@@ -1,5 +1,5 @@
 import state from '../state.js';
-import { getAIAssistant } from '../ai-assistant.js';
+import { getAIAssistant } from '../ai-service/ai-assistant.js';
 import { renderPreview } from '../preview/preview.js';
 import { getNodeById } from '../workspace/vfs.js';
 

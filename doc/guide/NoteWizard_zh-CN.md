@@ -1,5 +1,7 @@
 # NoteWizard 使用指南
 
+**语言**: [简体中文](./NoteWizard_zh-CN.md) | [English](./NoteWizard_en-US.md)
+
 <div align="center">
   <img src="../../src/assets/logo/app-logo-128.png" alt="NoteWizard Logo" width="96">
   <h3>现代化跨平台 Markdown 笔记应用</h3>

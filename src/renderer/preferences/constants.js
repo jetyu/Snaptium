@@ -53,7 +53,7 @@ export const SELECTORS = {
 // 默认值
 export const DEFAULTS = {
   THEME_MODE: 'system',
-  LANGUAGE: 'zh-CN',
+  LANGUAGE: 'en-US',
   EDITOR_FONT_SIZE: 14,
   PREVIEW_FONT_SIZE: 14,
   EDITOR_FONT_FAMILY: "'Microsoft YaHei', '微软雅黑', sans-serif",

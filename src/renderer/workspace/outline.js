@@ -1,4 +1,4 @@
-import state from './state.js';
+import state from '../state.js';
 
 export function generateOutline(markdownText) {
   const lines = markdownText.split('\n');

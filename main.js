@@ -173,6 +173,7 @@ function initializeManagers() {
     shell,
     fs,
     path,
+    app,
     t: managers.i18n.t,
     getWindow: () => managers.window.getMainWindow(),
     closeAllWindows: () => managers.window.closeAllWindows(),

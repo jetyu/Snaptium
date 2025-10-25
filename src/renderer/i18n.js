@@ -10,7 +10,7 @@ const {
   fs: electronFs,
 } = electronAPI;
 
-const DEFAULT_LANG = "zh-CN";
+const DEFAULT_LANG = "en-US";
 
 // 防止重复初始化的标志
 let isI18nInitialized = false;
@@ -51,7 +51,7 @@ async function initLanguage() {
   try {
     // 从 preferences.json 读取语言设置
     const savedLang = await ipcRenderer.invoke('preferences:get', 'language', null);
-    currentLang = savedLang || navigator.language || DEFAULT_LANG;
+    currentLang = savedLang || DEFAULT_LANG;
     
     // 确保语言在支持的语言列表中
     const supportedLangs = getSupportedLanguages();

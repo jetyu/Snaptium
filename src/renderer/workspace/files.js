@@ -2,7 +2,7 @@ import state from '../state.js';
 import { renderPreview } from '../preview/preview.js';
 import * as vfs from './vfs.js';
 import * as tree from './tree.js';
-import * as outline from '../outline.js';
+import * as outline from './outline.js';
 import { t } from '../i18n.js';
 
 const electronAPI = window.electronAPI;
