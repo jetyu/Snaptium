@@ -102,7 +102,7 @@ export function createPreferencesManager(deps) {
       if (filePath) {
         // 转换格式以匹配导入的预期结构
         const exportData = {
-          language: preferences.language || "zh-CN",
+          language: preferences.language || "en-US",
           theme: preferences.themeMode || "system",
           editor: {
             fontSize: preferences.editorFontSize || "16",

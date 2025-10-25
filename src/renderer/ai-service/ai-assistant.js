@@ -1,4 +1,4 @@
-import { t } from './i18n.js';
+import { t } from '../i18n.js';
 
 const electronAPI = window.electronAPI;
 const { ipcRenderer } = electronAPI;

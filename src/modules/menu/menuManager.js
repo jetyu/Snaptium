@@ -309,7 +309,7 @@ export function createMenuManager(deps) {
         {
           label: t("menu.help.tutorial"),
           click: () => {
-            shell.openExternal("https://markdown.com.cn/intro.html");
+            shell.openExternal("https://github.com/jetyu/NoteWizard/blob/main/doc/guide/NoteWizard_en-US.md");
           },
         },
         {

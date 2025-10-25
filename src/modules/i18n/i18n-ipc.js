@@ -3,7 +3,7 @@
  * 负责语言加载、翻译和语言切换
  */
 
-const DEFAULT_LANG = "zh-CN";
+const DEFAULT_LANG = "en-US";
 
 /**
  * 创建国际化管理器
@@ -25,7 +25,7 @@ export function createI18nManager(deps) {
 
   /**
    * 加载指定语言文件
-   * @param {string} lang - 语言代码（如 zh-CN, en-GB）
+   * @param {string} lang - 语言代码
    * @returns {boolean} 是否加载成功
    */
   function loadLanguage(lang) {
