@@ -12,7 +12,7 @@
   "preferencesTitle": "การตั้งค่า",
   "paneGeneral": "ทั่วไป",
   "paneAppearance": "ลักษณะ",
-  "paneAI": "การตั้งค่า AI",
+  "paneAIConfiguration": "การตั้งค่า AI",
   "labelLanguage": "ภาษา",
   "labelThemeMode": "โหมดธีม",
   "labelEditorFontSize": "ขนาดตัวอักษรตัวแก้ไข (px)",

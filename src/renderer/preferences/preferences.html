@@ -13,7 +13,8 @@
       <ul>
         <li data-pane="general" class="active" data-i18n="paneGeneral"></li>
         <li data-pane="appearance" data-i18n="paneAppearance"></li>
-        <li data-pane="ai" data-i18n="paneAI"></li>
+        <li data-pane="security" data-i18n="paneSecurity"></li>
+        <li data-pane="ai" data-i18n="paneAIConfiguration"></li>
       </ul>
     </nav>
     <section class="pref-content">
@@ -80,6 +81,67 @@
             <option value="'Courier New', monospace" data-i18n="optionCourierNew"></option>
           </select>
         </div>
+      </div>
+      <div id="pane-security" class="pref-pane">
+        <!-- 未启用加密时显示 -->
+        <div id="encryption-disabled-section" class="pref-section">
+          <h3 data-i18n="titleEncryptionDisabled"></h3>
+          <div class="pref-subsection">
+            <button id="btn-enable-encryption" class="primary-btn" data-i18n="btnEnableEncryption"></button>
+          </div>
+          <p class="hint-text" data-i18n="hintEncryptionTips"></p>
+        </div>
+                <!-- 加密状态显示 -->
+        <div id="encryption-status-section" class="pref-section">
+          <div class="status-info">
+            <span class="encryption-status-label" data-i18n="labelEncryptionStatus"></span>
+            <span id="encryption-status-text" class="encryption-status-value"></span>
+          </div>
+        </div>
+        <!-- 设置加密向导 - 显示恢复密钥 -->
+        <div id="encryption-setup-section" class="pref-section" style="display: none;">
+          <h3 data-i18n="titleSetupEncryption"></h3>
+          <div class="pref-subsection">
+            <label data-i18n="labelRecoveryKey"></label>
+            <div class="recovery-key-display">
+              <textarea id="recovery-key-display" readonly rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="pref-subsection">
+            <button id="btn-copy-key" class="secondary-btn" data-i18n="btnCopyKey"></button>
+            <button id="btn-download-key" class="secondary-btn" data-i18n="btnDownloadKey"></button>
+          </div>
+
+          <div class="pref-subsection">
+            <div class="warning-box">
+              <p class="warning-text" data-i18n="warningRecoveryKey"></p>
+            </div>
+          </div>
+
+          <div class="pref-subsection">
+            <label class="checkbox-label">
+              <input type="checkbox" id="confirm-saved-key">
+              <span data-i18n="confirmSavedKey"></span>
+            </label>
+          </div>
+
+          <div class="pref-subsection">
+            <button id="btn-confirm-setup" class="primary-btn" disabled data-i18n="btnConfirmSetup"></button>
+            <button id="btn-cancel-setup" class="secondary-btn" data-i18n="btnCancelSetup"></button>
+          </div>
+        </div>
+
+        <!-- 已启用加密时显示 -->
+        <div id="encryption-enabled-section" class="pref-section" style="display: none;">
+          <h3 data-i18n="titleEncryptionEnabled"></h3>
+          
+          <div class="pref-subsection">
+            <button id="btn-disable-encryption" class="danger-btn" data-i18n="btnDisableEncryption"></button>
+          </div>
+        </div>
+
+        
       </div>
       <div id="pane-ai" class="pref-pane">
         <div class="pref-section">

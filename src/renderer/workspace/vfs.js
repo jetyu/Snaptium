@@ -266,9 +266,9 @@ function deleteNode(id, permanent = false) {
       if (electronFs.existsSync(imagesDir)) {
         try {
           electronFs.rmSync(imagesDir, { recursive: true, force: true });
-          console.log(`[VFS] 已删除图片文件夹: ${imagesDir}`);
+          console.log(`[VFS] Deleted images folder: ${imagesDir}`);
         } catch (error) {
-          console.warn(`[VFS] 删除图片文件夹失败: ${imagesDir}`, error);
+          console.warn(`[VFS] Failed to delete images folder: ${imagesDir}`, error);
         }
       }
     }
@@ -302,14 +302,52 @@ function deleteNode(id, permanent = false) {
   return true;
 }
 
-function readContent(contentId) {
+async function readContent(contentId) {
   const p = electronPath.join(objectsDir(state.workspaceRoot), `${contentId}.md`);
-  if (electronFs.existsSync(p)) return electronFs.readFileSync(p, 'utf-8');
+  if (electronFs.existsSync(p)) {
+    let content = electronFs.readFileSync(p, 'utf-8');
+    
+    // 如果是加密内容，调用 IPC 解密
+    if (content.startsWith('ENCRYPTED:')) {
+      try {
+        const result = await ipcRenderer.invoke('encryption:decrypt-note', { content });
+        if (result.success) {
+          return result.decrypted;
+        } else {
+          console.error('解密失败:', result.error);
+          return content; // 解密失败，返回原内容
+        }
+      } catch (error) {
+        console.error('调用解密 IPC 失败:', error);
+        return content;
+      }
+    }
+    
+    return content;
+  }
   return '';
 }
 
-function writeContent(contentId, text) {
+async function writeContent(contentId, text) {
   const p = electronPath.join(objectsDir(state.workspaceRoot), `${contentId}.md`);
+  
+  // 检查是否启用加密
+  try {
+    const statusResult = await ipcRenderer.invoke('encryption:is-enabled');
+    if (statusResult.success && statusResult.enabled) {
+      // 加密内容
+      const encryptResult = await ipcRenderer.invoke('encryption:encrypt-note', { content: text });
+      if (encryptResult.success) {
+        text = encryptResult.encrypted;
+      } else {
+        console.error('加密失败:', encryptResult.error);
+        // 加密失败，仍然保存原内容
+      }
+    }
+  } catch (error) {
+    console.error('检查加密状态失败:', error);
+  }
+  
   electronFs.writeFileSync(p, text, 'utf-8');
 }
 

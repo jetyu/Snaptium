@@ -12,7 +12,7 @@
   "preferencesTitle": "Tùy chọn",
   "paneGeneral": "Chung",
   "paneAppearance": "Giao diện",
-  "paneAI": "Cài đặt AI",
+  "paneAIConfiguration": "Cài đặt AI",
   "labelLanguage": "Ngôn ngữ",
   "labelThemeMode": "Chế độ chủ đề",
   "labelEditorFontSize": "Kích thước phông chữ trình chỉnh sửa (px)",

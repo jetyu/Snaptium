@@ -22,7 +22,7 @@
  */
 export function createMenuManager(deps) {
   const { 
-    Menu, BrowserWindow, dialog, shell, fs, path,
+    Menu, BrowserWindow, dialog, shell, fs, path, app,
     t, getWindow, closeAllWindows, 
     importExportManager, handleManualUpdateCheck,
     __dirname 
@@ -211,7 +211,7 @@ export function createMenuManager(deps) {
                 win.close();
               });
             }
-            require('electron').app.exit(0);
+            app.exit(0);
           },
         },
       ],

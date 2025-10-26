@@ -55,7 +55,7 @@ export function createImporter(dependencies) {
         fs.rmSync(tempDir, { recursive: true, force: true });
       }
     } catch (error) {
-      console.warn('[Importer] 清理临时目录失败:', error);
+      console.warn('[Importer] Failed to clean up temp directory:', error);
     }
   }
 
@@ -125,7 +125,7 @@ export function createImporter(dependencies) {
           }
         }
       } catch (error) {
-        console.warn('[Importer] 解析节点失败:', error);
+        console.warn('[Importer] Failed to parse node:', error);
       }
     }
 
@@ -177,7 +177,7 @@ export function createImporter(dependencies) {
           nodeIds.add(node.id);
         }
       } catch (error) {
-        console.warn('[Importer] 解析节点失败:', error);
+        console.warn('[Importer] Failed to parse node:', error);
       }
     }
 
@@ -214,7 +214,7 @@ export function createImporter(dependencies) {
         
         // 检查节点 ID 是否已存在（避免重复导入文件夹等）
         if (existingNodeIds.has(node.id)) {
-          console.log(`[Importer] 跳过已存在的节点: ${node.id} (${node.name})`);
+          console.log(`[Importer] Skipped existing node: ${node.id} (${node.name})`);
           skippedCount++;
           // 如果是笔记文件，单独统计
           if (node.type === 'file') {
@@ -237,7 +237,7 @@ export function createImporter(dependencies) {
             
             // 如果哈希值相同，说明内容完全一致，跳过导入
             if (importHash && existingHash && importHash === existingHash) {
-              console.log(`[Importer] 跳过重复内容: ${originalId} (${node.name})`);
+              console.log(`[Importer] Skipped duplicate content: ${originalId} (${node.name})`);
               skippedNodes.push(node);
               skippedCount++;
               skippedNoteCount++;
@@ -279,7 +279,7 @@ export function createImporter(dependencies) {
 
         processedNodes.push(node);
       } catch (error) {
-        console.warn('[Importer] 解析节点失败:', error);
+        console.warn('[Importer] Failed to parse node:', error);
       }
     }
 
@@ -458,7 +458,7 @@ export function createImporter(dependencies) {
       mergeNodes(processedNodes, databaseDir);
 
       const totalNotes = activeCount + trashedCount;
-      console.log(`[Importer] 成功导入 ${totalNotes} 条笔记，${conflictCount} 条冲突已重命名，${skippedNoteCount} 条重复笔记已跳过`);
+      console.log(`[Importer] Successfully imported ${totalNotes} notes, ${conflictCount} conflicts renamed, ${skippedNoteCount} duplicate notes skipped`);
 
       return {
         success: true,
@@ -470,7 +470,7 @@ export function createImporter(dependencies) {
         manifest: validation.manifest
       };
     } catch (error) {
-      console.error('[Importer] 导入失败:', error);
+      console.error('[Importer] Import failed:', error);
       return { 
         success: false, 
         error: error.message 

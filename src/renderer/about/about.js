@@ -17,7 +17,7 @@ async function setupAboutPage() {
 
   const electronAPI = window.electronAPI;
   if (!electronAPI?.ipcRenderer) {
-    console.error("ipcRenderer 不可用，无法更新关于信息");
+    console.error("ipcRenderer not available, cannot update about information");
     return;
   }
 
@@ -42,6 +42,6 @@ async function setupAboutPage() {
 
 document.addEventListener("DOMContentLoaded", () => {
   setupAboutPage().catch((error) => {
-    console.error("初始化关于页面失败", error);
+    console.error("Failed to initialize about page", error);
   });
 });

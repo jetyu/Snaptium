@@ -13,7 +13,7 @@ const config = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8')).build;
 
 // 清理之前的构建目录
 function cleanDist() {
-  console.log('清理构建目录...');
+  console.log('Cleaning build directory...');
   const distPath = path.join(__dirname, 'dist');
   if (fs.existsSync(distPath)) {
     fs.rmSync(distPath, { recursive: true, force: true });
@@ -23,26 +23,26 @@ function cleanDist() {
 
 // 构建应用
 async function buildApp() {
-  console.log('开始构建应用...');
+  console.log('Starting application build...');
   
   try {
-    // 安装依赖
-    console.log('安装依赖...');
+    // Install dependencies
+    console.log('Installing dependencies...');
     execSync('npm install', { stdio: 'inherit' });
 
-    // 构建渲染进程
-    console.log('构建渲染进程...');
+    // Build renderer process
+    console.log('Building renderer process...');
     // 如果有前端构建步骤，可以在这里添加
     // 例如: execSync('npm run build:renderer', { stdio: 'inherit' });
 
-    // 打包应用
-    console.log('打包应用...');
+    // Package application
+    console.log('Packaging application...');
     
     // 设置目标平台
     const platform = process.platform === 'win32' ? 'win' : 
                    process.platform === 'darwin' ? 'mac' : 'linux';
     
-    console.log(`目标平台: ${platform}`);
+    console.log(`Target platform: ${platform}`);
     
     // 构建选项
     const buildOptions = {
@@ -62,17 +62,17 @@ async function buildApp() {
       config: config,
     });
 
-    console.log('构建成功！');
-    console.log(`安装包位置: ${path.join(__dirname, 'dist')}`);
+    console.log('Build successful!');
+    console.log(`Installer location: ${path.join(__dirname, 'dist')}`);
   } catch (error) {
-    console.error('构建失败:', error);
+    console.error('Build failed:', error);
     process.exit(1);
   }
 }
 
 // 执行构建
 async function main() {
-  console.log('NoteWizard 构建工具');
+  console.log('NoteWizard Build Tool');
   console.log('======================');
   
   cleanDist();

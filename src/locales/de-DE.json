@@ -12,7 +12,7 @@
   "preferencesTitle": "Einstellungen",
   "paneGeneral": "Allgemein",
   "paneAppearance": "Erscheinungsbild",
-  "paneAI": "KI-Konfiguration",
+  "paneAIConfiguration": "KI-Konfiguration",
   "labelLanguage": "Sprache",
   "labelThemeMode": "Themenmodus",
   "labelEditorFontSize": "Schriftgröße des Editors (px)",

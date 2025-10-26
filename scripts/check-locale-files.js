@@ -9,19 +9,19 @@ const __dirname = path.dirname(__filename);
 const localesDir = path.join(__dirname, '../src/locales');
 const referenceFile = path.join(localesDir, 'zh-CN.json');
 
-console.log('[INFO] 读取参考简体中文语言文件: zh-CN.json');
+console.log('[INFO] Reading reference Simplified Chinese language file: zh-CN.json');
 const referenceContent = fs.readFileSync(referenceFile, 'utf8');
 const referenceObj = JSON.parse(referenceContent);
 
 // 获取参考文件的键顺序
 const referenceKeys = Object.keys(referenceObj);
-console.log(`[INFO] 简体中文语言文件包含 ${referenceKeys.length} 个翻译主键\n`);
+console.log(`[INFO] Simplified Chinese language file contains ${referenceKeys.length} translation keys\n`);
 
 // 获取所有语言文件
 const localeFiles = fs.readdirSync(localesDir)
   .filter(file => file.endsWith('.json') && file !== 'zh-CN.json');
 
-console.log(`[INFO] 找到 ${localeFiles.length} 个语言文件\n`);
+console.log(`[INFO] Found ${localeFiles.length} language files\n`);
 
 let processedCount = 0;
 let errorCount = 0;
@@ -50,7 +50,7 @@ localeFiles.forEach(file => {
     const extraKeys = Object.keys(currentObj).filter(key => !referenceKeys.includes(key));
     if (extraKeys.length > 0) {
       console.log(`[WARN] ${file}`);
-      console.log(`       发现 ${extraKeys.length} 个额外的键: ${extraKeys.join(', ')}\n`);
+      console.log(`       Found ${extraKeys.length} extra keys: ${extraKeys.join(', ')}\n`);
       // 将额外的键添加到末尾
       extraKeys.forEach(key => {
         sortedObj[key] = currentObj[key];
@@ -61,7 +61,7 @@ localeFiles.forEach(file => {
     const missingKeys = referenceKeys.filter(key => !currentObj.hasOwnProperty(key));
     if (missingKeys.length > 0) {
       console.log(`[WARN] ${file}`);
-      console.log(`       缺少 ${missingKeys.length} 个键: ${missingKeys.join(', ')}\n`);
+      console.log(`       Missing ${missingKeys.length} keys: ${missingKeys.join(', ')}\n`);
       filesWithMissingKeys.push({
         file,
         count: missingKeys.length,
@@ -77,39 +77,39 @@ localeFiles.forEach(file => {
     
   } catch (error) {
     console.error(`[ERROR] ${file}`);
-    console.error(`        错误: ${error.message}\n`);
+    console.error(`        Error: ${error.message}\n`);
     failedFiles.push({ file, error: error.message });
     errorCount++;
   }
 });
 
 console.log('='.repeat(50));
-console.log(`\n[INFO] 处理结果:`);
-console.log(`       排序处理完成: ${processedCount - errorCount} 个语言文件`);
+console.log(`\n[INFO] Processing results:`);
+console.log(`       Sorting completed: ${processedCount - errorCount} language files`);
 if (errorCount > 0) {
-  console.log(`       排序处理失败: ${errorCount} 个语言文件`);
+  console.log(`       Sorting failed: ${errorCount} language files`);
 }
 if (filesWithMissingKeys.length > 0) {
-  console.log(`       翻译主键缺失: ${filesWithMissingKeys.length} 个语言文件`);
+  console.log(`       Translation keys missing: ${filesWithMissingKeys.length} language files`);
 }
 
 if (failedFiles.length > 0) {
-  console.log(`\n[INFO] 以下语言文件处理失败:`);
+  console.log(`\n[INFO] The following language files failed to process:`);
   failedFiles.forEach(({ file, error }) => {
     console.log(`       - ${file}: ${error}`);
   });
 }
 
 if (filesWithMissingKeys.length > 0) {
-  console.log(`\n[INFO] 以下语言文件缺少翻译键:`);
+  console.log(`\n[INFO] The following language files are missing translation keys:`);
   filesWithMissingKeys.forEach(({ file, count, keys }) => {
-    console.log(`       - ${file}: 缺少 ${count} 个键`);
+    console.log(`       - ${file}: Missing ${count} keys`);
     console.log(`         ${keys.join(', ')}`);
   });
 }
 
 if (errorCount === 0 && filesWithMissingKeys.length === 0) {
-  console.log(`\n[INFO] 其他语言文件与简体中文语言排序一致！\n`);
+  console.log(`\n[INFO] Other language files are sorted consistently with Simplified Chinese!\n`);
 } else {
-  console.log(`\n[INFO] 排序完成，但语言文件缺少翻译键，需要处理\n`);
+  console.log(`\n[INFO] Sorting completed, but language files are missing translation keys that need to be handled\n`);
 }

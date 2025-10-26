@@ -26,7 +26,7 @@ export function createImagesManager(deps) {
       }
       return true;
     } catch (error) {
-      console.error('创建目录失败:', dirPath, error);
+      console.error('Failed to create directory:', dirPath, error);
       return false;
     }
   }
@@ -122,7 +122,7 @@ export function createImagesManager(deps) {
         markdownPath,
       };
     } catch (error) {
-      console.error('粘贴图片保存失败:', error);
+      console.error('Failed to save pasted image:', error);
       return { success: false, error: error.message };
     }
   }

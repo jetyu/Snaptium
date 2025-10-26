@@ -12,7 +12,7 @@
   "preferencesTitle": "Pengaturan",
   "paneGeneral": "Umum",
   "paneAppearance": "Tampilan",
-  "paneAI": "Konfigurasi AI",
+  "paneAIConfiguration": "Konfigurasi AI",
   "labelLanguage": "Bahasa",
   "labelThemeMode": "Mode Tema",
   "labelEditorFontSize": "Ukuran Font Editor (px)",

@@ -15,6 +15,7 @@ import { createMenuManager } from "./src/modules/menu/menuManager.js";
 import { createTrayManager } from "./src/modules/tray/trayManager.js";
 import { createAutoUpdaterManager } from "./src/modules/updater/auto-updater.js";
 import { createImportExportManager } from "./src/modules/import-export/import-export-ipc.js";
+import { createEncryptionManager } from "./src/modules/encryption/encryption-ipc.js";
 import { registerApiBridge } from "./src/modules/api-bridge/api-bridge.js";
 
 const require = createRequire(import.meta.url);
@@ -165,7 +166,15 @@ function initializeManagers() {
     AdmZip
   });
 
-  // 8. 创建菜单管理器
+  // 8. 创建加密管理器
+  managers.encryption = createEncryptionManager({
+    ipcMain,
+    preferencesManager: managers.preferences,
+    app,
+    getWindow: () => managers.window.getMainWindow()
+  });
+
+  // 9. 创建菜单管理器
   managers.menu = createMenuManager({
     Menu,
     BrowserWindow,
@@ -173,6 +182,7 @@ function initializeManagers() {
     shell,
     fs,
     path,
+    app,
     t: managers.i18n.t,
     getWindow: () => managers.window.getMainWindow(),
     closeAllWindows: () => managers.window.closeAllWindows(),
@@ -183,7 +193,7 @@ function initializeManagers() {
     __dirname
   });
 
-  // 9. 创建托盘管理器
+  // 10. 创建托盘管理器
   managers.tray = createTrayManager({
     Tray,
     Menu,
@@ -202,7 +212,7 @@ function initializeManagers() {
 // 处理保存请求
 ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
   const win = managers.window?.getMainWindow();
-  if (!win) return { success: false, error: "窗口未初始化" };
+  if (!win) return { success: false, error: "Window not initialized" };
   
   try {
     let targetPath = filePath;
@@ -210,7 +220,7 @@ ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
       const { canceled, filePath: savePath } = await dialog.showSaveDialog(win, {
         filters: [{ name: "Markdown", extensions: ["md"] }],
       });
-      if (canceled) return { success: false, error: "用户取消保存" };
+      if (canceled) return { success: false, error: "User canceled save" };
       targetPath = savePath;
     }
 
@@ -223,7 +233,7 @@ ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
     await fs.promises.writeFile(targetPath, content, "utf-8");
     return { success: true, filePath: targetPath };
   } catch (error) {
-    console.error('保存文件失败:', error);
+    console.error('Failed to save file:', error);
     return { success: false, error: error.message };
   }
 });
@@ -280,14 +290,14 @@ app.on('window-all-closed', () => {
 
 // 未捕获的异常处理
 process.on('uncaughtException', (error) => {
-  console.error('未捕获的异常:', error);
-  dialog.showErrorBox('应用程序错误', '发生未处理的错误: ' + error.message);
+  console.error('Uncaught exception:', error);
+  dialog.showErrorBox('Application Error', 'Unhandled error occurred: ' + error.message);
 });
 
 // 未处理的 Promise 拒绝
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('未处理的Promise拒绝:', reason);
-  dialog.showErrorBox('Promise错误', '未处理的Promise拒绝: ' + (reason instanceof Error ? reason.message : String(reason)));
+  console.error('Unhandled Promise rejection:', reason);
+  dialog.showErrorBox('Promise Error', 'Unhandled Promise rejection: ' + (reason instanceof Error ? reason.message : String(reason)));
 });
 
 // 应用即将退出

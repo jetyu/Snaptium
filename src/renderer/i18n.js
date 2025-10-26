@@ -38,7 +38,7 @@ async function loadLanguage(lang) {
     return dict[lang];
   } catch (error) {
     if (lang === DEFAULT_LANG) {
-      console.warn(`加载默认语言包失败: ${error.message}`);
+      console.warn(`Failed to load default language pack: ${error.message}`);
       dict[DEFAULT_LANG] = {};
       return dict[DEFAULT_LANG];
     }

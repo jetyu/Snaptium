@@ -1,0 +1,593 @@
+/**
+ * 加密设置管理器（恢复密钥方案）
+ * 负责处理加密相关的所有UI逻辑和用户交互
+ */
+import { SELECTORS } from '../constants.js';
+
+export class EncryptionSettingsManager {
+  constructor(deps) {
+    this.electronAPI = deps.electronAPI;
+    this.prefsService = deps.prefsService;
+    this.i18n = deps.i18n;
+    this.eventBus = deps.eventBus;
+    this.modal = deps.modal;
+    
+    this.isEncryptionEnabled = false;
+    this.isInitialized = false;
+    this.currentRecoveryKey = null;
+  }
+
+  /**
+   * 初始化加密设置管理器
+   */
+  async init() {
+    if (this.isInitialized) return;
+    
+    this.setupElements();
+    this.attachEventListeners();
+    await this.loadSettings();
+    
+    this.isInitialized = true;
+  }
+
+  /**
+   * 设置 DOM 元素引用
+   */
+  setupElements() {
+    this.elements = {
+      // 区域容器
+      disabledSection: document.querySelector('#encryption-disabled-section'),
+      setupSection: document.querySelector(SELECTORS.ENCRYPTION_SETUP_SECTION),
+      enabledSection: document.querySelector('#encryption-enabled-section'),
+      statusSection: document.querySelector(SELECTORS.ENCRYPTION_STATUS_SECTION),
+      
+      // 启用加密按钮
+      enableEncryptionBtn: document.querySelector('#btn-enable-encryption'),
+      
+      // 设置加密 - 恢复密钥
+      recoveryKeyDisplay: document.querySelector('#recovery-key-display'),
+      confirmSavedKeyCheckbox: document.querySelector('#confirm-saved-key'),
+      copyKeyBtn: document.querySelector('#btn-copy-key'),
+      downloadKeyBtn: document.querySelector('#btn-download-key'),
+      confirmSetupBtn: document.querySelector('#btn-confirm-setup'),
+      cancelSetupBtn: document.querySelector('#btn-cancel-setup'),
+      
+      // 加密管理按钮
+      exportKeyBtn: document.querySelector('#btn-export-key'),
+      regenerateKeyBtn: document.querySelector('#btn-regenerate-key'),
+      disableEncryptionBtn: document.querySelector('#btn-disable-encryption'),
+      
+      // 状态显示
+      statusText: document.querySelector(SELECTORS.ENCRYPTION_STATUS_TEXT),
+    };
+  }
+
+  /**
+   * 绑定事件监听器
+   */
+  attachEventListeners() {
+    // 启用加密按钮
+    this.elements.enableEncryptionBtn?.addEventListener('click', () => {
+      this.showSetupWizard();
+    });
+
+    // 恢复密钥确认
+    this.elements.confirmSavedKeyCheckbox?.addEventListener('change', (e) => {
+      if (this.elements.confirmSetupBtn) {
+        this.elements.confirmSetupBtn.disabled = !e.target.checked;
+      }
+    });
+
+    // 复制密钥
+    this.elements.copyKeyBtn?.addEventListener('click', () => {
+      this.copyRecoveryKey();
+    });
+
+    // 下载密钥
+    this.elements.downloadKeyBtn?.addEventListener('click', () => {
+      this.downloadRecoveryKey();
+    });
+
+    // 完成设置按钮
+    this.elements.confirmSetupBtn?.addEventListener('click', () => {
+      this.handleConfirmSetup();
+    });
+
+    // 取消设置按钮
+    this.elements.cancelSetupBtn?.addEventListener('click', () => {
+      this.cancelSetup();
+    });
+
+    // 禁用加密
+    this.elements.disableEncryptionBtn?.addEventListener('click', () => {
+      this.handleDisableEncryption();
+    });
+
+    // 批量加密
+    const batchEncryptBtn = document.querySelector('#btn-batch-encrypt');
+    batchEncryptBtn?.addEventListener('click', () => {
+      this.handleBatchEncrypt();
+    });
+  }
+
+  /**
+   * 加载加密设置
+   */
+  async loadSettings() {
+    try {
+      // 检查是否已启用加密
+      const result = await this.electronAPI.ipcRenderer.invoke('encryption:is-enabled');
+      this.isEncryptionEnabled = result?.enabled || false;
+
+      this.updateUI();
+    } catch (error) {
+      console.error('Failed to load encryption settings:', error);
+    }
+  }
+
+  /**
+   * 更新UI显示状态
+   */
+  updateUI() {
+    if (this.isEncryptionEnabled) {
+      // 已启用加密
+      this.hideElement(this.elements.disabledSection);
+      this.hideElement(this.elements.setupSection);
+      this.showElement(this.elements.enabledSection);
+      this.updateStatusText(this.i18n.t('encryptionStatusEnabled'), 'enabled');
+    } else {
+      // 未启用加密
+      this.showElement(this.elements.disabledSection);
+      this.hideElement(this.elements.setupSection);
+      this.hideElement(this.elements.enabledSection);
+      this.updateStatusText(this.i18n.t('encryptionStatusDisabled'), 'disabled');
+    }
+  }
+
+  /**
+   * 显示设置向导
+   */
+  async showSetupWizard() {
+    try {
+      // 生成恢复密钥
+      const result = await this.electronAPI.ipcRenderer.invoke('encryption:generate-recovery-key');
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+
+      this.currentRecoveryKey = result.recoveryKey;
+      
+      // 显示密钥
+      if (this.elements.recoveryKeyDisplay) {
+        this.elements.recoveryKeyDisplay.value = this.currentRecoveryKey;
+      }
+
+      // 重置确认复选框
+      if (this.elements.confirmSavedKeyCheckbox) {
+        this.elements.confirmSavedKeyCheckbox.checked = false;
+      }
+      if (this.elements.confirmSetupBtn) {
+        this.elements.confirmSetupBtn.disabled = true;
+      }
+
+      this.hideElement(this.elements.disabledSection);
+      this.showElement(this.elements.setupSection);
+      this.updateStatusText(this.i18n.t('encryptionStatusPending'), 'pending');
+    } catch (error) {
+      console.error('Failed to show setup wizard:', error);
+      this.showMessage(this.i18n.t('errorGenerateKeyFailed') + ': ' + error.message, 'error');
+    }
+  }
+
+  /**
+   * 取消设置
+   */
+  cancelSetup() {
+    this.currentRecoveryKey = null;
+    if (this.elements.recoveryKeyDisplay) {
+      this.elements.recoveryKeyDisplay.value = '';
+    }
+    if (this.elements.confirmSavedKeyCheckbox) {
+      this.elements.confirmSavedKeyCheckbox.checked = false;
+    }
+    this.hideElement(this.elements.setupSection);
+    this.showElement(this.elements.disabledSection);
+    this.updateStatusText(this.i18n.t('encryptionStatusDisabled'), 'disabled');
+  }
+
+  /**
+   * 复制恢复密钥
+   */
+  async copyRecoveryKey() {
+    try {
+      if (!this.currentRecoveryKey) {
+        throw new Error(this.i18n.t('errorNoRecoveryKey'));
+      }
+
+      await navigator.clipboard.writeText(this.currentRecoveryKey);
+      this.showMessage(this.i18n.t('successKeyCopied'), 'success');
+    } catch (error) {
+      console.error('Failed to copy recovery key:', error);
+      this.showMessage(this.i18n.t('errorCopyFailed') + ': ' + error.message, 'error');
+    }
+  }
+
+  /**
+   * 下载恢复密钥
+   */
+  async downloadRecoveryKey() {
+    try {
+      if (!this.currentRecoveryKey) {
+        throw new Error(this.i18n.t('errorNoRecoveryKey'));
+      }
+
+      // 生成时间戳格式：YYYYMMDDHHMM
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      const hour = String(now.getHours()).padStart(2, '0');
+      const minute = String(now.getMinutes()).padStart(2, '0');
+      const timestamp = `${year}${month}${day}${hour}${minute}`;
+
+      const blob = new Blob([this.currentRecoveryKey], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `notewizard-recovery-key-${timestamp}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      this.showMessage(this.i18n.t('successKeyDownloaded'), 'success');
+    } catch (error) {
+      console.error('Failed to download recovery key:', error);
+      this.showMessage(this.i18n.t('errorDownloadFailed') + ': ' + error.message, 'error');
+    }
+  }
+
+  /**
+   * 处理确认设置
+   */
+  async handleConfirmSetup() {
+    if (!this.currentRecoveryKey) {
+      this.showMessage(this.i18n.t('errorNoRecoveryKey'), 'error');
+      return;
+    }
+
+    try {
+      this.elements.confirmSetupBtn.disabled = true;
+      this.elements.confirmSetupBtn.textContent = this.i18n.t('processing');
+
+      // 调用后端 IPC 设置加密
+      const result = await this.electronAPI.ipcRenderer.invoke('encryption:setup', { 
+        recoveryKey: this.currentRecoveryKey 
+      });
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      this.isEncryptionEnabled = true;
+      this.currentRecoveryKey = null;
+      this.hideElement(this.elements.setupSection);
+      this.updateUI();
+      
+      this.showMessage(this.i18n.t('successEncryptionEnabled'), 'success');
+      
+      // 自动批量加密现有笔记
+      setTimeout(() => {
+        this.handleBatchEncrypt();
+      }, 500);
+    } catch (error) {
+      console.error('Failed to setup encryption:', error);
+      this.showMessage(this.i18n.t('errorSetupFailed') + ': ' + error.message, 'error');
+    } finally {
+      this.elements.confirmSetupBtn.disabled = false;
+      this.elements.confirmSetupBtn.textContent = this.i18n.t('btnConfirmSetup');
+    }
+  }
+
+  /**
+   * 处理禁用加密
+   */
+  async handleDisableEncryption() {
+    // 创建验证函数
+    const validateKey = async (recoveryKey) => {
+      const verifyResult = await this.electronAPI.ipcRenderer.invoke(
+        'encryption:verify-key', 
+        { recoveryKey }
+      );
+      
+      if (!verifyResult.success) {
+        return { success: false, error: verifyResult.error };
+      }
+      
+      if (!verifyResult.valid) {
+        return { success: false, error: this.i18n.t('errorKeyIncorrect') };
+      }
+      
+      return { success: true };
+    };
+    
+    // 显示带验证的输入对话框
+    const recoveryKey = await this.showInputDialogWithValidation(
+      this.i18n.t('inputRecoveryKeyTitle'),
+      this.i18n.t('inputRecoveryKeyMessage'),
+      validateKey
+    );
+    
+    if (!recoveryKey) {
+      return; // 用户取消
+    }
+    
+    try {
+      // 执行禁用加密
+      this.showMessage(this.i18n.t('infoDecryptingNotes'), 'info');
+      
+      // 先批量解密所有笔记
+      const decryptResult = await this.electronAPI.ipcRenderer.invoke('encryption:decrypt-all');
+      
+      if (!decryptResult.success) {
+        throw new Error(decryptResult.error);
+      }
+      
+      // 再禁用加密
+      const result = await this.electronAPI.ipcRenderer.invoke('encryption:disable');
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      // 更新UI状态
+      this.isEncryptionEnabled = false;
+      this.updateUI();
+      
+      const message = this.i18n.t('encryptionDisabled', { decrypted: decryptResult.decrypted || 0 });
+      this.showMessage(message, 'success');
+      
+    } catch (error) {
+      console.error('Failed to disable encryption:', error);
+      this.showMessage(this.i18n.t('errorDisableFailed') + ': ' + error.message, 'error');
+    }
+  }
+
+  /**
+   * 处理批量加密
+   */
+  async handleBatchEncrypt() {
+    try {
+      this.showMessage(this.i18n.t('infoEncryptingNotes'), 'info');
+      
+      const result = await this.electronAPI.ipcRenderer.invoke('encryption:encrypt-all');
+      
+      if (!result.success) {
+        throw new Error(result.error);
+      }
+      
+      // 根据结果选择合适的消息
+      let message;
+      if (result.failed > 0) {
+        message = this.i18n.t('batchEncryptWithFailed', { 
+          encrypted: result.encrypted, 
+          failed: result.failed 
+        });
+      } else if (result.skipped > 0) {
+        message = this.i18n.t('batchEncryptWithSkipped', { 
+          encrypted: result.encrypted, 
+          skipped: result.skipped 
+        });
+      } else {
+        message = this.i18n.t('batchEncryptSuccess', { 
+          encrypted: result.encrypted 
+        });
+      }
+      
+      this.showMessage(message, 'success');
+    } catch (error) {
+      console.error('Failed to batch encrypt:', error);
+      this.showMessage(this.i18n.t('errorEncryptAllFailed') + ': ' + error.message, 'error');
+    }
+  }
+
+  /**
+   * 更新状态文本
+   */
+  updateStatusText(text, status) {
+    if (!this.elements.statusText) return;
+    
+    this.elements.statusText.textContent = text;
+    this.elements.statusText.className = `status-value status-${status}`;
+  }
+
+  /**
+   * 显示元素
+   */
+  showElement(element) {
+    if (element) element.style.display = 'block';
+  }
+
+  /**
+   * 隐藏元素
+   */
+  hideElement(element) {
+    if (element) element.style.display = 'none';
+  }
+
+  /**
+   * 显示输入对话框
+   */
+  async showInputDialogWithValidation(title, message, validateFn) {
+    return new Promise((resolve) => {
+      // 创建遮罩层（使用与 trash-modal 一致的结构）
+      const overlay = document.createElement('div');
+      overlay.className = 'input-dialog-modal';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      
+      // 创建对话框内容
+      const content = document.createElement('div');
+      content.className = 'input-dialog-modal__content';
+      
+      // 头部
+      const header = document.createElement('div');
+      header.className = 'input-dialog-modal__header';
+      
+      const titleEl = document.createElement('h2');
+      titleEl.className = 'input-dialog-modal__title';
+      titleEl.textContent = title;
+      
+      header.appendChild(titleEl);
+      
+      // 主体
+      const body = document.createElement('div');
+      body.className = 'input-dialog-modal__body';
+      
+      // 消息
+      const messageEl = document.createElement('p');
+      messageEl.className = 'input-dialog-modal__message';
+      messageEl.textContent = message;
+      
+      // 输入框
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'input-dialog-modal__input';
+      
+      // 错误提示（初始隐藏）
+      const errorEl = document.createElement('div');
+      errorEl.className = 'input-dialog-modal__error';
+      errorEl.style.display = 'none';
+      
+      body.appendChild(messageEl);
+      body.appendChild(input);
+      body.appendChild(errorEl);
+      
+      // 底部按钮
+      const footer = document.createElement('div');
+      footer.className = 'input-dialog-modal__footer';
+      
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'input-dialog-modal__btn input-dialog-modal__btn--secondary';
+      cancelBtn.textContent = this.i18n.t('btnCancel');
+      
+      const confirmBtn = document.createElement('button');
+      confirmBtn.className = 'input-dialog-modal__btn input-dialog-modal__btn--primary';
+      confirmBtn.textContent = this.i18n.t('btnConfirm');
+      
+      footer.appendChild(cancelBtn);
+      footer.appendChild(confirmBtn);
+      
+      // 组装对话框
+      content.appendChild(header);
+      content.appendChild(body);
+      content.appendChild(footer);
+      overlay.appendChild(content);
+      document.body.appendChild(overlay);
+      
+      // 聚焦输入框
+      setTimeout(() => input.focus(), 100);
+      
+      // 显示错误提示
+      const showError = (errorMsg) => {
+        errorEl.textContent = errorMsg;
+        errorEl.style.display = 'block';
+        input.classList.add('input-error');
+      };
+      
+      // 清除错误提示
+      const clearError = () => {
+        errorEl.style.display = 'none';
+        input.classList.remove('input-error');
+      };
+      
+      // 输入时清除错误
+      input.oninput = () => {
+        if (errorEl.style.display !== 'none') {
+          clearError();
+        }
+      };
+      
+      // 事件处理
+      const cleanup = (value) => {
+        document.body.removeChild(overlay);
+        resolve(value);
+      };
+      
+      // 确认按钮处理（带验证）
+      const handleConfirm = async () => {
+        const value = input.value.trim();
+        if (!value) {
+          return;
+        }
+        
+        // 如果提供了验证函数，执行验证
+        if (validateFn) {
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = this.i18n.t('processing');
+          
+          try {
+            const result = await validateFn(value);
+            if (result.success) {
+              cleanup(value);
+            } else {
+              showError(result.error || this.i18n.t('errorVerifyFailed'));
+              confirmBtn.disabled = false;
+              confirmBtn.textContent = this.i18n.t('btnConfirm');
+              input.focus();
+            }
+          } catch (error) {
+            showError(error.message);
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = this.i18n.t('btnConfirm');
+            input.focus();
+          }
+        } else {
+          cleanup(value);
+        }
+      };
+      
+      cancelBtn.onclick = () => cleanup(null);
+      confirmBtn.onclick = handleConfirm;
+      
+      // 支持键盘操作
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') {
+          handleConfirm();
+        } else if (e.key === 'Escape') {
+          cleanup(null);
+        }
+      };
+      
+      // 点击遮罩层关闭
+      overlay.onclick = (e) => {
+        if (e.target === overlay) {
+          cleanup(null);
+        }
+      };
+    });
+  }
+
+  /**
+   * 显示消息
+   */
+  showMessage(message, type = 'info') {
+    // 使用事件总线发送消息
+    this.eventBus?.emit('show-message', { message, type });
+    
+    // Fallback: use alert for errors, console for success
+    if (type === 'error') {
+      alert('Error: ' + message);
+    } else if (type === 'success') {
+      console.log('[Encryption] Success:', message);
+    }
+  }
+
+  /**
+   * 销毁管理器
+   */
+  destroy() {
+    // 清理事件监听器
+    this.isInitialized = false;
+  }
+}

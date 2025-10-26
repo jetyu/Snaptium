@@ -31,12 +31,12 @@ function selectFirstAvailableNote() {
   if (state.currentNodeId) return;
   const firstFileNode = findFirstFileNode(null);
   if (!firstFileNode) return;
-  setTimeout(() => {
+  setTimeout(async () => {
     const row = document.querySelector(`.tree-item[data-node-id="${firstFileNode.id}"] .tree-row`);
     if (row) {
       row.click();
     } else {
-      selectNode(firstFileNode);
+      await selectNode(firstFileNode);
     }
   }, 0);
 }
@@ -167,7 +167,7 @@ function showContextMenu(node, e) {
   const onDocClick = (ev) => { if (!menu.contains(ev.target)) close(); };
   setTimeout(() => document.addEventListener('click', onDocClick), 0);
 
-  menu.addEventListener('click', (ev) => {
+  menu.addEventListener('click', async (ev) => {
     const act = ev.target && ev.target.dataset && ev.target.dataset.action;
     if (!act) return;
     ev.stopPropagation();
@@ -218,7 +218,7 @@ function showContextMenu(node, e) {
       if (act === 'new-note') {
         const n = vfs.createFile(parentId, t('default.newNote'));
         tree.renderTree();
-        selectNode(n);
+        await selectNode(n);
       } else if (act === 'new-notebook') {
         const targetParentId = node && node.type === 'folder' ? node.id : null;
         const folder = vfs.createFolder(targetParentId, t('default.newNotebook'));
@@ -245,14 +245,14 @@ function showContextMenu(node, e) {
           }
 
           if (parentNode) {
-            selectNode(parentNode);
+            await selectNode(parentNode);
           } else {
             renderPreview();
           }
 
           updateStatus(t('file.movedToTrash'));
         } catch (err) {
-          console.error('删除节点失败:', err);
+          console.error('Failed to delete node:', err);
           updateStatus(t('file.deleteFailed'));
         }
 
@@ -268,7 +268,7 @@ function showContextMenu(node, e) {
  * @param {Object} node - 要选择的节点对象
  * 处理文件节点的内容加载和文件夹节点的状态更新
  */
-function selectNode(node) {
+async function selectNode(node) {
   if (state.currentNodeId && state.editor) {
     const prevNode = vfs.getNodeById(state.currentNodeId);
     if (prevNode && prevNode.type === 'file') {
@@ -289,7 +289,7 @@ function selectNode(node) {
   let content = state.fileContents.get(node.id);
   if (content == null) {
     try {
-      content = node.contentId ? vfs.readContent(node.contentId) : '';
+      content = node.contentId ? await vfs.readContent(node.contentId) : '';
     } catch (e) {
       content = '';
     }
@@ -394,7 +394,7 @@ async function initializeFileWorkspace() {
   }
 
   ipcRenderer.removeAllListeners('file-opened');
-  ipcRenderer.on('file-opened', (event, { content, filePath }) => {
+  ipcRenderer.on('file-opened', async (event, { content, filePath }) => {
     const fileNameWithExt = electronPath.basename(filePath);
     const fileName = electronPath.basename(filePath, electronPath.extname(filePath));
     
@@ -414,7 +414,7 @@ async function initializeFileWorkspace() {
     
     const node = vfs.createFile(parentId, fileNameWithExt, content);
     tree.renderTree();
-    selectNode(node);
+    await selectNode(node);
     updateStatus(`${t('file.imported')}: ${fileName}`);
   });
 
@@ -430,7 +430,7 @@ async function initializeFileWorkspace() {
     updateStatus(`${t('status.workspace')}: ${root}`);
 
     tree.setHandlers({
-      onSelect: (node) => selectNode(node),
+      onSelect: async (node) => await selectNode(node),
       onContext: (node, ev) => showContextMenu(node, ev),
       onMove: (sourceId, targetNode) => {
         try {
@@ -445,12 +445,12 @@ async function initializeFileWorkspace() {
           updateStatus(`${t('file.moved')}: ${targetNode.name}`);
         } catch (err) { }
       },
-      onInlineRenameCommit: (node, newName) => {
+      onInlineRenameCommit: async (node, newName) => {
         try {
           vfs.renameNode(node.id, newName);
           const keep = vfs.getNodeById(node.id);
           tree.renderTree();
-          if (keep) selectNode(keep);
+          if (keep) await selectNode(keep);
           updateStatus(t('file.renamedStatus'));
         } catch (err) { }
       },
@@ -490,8 +490,8 @@ async function initializeFileWorkspace() {
           // 重新渲染树
           tree.renderTree();
           // 选择新创建的笔记
-          setTimeout(() => {
-            selectNode(node);
+          setTimeout(async () => {
+            await selectNode(node);
             const selected = document.querySelector('.tree-row.active');
             if (selected) {
               selected.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -543,10 +543,10 @@ function setupEditorEvents() {
       const content = state.editor.getValue();
       state.fileContents.set(nodeId, content);
       if (state.autoSaveTimer) clearTimeout(state.autoSaveTimer);
-      state.autoSaveTimer = setTimeout(() => {
+      state.autoSaveTimer = setTimeout(async () => {
         try {
           if (node.contentId) {
-            vfs.writeContent(node.contentId, state.editor.getValue());
+            await vfs.writeContent(node.contentId, state.editor.getValue());
             updateStatus(`${t('file.autoSaved')}: ${node.name}`);
           }
         } catch (e) {

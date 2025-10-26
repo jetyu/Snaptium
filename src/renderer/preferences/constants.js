@@ -30,6 +30,18 @@ export const SELECTORS = {
   PREVIEW_FONT_INPUT: '#pref-preview-font',
   PREVIEW_FONT_FAMILY_SELECT: '#pref-preview-font-family',
   
+  // 加密设置
+  ENCRYPTION_SETUP_SECTION: '#encryption-setup-section',
+  ENCRYPTION_STATUS_SECTION: '#encryption-status-section',
+  MASTER_PASSWORD_INPUT: '#pref-master-password',
+  CONFIRM_PASSWORD_INPUT: '#pref-confirm-password',
+  PASSWORD_HINT_INPUT: '#pref-password-hint',
+  PASSWORD_STRENGTH: '#password-strength',
+  STRENGTH_BAR_FILL: '#strength-bar-fill',
+  STRENGTH_TEXT: '#strength-text',
+  CHANGE_PASSWORD_BTN: '#btn-change-password',
+  ENCRYPTION_STATUS_TEXT: '#encryption-status-text',
+  
   // AI 设置
   AI_ENABLED_INPUT: '#pref-ai-enabled',
   AI_TYPING_DELAY_INPUT: '#pref-ai-typing-delay',
@@ -105,6 +117,7 @@ export const STORAGE_KEYS = {
 export const PANES = {
   GENERAL: 'general',
   APPEARANCE: 'appearance',
+  SECURITY: 'security',
   AI: 'ai',
 };
 

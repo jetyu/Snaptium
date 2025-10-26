@@ -25,7 +25,7 @@ async function readMarkdownFile(lang) {
     const filePath = await resolveChangelogPath(lang);
     return await electronAPI.fs.readFile(filePath, "utf8");
   } catch (error) {
-    console.error("读取更新日志失败", error);
+    console.error("Failed to read changelog", error);
     throw error;
   }
 }
@@ -125,13 +125,13 @@ async function initializeChangelog() {
     const markdown = await readMarkdownFile(lang);
     renderMarkdown(markdown, container);
   } catch (error) {
-    console.error("初始化更新日志失败", error);
+    console.error("Failed to initialize changelog", error);
     container.textContent = error?.message || t("changelog.errors.initializationFailed");
   }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
   initializeChangelog().catch((error) => {
-    console.error("初始化更新日志失败", error);
+    console.error("Failed to initialize changelog", error);
   });
 });

@@ -9,6 +9,7 @@ import { PaneController } from './ui/PaneController.js';
 import { GeneralSettingsManager } from './managers/GeneralSettingsManager.js';
 import { AppearanceSettingsManager } from './managers/AppearanceSettingsManager.js';
 import { PathSettingsManager } from './managers/PathSettingsManager.js';
+import { EncryptionSettingsManager } from './managers/EncryptionSettingsManager.js';
 import { AISettingsManager } from './managers/AISettingsManager.js';
 import { SELECTORS, DEFAULTS } from './constants.js';
 
@@ -42,6 +43,7 @@ export class PreferencesManager {
     this.general = new GeneralSettingsManager(managerDeps);
     this.appearance = new AppearanceSettingsManager(managerDeps);
     this.path = new PathSettingsManager(managerDeps);
+    this.encryption = new EncryptionSettingsManager(managerDeps);
     this.ai = new AISettingsManager(managerDeps);
     
     this.isInitialized = false;
@@ -85,6 +87,7 @@ export class PreferencesManager {
       
       // 初始化需要 DOM 的管理器
       await this.path.init();
+      await this.encryption.init();
       await this.ai.init();
       
       // 绑定全局事件

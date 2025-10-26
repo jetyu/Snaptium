@@ -12,7 +12,7 @@
   "preferencesTitle": "설정",
   "paneGeneral": "일반",
   "paneAppearance": "외관",
-  "paneAI": "AI 구성",
+  "paneAIConfiguration": "AI 구성",
   "labelLanguage": "언어",
   "labelThemeMode": "테마 모드",
   "labelEditorFontSize": "편집기 글꼴 크기 (px)",

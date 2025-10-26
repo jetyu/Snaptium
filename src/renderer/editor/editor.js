@@ -44,7 +44,7 @@ export function initializeEditor() {
 
       return true;
     } catch (error) {
-      console.error('初始化编辑器失败:', error);
+      console.error('Failed to initialize editor:', error);
       return false;
     }
   }
@@ -110,12 +110,12 @@ function registerImagePasteHandler(editor) {
 
     const { electronAPI } = window;
     if (!electronAPI || !electronAPI.images || typeof electronAPI.images.saveImageFromPaste !== 'function') {
-      console.warn('缺少保存图片的electronAPI接口');
+      console.warn('Missing electronAPI interface for saving images');
       return;
     }
 
     if (!state.workspaceRoot) {
-      console.warn('workspaceRoot 未初始化，无法保存粘贴的图片');
+      console.warn('workspaceRoot not initialized, cannot save pasted images');
       return;
     }
 
@@ -147,7 +147,7 @@ function registerImagePasteHandler(editor) {
         });
 
         if (!result || !result.success || !result.markdownPath) {
-          const errorMessage = result?.error || '图片保存失败';
+          const errorMessage = result?.error || 'Failed to save image';
           console.error(errorMessage);
           if (electronAPI.dialog && typeof electronAPI.dialog.showMessageBox === 'function') {
             electronAPI.dialog.showMessageBox({
@@ -161,7 +161,7 @@ function registerImagePasteHandler(editor) {
 
         insertImageMarkdown(editor, result.markdownPath);
       } catch (error) {
-        console.error('处理图片失败:', error);
+        console.error('Failed to process image:', error);
         if (electronAPI.dialog && typeof electronAPI.dialog.showMessageBox === 'function') {
           electronAPI.dialog.showMessageBox({
             type: 'error',

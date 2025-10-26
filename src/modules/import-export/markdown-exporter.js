@@ -136,7 +136,7 @@ export function createMarkdownExporter(dependencies) {
       const destImagesDir = path.join(exportDir, 'images');
       copyDirectory(srcImagesDir, destImagesDir);
 
-      console.log(`[MarkdownExporter] 成功导出 ${noteCount} 条笔记到 ${exportDir}`);
+      console.log(`[MarkdownExporter] Successfully exported ${noteCount} notes to ${exportDir}`);
 
       return {
         success: true,
@@ -144,7 +144,7 @@ export function createMarkdownExporter(dependencies) {
         noteCount: noteCount
       };
     } catch (error) {
-      console.error('[MarkdownExporter] 导出失败:', error);
+      console.error('[MarkdownExporter] Export failed:', error);
       return { 
         success: false, 
         error: error.message 

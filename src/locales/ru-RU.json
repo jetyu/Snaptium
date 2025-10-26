@@ -12,7 +12,7 @@
   "preferencesTitle": "Настройки",
   "paneGeneral": "Общие",
   "paneAppearance": "Внешний вид",
-  "paneAI": "Настройки AI",
+  "paneAIConfiguration": "Настройки AI",
   "labelLanguage": "Язык",
   "labelThemeMode": "Режим темы",
   "labelEditorFontSize": "Размер шрифта редактора (px)",

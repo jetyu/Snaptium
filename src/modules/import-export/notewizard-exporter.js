@@ -1,5 +1,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
+import * as os from "node:os";
+import { verifyRecoveryKeyHash, decryptContent } from "../encryption/encryption-ipc.js";
 
 /**
  * 笔记导出模块
@@ -16,7 +18,7 @@ import * as path from "node:path";
  * @returns {Object} 导出管理器实例
  */
 export function createExporter(dependencies) {
-  const { app, dialog, getPreference, t, AdmZip } = dependencies;
+  const { app, dialog, getPreference, t, AdmZip, ipcMain } = dependencies;
 
   /**
    * 获取数据库目录路径
@@ -111,11 +113,123 @@ export function createExporter(dependencies) {
   }
 
   /**
+   * 检测目录中是否有加密文件
+   * @param {string} dirPath - 目录路径
+   * @returns {boolean} 是否有加密文件
+   */
+  function hasEncryptedFiles(dirPath) {
+    if (!fs.existsSync(dirPath)) {
+      return false;
+    }
+    
+    const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.md'));
+    
+    for (const file of files) {
+      const filePath = path.join(dirPath, file);
+      try {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        if (content.startsWith('ENCRYPTED:')) {
+          return true;
+        }
+      } catch (error) {
+        // 忽略单个文件读取错误
+        continue;
+      }
+    }
+    
+    return false;
+  }
+
+  /**
+   * 显示输入恢复密钥对话框
+   * @param {BrowserWindow} win - 主窗口实例
+   * @returns {Promise<string|null>} 恢复密钥或 null（用户取消）
+   */
+  async function promptRecoveryKey(win) {
+    // 直接显示输入对话框
+    return new Promise((resolve) => {
+      const handleResponse = (event, recoveryKey) => {
+        ipcMain.removeListener('export:recovery-key-response', handleResponse);
+        resolve(recoveryKey);
+      };
+      
+      ipcMain.once('export:recovery-key-response', handleResponse);
+      win.webContents.send('export:request-recovery-key', {
+        title: t('export.notewizard.encrypted.inputTitle'),
+        message: t('export.notewizard.encrypted.inputMessage')
+      });
+    });
+  }
+
+  /**
+   * 验证恢复密钥（使用加密模块的公共函数）
+   * @param {string} recoveryKey - 恢复密钥
+   * @returns {Promise<boolean>} 是否有效
+   */
+  async function verifyRecoveryKey(recoveryKey) {
+    try {
+      const config = await getPreference('encryption');
+      
+      if (!config || !config.enabled) {
+        return false;
+      }
+      
+      // 使用公共函数验证
+      return verifyRecoveryKeyHash(recoveryKey, config.recoveryKeyHash);
+    } catch (error) {
+      console.error('Failed to verify recovery key:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 解密目录中的所有加密文件到临时目录（使用加密模块的公共函数）
+   * @param {string} sourceDir - 源目录
+   * @param {string} tempDir - 临时目录
+   * @param {string} recoveryKey - 恢复密钥
+   * @returns {Object} 解密结果
+   */
+  function decryptFilesToTemp(sourceDir, tempDir, recoveryKey) {
+    const files = fs.readdirSync(sourceDir).filter(f => f.endsWith('.md'));
+    let decrypted = 0;
+    let copied = 0;
+    let failed = 0;
+    
+    for (const file of files) {
+      const sourceFile = path.join(sourceDir, file);
+      const targetFile = path.join(tempDir, file);
+      
+      try {
+        const content = fs.readFileSync(sourceFile, 'utf-8');
+        
+        // 检查是否为加密内容
+        if (content.startsWith('ENCRYPTED:')) {
+          // 使用公共函数解密
+          const decryptedContent = decryptContent(content, recoveryKey);
+          fs.writeFileSync(targetFile, decryptedContent, 'utf-8');
+          decrypted++;
+        } else {
+          // 非加密文件，直接复制
+          fs.copyFileSync(sourceFile, targetFile);
+          copied++;
+        }
+      } catch (error) {
+        console.error(`Failed to process file ${file}:`, error);
+        failed++;
+      }
+    }
+    
+    return { decrypted, copied, failed };
+  }
+
+  /**
    * 执行导出操作
    * @param {BrowserWindow} win - 主窗口实例
    * @returns {Promise<Object>} 导出结果
    */
   async function exportNotes(win) {
+    let tempDir = null;
+    
     try {
       // 检查数据库目录
       const databaseDir = getDatabaseDir();
@@ -131,6 +245,38 @@ export function createExporter(dependencies) {
           success: false, 
           error: t('export.notewizard.error.databaseNotExist')
         };
+      }
+
+      // 检查是否有加密文件
+      const objectsDir = path.join(databaseDir, 'objects');
+      const hasEncrypted = hasEncryptedFiles(objectsDir);
+      
+      let recoveryKey = null;
+      if (hasEncrypted) {
+        // 提示用户输入恢复密钥
+        recoveryKey = await promptRecoveryKey(win);
+        
+        if (!recoveryKey) {
+          // 用户取消
+          return { 
+            success: false, 
+            cancelled: true
+          };
+        }
+        
+        // 验证恢复密钥
+        const isValid = await verifyRecoveryKey(recoveryKey);
+        if (!isValid) {
+          await dialog.showMessageBox(win, {
+            type: 'error',
+            title: t('export.notewizard.error.title'),
+            message: t('export.notewizard.encrypted.keyIncorrect')
+          });
+          return { 
+            success: false, 
+            error: t('export.notewizard.encrypted.keyIncorrect')
+          };
+        }
       }
 
       // 显示保存对话框
@@ -165,6 +311,23 @@ export function createExporter(dependencies) {
         };
       }
 
+      // 如果有加密文件，创建临时目录并解密
+      if (hasEncrypted && recoveryKey) {
+        tempDir = path.join(os.tmpdir(), `notewizard-export-${Date.now()}`);
+        fs.mkdirSync(tempDir, { recursive: true });
+        
+        const tempObjectsDir = path.join(tempDir, 'objects');
+        fs.mkdirSync(tempObjectsDir, { recursive: true });
+        
+        // 解密文件到临时目录
+        const decryptResult = decryptFilesToTemp(objectsDir, tempObjectsDir, recoveryKey);
+        console.log(`[Exporter] Decryption result:`, decryptResult);
+        
+        if (decryptResult.failed > 0) {
+          console.warn(`[Exporter] ${decryptResult.failed} files failed to decrypt`);
+        }
+      }
+
       // 创建 ZIP 文件
       const zip = new AdmZip();
 
@@ -183,8 +346,12 @@ export function createExporter(dependencies) {
       addFileToZip(zip, nodesFilePath, 'nodes.jsonl');
       addFileToZip(zip, path.join(databaseDir, 'meta.json'), 'meta.json');
 
-      // 添加目录
-      addFolderToZip(zip, path.join(databaseDir, 'objects'), 'objects');
+      // 添加目录（如果有临时目录，使用临时目录的 objects，否则使用原目录）
+      if (tempDir) {
+        addFolderToZip(zip, path.join(tempDir, 'objects'), 'objects');
+      } else {
+        addFolderToZip(zip, path.join(databaseDir, 'objects'), 'objects');
+      }
       addFolderToZip(zip, path.join(databaseDir, 'images'), 'images');
       addFolderToZip(zip, path.join(databaseDir, 'trash'), 'trash');
 
@@ -199,11 +366,21 @@ export function createExporter(dependencies) {
         trashedNotes: noteStats.trashed
       };
     } catch (error) {
-      console.error('[Exporter] 导出失败:', error);
+      console.error('[Exporter] Export failed:', error);
       return { 
         success: false, 
         error: error.message 
       };
+    } finally {
+      // 清理临时目录
+      if (tempDir && fs.existsSync(tempDir)) {
+        try {
+          fs.rmSync(tempDir, { recursive: true, force: true });
+          console.log('[Exporter] Temporary directory cleaned up');
+        } catch (error) {
+          console.error('[Exporter] Failed to clean up temporary directory:', error);
+        }
+      }
     }
   }
 

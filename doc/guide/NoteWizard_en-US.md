@@ -19,7 +19,6 @@
 - [Keyboard Shortcuts](#keyboard-shortcuts)
 - [Preferences Settings](#preferences-settings)
 - [FAQ](#faq)
-- [Tips & Best Practices](#tips--best-practices)
 
 ---
 

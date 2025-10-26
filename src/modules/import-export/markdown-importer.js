@@ -108,7 +108,7 @@ export function createMarkdownImporter(dependencies) {
           contentIds.add(node.contentId);
         }
       } catch (error) {
-        console.warn('[MarkdownImporter] 解析节点失败:', error);
+        console.warn('[MarkdownImporter] Failed to parse node:', error);
       }
     }
 
@@ -200,7 +200,7 @@ export function createMarkdownImporter(dependencies) {
         importedCount++;
       }
 
-      console.log(`[MarkdownImporter] 成功导入 ${importedCount} 条笔记`);
+      console.log(`[MarkdownImporter] Successfully imported ${importedCount} notes`);
 
       return {
         success: true,
@@ -208,7 +208,7 @@ export function createMarkdownImporter(dependencies) {
         skippedCount: 0
       };
     } catch (error) {
-      console.error('[MarkdownImporter] 导入失败:', error);
+      console.error('[MarkdownImporter] Import failed:', error);
       return { 
         success: false, 
         error: error.message 

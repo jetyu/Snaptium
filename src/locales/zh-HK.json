@@ -12,7 +12,7 @@
   "preferencesTitle": "偏好設定",
   "paneGeneral": "一般",
   "paneAppearance": "外觀",
-  "paneAI": "AI 設定",
+  "paneAIConfiguration": "AI 設定",
   "labelLanguage": "語言",
   "labelThemeMode": "主題模式",
   "labelEditorFontSize": "編輯器字體大小 (像素)",

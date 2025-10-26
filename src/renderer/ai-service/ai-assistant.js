@@ -34,8 +34,8 @@ export class AIAssistant {
       this.typingDelay = parseInt(aiSettings.typingDelay) || 2000;
       this.minInputLength = parseInt(aiSettings.minInputLength) || 10;
     } catch (error) {
-      console.error('加载AI设置失败:', error);
-      this.isEnabled = false; // 默认禁用
+      console.error('Failed to load AI settings:', error);
+      this.isEnabled = false; // Default disabled
     }
   }
 
@@ -149,7 +149,7 @@ export class AIAssistant {
         this.showSuggestion(suggestion);
       }
     } catch (error) {
-      console.error('生成AI建议失败:', error);
+      console.error('Failed to generate AI suggestion:', error);
     } finally {
       this.isProcessing = false;
     }
@@ -230,7 +230,7 @@ export class AIAssistant {
 
       return data.choices?.[0]?.message?.content || '';
     } catch (error) {
-      console.error('AI API调用失败:', error);
+      console.error('AI API call failed:', error);
       throw error;
     }
   }

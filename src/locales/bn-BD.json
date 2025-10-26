@@ -12,7 +12,7 @@
   "preferencesTitle": "পছন্দসমূহ",
   "paneGeneral": "সাধারণ",
   "paneAppearance": "চেহারা",
-  "paneAI": "এআই কনফিগারেশন",
+  "paneAIConfiguration": "এআই কনফিগারেশন",
   "labelLanguage": "ভাষা",
   "labelThemeMode": "থিম মোড",
   "labelEditorFontSize": "সম্পাদক ফন্টের আকার (px)",

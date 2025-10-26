@@ -12,7 +12,7 @@
   "preferencesTitle": "Préférences",
   "paneGeneral": "Général",
   "paneAppearance": "Apparence",
-  "paneAI": "Configuration IA",
+  "paneAIConfiguration": "Configuration IA",
   "labelLanguage": "Langue",
   "labelThemeMode": "Mode de thème",
   "labelEditorFontSize": "Taille de police de l'éditeur (px)",

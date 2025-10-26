@@ -18,18 +18,18 @@ const options = {
 const input = path.join(__dirname, '../src/assets/logo/app-logo-512.png');
 const output = path.join(__dirname, '../src/assets/logo');
 
-console.log('生成图标文件...');
-console.log('输入文件:', input);
-console.log('输出目录:', output);
+console.log('Generating icon files...');
+console.log('Input file:', input);
+console.log('Output directory:', output);
 
 icongen(input, output, options)
   .then((results) => {
-    console.log('图标生成成功！');
+    console.log('Icon generation successful!');
     results.forEach(result => {
       console.log('  -', result);
     });
   })
   .catch((err) => {
-    console.error('图标生成失败:', err);
+    console.error('Icon generation failed:', err);
     process.exit(1);
   });

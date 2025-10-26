@@ -42,10 +42,10 @@ async function generateImage(size, format = 'png') {
       })
       .toFile(outputFile);
     
-    console.log(`✅ 已生成: ${path.basename(outputFile)}`);
+    console.log(`✅ Generated: ${path.basename(outputFile)}`);
     return outputFile;
   } catch (error) {
-    console.error(`❌ 生成 ${size}x${size} 图标失败:`, error.message);
+    console.error(`❌ Failed to generate ${size}x${size} icon:`, error.message);
     return null;
   }
 }
@@ -78,10 +78,10 @@ async function generateIco() {
     // 清理临时文件
     await fs.unlink(tempPng).catch(() => {});
     
-    console.log(`✅ 已生成: ${path.basename(outputFile)} (包含尺寸: ${config.icoSizes.join('x')}px)`);
+    console.log(`✅ Generated: ${path.basename(outputFile)} (includes sizes: ${config.icoSizes.join('x')}px)`);
     return outputFile;
   } catch (error) {
-    console.error('❌ 生成ICO文件失败:', error.message);
+    console.error('❌ Failed to generate ICO file:', error.message);
     return null;
   }
 }
@@ -97,21 +97,21 @@ async function generateAllPngs() {
 
 // 主函数
 async function main() {
-  console.log('🔄 开始生成应用程序图标...\n');
+  console.log('🔄 Starting to generate application icons...\n');
   
   try {
     // 确保输出目录存在
     await ensureDir(config.outputDir);
     
-    console.log('🖼️  生成PNG图标...');
+    console.log('🖼️  Generating PNG icons...');
     const pngResults = await generateAllPngs();
     
-    console.log('\n🎨 生成ICO图标...');
+    console.log('\n🎨 Generating ICO icon...');
     const icoResult = await generateIco();
     
-    console.log('\n✨ 图标生成完成！');
-    console.log('📁 输出目录:', config.outputDir);
-    console.log('\n生成的文件:');
+    console.log('\n✨ Icon generation completed!');
+    console.log('📁 Output directory:', config.outputDir);
+    console.log('\nGenerated files:');
     
     // 显示生成的文件列表
     const files = await fs.readdir(config.outputDir);
@@ -127,9 +127,9 @@ async function main() {
       })
       .forEach(file => console.log(`  - ${file}`));
     
-    console.log('\n✅ 所有图标已准备就绪！');
+    console.log('\n✅ All icons are ready!');
   } catch (error) {
-    console.error('\n❌ 生成图标时出错:', error.message);
+    console.error('\n❌ Error generating icons:', error.message);
     process.exit(1);
   }
 }

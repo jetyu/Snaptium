@@ -20,7 +20,7 @@ export function calculateFileHash(filePath, algorithm = 'sha256') {
     const content = fs.readFileSync(filePath);
     return crypto.createHash(algorithm).update(content).digest('hex');
   } catch (error) {
-    console.warn(`[Utils] 计算文件哈希失败 (${filePath}):`, error);
+    console.warn(`[Utils] Failed to calculate file hash (${filePath}):`, error);
     return null;
   }
 }

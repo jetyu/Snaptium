@@ -12,7 +12,7 @@
   "preferencesTitle": "Preferences",
   "paneGeneral": "General",
   "paneAppearance": "Appearance",
-  "paneAI": "AI Settings",
+  "paneAIConfiguration": "AI Configuration",
   "labelLanguage": "Language",
   "labelThemeMode": "Theme Mode",
   "labelEditorFontSize": "Editor Font Size (px)",

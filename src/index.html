@@ -6,17 +6,16 @@
   <title>NoteWizard</title>
   <meta http-equiv="Content-Security-Policy" content="
   default-src 'self';
-  script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;
-  style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com;
+  script-src 'self' 'unsafe-inline';
+  style-src 'self' 'unsafe-inline';
   img-src 'self' data: https:;
   font-src 'self' data: https:;
   connect-src 'self' https:;
   object-src 'none';
   base-uri 'self';
   form-action 'none';
-  upgrade-insecure-requests;
 ">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.css" />
+  <link rel="stylesheet" href="../node_modules/codemirror/lib/codemirror.css" />
   <link rel="stylesheet" href="./styles/main/main.css" />
 </head>
 
@@ -172,9 +171,9 @@
   <div id="status" data-i18n="statusReady">Ready</div>
 
   <!-- 脚本 -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/codemirror.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.5/mode/markdown/markdown.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="../node_modules/codemirror/lib/codemirror.js"></script>
+  <script src="../node_modules/codemirror/mode/markdown/markdown.js"></script>
+  <script src="../node_modules/marked/marked.min.js"></script>
   <script type="module" src="./renderer_bootstrap.js"></script>
 </body>
 

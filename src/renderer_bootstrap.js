@@ -6,8 +6,31 @@ import i18n, { initI18n, applyI18n } from './renderer/i18n.js';
 import { initPreferences } from './renderer/preferences/index.js';
 import { initTrash } from './renderer/trash/trash.js';
 import { initPreview } from './renderer/preview/preview.js';
+import { showInputDialog } from './renderer/preferences/ui/DialogController.js';
 
 const { ipcRenderer } = window.electronAPI;
+
+/**
+ * 设置导出相关的 IPC 监听器
+ */
+function setupExportIPCListeners() {
+  // 监听导出时请求恢复密钥的事件
+  ipcRenderer.on('export:request-recovery-key', (event, { title, message }) => {
+    showInputDialog({
+      title,
+      message,
+      placeholder: i18n.t('labelRecoveryKey'),
+      confirmText: i18n.t('btnConfirm'),
+      cancelText: i18n.t('btnCancel'),
+      onConfirm: (value) => {
+        ipcRenderer.send('export:recovery-key-response', value);
+      },
+      onCancel: () => {
+        ipcRenderer.send('export:recovery-key-response', null);
+      }
+    });
+  });
+}
 
 function setupLeftPanelUI() {
   const leftPanel = document.getElementById('left-panel');
@@ -182,6 +205,7 @@ async function runAppInitialization() {
   
   initTrash();
   setupOutlineWhenReady();
+  setupExportIPCListeners();
   try {
     const visible = document.getElementById('preview-panel')?.style.display !== 'none';
     ipcRenderer.send('preview-state-changed', { visible });
