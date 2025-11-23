@@ -6,7 +6,7 @@ import i18n, { initI18n, applyI18n } from './renderer/i18n.js';
 import { initPreferences } from './renderer/preferences/index.js';
 import { initTrash } from './renderer/trash/trash.js';
 import { initPreview } from './renderer/preview/preview.js';
-import { showInputDialog } from './renderer/preferences/ui/DialogController.js';
+import { showInputDialog, showInputDialogWithValidation } from './renderer/preferences/ui/DialogController.js';
 
 const { ipcRenderer } = window.electronAPI;
 
@@ -16,18 +16,30 @@ const { ipcRenderer } = window.electronAPI;
 function setupExportIPCListeners() {
   // 监听导出时请求恢复密钥的事件
   ipcRenderer.on('export:request-recovery-key', (event, { title, message }) => {
-    showInputDialog({
+    const validateFn = async (recoveryKey) => {
+      const verifyResult = await ipcRenderer.invoke('encryption:verify-key', { recoveryKey });
+
+      if (!verifyResult.success) {
+        return { success: false, error: verifyResult.error || i18n.t('errorVerifyFailed') };
+      }
+
+      if (!verifyResult.valid) {
+        // 直接在输入对话框内显示恢复密钥错误
+        return { success: false, error: i18n.t('errorKeyIncorrect') };
+      }
+
+      return { success: true };
+    };
+
+    showInputDialogWithValidation({
       title,
       message,
       placeholder: i18n.t('labelRecoveryKey'),
       confirmText: i18n.t('btnConfirm'),
       cancelText: i18n.t('btnCancel'),
-      onConfirm: (value) => {
-        ipcRenderer.send('export:recovery-key-response', value);
-      },
-      onCancel: () => {
-        ipcRenderer.send('export:recovery-key-response', null);
-      }
+      validateFn,
+    }).then((value) => {
+      ipcRenderer.send('export:recovery-key-response', value);
     });
   });
 }

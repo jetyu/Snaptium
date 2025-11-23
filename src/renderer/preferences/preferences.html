@@ -110,7 +110,7 @@
 
           <div class="pref-subsection">
             <button id="btn-copy-key" class="secondary-btn" data-i18n="btnCopyKey"></button>
-            <button id="btn-download-key" class="secondary-btn" data-i18n="btnDownloadKey"></button>
+            <button id="btn-download-key" class="secondary-btn" data-i18n="btnSaveRecoveryKey"></button>
           </div>
 
           <div class="pref-subsection">
@@ -120,9 +120,9 @@
           </div>
 
           <div class="pref-subsection">
-            <label class="checkbox-label">
+            <label class="startup-switch">
               <input type="checkbox" id="confirm-saved-key">
-              <span data-i18n="confirmSavedKey"></span>
+              <span id="confirm-saved-key-text" data-i18n="confirmSavedKeyText"></span>
             </label>
           </div>
 
@@ -134,7 +134,7 @@
 
         <!-- 已启用加密时显示 -->
         <div id="encryption-enabled-section" class="pref-section" style="display: none;">
-          <h3 data-i18n="titleEncryptionEnabled"></h3>
+          <h3 data-i18n="titleEncryptionManagement"></h3>
           
           <div class="pref-subsection">
             <button id="btn-disable-encryption" class="danger-btn" data-i18n="btnDisableEncryption"></button>

@@ -3,6 +3,7 @@
  * 负责处理加密相关的所有UI逻辑和用户交互
  */
 import { SELECTORS } from '../constants.js';
+import { showInputDialogWithValidation } from '../ui/DialogController.js';
 
 export class EncryptionSettingsManager {
   constructor(deps) {
@@ -15,6 +16,7 @@ export class EncryptionSettingsManager {
     this.isEncryptionEnabled = false;
     this.isInitialized = false;
     this.currentRecoveryKey = null;
+    this.handleLanguageChange = this.handleLanguageChange.bind(this);
   }
 
   /**
@@ -46,7 +48,7 @@ export class EncryptionSettingsManager {
       
       // 设置加密 - 恢复密钥
       recoveryKeyDisplay: document.querySelector('#recovery-key-display'),
-      confirmSavedKeyCheckbox: document.querySelector('#confirm-saved-key'),
+      confirmSavedKeyTextCheckbox: document.querySelector('#confirm-saved-key'),
       copyKeyBtn: document.querySelector('#btn-copy-key'),
       downloadKeyBtn: document.querySelector('#btn-download-key'),
       confirmSetupBtn: document.querySelector('#btn-confirm-setup'),
@@ -72,7 +74,7 @@ export class EncryptionSettingsManager {
     });
 
     // 恢复密钥确认
-    this.elements.confirmSavedKeyCheckbox?.addEventListener('change', (e) => {
+    this.elements.confirmSavedKeyTextCheckbox?.addEventListener('change', (e) => {
       if (this.elements.confirmSetupBtn) {
         this.elements.confirmSetupBtn.disabled = !e.target.checked;
       }
@@ -108,6 +110,9 @@ export class EncryptionSettingsManager {
     batchEncryptBtn?.addEventListener('click', () => {
       this.handleBatchEncrypt();
     });
+
+    // 监听语言变化事件
+    window.addEventListener('languageChanged', this.handleLanguageChange);
   }
 
   /**
@@ -163,8 +168,8 @@ export class EncryptionSettingsManager {
       }
 
       // 重置确认复选框
-      if (this.elements.confirmSavedKeyCheckbox) {
-        this.elements.confirmSavedKeyCheckbox.checked = false;
+      if (this.elements.confirmSavedKeyTextCheckbox) {
+        this.elements.confirmSavedKeyTextCheckbox.checked = false;
       }
       if (this.elements.confirmSetupBtn) {
         this.elements.confirmSetupBtn.disabled = true;
@@ -187,8 +192,8 @@ export class EncryptionSettingsManager {
     if (this.elements.recoveryKeyDisplay) {
       this.elements.recoveryKeyDisplay.value = '';
     }
-    if (this.elements.confirmSavedKeyCheckbox) {
-      this.elements.confirmSavedKeyCheckbox.checked = false;
+    if (this.elements.confirmSavedKeyTextCheckbox) {
+      this.elements.confirmSavedKeyTextCheckbox.checked = false;
     }
     this.hideElement(this.elements.setupSection);
     this.showElement(this.elements.disabledSection);
@@ -392,6 +397,13 @@ export class EncryptionSettingsManager {
   }
 
   /**
+   * 处理语言变化事件
+   */
+  handleLanguageChange() {
+    this.updateUI();
+  }
+
+  /**
    * 更新状态文本
    */
   updateStatusText(text, status) {
@@ -415,158 +427,8 @@ export class EncryptionSettingsManager {
     if (element) element.style.display = 'none';
   }
 
-  /**
-   * 显示输入对话框
-   */
-  async showInputDialogWithValidation(title, message, validateFn) {
-    return new Promise((resolve) => {
-      // 创建遮罩层（使用与 trash-modal 一致的结构）
-      const overlay = document.createElement('div');
-      overlay.className = 'input-dialog-modal';
-      overlay.setAttribute('role', 'dialog');
-      overlay.setAttribute('aria-modal', 'true');
-      
-      // 创建对话框内容
-      const content = document.createElement('div');
-      content.className = 'input-dialog-modal__content';
-      
-      // 头部
-      const header = document.createElement('div');
-      header.className = 'input-dialog-modal__header';
-      
-      const titleEl = document.createElement('h2');
-      titleEl.className = 'input-dialog-modal__title';
-      titleEl.textContent = title;
-      
-      header.appendChild(titleEl);
-      
-      // 主体
-      const body = document.createElement('div');
-      body.className = 'input-dialog-modal__body';
-      
-      // 消息
-      const messageEl = document.createElement('p');
-      messageEl.className = 'input-dialog-modal__message';
-      messageEl.textContent = message;
-      
-      // 输入框
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.className = 'input-dialog-modal__input';
-      
-      // 错误提示（初始隐藏）
-      const errorEl = document.createElement('div');
-      errorEl.className = 'input-dialog-modal__error';
-      errorEl.style.display = 'none';
-      
-      body.appendChild(messageEl);
-      body.appendChild(input);
-      body.appendChild(errorEl);
-      
-      // 底部按钮
-      const footer = document.createElement('div');
-      footer.className = 'input-dialog-modal__footer';
-      
-      const cancelBtn = document.createElement('button');
-      cancelBtn.className = 'input-dialog-modal__btn input-dialog-modal__btn--secondary';
-      cancelBtn.textContent = this.i18n.t('btnCancel');
-      
-      const confirmBtn = document.createElement('button');
-      confirmBtn.className = 'input-dialog-modal__btn input-dialog-modal__btn--primary';
-      confirmBtn.textContent = this.i18n.t('btnConfirm');
-      
-      footer.appendChild(cancelBtn);
-      footer.appendChild(confirmBtn);
-      
-      // 组装对话框
-      content.appendChild(header);
-      content.appendChild(body);
-      content.appendChild(footer);
-      overlay.appendChild(content);
-      document.body.appendChild(overlay);
-      
-      // 聚焦输入框
-      setTimeout(() => input.focus(), 100);
-      
-      // 显示错误提示
-      const showError = (errorMsg) => {
-        errorEl.textContent = errorMsg;
-        errorEl.style.display = 'block';
-        input.classList.add('input-error');
-      };
-      
-      // 清除错误提示
-      const clearError = () => {
-        errorEl.style.display = 'none';
-        input.classList.remove('input-error');
-      };
-      
-      // 输入时清除错误
-      input.oninput = () => {
-        if (errorEl.style.display !== 'none') {
-          clearError();
-        }
-      };
-      
-      // 事件处理
-      const cleanup = (value) => {
-        document.body.removeChild(overlay);
-        resolve(value);
-      };
-      
-      // 确认按钮处理（带验证）
-      const handleConfirm = async () => {
-        const value = input.value.trim();
-        if (!value) {
-          return;
-        }
-        
-        // 如果提供了验证函数，执行验证
-        if (validateFn) {
-          confirmBtn.disabled = true;
-          confirmBtn.textContent = this.i18n.t('processing');
-          
-          try {
-            const result = await validateFn(value);
-            if (result.success) {
-              cleanup(value);
-            } else {
-              showError(result.error || this.i18n.t('errorVerifyFailed'));
-              confirmBtn.disabled = false;
-              confirmBtn.textContent = this.i18n.t('btnConfirm');
-              input.focus();
-            }
-          } catch (error) {
-            showError(error.message);
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = this.i18n.t('btnConfirm');
-            input.focus();
-          }
-        } else {
-          cleanup(value);
-        }
-      };
-      
-      cancelBtn.onclick = () => cleanup(null);
-      confirmBtn.onclick = handleConfirm;
-      
-      // 支持键盘操作
-      input.onkeydown = (e) => {
-        if (e.key === 'Enter') {
-          handleConfirm();
-        } else if (e.key === 'Escape') {
-          cleanup(null);
-        }
-      };
-      
-      // 点击遮罩层关闭
-      overlay.onclick = (e) => {
-        if (e.target === overlay) {
-          cleanup(null);
-        }
-      };
-    });
-  }
+  // 原有的 showInputDialogWithValidation 已被提取为通用组件，
+  // 现在通过 DialogController 提供的工具函数来实现相同能力。
 
   /**
    * 显示消息
@@ -587,6 +449,9 @@ export class EncryptionSettingsManager {
    * 销毁管理器
    */
   destroy() {
+    // 移除语言变化事件监听器
+    window.removeEventListener('languageChanged', this.handleLanguageChange);
+    
     // 清理事件监听器
     this.isInitialized = false;
   }

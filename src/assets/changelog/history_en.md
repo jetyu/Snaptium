@@ -1,3 +1,17 @@
+### [0.4.0] - 2025-11-24
+#### Added
+- Added local note encryption using the AES-256-GCM algorithm for on-device data protection.
+
+#### Fixed
+- Fixed an issue where the Windows version could leave a background process running after uninstallation in certain scenarios.
+- Fixed translation issues in several non-English languages.
+
+#### Optimized
+- Improved view rendering performance.
+- Improved default language initialization.
+- Improved application startup speed.
+- Improved the interaction experience for exporting  .nwp format.
+
 ### [0.3.2] - 2025-10-26
 #### Optimized
 - Optimized the performance of the editor.
