@@ -23,7 +23,7 @@
 - **Minimalist Interface**: Simple, pure, and ad-free
 - **Cross-Platform**: Supports Windows, macOS, and Linux
 - **Easy Migration**: Supports complete NoteWizard proprietary format (.nwp) for full import/export, as well as Markdown (.md) format import/export
-- **Local Encrypted Storage**: All note data can be encrypted and stored under the user's local control.
+- **Local Encrypted Storage**: All note data can be encrypte(AES-256-GCM algorithm) and stored under the user's local control.
 - **Markdown Support**: Real-time preview of Markdown rendering
 - **AI-Powered Writing Assistant**: AI-powered writing assistance to make your writing easier (Off by default)
 - **Internationalization**: Supports 19 languages and regional settings worldwide
