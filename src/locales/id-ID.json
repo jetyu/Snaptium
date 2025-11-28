@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "Status Enkripsi:",
   "inputRecoveryKeyTitle": "Masukkan Kunci Pemulihan",
   "inputRecoveryKeyMessage": "Harap masukkan kunci pemulihan untuk menonaktifkan enkripsi catatan.\nPeringatan Keamanan: Ini akan mendekripsi semua catatan dan menghapus konfigurasi enkripsi.",
+  "inputRecoveryKeyPlaceholder": "Silakan masukkan kunci pemulihan",
   "btnCancel": "Batal",
   "btnConfirm": "Konfirmasi",
   "btnSaveRecoveryKey": "Ekspor Kunci",
@@ -319,6 +320,9 @@
   "batchEncryptSuccess": "Enkripsi batch selesai! Sukses: {encrypted} berkas",
   "batchEncryptWithSkipped": "Enkripsi batch selesai! Sukses: {encrypted} berkas, Dilewati: {skipped} berkas",
   "batchEncryptWithFailed": "Enkripsi batch selesai! Sukses: {encrypted} berkas, Gagal: {failed} berkas",
-  "batchDecryptSuccess": "Dekripsi batch selesai! Sukses: {decrypted} berkas",
-  "encryptionDisabled": "Enkripsi dinonaktifkan! {decrypted} berkas didekripsi."
+  "batchDecryptSuccess": "Dekripsi batch selesai! Sukses: {decrypted} file",
+  "encryptionDisabled": "Enkripsi dinonaktifkan! {decrypted} file didekripsi.",
+  "search.resultsCount": "Ditemukan {count} catatan",
+  "search.noResults": "Tidak ada catatan yang cocok ditemukan",
+  "search.clearSearch": "Hapus pencarian"
 }

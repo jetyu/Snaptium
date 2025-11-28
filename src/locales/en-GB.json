@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "Encryption Status:",
   "inputRecoveryKeyTitle": "Input Recovery Key",
   "inputRecoveryKeyMessage": "Please input recovery key to disable note encryption.\nSecurity Warning: This will decrypt all notes and clear encryption configuration.",
+  "inputRecoveryKeyPlaceholder": "Please input recovery key",
   "btnCancel": "Cancel",
   "btnConfirm": "Confirm",
   "btnSaveRecoveryKey": "Export Key",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "Batch encryption complete! Success: {encrypted}, Skipped: {skipped}",
   "batchEncryptWithFailed": "Batch encryption complete! Success: {encrypted}, Failed: {failed}",
   "batchDecryptSuccess": "Batch decryption complete! Success: {decrypted}",
-  "encryptionDisabled": "Encryption disabled! Decrypted {decrypted} files."
+  "encryptionDisabled": "Encryption disabled! Decrypted {decrypted} files.",
+  "search.resultsCount": "Found {count} notes",
+  "search.noResults": "No matching notes found",
+  "search.clearSearch": "Clear search"
 }

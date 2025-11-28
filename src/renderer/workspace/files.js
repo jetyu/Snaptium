@@ -3,6 +3,7 @@ import { renderPreview } from '../preview/preview.js';
 import * as vfs from './vfs.js';
 import * as tree from './tree.js';
 import * as outline from './outline.js';
+import * as search from './search.js';
 import { t } from '../i18n.js';
 
 const electronAPI = window.electronAPI;
@@ -458,6 +459,9 @@ async function initializeFileWorkspace() {
     tree.renderTree();
     selectFirstAvailableNote();
   } catch (e) { }
+
+  // 初始化搜索功能
+  search.initSearch(fileSearch, treeContainer);
 
   newFileBtn.addEventListener('click', (e) => {
     // 弹出新建菜单：笔记 / 笔记本

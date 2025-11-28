@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "এনক্রিপশন স্থিতি:",
   "inputRecoveryKeyTitle": "পুনরুদ্ধার কী লিখুন",
   "inputRecoveryKeyMessage": "নোট এনক্রিপশন অক্ষম করতে অনুগ্রহ করে পুনরুদ্ধার কী লিখুন।\nনিরাপত্তা সতর্কতা: এটি সমস্ত নোট ডিক্রিপ্ট করবে এবং এনক্রিপশন কনফিগারেশন মুছে ফেলবে।",
+  "inputRecoveryKeyPlaceholder": "অনুগ্রহ করে পুনরুদ্ধার কী প্রবেশ করুন",
   "btnCancel": "বাতিল",
   "btnConfirm": "নিশ্চিত করুন",
   "btnSaveRecoveryKey": "কী রপ্তানি করুন",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "ব্যাচ এনক্রিপশন সম্পূর্ণ! সফল: {encrypted} টি ফাইল, এড়িয়ে যাওয়া হয়েছে: {skipped} টি ফাইল",
   "batchEncryptWithFailed": "ব্যাচ এনক্রিপশন সম্পূর্ণ! সফল: {encrypted} টি ফাইল, ব্যর্থ: {failed} টি ফাইল",
   "batchDecryptSuccess": "ব্যাচ ডিক্রিপশন সম্পূর্ণ! সফল: {decrypted} টি ফাইল",
-  "encryptionDisabled": "এনক্রিপশন অক্ষম করা হয়েছে! {decrypted} টি ফাইল ডিক্রিপ্ট করা হয়েছে।"
+  "encryptionDisabled": "এনক্রিপশন অক্ষম করা হয়েছে! {decrypted} টি ফাইল ডিক্রিপ্ট করা হয়েছে।",
+  "search.resultsCount": "{count} টি নোট পাওয়া গেছে",
+  "search.noResults": "কোনো মিল নোট পাওয়া যায়নি",
+  "search.clearSearch": "অনুসন্ধান মুছে ফেলুন"
 }

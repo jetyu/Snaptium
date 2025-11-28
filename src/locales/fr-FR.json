@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "État du chiffrement :",
   "inputRecoveryKeyTitle": "Entrer la clé de récupération",
   "inputRecoveryKeyMessage": "Veuillez entrer la clé de récupération pour désactiver le chiffrement des notes.\nAvertissement de sécurité : cela déchiffrera toutes les notes et effacera la configuration de chiffrement.",
+  "inputRecoveryKeyPlaceholder": "Veuillez saisir la clé de récupération",
   "btnCancel": "Annuler",
   "btnConfirm": "Confirmer",
   "btnSaveRecoveryKey": "Exporter la clé",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "Chiffrement par lot terminé ! Succès : {encrypted} fichiers, Ignorés : {skipped} fichiers",
   "batchEncryptWithFailed": "Chiffrement par lot terminé ! Succès : {encrypted} fichiers, Échec : {failed} fichiers",
   "batchDecryptSuccess": "Déchiffrement par lot terminé ! Succès : {decrypted} fichiers",
-  "encryptionDisabled": "Chiffrement désactivé ! {decrypted} fichiers déchiffrés."
+  "encryptionDisabled": "Chiffrement désactivé ! {decrypted} fichiers déchiffrés.",
+  "search.resultsCount": "{count} notes trouvées",
+  "search.noResults": "Aucune note correspondante trouvée",
+  "search.clearSearch": "Effacer la recherche"
 }

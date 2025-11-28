@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "Статус шифрования:",
   "inputRecoveryKeyTitle": "Введите ключ восстановления",
   "inputRecoveryKeyMessage": "Пожалуйста, введите ключ восстановления для отключения шифрования заметок.\nПредупреждение безопасности: Это расшифрует все заметки и удалит конфигурацию шифрования.",
+  "inputRecoveryKeyPlaceholder": "Пожалуйста, введите ключ восстановления",
   "btnCancel": "Отмена",
   "btnConfirm": "Подтвердить",
   "btnSaveRecoveryKey": "Экспорт ключа",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "Пакетное шифрование завершено! Успешно: {encrypted} файлов, Пропущено: {skipped} файлов",
   "batchEncryptWithFailed": "Пакетное шифрование завершено! Успешно: {encrypted} файлов, Ошибка: {failed} файлов",
   "batchDecryptSuccess": "Пакетная расшифровка завершена! Успешно: {decrypted} файлов",
-  "encryptionDisabled": "Шифрование отключено! Расшифровано {decrypted} файлов."
+  "encryptionDisabled": "Шифрование отключено! Расшифровано {decrypted} файлов.",
+  "search.resultsCount": "Найдено {count} заметок",
+  "search.noResults": "Соответствующие заметки не найдены",
+  "search.clearSearch": "Очистить поиск"
 }

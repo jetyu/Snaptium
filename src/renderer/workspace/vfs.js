@@ -369,6 +369,57 @@ function emptyTrash() {
   return trashedRoots.length;
 }
 
+/**
+ * 搜索节点(基于内存中的 state.nodes)
+ * @param {string} query - 搜索关键词
+ * @param {Object} options - 搜索选项
+ * @returns {Array} 匹配的节点数组
+ */
+function searchNodes(query, options = {}) {
+  const {
+    caseSensitive = false,
+    includeFiles = true,
+    includeFolders = false,
+    includeTrashed = false
+  } = options;
+  
+  if (!query || query.trim() === '') return [];
+  
+  const results = [];
+  const searchQuery = caseSensitive ? query : query.toLowerCase();
+  
+  // 直接遍历内存中的 Map,无IO操作
+  for (const node of state.nodes.values()) {
+    if (node.type === 'file' && !includeFiles) continue;
+    if (node.type === 'folder' && !includeFolders) continue;
+    if (node.trashed && !includeTrashed) continue;
+    
+    const nodeName = caseSensitive ? node.name : node.name.toLowerCase();
+    if (nodeName.includes(searchQuery)) {
+      results.push(node);
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * 获取节点的完整路径
+ * @param {string} nodeId - 节点ID
+ * @returns {Array} 从根到该节点的路径数组
+ */
+function getNodePath(nodeId) {
+  const path = [];
+  let current = state.nodes.get(nodeId);
+  
+  while (current) {
+    path.unshift(current);
+    current = current.parentId ? state.nodes.get(current.parentId) : null;
+  }
+  
+  return path;
+}
+
 export {
   getDefaultWorkspaceRoot,
   initWorkspace,
@@ -383,4 +434,6 @@ export {
   readContent,
   writeContent,
   emptyTrash,
+  searchNodes,
+  getNodePath,
 };

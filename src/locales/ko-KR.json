@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "암호화 상태:",
   "inputRecoveryKeyTitle": "복구 키 입력",
   "inputRecoveryKeyMessage": "노트 암호화를 비활성화하려면 복구 키를 입력하세요.\n보안 경고: 모든 노트가 복호화되고 암호화 구성이 지워집니다.",
+  "inputRecoveryKeyPlaceholder": "복구 키를 입력하세요",
   "btnCancel": "취소",
   "btnConfirm": "확인",
   "btnSaveRecoveryKey": "키 내보내기",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "일괄 암호화 완료! 성공: {encrypted}개 파일, 건너뜀: {skipped}개",
   "batchEncryptWithFailed": "일괄 암호화 완료! 성공: {encrypted}개 파일, 실패: {failed}개",
   "batchDecryptSuccess": "일괄 복호화 완료! 성공: {decrypted}개 파일",
-  "encryptionDisabled": "암호화가 비활성화되었습니다! {decrypted}개 파일이 복호화되었습니다."
+  "encryptionDisabled": "암호화가 비활성화되었습니다! {decrypted}개 파일이 복호화되었습니다.",
+  "search.resultsCount": "{count}개의 노트를 찾았습니다",
+  "search.noResults": "일치하는 노트를 찾을 수 없습니다",
+  "search.clearSearch": "검색 지우기"
 }

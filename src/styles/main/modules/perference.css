@@ -61,6 +61,11 @@
 
 .browse-btn,
 #btn-enable-encryption,
+#btn-disable-encryption,
+#btn-copy-key,
+#btn-download-key,
+#btn-confirm-setup,
+#btn-cancel-setup,
 .exportSetting-btn,
 .importSetting-btn,
 .testSetting-btn,
@@ -76,6 +81,11 @@
 }
 
 #btn-enable-encryption:hover,
+#btn-disable-encryption:hover,
+#btn-copy-key:hover,
+#btn-download-key:hover,
+#btn-confirm-setup:hover,
+#btn-cancel-setup:hover,
 .browse-btn:hover,
 .exportSetting-btn:hover,
 .importSetting-btn:hover,

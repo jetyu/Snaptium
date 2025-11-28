@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "加密狀態：",
   "inputRecoveryKeyTitle": "輸入恢復金鑰",
   "inputRecoveryKeyMessage": "請輸入恢復金鑰以禁用加密筆記功能。\n安全提示：這將解密所有加密筆記並清除加密配置",
+  "inputRecoveryKeyPlaceholder": "請輸入恢復金鑰",
   "btnCancel": "取消",
   "btnConfirm": "確認",
   "btnSaveRecoveryKey": "匯出金鑰",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "批次加密完成！成功: {encrypted} 個檔案，跳過: {skipped} 個",
   "batchEncryptWithFailed": "批次加密完成！成功: {encrypted} 個檔案，失敗: {failed} 個",
   "batchDecryptSuccess": "批次解密完成！成功: {decrypted} 個檔案",
-  "encryptionDisabled": "加密已禁用！已解密 {decrypted} 個檔案。"
+  "encryptionDisabled": "加密已禁用！已解密 {decrypted} 個檔案。",
+  "search.resultsCount": "找到 {count} 個筆記",
+  "search.noResults": "未找到匹配的筆記",
+  "search.clearSearch": "清空搜尋"
 }

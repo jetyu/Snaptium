@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "Verschlüsselungsstatus:",
   "inputRecoveryKeyTitle": "Wiederherstellungsschlüssel eingeben",
   "inputRecoveryKeyMessage": "Bitte geben Sie den Wiederherstellungsschlüssel ein, um die Notizverschlüsselung zu deaktivieren.\nSicherheitswarnung: Dies entschlüsselt alle Notizen und löscht die Verschlüsselungskonfiguration.",
+  "inputRecoveryKeyPlaceholder": "Bitte geben Sie den Wiederherstellungsschlüssel ein",
   "btnCancel": "Abbrechen",
   "btnConfirm": "Bestätigen",
   "btnSaveRecoveryKey": "Schlüssel exportieren",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "Batch-Verschlüsselung abgeschlossen! Erfolg: {encrypted} Dateien, Übersprungen: {skipped} Dateien",
   "batchEncryptWithFailed": "Batch-Verschlüsselung abgeschlossen! Erfolg: {encrypted} Dateien, Fehlgeschlagen: {failed} Dateien",
   "batchDecryptSuccess": "Batch-Entschlüsselung abgeschlossen! Erfolg: {decrypted} Dateien",
-  "encryptionDisabled": "Verschlüsselung deaktiviert! {decrypted} Dateien entschlüsselt."
+  "encryptionDisabled": "Verschlüsselung deaktiviert! {decrypted} Dateien entschlüsselt.",
+  "search.resultsCount": "{count} Notizen gefunden",
+  "search.noResults": "Keine passenden Notizen gefunden",
+  "search.clearSearch": "Suche löschen"
 }

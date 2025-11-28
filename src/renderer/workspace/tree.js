@@ -285,9 +285,66 @@ function startInlineRename(nodeId) {
   input.addEventListener('blur', onBlur);
 }
 
+/**
+ * 应用搜索过滤(使用CSS控制可见性)
+ * @param {Array} matchedNodes - 匹配的节点数组
+ */
+function applySearchFilter(matchedNodes) {
+  const matchedIds = new Set(matchedNodes.map(n => n.id));
+  const parentIds = new Set();
+  
+  // 收集所有匹配节点的父路径
+  matchedNodes.forEach(node => {
+    const path = vfs.getNodePath(node.id);
+    path.forEach(n => parentIds.add(n.id));
+  });
+  
+  // 遍历所有树节点,控制可见性
+  document.querySelectorAll('.tree-item').forEach(item => {
+    const nodeId = item.dataset.nodeId;
+    if (matchedIds.has(nodeId) || parentIds.has(nodeId)) {
+      item.style.display = ''; // 显示
+      // 自动展开包含匹配结果的文件夹
+      if (parentIds.has(nodeId) && item.classList.contains('folder')) {
+        item.classList.add('expanded');
+        // 确保子树已渲染
+        const existing = item.querySelector(':scope > ul.tree-level');
+        if (!existing) {
+          const node = vfs.getNodeById(nodeId);
+          if (node) {
+            item.appendChild(buildTreeDom(node.id));
+          }
+        }
+      }
+    } else {
+      item.style.display = 'none'; // 隐藏
+    }
+  });
+  
+  // 标记搜索模式
+  const container = document.getElementById('tree');
+  if (container) container.dataset.searchMode = 'true';
+}
+
+/**
+ * 清除搜索过滤
+ */
+function clearSearchFilter() {
+  // 恢复所有节点可见性
+  document.querySelectorAll('.tree-item').forEach(item => {
+    item.style.display = '';
+  });
+  
+  // 移除搜索模式标记
+  const container = document.getElementById('tree');
+  if (container) delete container.dataset.searchMode;
+}
+
 export {
   setHandlers,
   renderTree,
   startInlineRename,
   buildTreeDom,
+  applySearchFilter,
+  clearSearchFilter,
 };

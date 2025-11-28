@@ -242,7 +242,7 @@
   "export.notewizard.manifest.description": "NoteWizard笔记数据导出包",
   "export.notewizard.encrypted.detected": "检测到加密笔记",
   "export.notewizard.encrypted.prompt": "您的笔记中包含加密内容。\n为了导出可用的笔记文件，需要输入恢复密钥进行解密。\n\n是否继续？",
-  "export.notewizard.encrypted.inputTitle": "输入恢复密钥",
+  "export.notewizard.encrypted.inputTitle": "NoteWizard笔记密钥验证",
   "export.notewizard.encrypted.inputMessage": "请输入恢复密钥以解密笔记文件导出",
   "export.notewizard.encrypted.verifying": "正在验证恢复密钥...",
   "export.notewizard.encrypted.decrypting": "正在解密笔记...",
@@ -291,8 +291,9 @@
   "titleEncryptionManagement": "加密管理",
   "btnDisableEncryption": "禁用加密",
   "labelEncryptionStatus": "加密状态：",
-  "inputRecoveryKeyTitle": "输入恢复密钥",
+  "inputRecoveryKeyTitle": "密钥验证",
   "inputRecoveryKeyMessage": "请输入恢复密钥以禁用加密笔记功能。\n安全提示：这将解密所有加密笔记并清除加密配置",
+  "inputRecoveryKeyPlaceholder": "请输入恢复密钥",
   "btnCancel": "取消",
   "btnConfirm": "确认",
   "btnSaveRecoveryKey": "导出密钥",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "批量加密完成！成功: {encrypted} 个文件，跳过: {skipped} 个",
   "batchEncryptWithFailed": "批量加密完成！成功: {encrypted} 个文件，失败: {failed} 个",
   "batchDecryptSuccess": "批量解密完成！成功: {decrypted} 个文件",
-  "encryptionDisabled": "加密已禁用！已解密 {decrypted} 个文件。"
+  "encryptionDisabled": "加密已禁用！已解密 {decrypted} 个文件。",
+  "search.resultsCount": "找到 {count} 个笔记",
+  "search.noResults": "未找到匹配的笔记",
+  "search.clearSearch": "清空搜索"
 }

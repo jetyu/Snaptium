@@ -234,3 +234,47 @@
     color: var(--muted);
     font-style: italic;
 }
+
+/* 清空按钮 */
+.search-clear-btn {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+    font-size: 20px;
+    line-height: 1;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted);
+    z-index: 10;
+}
+
+.search-clear-btn:hover {
+    opacity: 1;
+    color: var(--text);
+}
+
+/* 搜索功能样式 */
+#file-search.searching {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(97, 98, 105, 0.2);
+}
+
+
+/* 搜索模式下的树 */
+#tree[data-search-mode="true"] .tree-item {
+    transition: opacity 0.2s;
+}
+
+#tree[data-search-mode="true"] .tree-item[style*="display: none"] {
+    opacity: 0;
+}

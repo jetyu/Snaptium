@@ -34,7 +34,7 @@ function setupExportIPCListeners() {
     showInputDialogWithValidation({
       title,
       message,
-      placeholder: i18n.t('labelRecoveryKey'),
+      placeholder: i18n.t('inputRecoveryKeyPlaceholder'),
       confirmText: i18n.t('btnConfirm'),
       cancelText: i18n.t('btnCancel'),
       validateFn,

@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "สถานะการเข้ารหัส:",
   "inputRecoveryKeyTitle": "ป้อนคีย์กู้คืน",
   "inputRecoveryKeyMessage": "โปรดป้อนคีย์กู้คืนเพื่อปิดใช้งานการเข้ารหัสโน้ต\nคำเตือนความปลอดภัย: สิ่งนี้จะถอดรหัสโน้ตทั้งหมดและล้างการกำหนดค่าการเข้ารหัส",
+  "inputRecoveryKeyPlaceholder": "กรุณาป้อนคีย์กู้คืน",
   "btnCancel": "ยกเลิก",
   "btnConfirm": "ยืนยัน",
   "btnSaveRecoveryKey": "ส่งออกคีย์",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "เข้ารหัสแบบกลุ่มเสร็จสมบูรณ์! สำเร็จ: {encrypted} ไฟล์, ข้าม: {skipped} ไฟล์",
   "batchEncryptWithFailed": "เข้ารหัสแบบกลุ่มเสร็จสมบูรณ์! สำเร็จ: {encrypted} ไฟล์, ล้มเหลว: {failed} ไฟล์",
   "batchDecryptSuccess": "ถอดรหัสแบบกลุ่มเสร็จสมบูรณ์! สำเร็จ: {decrypted} ไฟล์",
-  "encryptionDisabled": "ปิดใช้งานการเข้ารหัสแล้ว! ถอดรหัส {decrypted} ไฟล์"
+  "encryptionDisabled": "ปิดใช้งานการเข้ารหัสแล้ว! ถอดรหัส {decrypted} ไฟล์",
+  "search.resultsCount": "พบ {count} บันทึก",
+  "search.noResults": "ไม่พบบันทึกที่ตรงกัน",
+  "search.clearSearch": "ล้างการค้นหา"
 }

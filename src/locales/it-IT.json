@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "Stato crittografia:",
   "inputRecoveryKeyTitle": "Inserisci chiave di recupero",
   "inputRecoveryKeyMessage": "Inserisci la chiave di recupero per disabilitare la crittografia delle note.\nAvviso di sicurezza: Questo decritterà tutte le note e cancellerà la configurazione di crittografia.",
+  "inputRecoveryKeyPlaceholder": "Inserisci la chiave di recupero",
   "btnCancel": "Annulla",
   "btnConfirm": "Conferma",
   "btnSaveRecoveryKey": "Esporta chiave",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "Crittografia batch completata! Successo: {encrypted} file, Saltati: {skipped} file",
   "batchEncryptWithFailed": "Crittografia batch completata! Successo: {encrypted} file, Falliti: {failed} file",
   "batchDecryptSuccess": "Decrittazione batch completata! Successo: {decrypted} file",
-  "encryptionDisabled": "Crittografia disabilitata! Decrittati {decrypted} file."
+  "encryptionDisabled": "Crittografia disabilitata! {decrypted} file decrittati.",
+  "search.resultsCount": "Trovate {count} note",
+  "search.noResults": "Nessuna nota corrispondente trovata",
+  "search.clearSearch": "Cancella ricerca"
 }

@@ -1,16 +1,22 @@
+### [0.4.1] - 2025-11-28
+#### Fixed
+- Fixed an issue where the search bar could not perform searches.
+- Fixed an issue where encryption could not be disabled in certain scenarios.
+#### Optimized
+- Optimized the interaction experience of security-related features.
+- Optimized the interaction experience of exporting the .nwp format.
+
 ### [0.4.0] - 2025-11-24
 #### Added
 - Added local note encryption using the AES-256-GCM algorithm for on-device data protection.
-
 #### Fixed
 - Fixed an issue where the Windows version could leave a background process running after uninstallation in certain scenarios.
 - Fixed translation issues in several non-English languages.
-
 #### Optimized
-- Improved view rendering performance.
-- Improved default language initialization.
-- Improved application startup speed.
-- Improved the interaction experience for exporting  .nwp format.
+- Optimized view rendering performance.
+- Optimized default language initialization.
+- Optimized application startup speed.
+- Optimized the interaction experience of exporting the .nwp format.
 
 ### [0.3.2] - 2025-10-26
 #### Optimized

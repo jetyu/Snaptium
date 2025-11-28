@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "Estado de cifrado:",
   "inputRecoveryKeyTitle": "Ingresar clave de recuperación",
   "inputRecoveryKeyMessage": "Ingrese la clave de recuperación para deshabilitar el cifrado de notas.\nAdvertencia de seguridad: Esto descifrará todas las notas y borrará la configuración de cifrado.",
+  "inputRecoveryKeyPlaceholder": "Por favor, ingrese la clave de recuperación",
   "btnCancel": "Cancelar",
   "btnConfirm": "Confirmar",
   "btnSaveRecoveryKey": "Exportar clave",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "¡Cifrado por lotes completado! Éxito: {encrypted} archivos, Omitidos: {skipped} archivos",
   "batchEncryptWithFailed": "¡Cifrado por lotes completado! Éxito: {encrypted} archivos, Fallidos: {failed} archivos",
   "batchDecryptSuccess": "¡Descifrado por lotes completado! Éxito: {decrypted} archivos",
-  "encryptionDisabled": "¡Cifrado deshabilitado! {decrypted} archivos descifrados."
+  "encryptionDisabled": "¡Cifrado deshabilitado! {decrypted} archivos descifrados.",
+  "search.resultsCount": "Se encontraron {count} notas",
+  "search.noResults": "No se encontraron notas coincidentes",
+  "search.clearSearch": "Limpiar búsqueda"
 }

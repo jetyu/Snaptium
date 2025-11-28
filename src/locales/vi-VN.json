@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "Trạng thái mã hóa:",
   "inputRecoveryKeyTitle": "Nhập khóa khôi phục",
   "inputRecoveryKeyMessage": "Vui lòng nhập khóa khôi phục để tắt mã hóa ghi chú.\nCảnh báo bảo mật: Điều này sẽ giải mã tất cả các ghi chú và xóa cấu hình mã hóa.",
+  "inputRecoveryKeyPlaceholder": "Vui lòng nhập khóa khôi phục",
   "btnCancel": "Hủy",
   "btnConfirm": "Xác nhận",
   "btnSaveRecoveryKey": "Xuất khóa",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "Mã hóa hàng loạt hoàn tất! Thành công: {encrypted} tệp, Bỏ qua: {skipped} tệp",
   "batchEncryptWithFailed": "Mã hóa hàng loạt hoàn tất! Thành công: {encrypted} tệp, Thất bại: {failed} tệp",
   "batchDecryptSuccess": "Giải mã hàng loạt hoàn tất! Thành công: {decrypted} tệp",
-  "encryptionDisabled": "Đã tắt mã hóa! Đã giải mã {decrypted} tệp."
+  "encryptionDisabled": "Đã tắt mã hóa! Đã giải mã {decrypted} tệp.",
+  "search.resultsCount": "Tìm thấy {count} ghi chú",
+  "search.noResults": "Không tìm thấy ghi chú phù hợp",
+  "search.clearSearch": "Xóa tìm kiếm"
 }

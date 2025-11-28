@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "Estado da Criptografia:",
   "inputRecoveryKeyTitle": "Introduzir Chave de Recuperação",
   "inputRecoveryKeyMessage": "Por favor, introduza a chave de recuperação para desativar a criptografia de notas.\nAviso de Segurança: Isto desencriptará todas as notas e limpará a configuração de criptografia.",
+  "inputRecoveryKeyPlaceholder": "Por favor, insira a chave de recuperação",
   "btnCancel": "Cancelar",
   "btnConfirm": "Confirmar",
   "btnSaveRecoveryKey": "Exportar Chave",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "Criptografia em lote concluída! Sucesso: {encrypted} ficheiros, Ignorados: {skipped} ficheiros",
   "batchEncryptWithFailed": "Criptografia em lote concluída! Sucesso: {encrypted} ficheiros, Falha: {failed} ficheiros",
   "batchDecryptSuccess": "Desencriptação em lote concluída! Sucesso: {decrypted} ficheiros",
-  "encryptionDisabled": "Criptografia desativada! {decrypted} ficheiros desencriptados."
+  "encryptionDisabled": "Criptografia desativada! {decrypted} ficheiros desencriptados.",
+  "search.resultsCount": "Encontradas {count} notas",
+  "search.noResults": "Nenhuma nota correspondente encontrada",
+  "search.clearSearch": "Limpar pesquisa"
 }

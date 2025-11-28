@@ -293,6 +293,7 @@
   "labelEncryptionStatus": "暗号化状態:",
   "inputRecoveryKeyTitle": "リカバリキーを入力",
   "inputRecoveryKeyMessage": "ノートの暗号化を無効にするにはリカバリキーを入力してください。\nセキュリティ警告: これによりすべてのノートが復号化され、暗号化設定が消去されます。",
+  "inputRecoveryKeyPlaceholder": "リカバリーキーを入力してください",
   "btnCancel": "キャンセル",
   "btnConfirm": "確認",
   "btnSaveRecoveryKey": "キーをエクスポート",
@@ -320,5 +321,8 @@
   "batchEncryptWithSkipped": "一括暗号化完了！成功: {encrypted} ファイル、スキップ: {skipped} ファイル",
   "batchEncryptWithFailed": "一括暗号化完了！成功: {encrypted} ファイル、失敗: {failed} ファイル",
   "batchDecryptSuccess": "一括復号化完了！成功: {decrypted} ファイル",
-  "encryptionDisabled": "暗号化が無効になりました！ {decrypted} ファイルを復号化しました。"
+  "encryptionDisabled": "暗号化が無効になりました！ {decrypted} ファイルを復号化しました。",
+  "search.resultsCount": "{count} 件のノートが見つかりました",
+  "search.noResults": "一致するノートが見つかりません",
+  "search.clearSearch": "検索をクリア"
 }

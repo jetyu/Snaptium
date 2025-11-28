@@ -317,11 +317,14 @@ export class EncryptionSettingsManager {
     };
     
     // 显示带验证的输入对话框
-    const recoveryKey = await this.showInputDialogWithValidation(
-      this.i18n.t('inputRecoveryKeyTitle'),
-      this.i18n.t('inputRecoveryKeyMessage'),
-      validateKey
-    );
+    const recoveryKey = await showInputDialogWithValidation({
+      title: this.i18n.t('inputRecoveryKeyTitle'),
+      message: this.i18n.t('inputRecoveryKeyMessage'),
+      placeholder: this.i18n.t('inputRecoveryKeyPlaceholder') ,
+      confirmText: this.i18n.t('btnConfirm') ,
+      cancelText: this.i18n.t('btnCancel') ,
+      validateFn: validateKey
+    });
     
     if (!recoveryKey) {
       return; // 用户取消
