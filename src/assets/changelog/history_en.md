@@ -1,10 +1,16 @@
+### [0.4.2] - 2025-11-30
+#### Added
+- Added an emergency decryption feature for local notes to restore encrypted content in special scenarios.
+#### Fixed
+- Fixed an issue where content in the Recycle Bin could not be encrypted properly.
+
 ### [0.4.1] - 2025-11-28
 #### Fixed
 - Fixed an issue where the search bar could not perform searches.
 - Fixed an issue where encryption could not be disabled in certain scenarios.
 #### Optimized
-- Optimized the interaction experience of security-related features.
-- Optimized the interaction experience of exporting the .nwp format.
+- Improved the interaction experience of security-related features.
+- Improved the interaction experience when exporting the .nwp format.
 
 ### [0.4.0] - 2025-11-24
 #### Added
@@ -129,7 +135,7 @@
 - Fixed incorrect version number display on the About page.
 - Fixed AI service provider list loading failure in some cases.
 - Fixed content security policy issue introduced in version 0.0.4.
-#### Improved
+#### Optimized
 - Optimized interaction logic and experience for custom note file save path.
 
 ### [0.0.4-dev] - 2025-08-03
@@ -147,7 +153,7 @@
 - Fixed window size memory function failure.
 - Fixed incorrect path when creating notes via context menu in some cases.
 - Fixed AI configuration panel language not updating in real time when switching app language.
-#### Improved
+#### Optimized
 - Optimized default window size to support more display devices.
 - Optimized page transition and animation effects.
 - Improved interaction experience across multiple UI elements.

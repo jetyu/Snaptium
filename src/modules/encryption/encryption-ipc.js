@@ -134,9 +134,132 @@ export function createEncryptionManager(deps) {
         } else {
           console.warn('safeStorage is not available on this system');
         }
+      } else {
+        // 尝试从 meta.json 读取临时恢复密钥进行紧急恢复
+        await tryRecoverFromMetaJson();
       }
     } catch (error) {
       console.error('Failed to initialize encryption:', error);
+    }
+  };
+  
+  /**
+   * 读取临时恢复密钥进行紧急恢复
+   */
+  const tryRecoverFromMetaJson = async () => {
+    try {
+      const databaseDir = path.join(app.getPath('documents'), 'NoteWizard', 'Database');
+      const metaPath = path.join(databaseDir, 'meta.json');
+      
+      if (!fs.existsSync(metaPath)) {
+        return;
+      }
+      
+      const metaContent = fs.readFileSync(metaPath, 'utf-8');
+      const meta = JSON.parse(metaContent);
+      
+      // 检查是否有临时恢复密钥
+      if (!meta.tempRecoveryKey) {
+        return;
+      }
+      
+      console.log('[Encryption] Found temp recovery key in meta.json, attempting emergency recovery...');
+      
+      const recoveryKey = meta.tempRecoveryKey;
+      
+      // 验证密钥格式
+      if (typeof recoveryKey !== 'string' || recoveryKey.length < 10) {
+        console.error('[Encryption] Invalid recovery key format in meta.json');
+        // 清除无效的密钥
+        delete meta.tempRecoveryKey;
+        fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+        return;
+      }
+      
+      // 尝试使用密钥解密一个文件来验证
+      const objectsDir = path.join(databaseDir, 'objects');
+      if (fs.existsSync(objectsDir)) {
+        const files = fs.readdirSync(objectsDir).filter(f => f.endsWith('.md'));
+        let verified = false;
+        
+        for (const file of files) {
+          const filePath = path.join(objectsDir, file);
+          const content = fs.readFileSync(filePath, 'utf-8');
+          
+          if (content.startsWith('ENCRYPTED:')) {
+            // 尝试解密验证
+            try {
+              const parts = content.split(':');
+              if (parts.length >= 6) {
+                const [, , saltB64, ivB64, authTagB64, ...encryptedParts] = parts;
+                const encryptedData = encryptedParts.join(':');
+                
+                const salt = Buffer.from(saltB64, 'base64');
+                const iv = Buffer.from(ivB64, 'base64');
+                const authTag = Buffer.from(authTagB64, 'base64');
+                
+                const key = deriveKeyFromRecovery(recoveryKey, salt);
+                
+                const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+                decipher.setAuthTag(authTag);
+                decipher.update(encryptedData, 'base64', 'utf8');
+                decipher.final('utf8');
+                
+                verified = true;
+                console.log('[Encryption] Recovery key verified successfully');
+                break;
+              }
+            } catch (error) {
+              console.error('[Encryption] Recovery key verification failed:', error.message);
+              // 密钥验证失败，清除无效密钥
+              delete meta.tempRecoveryKey;
+              fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+              console.log('[Encryption] Invalid recovery key removed from meta.json');
+              return;
+            }
+          }
+        }
+        
+        if (!verified && meta.encrypted) {
+          // 数据库标记为加密但没有找到加密文件，可能是空数据库
+          console.log('[Encryption] No encrypted files found to verify, proceeding with recovery');
+          verified = true;
+        }
+        
+        if (verified || !meta.encrypted) {
+          // 密钥验证成功，保存到 safeStorage
+          if (safeStorage.isEncryptionAvailable()) {
+            const encrypted = safeStorage.encryptString(recoveryKey);
+            const encryptedRecoveryKey = encrypted.toString('base64');
+            
+            // 生成新的盐值
+            const salt = crypto.randomBytes(32).toString('hex');
+            
+            // 保存加密配置
+            await preferencesManager.setPreference('encryption', {
+              enabled: true,
+              salt: salt,
+              recoveryKeyHash: crypto.createHash('sha256').update(recoveryKey).digest('hex'),
+              encryptedRecoveryKey: encryptedRecoveryKey,
+              setupTime: Date.now(),
+              recoveredAt: Date.now() // 标记为恢复的配置
+            });
+            
+            encryptionEnabled = true;
+            currentRecoveryKey = recoveryKey;
+            currentSalt = salt;
+            
+            console.log('[Encryption] Emergency recovery successful, encryption enabled');
+          }
+          
+          // 清除 meta.json 中的临时密钥
+          delete meta.tempRecoveryKey;
+          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+          console.log('[Encryption] Temporary recovery key removed from meta.json');
+        }
+      }
+    } catch (error) {
+      console.error('[Encryption] Emergency recovery failed:', error);
     }
   };
   
@@ -479,25 +602,44 @@ export function createEncryptionManager(deps) {
       
       console.log('[Encryption] Starting batch encryption...');
       
-      // 获取笔记目录
-      const notesDir = path.join(app.getPath('documents'), 'NoteWizard', 'Database', 'objects');
+      // 获取笔记目录和回收站目录
+      const databaseDir = path.join(app.getPath('documents'), 'NoteWizard', 'Database');
+      const notesDir = path.join(databaseDir, 'objects');
+      const trashDir = path.join(databaseDir, 'trash');
       
-      if (!fs.existsSync(notesDir)) {
+      // 收集所有需要加密的文件
+      const filesToEncrypt = [];
+      
+      // 收集 objects 目录中的文件
+      if (fs.existsSync(notesDir)) {
+        const objectFiles = fs.readdirSync(notesDir)
+          .filter(f => f.endsWith('.md'))
+          .map(f => ({ file: f, dir: notesDir, dirName: 'objects' }));
+        filesToEncrypt.push(...objectFiles);
+      }
+      
+      // 收集 trash 目录中的文件
+      if (fs.existsSync(trashDir)) {
+        const trashFiles = fs.readdirSync(trashDir)
+          .filter(f => f.endsWith('.md'))
+          .map(f => ({ file: f, dir: trashDir, dirName: 'trash' }));
+        filesToEncrypt.push(...trashFiles);
+      }
+      
+      if (filesToEncrypt.length === 0) {
         return { success: true, encrypted: 0, failed: 0, skipped: 0 };
       }
       
-      // 读取所有 .md 文件
-      const files = fs.readdirSync(notesDir).filter(f => f.endsWith('.md'));
-      const total = files.length;
+      const total = filesToEncrypt.length;
       let encrypted = 0;
       let failed = 0;
       let skipped = 0;
       
       const win = getWindow();
       
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const filePath = path.join(notesDir, file);
+      for (let i = 0; i < filesToEncrypt.length; i++) {
+        const { file, dir, dirName } = filesToEncrypt[i];
+        const filePath = path.join(dir, file);
         
         try {
           // 读取文件内容
@@ -532,6 +674,8 @@ export function createEncryptionManager(deps) {
           fs.writeFileSync(filePath, result, 'utf-8');
           encrypted++;
           
+          console.log(`[Encryption] Encrypted file in ${dirName}: ${file}`);
+          
           // 发送进度
           if (win) {
             win.webContents.send('encryption:progress', {
@@ -542,12 +686,26 @@ export function createEncryptionManager(deps) {
             });
           }
         } catch (error) {
-          console.error(`Failed to encrypt file ${file}:`, error);
+          console.error(`Failed to encrypt file ${file} in ${dirName}:`, error);
           failed++;
         }
       }
       
       console.log(`[Encryption] Batch encryption completed: ${encrypted} encrypted, ${skipped} skipped, ${failed} failed`);
+      
+      // 更新 meta.json 的加密状态
+      try {
+        const metaPath = path.join(databaseDir, 'meta.json');
+        if (fs.existsSync(metaPath)) {
+          const metaContent = fs.readFileSync(metaPath, 'utf-8');
+          const meta = JSON.parse(metaContent);
+          meta.encrypted = true;
+          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+          console.log('[Encryption] Updated meta.json: encrypted = true');
+        }
+      } catch (error) {
+        console.error('Failed to update meta.json:', error);
+      }
       
       return { 
         success: true, 
@@ -568,25 +726,44 @@ export function createEncryptionManager(deps) {
     try {
       console.log('[Encryption] Starting batch decryption...');
       
-      // 获取笔记目录
-      const notesDir = path.join(app.getPath('documents'), 'NoteWizard', 'Database', 'objects');
+      // 获取笔记目录和回收站目录
+      const databaseDir = path.join(app.getPath('documents'), 'NoteWizard', 'Database');
+      const notesDir = path.join(databaseDir, 'objects');
+      const trashDir = path.join(databaseDir, 'trash');
       
-      if (!fs.existsSync(notesDir)) {
-        return { success: true, decrypted: 0, failed: 0 };
+      // 收集所有需要解密的文件
+      const filesToDecrypt = [];
+      
+      // 收集 objects 目录中的文件
+      if (fs.existsSync(notesDir)) {
+        const objectFiles = fs.readdirSync(notesDir)
+          .filter(f => f.endsWith('.md'))
+          .map(f => ({ file: f, dir: notesDir, dirName: 'objects' }));
+        filesToDecrypt.push(...objectFiles);
       }
       
-      // 读取所有 .md 文件
-      const files = fs.readdirSync(notesDir).filter(f => f.endsWith('.md'));
-      const total = files.length;
+      // 收集 trash 目录中的文件
+      if (fs.existsSync(trashDir)) {
+        const trashFiles = fs.readdirSync(trashDir)
+          .filter(f => f.endsWith('.md'))
+          .map(f => ({ file: f, dir: trashDir, dirName: 'trash' }));
+        filesToDecrypt.push(...trashFiles);
+      }
+      
+      if (filesToDecrypt.length === 0) {
+        return { success: true, decrypted: 0, failed: 0, skipped: 0 };
+      }
+      
+      const total = filesToDecrypt.length;
       let decrypted = 0;
       let failed = 0;
       let skipped = 0;
       
       const win = getWindow();
       
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const filePath = path.join(notesDir, file);
+      for (let i = 0; i < filesToDecrypt.length; i++) {
+        const { file, dir, dirName } = filesToDecrypt[i];
+        const filePath = path.join(dir, file);
         
         try {
           // 读取文件内容
@@ -601,7 +778,7 @@ export function createEncryptionManager(deps) {
           // 解密内容
           const parts = content.split(':');
           if (parts.length < 6) {
-            console.error(`Invalid encrypted format in file ${file}`);
+            console.error(`Invalid encrypted format in file ${file} in ${dirName}`);
             failed++;
             continue;
           }
@@ -610,7 +787,7 @@ export function createEncryptionManager(deps) {
           const encryptedData = encryptedParts.join(':');
           
           if (prefix !== 'ENCRYPTED' || version !== 'v1') {
-            console.error(`Unsupported encryption version in file ${file}`);
+            console.error(`Unsupported encryption version in file ${file} in ${dirName}`);
             failed++;
             continue;
           }
@@ -634,6 +811,8 @@ export function createEncryptionManager(deps) {
           fs.writeFileSync(filePath, decryptedContent, 'utf-8');
           decrypted++;
           
+          console.log(`[Encryption] Decrypted file in ${dirName}: ${file}`);
+          
           // 发送进度
           if (win) {
             win.webContents.send('encryption:progress', {
@@ -644,12 +823,26 @@ export function createEncryptionManager(deps) {
             });
           }
         } catch (error) {
-          console.error(`Failed to decrypt file ${file}:`, error);
+          console.error(`Failed to decrypt file ${file} in ${dirName}:`, error);
           failed++;
         }
       }
       
       console.log(`[Encryption] Batch decryption completed: ${decrypted} decrypted, ${skipped} skipped, ${failed} failed`);
+      
+      // 更新 meta.json 的加密状态
+      try {
+        const metaPath = path.join(databaseDir, 'meta.json');
+        if (fs.existsSync(metaPath)) {
+          const metaContent = fs.readFileSync(metaPath, 'utf-8');
+          const meta = JSON.parse(metaContent);
+          meta.encrypted = false;
+          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+          console.log('[Encryption] Updated meta.json: encrypted = false');
+        }
+      } catch (error) {
+        console.error('Failed to update meta.json:', error);
+      }
       
       return { 
         success: true, 

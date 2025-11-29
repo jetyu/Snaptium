@@ -307,8 +307,27 @@ async function readContent(contentId) {
   if (electronFs.existsSync(p)) {
     let content = electronFs.readFileSync(p, 'utf-8');
     
-    // 如果是加密内容，调用 IPC 解密
+    // 双重验证：检查 meta.json 的加密状态和文件内容的 ENCRYPTED: 前缀
+    const metaPath = electronPath.join(nwDir(state.workspaceRoot), 'meta.json');
+    let metaEncrypted = false;
+    
+    try {
+      if (electronFs.existsSync(metaPath)) {
+        const metaContent = electronFs.readFileSync(metaPath, 'utf-8');
+        const meta = JSON.parse(metaContent);
+        metaEncrypted = meta.encrypted === true;
+      }
+    } catch (error) {
+      console.warn('Failed to read meta.json encryption status:', error);
+    }
+    
+    // 如果是加密内容（文件内容以 ENCRYPTED: 开头），调用 IPC 解密
     if (content.startsWith('ENCRYPTED:')) {
+      // 验证 meta.json 的加密状态是否一致
+      if (!metaEncrypted) {
+        console.warn(`[VFS] Inconsistent encryption state: file ${contentId}.md is encrypted but meta.json shows encrypted=false`);
+      }
+      
       try {
         const result = await ipcRenderer.invoke('encryption:decrypt-note', { content });
         if (result.success) {
@@ -320,6 +339,11 @@ async function readContent(contentId) {
       } catch (error) {
         console.error('调用解密 IPC 失败:', error);
         return content;
+      }
+    } else {
+      // 文件未加密，但 meta.json 显示已加密，发出警告
+      if (metaEncrypted) {
+        console.warn(`[VFS] Inconsistent encryption state: file ${contentId}.md is not encrypted but meta.json shows encrypted=true`);
       }
     }
     
