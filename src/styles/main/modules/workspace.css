@@ -107,19 +107,20 @@
     padding: 10px 12px;
     cursor: pointer;
     border-bottom: 1px solid var(--border);
-    transition: none;
+    transition: background-color 0.15s ease, color 0.15s ease;
     font-size: 13px;
     position: relative;
 }
 
 .file-item:hover {
-    padding-left: 16px;
+    background-color: var(--hover);
 }
 
 .file-item.active {
+    background-color: #e5e7eb; 
     color: var(--accent);
-    font-weight: 500;
     border-left: 3px solid var(--accent-border);
+    font-weight: 500; 
 }
 
 .file-item.active::before {
@@ -132,11 +133,15 @@
     background: var(--accent-border);
 }
 
-/* Tree 基础行样式（可调：--accent, --accent-contrast, --accent-hover） */
+/* Tree 基础行样式 */
 .tree-row {
     display: flex;
     align-items: center;
     gap: 6px;
+    padding: 2px 1px;
+    border-radius: 1px;
+    cursor: pointer;
+   transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .tree-label {
@@ -166,8 +171,11 @@
 }
 
 .tree-row.active {
+    background-color: #e5e7eb;
     color: var(--accent);
     font-weight: 500;
+    border-left: 3px solid var(--accent-border);
+    padding-left: 5px;
 }
 
 
@@ -277,4 +285,10 @@
 
 #tree[data-search-mode="true"] .tree-item[style*="display: none"] {
     opacity: 0;
+}
+
+/* 暗色主题下的文件选中样式 */
+:root[data-theme="dark"] .file-item.active,
+:root[data-theme="dark"] .tree-row.active {
+    background-color: #374151;
 }
