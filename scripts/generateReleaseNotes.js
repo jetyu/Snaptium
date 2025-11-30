@@ -5,6 +5,10 @@ function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+const TEMPLATE_PATH = resolve('.github/template/RELEASE_NOTES.md');
+const BODY_START_MARKER = '<!-- RELEASE_NOTES_BODY_START -->';
+const BODY_END_MARKER = '<!-- RELEASE_NOTES_BODY_END -->';
+
 function getVersionFromArgs() {
   const raw = process.argv[2];
   if (!raw) {
@@ -31,16 +35,18 @@ function extractSection(historyContent, versionWithoutPrefix) {
   return sectionBody;
 }
 
-function buildReleaseNotes({ sectionBody }) {
-  const header = '### NoteWizard Release Notes';
-  const body = sectionBody.trim();
-  const footer = [
-    '#### Full Changelog',
-    '- [English](https://github.com/jetyu/NoteWizard/blob/main/src/assets/changelog/history_en.md)',
-    '- [简体中文](https://github.com/jetyu/NoteWizard/blob/main/src/assets/changelog/history_cn.md)'
-  ].join('\n');
+function buildReleaseNotes({ templateContent, sectionBody }) {
+  const body = sectionBody.trim() || '_No changes for this release._';
+  const pattern = new RegExp(
+    `(${escapeRegExp(BODY_START_MARKER)}\\s*)([\\s\\S]*?)(${escapeRegExp(BODY_END_MARKER)})`
+  );
 
-  return `${header}\n\n${body ? `${body}\n\n` : ''}${footer}\n`;
+  if (!pattern.test(templateContent)) {
+    throw new Error('Release notes template is missing body markers.');
+  }
+
+  const nextContent = templateContent.replace(pattern, `$1${body}\n\n$3`);
+  return nextContent.endsWith('\n') ? nextContent : `${nextContent}\n`;
 }
 
 function main() {
@@ -54,10 +60,10 @@ function main() {
   const historyContent = readFileSync(historyPath, 'utf8');
 
   const sectionBody = extractSection(historyContent, version);
-  const notes = buildReleaseNotes({ sectionBody });
+  const templateContent = readFileSync(TEMPLATE_PATH, 'utf8');
+  const notes = buildReleaseNotes({ templateContent, sectionBody });
 
-  const outputPath = resolve('.github/template/RELEASE_NOTES.md');
-  writeFileSync(outputPath, notes, 'utf8');
+  writeFileSync(TEMPLATE_PATH, notes, 'utf8');
   console.log(`Generated release notes for ${tag}`);
 }
 
