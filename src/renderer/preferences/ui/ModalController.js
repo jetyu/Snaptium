@@ -90,13 +90,6 @@ export class ModalController {
       closeBtn.addEventListener('click', () => this.close());
     }
 
-    // 点击背景关闭
-    this.modal.addEventListener('click', (e) => {
-      if (e.target === this.modal) {
-        this.close();
-      }
-    });
-
     // ESC 键关闭
     this.handleEscKey = (e) => {
       if (e.key === 'Escape' && this.isOpen()) {

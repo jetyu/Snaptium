@@ -3,12 +3,14 @@
 - Added an emergency decryption feature for local notes to restore encrypted content in special scenarios.
 #### Fixed
 - Fixed an issue where content in the Recycle Bin could not be encrypted properly.
+#### Improved
+- Enhanced the interaction experience of the preferences pane.
 
 ### [0.4.1] - 2025-11-28
 #### Fixed
 - Fixed an issue where the search bar could not perform searches.
 - Fixed an issue where encryption could not be disabled in certain scenarios.
-#### Optimized
+#### Improved
 - Improved the interaction experience of security-related features.
 - Improved the interaction experience when exporting the .nwp format.
 
@@ -18,21 +20,21 @@
 #### Fixed
 - Fixed an issue where the Windows version could leave a background process running after uninstallation in certain scenarios.
 - Fixed translation issues in several non-English languages.
-#### Optimized
+#### Improved
 - Optimized view rendering performance.
-- Optimized default language initialization.
+- Improved default language initialization.
 - Optimized application startup speed.
-- Optimized the interaction experience of exporting the .nwp format.
+- Improved the interaction experience of exporting the .nwp format.
 
 ### [0.3.2] - 2025-10-26
-#### Optimized
+#### Improved
 - Optimized the performance of the editor.
 
 ### [0.3.1] - 2025-10-25
 #### Fixed
 - Fixed missing translation issues in other languages.
-#### Optimized
-- Optimized the interactive experience of the Check for Updates panel.
+#### Improved
+- Improved the interactive experience of the Check for Updates panel.
 
 ### [0.3.0] - 2025-10-24
 #### Added
@@ -40,16 +42,16 @@
 #### Fixed
 - Fixed known issues.
 - Fixed translation issues in other languages.
-#### Optimized
+#### Improved
 - Refactored the Preferences panel code.
-- Optimized the Recycle Bin experience.
+- Improved the Recycle Bin experience.
 - Optimized the update log module loading performance.
 - Optimized VFS performance.
 - Optimized the IPC module.
 
 ### [0.2.6] - 2025-10-04
-#### Optimized
-- Optimized the editor experience.
+#### Improved
+- Improved the editor experience.
 
 ### [0.2.5] - 2025-10-03
 #### Fixed
@@ -65,7 +67,7 @@
 #### Fixed
 - Fixed hardcoded internationalization issues.
 - Fixed an issue where the menu bar language did not update after switching languages and restarting.
-#### Optimized
+#### Improved
 - Optimized logic for importing, exporting, and resetting preferences configuration.
 
 ### [0.2.1] - 2025-10-01
@@ -79,8 +81,8 @@
 - Fixed several known UI issues.
 - Fixed cursor position issue in AI suggestions.
 - Fixed an outline display error introduced in version 0.1.0.
-#### Optimized
-- Optimized interaction experience in the Preferences interface.
+#### Improved
+- Improved interaction experience in the Preferences interface.
 - Refactored AI service interfaces to support all AI services compatible with the OpenAI API.
 
 ### [0.1.0] - 2025-09-20
@@ -88,12 +90,12 @@
 - Fixed scrollbar issue in the note list.
 - Fixed deletion logic issue in the Recycle Bin.
 - Fixed registry residue issue after disabling startup on boot.
-#### Optimized
-- Optimized Recycle Bin interface and interaction.
+#### Improved
+- Improved Recycle Bin interface and interaction.
 
 ### [0.0.9-dev] - 2025-09-15
 #### Improved
-- Optimized high-resolution display adaptation.
+- Improved high-resolution display adaptation.
 
 ### [0.0.8-dev] - 2025-09-13
 #### Fixed
@@ -114,7 +116,7 @@
 #### Improved
 - Upgraded Electron framework to version 37.4.0.
 - Optimized installer package size.
-- Optimized notebook expand/collapse state.
+- Improved notebook expand/collapse state.
 - Optimized resource loading logic.
 - Refactored multilingual switching logic.
 #### Removed
@@ -135,8 +137,8 @@
 - Fixed incorrect version number display on the About page.
 - Fixed AI service provider list loading failure in some cases.
 - Fixed content security policy issue introduced in version 0.0.4.
-#### Optimized
-- Optimized interaction logic and experience for custom note file save path.
+#### Improved
+- Improved interaction logic and experience for custom note file save path.
 
 ### [0.0.4-dev] - 2025-08-03
 #### Added
@@ -153,9 +155,9 @@
 - Fixed window size memory function failure.
 - Fixed incorrect path when creating notes via context menu in some cases.
 - Fixed AI configuration panel language not updating in real time when switching app language.
-#### Optimized
-- Optimized default window size to support more display devices.
-- Optimized page transition and animation effects.
+#### Improved
+- Improved default window size to support more display devices.
+- Improved page transition and animation effects.
 - Improved interaction experience across multiple UI elements.
 - Improved application startup speed.
 
