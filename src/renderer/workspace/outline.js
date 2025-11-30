@@ -34,7 +34,8 @@ export function renderOutline(outline) {
       if (state.editor) {
         state.editor.focus();
         state.editor.setCursor({ line: item.lineNumber, ch: 0 });
-        state.editor.scrollIntoView({ line: item.lineNumber, ch: 0 }, 100);
+        const coords = state.editor.charCoords({ line: item.lineNumber, ch: 0 }, 'local');
+        state.editor.scrollTo(null, coords.top);
       }
     });
 
