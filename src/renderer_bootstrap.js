@@ -1,6 +1,6 @@
 import { onDomReadyInitEditor } from './renderer/editor/editor.js';
 import { setupOutlineWhenReady } from './renderer/workspace/outline.js';
-import { initializeFileWorkspace, setupEditorEvents } from './renderer/workspace/files.js';
+import { initializeFileWorkspace, setupEditorEvents, forceFlushAutoSave } from './renderer/workspace/files.js';
 import { setupToolbar } from './renderer/editor/toolbar.js';
 import i18n, { initI18n, applyI18n } from './renderer/i18n.js';
 import { initPreferences } from './renderer/preferences/index.js';
@@ -218,10 +218,33 @@ async function runAppInitialization() {
   initTrash();
   setupOutlineWhenReady();
   setupExportIPCListeners();
+  setupBeforeUnloadHandler();
   try {
     const visible = document.getElementById('preview-panel')?.style.display !== 'none';
     ipcRenderer.send('preview-state-changed', { visible });
   } catch {}
+}
+
+/**
+ * 设置窗口关闭前的保存处理
+ * 确保在窗口关闭/刷新/热重载前保存未保存的内容
+ */
+function setupBeforeUnloadHandler() {
+  window.addEventListener('beforeunload', (event) => {
+    // 同步执行强制保存
+    try {
+      forceFlushAutoSave();
+    } catch (e) {
+      console.error('[BeforeUnload] Save Failed:', e);
+    }
+  });
+  
+  // 监听来自主进程的关闭前通知
+  ipcRenderer.on('app-before-quit', async () => {
+    console.log('[BeforeQuit] ForceSaveContent');
+    await forceFlushAutoSave();
+    ipcRenderer.send('app-quit-ready');
+  });
 }
 
 function bootstrap() {

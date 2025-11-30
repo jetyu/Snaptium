@@ -587,13 +587,22 @@ function setupEditorEvents() {
       state.autoSaveTimer = setTimeout(async () => {
         try {
           if (node.contentId) {
-            await vfs.writeContent(node.contentId, state.editor.getValue());
-            updateStatus(`${t('file.autoSaved')}: ${node.name}`);
+            const currentContent = state.editor.getValue();
+            // 保存前再次验证内容有效性
+            if (currentContent !== undefined && currentContent !== null) {
+              const result = await vfs.writeContent(node.contentId, currentContent);
+              if (result) {
+                updateStatus(`${t('file.autoSaved')}: ${node.name}`);
+              } else {
+                console.warn('[AutoSave] writeContent: Content is protected');
+              }
+            }
           }
         } catch (e) {
+          console.error('[AutoSave] Autosave Exception:', e);
           updateStatus(t('file.autoSaveFailed'));
         }
-      }, 800);
+      }, 2000);
     });
   } else {
     setTimeout(setupEditorEvents, 100);
@@ -613,6 +622,35 @@ async function refreshWorkspace() {
 }
 
 /**
+ * 强制立即保存当前编辑器内容
+ * 用于窗口关闭前确保数据不丢失
+ */
+async function forceFlushAutoSave() {
+  // 清除未执行的自动保存定时器
+  if (state.autoSaveTimer) {
+    clearTimeout(state.autoSaveTimer);
+    state.autoSaveTimer = null;
+  }
+  
+  // 获取当前编辑的节点
+  const nodeId = state.currentNodeId;
+  if (!nodeId || !state.editor) return;
+  
+  const node = vfs.getNodeById(nodeId);
+  if (!node || node.type !== 'file' || !node.contentId) return;
+  
+  try {
+    const currentContent = state.editor.getValue();
+    if (currentContent !== undefined && currentContent !== null) {
+      console.log('[ForceFlush] ForceSave When Windows is closed:', node.name);
+      await vfs.writeContent(node.contentId, currentContent);
+    }
+  } catch (e) {
+    console.error('[ForceFlush] ForceSave Failed:', e);
+  }
+}
+
+/**
  * 文件操作相关的公共接口
  */
 export {
@@ -624,4 +662,5 @@ export {
   setupEditorEvents,
   selectNode as selectFile,
   refreshWorkspace,
+  forceFlushAutoSave,
 };
