@@ -99,8 +99,19 @@ function showFileProperties(filePath) {
 
     const stats = electronFs.statSync(filePath);
     const sizeInKB = (stats.size / 1024).toFixed(2);
-    const modifiedTime = new Date(stats.mtime).toLocaleString();
-
+    
+    // 处理修改时间
+    let modifiedTime;
+    const timeValue = stats.mtime || stats.ctime || new Date();
+    const dateObj = new Date(timeValue);
+    
+    // 验证日期对象是否有效
+    if (isNaN(dateObj.getTime())) {
+      modifiedTime = t('unknown') || 'Unknown';
+    } else {
+      modifiedTime = dateObj.toLocaleString();
+    }
+    
     const props = `
       ${t('property.location')}: ${electronPath.dirname(filePath)}
       ${t('property.size')}: ${sizeInKB} KB
@@ -114,6 +125,116 @@ function showFileProperties(filePath) {
   }
 }
 
+/**
+ * 获取文件路径
+ * @param {Object} node - 节点对象
+ * @returns {string|null} 文件路径
+ */
+function getFilePath(node) {
+  if (!node || !node.contentId) return null;
+  
+  const ext = node.name ? electronPath.extname(node.name) : '.md';
+  const fileName = node.contentId + (node.contentId.endsWith(ext) ? '' : ext);
+  let filePath = electronPath.join(getDefaultSaveDir(), 'objects', fileName);
+  
+  // 确保文件路径有扩展名
+  if (!electronPath.extname(filePath) && node.name) {
+    const ext = electronPath.extname(node.name) || '.md';
+    filePath += ext;
+  }
+  
+  return filePath;
+}
+
+/**
+ * 菜单操作处理器
+ * @param {string} action - 操作类型
+ * @param {Object} node - 节点对象
+ */
+async function handleMenuAction(action, node) {
+  try {
+    // 文件系统相关操作（需要文件路径）
+    if (['showInFolder', 'properties'].includes(action)) {
+      const filePath = getFilePath(node);
+      if (!filePath) {
+        updateStatus(t('file.cannotGetPath'));
+        return;
+      }
+      
+      switch (action) {
+        case 'showInFolder':
+          electronShell.showItemInFolder(filePath);
+          break;
+        case 'properties':
+          // 延迟执行，避免阻塞菜单关闭
+          setTimeout(() => showFileProperties(filePath), 100);
+          break;
+      }
+      return;
+    }
+    
+    // 节点操作
+    const parentId = node ? (node.type === 'folder' ? node.id : node.parentId) : null;
+    
+    switch (action) {
+      case 'new-note':
+        const newNote = vfs.createFile(parentId, t('default.newNote'));
+        tree.renderTree();
+        await selectNode(newNote);
+        break;
+        
+      case 'new-notebook':
+        const targetParentId = node && node.type === 'folder' ? node.id : null;
+        vfs.createFolder(targetParentId, t('default.newNotebook'));
+        tree.renderTree();
+        break;
+        
+      case 'rename':
+        // 延迟执行，确保菜单已关闭
+        setTimeout(() => tree.startInlineRename(node.id), 100);
+        break;
+        
+      case 'delete':
+        if (!node) return;
+        // 延迟执行 confirm，避免阻塞菜单关闭
+        setTimeout(async () => {
+          const displayName = node.name || t('default.thisItem');
+          if (!confirm(t('dialog.deleteConfirm').replace('{name}', displayName))) {
+            return;
+          }
+          
+          try {
+            const parentNode = node.parentId ? vfs.getNodeById(node.parentId) : null;
+            vfs.deleteNode(node.id);
+            ipcRenderer?.send('trash-updated');
+            tree.renderTree();
+            
+            if (state.currentNodeId === node.id) {
+              state.currentNodeId = null;
+              if (state.editor) {
+                state.editor.setValue('');
+              }
+            }
+            
+            if (parentNode) {
+              await selectNode(parentNode);
+            } else {
+              renderPreview();
+            }
+            
+            updateStatus(t('file.movedToTrash'));
+          } catch (err) {
+            console.error('Failed to delete node:', err);
+            updateStatus(t('file.deleteFailed'));
+          }
+        }, 100);
+        break;
+    }
+  } catch (err) {
+    console.error('Menu action error:', err);
+    updateStatus(t('file.operationFailed') + ': ' + err.message);
+  }
+}
 
 /**
  * 显示视图的上下文菜单
@@ -144,7 +265,6 @@ function showContextMenu(node, e) {
   // 2. 笔记文件
   else if (isFile) {
     menuHTML.push(
-      `<div class="menu-item" data-action="open">${t('contextMenu.open')}</div>`,
       `<div class="menu-item" data-action="rename">${t('contextMenu.rename')}</div>`,
       `<div class="menu-item" data-action="delete">${t('contextMenu.delete')}</div>`,
       `<div class="menu-item" data-action="showInFolder">${t('contextMenu.showInFolder')}</div>`,
@@ -172,95 +292,12 @@ function showContextMenu(node, e) {
     const act = ev.target && ev.target.dataset && ev.target.dataset.action;
     if (!act) return;
     ev.stopPropagation();
+    
+    // 立即关闭菜单
     close();
-
-    try {
-      // 处理文件相关操作
-      if (['open', 'showInFolder', 'properties'].includes(act) && node) {
-        try {
-          // 获取文件路径
-          let filePath;
-          if (node.contentId) {
-            const ext = node.name ? electronPath.extname(node.name) : '.md'; // 默认使用 .md 扩展名
-            const fileName = node.contentId + (node.contentId.endsWith(ext) ? '' : ext);
-            filePath = electronPath.join(getDefaultSaveDir(), 'objects', fileName);
-          }
-          // 确保文件路径有扩展名
-          if (filePath && !electronPath.extname(filePath) && node.name) {
-            const ext = electronPath.extname(node.name) || '.md';
-            filePath += ext;
-          }
-          
-          if (!filePath) {
-            updateStatus(t('file.cannotGetPath'));
-            return;
-          }
-          switch (act) {
-            case 'open':
-              electronShell.openPath(filePath).catch(console.error);
-              break;
-            case 'showInFolder':
-              electronShell.showItemInFolder(filePath);
-              break;
-            case 'properties':
-              showFileProperties(filePath);
-              break;
-          }
-        } catch (err) {
-          updateStatus(t('file.operationFailed') + ': ' + err.message);
-        }
-        return;
-      }
-
-      // 处理树节点操作
-      let parentId = null;
-      if (node) parentId = node.type === 'folder' ? node.id : node.parentId;
-
-      if (act === 'new-note') {
-        const n = vfs.createFile(parentId, t('default.newNote'));
-        tree.renderTree();
-        await selectNode(n);
-      } else if (act === 'new-notebook') {
-        const targetParentId = node && node.type === 'folder' ? node.id : null;
-        const folder = vfs.createFolder(targetParentId, t('default.newNotebook'));
-        tree.renderTree();
-      } else if (act === 'rename') {
-        setTimeout(() => tree.startInlineRename(node.id), 0);
-      } else if (act === 'delete' && node) {
-        const displayName = node.name || t('default.thisItem');
-        if (!confirm(t('dialog.deleteConfirm').replace('{name}', displayName))) {
-          return;
-        }
-
-        try {
-          const parentNode = node.parentId ? vfs.getNodeById(node.parentId) : null;
-          vfs.deleteNode(node.id);
-          ipcRenderer?.send('trash-updated');
-          tree.renderTree();
-
-          if (state.currentNodeId === node.id) {
-            state.currentNodeId = null;
-            if (state.editor) {
-              state.editor.setValue('');
-            }
-          }
-
-          if (parentNode) {
-            await selectNode(parentNode);
-          } else {
-            renderPreview();
-          }
-
-          updateStatus(t('file.movedToTrash'));
-        } catch (err) {
-          console.error('Failed to delete node:', err);
-          updateStatus(t('file.deleteFailed'));
-        }
-
-        return;
-      }
-    } catch (err) {
-    }
+    
+    // 执行对应的操作处理器
+    await handleMenuAction(act, node);
   });
 }
 
