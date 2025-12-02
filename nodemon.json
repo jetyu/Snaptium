@@ -1,5 +1,6 @@
 {
   "verbose": true,
   "ignore": ["node_modules/", "dist/"],
-  "ext": "js,json,html,css"
+  "ext": "js,json,html,css",
+  "delay": 1000
 }

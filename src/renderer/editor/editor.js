@@ -67,6 +67,31 @@ function setupEditorEventListeners(editor, aiAssistant) {
     });
     window.dispatchEvent(event);
   });
+
+  // 滚动同步：编辑器滚动时同步预览面板
+  const scrollElement = editor.getScrollerElement();
+  if (scrollElement) {
+    let isSyncing = false;
+    scrollElement.addEventListener('scroll', function() {
+      if (isSyncing) return;
+      
+      const previewContainer = document.getElementById('preview-container');
+      if (!previewContainer) return;
+      
+      const scrollTop = scrollElement.scrollTop;
+      const scrollHeight = scrollElement.scrollHeight - scrollElement.clientHeight;
+      if (scrollHeight <= 0) return;
+      
+      const scrollRatio = scrollTop / scrollHeight;
+      
+      const previewScrollHeight = previewContainer.scrollHeight - previewContainer.clientHeight;
+      if (previewScrollHeight > 0) {
+        isSyncing = true;
+        previewContainer.scrollTop = scrollRatio * previewScrollHeight;
+        requestAnimationFrame(() => { isSyncing = false; });
+      }
+    });
+  }
 }
 
 function handleTabKey(cm) {

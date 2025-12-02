@@ -353,7 +353,17 @@ async function readContent(contentId) {
 }
 
 async function writeContent(contentId, text) {
+  // 验证内容有效性，防止写入空内容导致数据丢失
+  if (text === undefined || text === null) {
+    console.error('[VFS] writeContent: Content is invalid');
+    return false;
+  }
+  
   const p = electronPath.join(objectsDir(state.workspaceRoot), `${contentId}.md`);
+  const tmpPath = p + '.tmp';
+  const backupPath = p + '.bak';
+  
+  let contentToWrite = text;
   
   // 检查是否启用加密
   try {
@@ -362,17 +372,62 @@ async function writeContent(contentId, text) {
       // 加密内容
       const encryptResult = await ipcRenderer.invoke('encryption:encrypt-note', { content: text });
       if (encryptResult.success) {
-        text = encryptResult.encrypted;
+        contentToWrite = encryptResult.encrypted;
       } else {
-        console.error('加密失败:', encryptResult.error);
-        // 加密失败，仍然保存原内容
+        // 加密失败，使用原内容继续保存
+        console.error('[VFS] 加密失败:', encryptResult.error);
       }
     }
   } catch (error) {
-    console.error('检查加密状态失败:', error);
+    // IPC 失败时，继续使用原内容保存。
+    console.error('[VFS] 检查加密状态失败:', error);
+    
   }
   
-  electronFs.writeFileSync(p, text, 'utf-8');
+  // 再次验证：确保最终要写入的内容有效
+  if (contentToWrite === undefined || contentToWrite === null || 
+      (typeof contentToWrite === 'string' && contentToWrite.length === 0 && text.length > 0)) {
+    console.error('[VFS] writeContent: 处理后内容异常，跳过写入以保护数据');
+    return false;
+  }
+  
+  try {
+    // 原子写入：先写临时文件
+    electronFs.writeFileSync(tmpPath, contentToWrite, 'utf-8');
+    
+    // 验证临时文件写入成功
+    const writtenContent = electronFs.readFileSync(tmpPath, 'utf-8');
+    if (writtenContent !== contentToWrite) {
+      console.error('[VFS] writeContent: 临时文件验证失败，内容不匹配');
+      if (electronFs.existsSync(tmpPath)) electronFs.unlinkSync(tmpPath);
+      return false;
+    }
+    
+    // 如果原文件存在且有内容，创建备份
+    if (electronFs.existsSync(p)) {
+      const originalContent = electronFs.readFileSync(p, 'utf-8');
+      if (originalContent.length > 0) {
+        electronFs.writeFileSync(backupPath, originalContent, 'utf-8');
+      }
+    }
+    
+    // 原子替换：重命名临时文件为目标文件
+    electronFs.renameSync(tmpPath, p);
+    
+    // 写入成功后删除备份文件
+    if (electronFs.existsSync(backupPath)) {
+      electronFs.unlinkSync(backupPath);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('[VFS] writeContent: 写入失败:', error);
+    // 清理临时文件
+    if (electronFs.existsSync(tmpPath)) {
+      try { electronFs.unlinkSync(tmpPath); } catch (_) {}
+    }
+    return false;
+  }
 }
 
 function emptyTrash() {
