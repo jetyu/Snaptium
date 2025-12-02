@@ -185,10 +185,19 @@ export function createPreferencesManager(deps) {
           app.getPath("userData"),
           "preferences.json"
         );
+        let existingEncryption = null;
+        
         if (fs.existsSync(settingsPath)) {
           const currentData = await fs.promises.readFile(settingsPath, "utf8");
-          currentSettings.settings = JSON.parse(currentData);
+          const currentPrefs = JSON.parse(currentData);
+          currentSettings.settings = currentPrefs;
           currentSettings.backupDate = new Date().toISOString();
+          
+          // 保存现有的加密配置，导入时不覆盖
+          if (currentPrefs.encryption) {
+            existingEncryption = currentPrefs.encryption;
+          }
+          
           await fs.promises.writeFile(
             backupPath,
             JSON.stringify(currentSettings, null, 2),
@@ -196,10 +205,16 @@ export function createPreferencesManager(deps) {
           );
         }
 
-        // 保存新设置
+        // 合并设置：保留原有的加密配置
+        const mergedSettings = { ...preferences.settings };
+        if (existingEncryption) {
+          mergedSettings.encryption = existingEncryption;
+        }
+
+        // 保存合并后的设置
         await fs.promises.writeFile(
           path.join(app.getPath("userData"), "preferences.json"),
-          JSON.stringify(preferences.settings, null, 2),
+          JSON.stringify(mergedSettings, null, 2),
           "utf8"
         );
 
