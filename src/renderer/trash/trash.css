@@ -83,7 +83,7 @@
   padding: 4px 10px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.9em;
+  font-size: 1em;
   color: var(--muted, #666);
 }
 

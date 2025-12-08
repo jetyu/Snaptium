@@ -1,3 +1,7 @@
+### [0.4.4] - 2025-12-08
+#### Improvements
+- Improved the user experience of the preferences panel.
+
 ### [0.4.3] - 2025-12-07
 #### Fixes
 - Fixed an issue that could cause encrypted note content to be lost in certain scenarios.
