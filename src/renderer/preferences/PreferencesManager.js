@@ -19,13 +19,13 @@ export class PreferencesManager {
     this.electronAPI = deps.electronAPI || window.electronAPI;
     this.i18n = deps.i18n;
     this.ipcRenderer = this.electronAPI.ipcRenderer;
-    
+
     // 创建服务层
     this.prefsService = createPreferencesService(this.ipcRenderer);
-    
+
     // 创建事件总线
     this.eventBus = eventBus;
-    
+
     // 创建共享依赖对象
     const sharedDeps = {
       electronAPI: this.electronAPI,
@@ -33,11 +33,11 @@ export class PreferencesManager {
       i18n: this.i18n,
       eventBus: this.eventBus,
     };
-    
+
     // 创建 UI 控制器
     this.modal = new ModalController(sharedDeps);
     this.pane = new PaneController({ ...sharedDeps, modal: this.modal });
-    
+
     // 创建设置管理器
     const managerDeps = { ...sharedDeps, modal: this.modal };
     this.general = new GeneralSettingsManager(managerDeps);
@@ -45,7 +45,7 @@ export class PreferencesManager {
     this.path = new PathSettingsManager(managerDeps);
     this.encryption = new EncryptionSettingsManager(managerDeps);
     this.ai = new AISettingsManager(managerDeps);
-    
+
     this.isInitialized = false;
   }
 
@@ -58,16 +58,16 @@ export class PreferencesManager {
     // 初始化各个管理器（加载设置并应用）
     await this.general.init();
     await this.appearance.init();
-    
+
     // 监听 IPC 事件
     this.bindIPCEvents();
-    
+
     // 初始化 UI（在 DOMContentLoaded 后）
     await this.initUI();
-    
+
     // 设置快捷键
     this.setupKeyboardShortcuts();
-    
+
     this.isInitialized = true;
   }
 
@@ -78,18 +78,18 @@ export class PreferencesManager {
     const initUITask = async () => {
       // 确保模态框存在
       await this.modal.ensureModalExists();
-      
+
       // 初始化面板控制器
       this.pane.init();
-      
+
       this.general.bindEvents();
       this.appearance.bindEvents();
-      
+
       // 初始化需要 DOM 的管理器
       await this.path.init();
       await this.encryption.init();
       await this.ai.init();
-      
+
       // 绑定全局事件
       this.bindGlobalEvents();
     };
@@ -121,13 +121,13 @@ export class PreferencesManager {
 
     // 绑定导出按钮
     this.bindExportButton(modalElement);
-    
+
     // 绑定导入按钮
     this.bindImportButton(modalElement);
-    
+
     // 绑定重置按钮
     this.bindResetButton(modalElement);
-    
+
     // 监听模态框打开事件
     this.eventBus.on('modal:opened', async () => {
       await this.onModalOpened();
@@ -177,7 +177,7 @@ export class PreferencesManager {
   async onModalOpened() {
     // 恢复上次激活的面板
     this.pane.restoreActivePane();
-    
+
     // 加载所有设置到 UI
     await this.loadAllSettingsToUI();
   }
@@ -237,12 +237,13 @@ export class PreferencesManager {
         noteSavePath: allPrefs.noteSavePath || await this.prefsService.getDefaultSavePath(),
         language: allPrefs.language || DEFAULTS.LANGUAGE,
         aiSettings: completeAISettings,
-        startupOnLogin: allPrefs.startupOnLogin || false
+        startupOnLogin: allPrefs.startupOnLogin || false,
+        autoUpdate: allPrefs.autoUpdate !== undefined ? allPrefs.autoUpdate : true
       };
 
       // 调用主进程导出
       const result = await this.prefsService.exportPreferences(preferences);
-      
+
       const statusElement = document.getElementById('status');
       if (result.success) {
         if (statusElement) {
@@ -274,7 +275,7 @@ export class PreferencesManager {
 
       // 调用主进程导入
       const result = await this.prefsService.importPreferences();
-      
+
       if (result.success) {
         // 应用导入的首选项
         await this.applyImportedPreferences(result.preferences);
@@ -346,6 +347,12 @@ export class PreferencesManager {
       await this.prefsService.setStartupEnabled(!!prefs.startupOnLogin);
     }
 
+    // 应用自动更新设置
+    if (typeof prefs.autoUpdate !== 'undefined') {
+      await this.prefsService.set('autoUpdate', !!prefs.autoUpdate);
+      await this.prefsService.toggleAutoUpdate(!!prefs.autoUpdate);
+    }
+
     // 重新加载所有设置到 UI
     await this.loadAllSettingsToUI();
   }
@@ -372,7 +379,7 @@ export class PreferencesManager {
     // 字号快捷键：Ctrl+= / Ctrl+- / Ctrl+0
     window.addEventListener('keydown', async (e) => {
       if (!e.ctrlKey) return;
-      
+
       const key = e.key;
       if (key === '=' || key === '+') {
         const cur = await this.prefsService.get('editorFontSize', DEFAULTS.EDITOR_FONT_SIZE);

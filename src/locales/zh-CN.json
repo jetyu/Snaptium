@@ -23,6 +23,8 @@
   "labelPreviewFont": "预览字体",
   "labelStartup": "启动",
   "textStartup": "开机启动NoteWizard",
+  "labelAutoUpdate": "软件更新",
+  "textAutoUpdate": "自动检查更新",
   "themeSystem": "跟随系统",
   "themeLight": "亮色",
   "themeDark": "暗色",

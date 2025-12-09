@@ -7,6 +7,9 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
   let isCheckingForUpdates = false;
   let isDownloadingUpdate = false;
   let autoUpdaterInitialized = false;
+  let autoUpdateIntervalId = null;
+  let isBackgroundCheck = false;
+  const AUTO_UPDATE_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
 
   function getActiveWindow() {
     if (typeof getWindow !== "function") {
@@ -103,24 +106,34 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
     autoUpdater.on("update-not-available", async () => {
       isCheckingForUpdates = false;
       resetProgress();
-      await dialog.showMessageBox(getActiveWindow() ?? undefined, {
-        type: "info",
-        buttons: [t("update.button.confirm")],
-        defaultId: 0,
-        title: t("appName"),
-        message: t("update.message.latest"),
-        noLink: true,
-      });
+      // Only show dialog for manual checks, not background checks
+      if (!isBackgroundCheck) {
+        await dialog.showMessageBox(getActiveWindow() ?? undefined, {
+          type: "info",
+          buttons: [t("update.button.confirm")],
+          defaultId: 0,
+          title: t("appName"),
+          message: t("update.message.latest"),
+          noLink: true,
+        });
+      }
+      isBackgroundCheck = false;
     });
 
     autoUpdater.on("error", (error) => {
       isCheckingForUpdates = false;
       isDownloadingUpdate = false;
       resetProgress();
-      dialog.showErrorBox(
-        t("update.error.generic"),
-        error instanceof Error ? error.message : String(error)
-      );
+      // Only show error dialog for manual checks, silently fail for background checks
+      if (!isBackgroundCheck) {
+        dialog.showErrorBox(
+          t("update.error.generic"),
+          error instanceof Error ? error.message : String(error)
+        );
+      } else {
+        console.error("[Auto-Update] Background check failed:", error);
+      }
+      isBackgroundCheck = false;
     });
 
     autoUpdater.on("download-progress", (progress) => {
@@ -210,9 +223,61 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
     }
   }
 
+  async function checkForUpdatesInBackground() {
+    if (!app.isPackaged) {
+      return;
+    }
+
+    initialize();
+
+    if (isCheckingForUpdates || isDownloadingUpdate) {
+      return;
+    }
+
+    try {
+      isBackgroundCheck = true;
+      isCheckingForUpdates = true;
+      await autoUpdater.checkForUpdates();
+    } catch (error) {
+      isCheckingForUpdates = false;
+      isBackgroundCheck = false;
+      console.error("[Auto-Update] Background check failed:", error);
+    }
+  }
+
+  function startAutoUpdateCheck() {
+    if (autoUpdateIntervalId) {
+      console.log("[Auto-Update] Auto-update check already running");
+      return;
+    }
+
+    console.log("[Auto-Update] Starting auto-update check with interval:", AUTO_UPDATE_INTERVAL / 1000 / 60, "minutes");
+
+    // Perform initial check after 5 minutes
+    setTimeout(() => {
+      checkForUpdatesInBackground();
+    }, 5 * 60 * 1000);
+
+    // Set up periodic checks
+    autoUpdateIntervalId = setInterval(() => {
+      checkForUpdatesInBackground();
+    }, AUTO_UPDATE_INTERVAL);
+  }
+
+  function stopAutoUpdateCheck() {
+    if (autoUpdateIntervalId) {
+      console.log("[Auto-Update] Stopping auto-update check");
+      clearInterval(autoUpdateIntervalId);
+      autoUpdateIntervalId = null;
+    }
+  }
+
   return {
     initialize,
     checkForUpdates,
+    checkForUpdatesInBackground,
+    startAutoUpdateCheck,
+    stopAutoUpdateCheck,
   };
 }
 

@@ -34,6 +34,7 @@ app.commandLine.appendSwitch('enable-logging');
 app.commandLine.appendSwitch('log-level', '0');
 
 // 在应用启动前设置应用名称
+app.setName("NoteWizard");
 if (process.platform === "win32") {
   app.setAppUserModelId("com.app.notewizard");
 }
@@ -92,12 +93,12 @@ function initializeManagers() {
     onLanguageChanged: (lang) => {
       // 语言切换后的回调：重建菜单和托盘
       const iconPath = managers.window?.getIconPath();
-      
+
       // 重建菜单
       if (managers.menu && iconPath) {
         managers.menu.createApplicationMenu(iconPath);
       }
-      
+
       // 重建托盘
       if (managers.tray && process.platform !== "darwin") {
         managers.tray.destroyTray();
@@ -213,7 +214,7 @@ function initializeManagers() {
 ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
   const win = managers.window?.getMainWindow();
   if (!win) return { success: false, error: "Window not initialized" };
-  
+
   try {
     let targetPath = filePath;
     if (!targetPath) {
@@ -242,7 +243,7 @@ ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
 ipcMain.handle("select-directory", async (event, defaultPath) => {
   const win = managers.window?.getMainWindow();
   if (!win) return null;
-  
+
   const result = await dialog.showOpenDialog(win, {
     defaultPath: defaultPath || app.getPath("documents"),
     properties: ["openDirectory", "createDirectory"],
@@ -250,23 +251,41 @@ ipcMain.handle("select-directory", async (event, defaultPath) => {
   return result.canceled ? null : result.filePaths[0];
 });
 
+// 处理自动更新切换
+ipcMain.handle("auto-update:toggle", async (event, enabled) => {
+  try {
+    if (enabled) {
+      console.log('[Auto-Update] Enabling auto-update checks');
+      managers.updater.startAutoUpdateCheck();
+    } else {
+      console.log('[Auto-Update] Disabling auto-update checks');
+      managers.updater.stopAutoUpdateCheck();
+    }
+    return { success: true };
+  } catch (error) {
+    console.error('[Auto-Update] Failed to toggle auto-update:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+
 // ==================== 应用启动 ====================
 app.whenReady().then(() => {
   // 初始化所有管理器
   initializeManagers();
-  
+
   // 创建主窗口
   managers.window.createMainWindow();
-  
+
   // 创建应用菜单
   const iconPath = managers.window.getIconPath();
   managers.menu.createApplicationMenu(iconPath);
-  
+
   // 创建系统托盘（在Windows和Linux上）
   if (process.platform !== "darwin") {
     managers.tray.createSystemTray();
   }
-  
+
   // macOS 应用激活
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -275,6 +294,17 @@ app.whenReady().then(() => {
       managers.window.showMainWindow();
     }
   });
+
+  // 初始化自动更新检查
+  (async () => {
+    const autoUpdate = managers.preferences.getPreference('autoUpdate', true);
+    if (autoUpdate) {
+      console.log('[Auto-Update] Auto-update is enabled, starting background checks');
+      managers.updater.startAutoUpdateCheck();
+    } else {
+      console.log('[Auto-Update] Auto-update is disabled');
+    }
+  })();
 
   console.log('NoteWizard Started');
 });

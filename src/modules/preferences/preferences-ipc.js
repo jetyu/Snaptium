@@ -123,6 +123,7 @@ export function createPreferencesManager(deps) {
           },
           noteSavePath: preferences.noteSavePath || "",
           startupOnLogin: !!preferences.startupOnLogin,
+          autoUpdate: preferences.autoUpdate !== undefined ? !!preferences.autoUpdate : true,
         };
 
         const data = {
@@ -186,18 +187,18 @@ export function createPreferencesManager(deps) {
           "preferences.json"
         );
         let existingEncryption = null;
-        
+
         if (fs.existsSync(settingsPath)) {
           const currentData = await fs.promises.readFile(settingsPath, "utf8");
           const currentPrefs = JSON.parse(currentData);
           currentSettings.settings = currentPrefs;
           currentSettings.backupDate = new Date().toISOString();
-          
+
           // 保存现有的加密配置，导入时不覆盖
           if (currentPrefs.encryption) {
             existingEncryption = currentPrefs.encryption;
           }
-          
+
           await fs.promises.writeFile(
             backupPath,
             JSON.stringify(currentSettings, null, 2),

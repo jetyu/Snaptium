@@ -23,6 +23,8 @@
   "labelPreviewFont": "미리보기 글꼴",
   "labelStartup": "시작",
   "textStartup": "시작 시 NoteWizard 실행",
+  "labelAutoUpdate": "소프트웨어 업데이트",
+  "textAutoUpdate": "자동으로 업데이트 확인",
   "themeSystem": "시스템",
   "themeLight": "라이트",
   "themeDark": "다크",

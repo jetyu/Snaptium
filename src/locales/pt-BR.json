@@ -23,6 +23,8 @@
   "labelPreviewFont": "Fonte da Visualização",
   "labelStartup": "Inicialização",
   "textStartup": "Iniciar NoteWizard na inicialização",
+  "labelAutoUpdate": "Atualização de software",
+  "textAutoUpdate": "Verificar atualizações automaticamente",
   "themeSystem": "Sistema",
   "themeLight": "Claro",
   "themeDark": "Escuro",

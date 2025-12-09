@@ -23,6 +23,8 @@
   "labelPreviewFont": "Police aperçu",
   "labelStartup": "Démarrage",
   "textStartup": "Lancer NoteWizard au démarrage",
+  "labelAutoUpdate": "Mise à jour logicielle",
+  "textAutoUpdate": "Vérifier automatiquement les mises à jour",
   "themeSystem": "Système",
   "themeLight": "Clair",
   "themeDark": "Sombre",

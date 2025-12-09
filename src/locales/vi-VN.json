@@ -23,6 +23,8 @@
   "labelPreviewFont": "Phông chữ xem trước",
   "labelStartup": "Khởi động",
   "textStartup": "Khởi chạy NoteWizard khi khởi động",
+  "labelAutoUpdate": "Cập nhật phần mềm",
+  "textAutoUpdate": "Tự động kiểm tra cập nhật",
   "themeSystem": "Hệ thống",
   "themeLight": "Sáng",
   "themeDark": "Tối",

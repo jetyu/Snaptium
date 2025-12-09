@@ -23,6 +23,8 @@
   "labelPreviewFont": "Carattere anteprima",
   "labelStartup": "Avvio",
   "textStartup": "Avvia NoteWizard all'avvio",
+  "labelAutoUpdate": "Aggiornamento software",
+  "textAutoUpdate": "Controlla automaticamente gli aggiornamenti",
   "themeSystem": "Sistema",
   "themeLight": "Chiaro",
   "themeDark": "Scuro",

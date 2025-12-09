@@ -23,6 +23,8 @@
   "labelPreviewFont": "Font Pratinjau",
   "labelStartup": "Startup",
   "textStartup": "Jalankan NoteWizard saat startup",
+  "labelAutoUpdate": "Pembaruan Perangkat Lunak",
+  "textAutoUpdate": "Periksa pembaruan secara otomatis",
   "themeSystem": "Sistem",
   "themeLight": "Terang",
   "themeDark": "Gelap",

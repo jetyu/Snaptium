@@ -1,3 +1,9 @@
+### [0.5.0] - 2025-12-14
+#### New
+- Added background automatic update software function.
+#### Improvements
+- Improved the user experience of software updates.
+
 ### [0.4.4] - 2025-12-08
 #### Improvements
 - Improved the user experience of the preferences panel.
@@ -72,7 +78,7 @@
 
 ### [0.2.4] - 2025-10-03
 #### New
-- Added automatic software update feature.
+- Added software update feature.
 #### Fixes
 - Fixed an issue where the workspace was incorrectly collapsed when closing the preview panel.
 

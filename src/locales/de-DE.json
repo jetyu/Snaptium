@@ -23,6 +23,8 @@
   "labelPreviewFont": "Vorschau-Schriftart",
   "labelStartup": "Start",
   "textStartup": "NoteWizard beim Start öffnen",
+  "labelAutoUpdate": "Software-Update",
+  "textAutoUpdate": "Automatisch nach Updates suchen",
   "themeSystem": "System",
   "themeLight": "Hell",
   "themeDark": "Dunkel",

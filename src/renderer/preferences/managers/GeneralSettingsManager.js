@@ -11,7 +11,7 @@ export class GeneralSettingsManager {
     this.i18n = deps.i18n;
     this.eventBus = deps.eventBus;
     this.modal = deps.modal;
-    
+
     this.systemListenerSetup = false;
     this.isInitialized = false;
     this.eventsbound = false;
@@ -22,10 +22,10 @@ export class GeneralSettingsManager {
    */
   async init() {
     if (this.isInitialized) return;
-    
+
     await this.loadSettings();
     this.bindEvents();
-    
+
     this.isInitialized = true;
   }
 
@@ -36,7 +36,7 @@ export class GeneralSettingsManager {
     // 加载并应用主题
     const themeMode = await this.prefsService.get('themeMode', DEFAULTS.THEME_MODE);
     applyThemeByMode(themeMode);
-    
+
     // 设置系统主题监听
     await this.setupSystemWatcher();
   }
@@ -50,12 +50,15 @@ export class GeneralSettingsManager {
 
     // 加载主题设置
     await this.loadThemeToUI(modalElement);
-    
+
     // 加载语言设置
     await this.loadLanguageToUI(modalElement);
-    
+
     // 加载开机自启设置
     await this.loadStartupToUI(modalElement);
+
+    // 加载自动更新设置
+    await this.loadAutoUpdateToUI(modalElement);
   }
 
   /**
@@ -79,7 +82,7 @@ export class GeneralSettingsManager {
     try {
       // 确保 i18n 已初始化
       await this.i18n.ensureInitialized();
-      
+
       // 获取支持的语言列表
       const supportedLangs = this.i18n.getSupportedLanguagesWithNames();
 
@@ -115,7 +118,7 @@ export class GeneralSettingsManager {
         startupCheckbox.checked = !!result.enabled;
         try {
           localStorage.setItem(STORAGE_KEYS.STARTUP_ON_LOGIN, String(!!result.enabled));
-        } catch {}
+        } catch { }
       } else {
         // 从本地存储读取
         const saved = localStorage.getItem(STORAGE_KEYS.STARTUP_ON_LOGIN);
@@ -129,24 +132,43 @@ export class GeneralSettingsManager {
   }
 
   /**
+   * 加载自动更新设置到 UI
+   */
+  async loadAutoUpdateToUI(modalElement) {
+    const autoUpdateCheckbox = modalElement.querySelector('#pref-auto-update');
+    if (!autoUpdateCheckbox) return;
+
+    try {
+      const autoUpdate = await this.prefsService.get('autoUpdate', true); // Default to true
+      autoUpdateCheckbox.checked = !!autoUpdate;
+    } catch (error) {
+      console.error('[GeneralSettingsManager] Failed to load auto-update settings:', error);
+      autoUpdateCheckbox.checked = true; // Default to enabled
+    }
+  }
+
+  /**
    * 绑定事件
    */
   bindEvents() {
     // 防止重复绑定
     if (this.eventsBound) return;
-    
+
     const modalElement = this.modal.getModal();
     if (!modalElement) return;
 
     // 主题切换
     this.bindThemeEvents(modalElement);
-    
+
     // 语言切换
     this.bindLanguageEvents(modalElement);
-    
+
     // 开机自启
     this.bindStartupEvents(modalElement);
-    
+
+    // 自动更新
+    this.bindAutoUpdateEvents(modalElement);
+
     this.eventsBound = true;
   }
 
@@ -186,7 +208,7 @@ export class GeneralSettingsManager {
       try {
         const selectedLang = langSelect.value;
         await this.i18n.setLanguage(selectedLang);
-        
+
         // 更新下拉框显示
         const selectedOption = langSelect.querySelector(`option[value="${selectedLang}"]`);
         if (selectedOption) {
@@ -208,15 +230,15 @@ export class GeneralSettingsManager {
     startupCheckbox.addEventListener('change', async () => {
       const desired = !!startupCheckbox.checked;
       startupCheckbox.disabled = true;
-      
+
       try {
         const result = await this.prefsService.setStartupEnabled(desired);
-        
+
         if (result && result.success) {
           try {
             localStorage.setItem(STORAGE_KEYS.STARTUP_ON_LOGIN, String(desired));
-          } catch {}
-          
+          } catch { }
+
           this.showStatus(desired ? '已启用开机自启' : '已禁用开机自启');
         } else {
           // 恢复原状态
@@ -233,11 +255,38 @@ export class GeneralSettingsManager {
   }
 
   /**
+   * 绑定自动更新事件
+   */
+  bindAutoUpdateEvents(modalElement) {
+    const autoUpdateCheckbox = modalElement.querySelector('#pref-auto-update');
+    if (!autoUpdateCheckbox) return;
+
+    autoUpdateCheckbox.addEventListener('change', async () => {
+      const enabled = !!autoUpdateCheckbox.checked;
+      autoUpdateCheckbox.disabled = true;
+
+      try {
+        await this.prefsService.set('autoUpdate', enabled);
+
+        // Notify main process to start/stop auto-update check
+        await this.prefsService.toggleAutoUpdate(enabled);
+
+        this.showStatus(enabled ? '已启用自动更新检查' : '已禁用自动更新检查');
+      } catch (error) {
+        autoUpdateCheckbox.checked = !enabled;
+        this.showStatus('设置自动更新失败: ' + (error.message || error));
+      } finally {
+        autoUpdateCheckbox.disabled = false;
+      }
+    });
+  }
+
+  /**
    * 设置系统主题监听
    */
   async setupSystemWatcher() {
     if (this.systemListenerSetup) return;
-    
+
     const mq = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = async () => {
       const mode = await this.prefsService.get('themeMode', DEFAULTS.THEME_MODE);
@@ -245,13 +294,13 @@ export class GeneralSettingsManager {
         applyThemeByMode(mode);
       }
     };
-    
+
     if (mq.addEventListener) {
       mq.addEventListener('change', handler);
     } else if (mq.addListener) {
       mq.addListener(handler);
     }
-    
+
     this.systemListenerSetup = true;
   }
 
@@ -285,5 +334,8 @@ export class GeneralSettingsManager {
 
     // 更新 UI
     await this.loadToUI();
+
+    // 重置自动更新到默认值（启用）
+    await this.prefsService.set('autoUpdate', true);
   }
 }

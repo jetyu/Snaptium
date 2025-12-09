@@ -23,6 +23,8 @@
   "labelPreviewFont": "পূর্বরূপের ফন্ট",
   "labelStartup": "স্টার্টআপ",
   "textStartup": "স্টার্টআপে NoteWizard চালু করুন",
+  "labelAutoUpdate": "সফটওয়্যার আপডেট",
+  "textAutoUpdate": "স্বয়ংক্রিয়ভাবে আপডেট পরীক্ষা করুন",
   "themeSystem": "সিস্টেম",
   "themeLight": "হালকা",
   "themeDark": "অন্ধকার",

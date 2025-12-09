@@ -23,6 +23,8 @@
   "labelPreviewFont": "ฟอนต์แสดงตัวอย่าง",
   "labelStartup": "การเริ่มต้น",
   "textStartup": "เปิด NoteWizard เมื่อเริ่มต้น",
+  "labelAutoUpdate": "อัปเดตซอฟต์แวร์",
+  "textAutoUpdate": "ตรวจสอบการอัปเดตโดยอัตโนมัติ",
   "themeSystem": "ระบบ",
   "themeLight": "สว่าง",
   "themeDark": "มืด",

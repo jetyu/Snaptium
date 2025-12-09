@@ -23,6 +23,8 @@
   "labelPreviewFont": "預覽字體",
   "labelStartup": "啟動",
   "textStartup": "開機啟動 NoteWizard",
+  "labelAutoUpdate": "軟體更新",
+  "textAutoUpdate": "自動檢查更新",
   "themeSystem": "跟隨系統",
   "themeLight": "亮色",
   "themeDark": "暗色",

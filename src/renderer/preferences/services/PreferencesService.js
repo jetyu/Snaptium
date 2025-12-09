@@ -176,6 +176,20 @@ export class PreferencesService {
       return { success: false, error: error.message };
     }
   }
+
+  /**
+   * 切换自动更新检查
+   * @param {boolean} enabled - 是否启用
+   * @returns {Promise<Object>} { success, error? }
+   */
+  async toggleAutoUpdate(enabled) {
+    try {
+      return await this.ipc.invoke('auto-update:toggle', enabled);
+    } catch (error) {
+      console.error('[PreferencesService] Failed to toggle auto-update:', error);
+      return { success: false, error: error.message };
+    }
+  }
 }
 
 /**

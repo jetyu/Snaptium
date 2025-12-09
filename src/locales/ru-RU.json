@@ -23,6 +23,8 @@
   "labelPreviewFont": "Шрифт предпросмотра",
   "labelStartup": "Запуск",
   "textStartup": "Запускать NoteWizard при старте системы",
+  "labelAutoUpdate": "Обновление ПО",
+  "textAutoUpdate": "Автоматически проверять обновления",
   "themeSystem": "Системная",
   "themeLight": "Светлая",
   "themeDark": "Темная",
