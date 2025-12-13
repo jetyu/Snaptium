@@ -168,7 +168,7 @@ async function loadTrashItems() {
         // 检查父节点是否也被删除
         const parent = node.parentId ? state.nodes.get(node.parentId) : null;
         const isRootTrashedNode = !parent || !parent.trashed;
-        
+
         if (isRootTrashedNode) {
           // 统计子项数量
           let childCount = 0;
@@ -183,7 +183,7 @@ async function loadTrashItems() {
             }
           };
           countChildren(id);
-          
+
           trashedNodes.push({
             id,
             name: node.name,
@@ -212,13 +212,13 @@ async function loadTrashItems() {
     trashedNodes.forEach((item) => {
       const row = document.createElement('tr');
       const fileName = item.type === 'file' ? (item.fileName || `${item.name}.md`) : '-';
-      
+
       // 显示名称，如果是文件夹且有子项，显示子项数量
       let displayName = item.name;
       if (item.type === 'folder' && item.childCount > 0) {
         displayName = `${item.name} (${item.childCount} ${t('trash.items')})`;
       }
-      
+
       row.innerHTML = `
         <td>${displayName}</td>
         <td>${fileName}</td>
@@ -282,10 +282,7 @@ async function showTrashDialog() {
     modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
 
-    const focusable = modal.querySelector('button, [href], [tabindex]:not([tabindex="-1"])');
-    if (focusable) {
-      focusable.focus();
-    }
+
 
     await loadTrashItems();
   } catch (error) {

@@ -65,16 +65,7 @@
   border-color: var(--accent, #666);
 }
 
-.trash-modal__btn--danger {
-  color: #fff;
-  background-color: var(--danger, #d93025);
-  border-color: var(--danger, #d93025);
-}
 
-.trash-modal__btn--danger:hover {
-  background-color: var(--danger-dark, #b02117);
-  border-color: var(--danger-dark, #b02117);
-}
 
 .trash-modal__close {
   display: inline-flex;
