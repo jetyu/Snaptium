@@ -43,10 +43,10 @@ export function createExporter(dependencies) {
     }
     const content = fs.readFileSync(nodesFilePath, 'utf-8');
     const lines = content.split(/\r?\n/).filter(Boolean);
-    
+
     let activeCount = 0;
     let trashedCount = 0;
-    
+
     for (const line of lines) {
       try {
         const node = JSON.parse(line);
@@ -61,7 +61,7 @@ export function createExporter(dependencies) {
         // 忽略解析错误的行
       }
     }
-    
+
     return {
       total: activeCount + trashedCount,
       active: activeCount,
@@ -121,9 +121,9 @@ export function createExporter(dependencies) {
     if (!fs.existsSync(dirPath)) {
       return false;
     }
-    
+
     const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.md'));
-    
+
     for (const file of files) {
       const filePath = path.join(dirPath, file);
       try {
@@ -136,7 +136,7 @@ export function createExporter(dependencies) {
         continue;
       }
     }
-    
+
     return false;
   }
 
@@ -152,7 +152,7 @@ export function createExporter(dependencies) {
         ipcMain.removeListener('export:recovery-key-response', handleResponse);
         resolve(recoveryKey);
       };
-      
+
       ipcMain.once('export:recovery-key-response', handleResponse);
       win.webContents.send('export:request-recovery-key', {
         title: t('export.notewizard.encrypted.inputTitle'),
@@ -169,11 +169,11 @@ export function createExporter(dependencies) {
   async function verifyRecoveryKey(recoveryKey) {
     try {
       const config = await getPreference('encryption');
-      
+
       if (!config || !config.enabled) {
         return false;
       }
-      
+
       // 使用公共函数验证
       return verifyRecoveryKeyHash(recoveryKey, config.recoveryKeyHash);
     } catch (error) {
@@ -194,14 +194,14 @@ export function createExporter(dependencies) {
     let decrypted = 0;
     let copied = 0;
     let failed = 0;
-    
+
     for (const file of files) {
       const sourceFile = path.join(sourceDir, file);
       const targetFile = path.join(tempDir, file);
-      
+
       try {
         const content = fs.readFileSync(sourceFile, 'utf-8');
-        
+
         // 检查是否为加密内容
         if (content.startsWith('ENCRYPTED:')) {
           // 使用公共函数解密
@@ -218,7 +218,7 @@ export function createExporter(dependencies) {
         failed++;
       }
     }
-    
+
     return { decrypted, copied, failed };
   }
 
@@ -229,41 +229,42 @@ export function createExporter(dependencies) {
    */
   async function exportNotes(win) {
     let tempDir = null;
-    
+
     try {
       // 检查数据库目录
       const databaseDir = getDatabaseDir();
       if (!databaseDir) {
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: t('export.notewizard.error.noWorkspace')
         };
       }
 
       if (!fs.existsSync(databaseDir)) {
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: t('export.notewizard.error.databaseNotExist')
         };
       }
 
       // 检查是否有加密文件
       const objectsDir = path.join(databaseDir, 'objects');
-      const hasEncrypted = hasEncryptedFiles(objectsDir);
-      
+      const trashDir = path.join(databaseDir, 'trash');
+      const hasEncrypted = hasEncryptedFiles(objectsDir) || hasEncryptedFiles(trashDir);
+
       let recoveryKey = null;
       if (hasEncrypted) {
         // 提示用户输入恢复密钥
         recoveryKey = await promptRecoveryKey(win);
-        
+
         if (!recoveryKey) {
           // 用户取消
-          return { 
-            success: false, 
+          return {
+            success: false,
             cancelled: true
           };
         }
-        
+
         // 验证恢复密钥
         const isValid = await verifyRecoveryKey(recoveryKey);
         if (!isValid) {
@@ -272,8 +273,8 @@ export function createExporter(dependencies) {
             title: t('export.notewizard.error.title'),
             message: t('export.notewizard.encrypted.keyIncorrect')
           });
-          return { 
-            success: false, 
+          return {
+            success: false,
             error: t('export.notewizard.encrypted.keyIncorrect')
           };
         }
@@ -293,20 +294,20 @@ export function createExporter(dependencies) {
         title: t('export.notewizard.dialog.title'),
         defaultPath: `NoteWizard_Package_${timestamp}.nwp`,
         filters: [
-          { 
-            name: t('export.notewizard.dialog.filterName'), 
-            extensions: ['nwp'] 
+          {
+            name: t('export.notewizard.dialog.filterName'),
+            extensions: ['nwp']
           },
-          { 
-            name: t('export.notewizard.dialog.allFiles'), 
-            extensions: ['*'] 
+          {
+            name: t('export.notewizard.dialog.allFiles'),
+            extensions: ['*']
           }
         ]
       });
 
       if (canceled || !filePath) {
-        return { 
-          success: false, 
+        return {
+          success: false,
           cancelled: true
         };
       }
@@ -315,16 +316,28 @@ export function createExporter(dependencies) {
       if (hasEncrypted && recoveryKey) {
         tempDir = path.join(os.tmpdir(), `notewizard-export-${Date.now()}`);
         fs.mkdirSync(tempDir, { recursive: true });
-        
+
+        // 处理 objects 目录
         const tempObjectsDir = path.join(tempDir, 'objects');
         fs.mkdirSync(tempObjectsDir, { recursive: true });
-        
-        // 解密文件到临时目录
-        const decryptResult = decryptFilesToTemp(objectsDir, tempObjectsDir, recoveryKey);
-        console.log(`[Exporter] Decryption result:`, decryptResult);
-        
-        if (decryptResult.failed > 0) {
-          console.warn(`[Exporter] ${decryptResult.failed} files failed to decrypt`);
+        const objectsDecryptResult = decryptFilesToTemp(objectsDir, tempObjectsDir, recoveryKey);
+
+        // 处理 trash 目录
+        const tempTrashDir = path.join(tempDir, 'trash');
+        if (fs.existsSync(trashDir)) {
+          fs.mkdirSync(tempTrashDir, { recursive: true });
+          const trashDecryptResult = decryptFilesToTemp(trashDir, tempTrashDir, recoveryKey);
+
+          console.log(`[Exporter] Decryption result: Objects(${objectsDecryptResult.decrypted}) Trash(${trashDecryptResult.decrypted})`);
+
+          if (objectsDecryptResult.failed > 0 || trashDecryptResult.failed > 0) {
+            console.warn(`[Exporter] Some files failed to decrypt: Objects(${objectsDecryptResult.failed}) Trash(${trashDecryptResult.failed})`);
+          }
+        } else {
+          console.log(`[Exporter] Decryption result: Objects(${objectsDecryptResult.decrypted})`);
+          if (objectsDecryptResult.failed > 0) {
+            console.warn(`[Exporter] Some files failed to decrypt: Objects(${objectsDecryptResult.failed})`);
+          }
         }
       }
 
@@ -338,7 +351,7 @@ export function createExporter(dependencies) {
       // 生成并添加 manifest.json
       const manifest = generateManifest(noteStats);
       zip.addFile(
-        'manifest.json', 
+        'manifest.json',
         Buffer.from(JSON.stringify(manifest, null, 2), 'utf-8')
       );
 
@@ -349,11 +362,19 @@ export function createExporter(dependencies) {
       // 添加目录（如果有临时目录，使用临时目录的 objects，否则使用原目录）
       if (tempDir) {
         addFolderToZip(zip, path.join(tempDir, 'objects'), 'objects');
+        // 检查临时回收站是否存在
+        const tempTrashPath = path.join(tempDir, 'trash');
+        if (fs.existsSync(tempTrashPath)) {
+          addFolderToZip(zip, tempTrashPath, 'trash');
+        } else {
+          addFolderToZip(zip, trashDir, 'trash');
+        }
       } else {
         addFolderToZip(zip, path.join(databaseDir, 'objects'), 'objects');
+        addFolderToZip(zip, trashDir, 'trash');
       }
+
       addFolderToZip(zip, path.join(databaseDir, 'images'), 'images');
-      addFolderToZip(zip, path.join(databaseDir, 'trash'), 'trash');
 
       // 写入 ZIP 文件
       zip.writeZip(filePath);
@@ -367,9 +388,9 @@ export function createExporter(dependencies) {
       };
     } catch (error) {
       console.error('[Exporter] Export failed:', error);
-      return { 
-        success: false, 
-        error: error.message 
+      return {
+        success: false,
+        error: error.message
       };
     } finally {
       // 清理临时目录

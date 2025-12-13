@@ -1,8 +1,15 @@
-### [0.5.0] - 2025-12-14
+### [1.0.0] - 2026-01-01
+We are pleased to announce the official release of NoteWizard 1.0.
+After 7 months of continuous iteration and optimization, this version delivers significant improvements in stability and overall user experience.
 #### New
-- Added background automatic update software function.
+- Support for automatic background update checking and downloading to ensure users always stay on the latest version.
+- Real-time word count display while editing notes.
+#### Fixes
+- Fixed an issue where exporting encrypted Markdown (.md) files could fail when encryption was enabled.
+- Fixed button focus issue.
 #### Improvements
-- Improved the user experience of software updates.
+- Upgraded the Electron runtime framework to v39.2.6.
+- Improved the software update workflow and user interactions.
 
 ### [0.4.4] - 2025-12-08
 #### Improvements
