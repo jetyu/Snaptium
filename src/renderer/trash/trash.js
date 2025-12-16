@@ -58,7 +58,24 @@ function bindModalEvents(modal) {
   const emptyBtn = modal.querySelector('#empty-trash-btn');
   if (emptyBtn) {
     emptyBtn.addEventListener('click', async () => {
-      if (!confirm(t('trash.emptyConfirm'))) return;
+      let confirmed = false;
+      if (electronAPI.dialog && electronAPI.dialog.showMessageBox) {
+        const result = await electronAPI.dialog.showMessageBox({
+          type: 'warning',
+          title: t('dialog.confirm'),
+          message: t('trash.emptyConfirm'),
+          buttons: [t('trash.delete'), t('dialog.cancel')],
+          defaultId: 0,
+          cancelId: 1,
+          noLink: true
+        });
+        confirmed = result.response === 0;
+      } else {
+        confirmed = confirm(t('trash.emptyConfirm'));
+      }
+      
+      if (!confirmed) return;
+      
       try {
         const removed = vfs.emptyTrash();
         await loadTrashItems();
@@ -234,12 +251,31 @@ async function loadTrashItems() {
       btn.addEventListener('click', async (event) => {
         event.stopPropagation();
         const id = btn.getAttribute('data-id');
-        if (id && confirm(t('trash.restoreConfirm'))) {
-          vfs.restoreNode(id);
-          await loadTrashItems();
-          renderTree();
-          ipcRenderer.send('trash-updated');
+        if (!id) return;
+        
+        // 使用 Electron 原生对话框
+        let confirmed = false;
+        if (electronAPI.dialog && electronAPI.dialog.showMessageBox) {
+          const result = await electronAPI.dialog.showMessageBox({
+            type: 'question',
+            title: t('dialog.confirm'),
+            message: t('trash.restoreConfirm'),
+            buttons: [t('trash.restore'), t('dialog.cancel')],
+            defaultId: 0,
+            cancelId: 1,
+            noLink: true
+          });
+          confirmed = result.response === 0;
+        } else {
+          confirmed = confirm(t('trash.restoreConfirm'));
         }
+        
+        if (!confirmed) return;
+        
+        vfs.restoreNode(id);
+        await loadTrashItems();
+        renderTree();
+        ipcRenderer.send('trash-updated');
       });
     });
 
@@ -247,12 +283,31 @@ async function loadTrashItems() {
       btn.addEventListener('click', async (event) => {
         event.stopPropagation();
         const id = btn.getAttribute('data-id');
-        if (id && confirm(t('trash.permanentDeleteConfirm'))) {
-          vfs.deleteNode(id, true);
-          await loadTrashItems();
-          renderTree();
-          ipcRenderer.send('trash-updated');
+        if (!id) return;
+        
+        // 使用 Electron 原生对话框
+        let confirmed = false;
+        if (electronAPI.dialog && electronAPI.dialog.showMessageBox) {
+          const result = await electronAPI.dialog.showMessageBox({
+            type: 'warning',
+            title: t('dialog.confirm'),
+            message: t('trash.permanentDeleteConfirm'),
+            buttons: [t('trash.delete'), t('dialog.cancel')],
+            defaultId: 0,
+            cancelId: 1,
+            noLink: true
+          });
+          confirmed = result.response === 0;
+        } else {
+          confirmed = confirm(t('trash.permanentDeleteConfirm'));
         }
+        
+        if (!confirmed) return;
+        
+        vfs.deleteNode(id, true);
+        await loadTrashItems();
+        renderTree();
+        ipcRenderer.send('trash-updated');
       });
     });
 

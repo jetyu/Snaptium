@@ -269,7 +269,25 @@ export class PreferencesManager {
   async importPreferences() {
     try {
       // 显示确认对话框
-      if (!confirm(this.t('importConfirm'))) {
+      let confirmed = false;
+      const electronAPI = window.electronAPI;
+      
+      if (electronAPI?.dialog?.showMessageBox) {
+        const result = await electronAPI.dialog.showMessageBox({
+          type: 'question',
+          title: this.t('dialog.confirm'),
+          message: this.t('importConfirm'),
+          buttons: [this.t('dialog.ok'), this.t('dialog.cancel')],
+          defaultId: 0,
+          cancelId: 1,
+          noLink: true
+        });
+        confirmed = result.response === 0;
+      } else {
+        confirmed = confirm(this.t('importConfirm'));
+      }
+
+      if (!confirmed) {
         return;
       }
 
@@ -281,7 +299,23 @@ export class PreferencesManager {
         await this.applyImportedPreferences(result.preferences);
 
         // 提示用户重启应用
-        if (confirm(this.t('restartAppNotify'))) {
+        let shouldRestart = false;
+        if (electronAPI?.dialog?.showMessageBox) {
+          const restartResult = await electronAPI.dialog.showMessageBox({
+            type: 'question',
+            title: this.t('dialog.confirm'),
+            message: this.t('restartAppNotify'),
+            buttons: [this.t('dialog.ok'), this.t('dialog.cancel')],
+            defaultId: 0,
+            cancelId: 1,
+            noLink: true
+          });
+          shouldRestart = restartResult.response === 0;
+        } else {
+          shouldRestart = confirm(this.t('restartAppNotify'));
+        }
+
+        if (shouldRestart) {
           await this.prefsService.relaunchApp();
         }
       } else {
@@ -361,7 +395,26 @@ export class PreferencesManager {
    * 重置所有设置
    */
   async resetAllSettings() {
-    if (!confirm(this.t('resetConfirmNotify'))) {
+    // 显示确认对话框
+    let confirmed = false;
+    const electronAPI = window.electronAPI;
+    
+    if (electronAPI?.dialog?.showMessageBox) {
+      const result = await electronAPI.dialog.showMessageBox({
+        type: 'warning',
+        title: this.t('dialog.confirm'),
+        message: this.t('resetConfirmNotify'),
+        buttons: [this.t('dialog.ok'), this.t('dialog.cancel')],
+        defaultId: 0,
+        cancelId: 1,
+        noLink: true
+      });
+      confirmed = result.response === 0;
+    } else {
+      confirmed = confirm(this.t('resetConfirmNotify'));
+    }
+
+    if (!confirmed) {
       return;
     }
 

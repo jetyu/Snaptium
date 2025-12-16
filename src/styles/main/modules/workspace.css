@@ -72,16 +72,17 @@
 
 #file-search {
     flex: 1;
-    padding: 4px 8px;
+    padding: 6px 8px;
     border: 1px solid var(--border);
     border-radius: 4px;
     background: var(--surface);
     color: var(--text);
     font-size: 13px;
     transition: none;
-    height: 28px;
+    height: 32px;
     box-sizing: border-box;
     width: 0; /* Allow flex to control width */
+    line-height: 20px;
 }
 
 #file-search:hover {
