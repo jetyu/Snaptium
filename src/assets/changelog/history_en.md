@@ -6,9 +6,11 @@ After 7 months of continuous iteration and optimization, this version delivers s
 - Real-time word count display while editing notes.
 #### Fixes
 - Fixed an issue where exporting encrypted Markdown (.md) files could fail when encryption was enabled.
+- Fixed an issue where the editor cursor would disappear after using the "Properties" or "Delete" options in the context menu.
 - Fixed button focus issue.
 #### Improvements
 - Upgraded the Electron runtime framework to v39.2.6.
+- Upgraded the CodeMirror editor framework to v5.65.20.
 - Improved the software update workflow and user interactions.
 
 ### [0.4.4] - 2025-12-08

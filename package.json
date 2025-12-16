@@ -20,7 +20,7 @@
   "dependencies": {
     "@material-design-icons/svg": "^0.14.15",
     "adm-zip": "^0.5.10",
-    "codemirror": "^5.65.16",
+    "codemirror": "^5.65.20",
     "electron-updater": "^6.3.6",
     "icon-gen": "^5.0.0",
     "marked": "^12.0.2",

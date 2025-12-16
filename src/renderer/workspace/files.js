@@ -90,7 +90,7 @@ function updateStatus(message) {
  * 显示文件属性对话框
  * @param {string} filePath - 文件路径
  */
-function showFileProperties(filePath) {
+async function showFileProperties(filePath) {
   try {
     // 检查文件是否存在
     if (!electronFs.existsSync(filePath)) {
@@ -112,16 +112,25 @@ function showFileProperties(filePath) {
       modifiedTime = dateObj.toLocaleString();
     }
     
-    const props = `
-      ${t('property.location')}: ${electronPath.dirname(filePath)}
-      ${t('property.size')}: ${sizeInKB} KB
-      ${t('property.modifiedTime')}: ${modifiedTime}
-    `;
+    const message = `${t('property.location')}: ${electronPath.dirname(filePath)}\n${t('property.size')}: ${sizeInKB} KB\n${t('property.modifiedTime')}: ${modifiedTime}`;
 
-    alert(`${t('dialog.fileProperties')}:\n${props}`);
+    await electronAPI.dialog.showMessageBox({
+      type: 'info',
+      title: t('dialog.fileProperties'),
+      message: t('dialog.fileProperties'),
+      detail: message,
+      buttons: [t('dialog.ok')]
+    });
   } catch (error) {
     const errorMessage = `${t('dialog.cannotGetProperties')}: ${error.message}\n${t('dialog.path')}: ${filePath}`;
-    alert(errorMessage);
+    
+    await electronAPI.dialog.showMessageBox({
+      type: 'error',
+      title: t('dialog.error'),
+      message: t('dialog.error'),
+      detail: errorMessage,
+      buttons: [t('dialog.ok')]
+    });
   }
 }
 
@@ -196,10 +205,21 @@ async function handleMenuAction(action, node) {
         
       case 'delete':
         if (!node) return;
-        // 延迟执行 confirm，避免阻塞菜单关闭
         setTimeout(async () => {
           const displayName = node.name || t('default.thisItem');
-          if (!confirm(t('dialog.deleteConfirm').replace('{name}', displayName))) {
+          
+          const result = await electronAPI.dialog.showMessageBox({
+            type: 'warning',
+            title: t('dialog.confirm'),
+            message: t('dialog.deleteConfirm').replace('{name}', displayName),
+            detail: t('dialog.deleteDetail'),
+            buttons: [t('contextMenu.delete'), t('dialog.cancel')],
+            defaultId: 1,
+            cancelId: 1,
+            noLink: true
+          });
+          
+          if (result.response !== 0) {
             return;
           }
           
@@ -345,7 +365,7 @@ async function selectNode(node) {
  * @param {string} action - 要执行的操作类型 (rename/delete)
  * @param {HTMLElement} fileItem - 关联的文件元素
  */
-function handleFileAction(action, fileItem) {
+async function handleFileAction(action, fileItem) {
   const oldName = fileItem.textContent;
   const oldPath = fileItem.dataset.filePath;
   const dir = electronPath.dirname(oldPath || getDefaultSaveDir());
@@ -357,7 +377,12 @@ function handleFileAction(action, fileItem) {
       const finalName = input.toLowerCase().endsWith('.md') ? input : input + '.md';
       const newPath = electronPath.join(dir, finalName);
       if (electronFs.existsSync(newPath)) {
-        alert(t('file.fileExists'));
+        await electronAPI.dialog.showMessageBox({
+          type: 'warning',
+          title: t('dialog.error'),
+          message: t('file.fileExists'),
+          buttons: [t('dialog.ok')]
+        });
         return;
       }
       try {
@@ -377,16 +402,37 @@ function handleFileAction(action, fileItem) {
         if (state.currentFileItem === fileItem) state.currentFilePath = newPath;
         updateStatus(`${t('file.renamed')}: ${finalName}`);
       } catch (e) {
-        alert(t('file.renameFailed'));
+        await electronAPI.dialog.showMessageBox({
+          type: 'error',
+          title: t('dialog.error'),
+          message: t('file.renameFailed'),
+          buttons: [t('dialog.ok') ]
+        });
       }
       break;
     }
     case 'delete': {
-      if (!confirm(t('dialog.deleteFileConfirm').replace('{name}', oldName))) return;
+      const result = await electronAPI.dialog.showMessageBox({
+        type: 'warning',
+        title: t('dialog.confirm'),
+        message: t('dialog.deleteFileConfirm').replace('{name}', oldName),
+        buttons: [t('contextMenu.delete'), t('dialog.cancel')],
+        defaultId: 1,
+        cancelId: 1,
+        noLink: true
+      });
+      
+      if (result.response !== 0) return;
+      
       try {
         if (oldPath && electronFs.existsSync(oldPath)) electronFs.unlinkSync(oldPath);
       } catch (e) {
-        alert(t('file.deleteFailed2'));
+        await electronAPI.dialog.showMessageBox({
+          type: 'error',
+          title: t('dialog.error'),
+          message: t('file.deleteFailed2'),
+          buttons: [t('dialog.ok')]
+        });
         return;
       }
       if (state.fileContents.has(oldName)) state.fileContents.delete(oldName);
