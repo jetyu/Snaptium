@@ -621,13 +621,38 @@ function setupEditorEvents() {
     // 初始化大纲
     outline.setupOutlineWhenReady();
     
-    state.editor.on('change', () => {
+    state.editor.on('change', async () => {
       renderPreview();
+      const content = state.editor.getValue();
+      
+      // 如没有选中笔记但编辑器有内容，自动创建临时笔记
+      if (!state.currentNodeId && content.trim().length > 0) {
+        try {
+          console.log('[AutoCreate] Creating temporary note for unsaved content');
+          const noteName = t('default.untitledNote');
+          const newNode = vfs.createFile(null, noteName, content);
+          state.currentNodeId = newNode.id;
+          state.fileContents.set(newNode.id, content);
+          tree.renderTree();
+          
+          // 选中新创建的笔记
+          const treeRow = document.querySelector(`.tree-item[data-node-id="${newNode.id}"] .tree-row`);
+          if (treeRow) {
+            document.querySelectorAll('.tree-row').forEach(r => r.classList.remove('active'));
+            treeRow.classList.add('active');
+          }
+          
+          updateStatus(`${t('file.autoCreated')}: ${noteName}`);
+        } catch (e) {
+          console.error('[AutoCreate] Failed to create temporary note:', e);
+        }
+        return;
+      }
+      
       const nodeId = state.currentNodeId;
       if (!nodeId) return;
       const node = vfs.getNodeById(nodeId);
       if (!node || node.type !== 'file') return;
-      const content = state.editor.getValue();
       state.fileContents.set(nodeId, content);
       if (state.autoSaveTimer) clearTimeout(state.autoSaveTimer);
       state.autoSaveTimer = setTimeout(async () => {
