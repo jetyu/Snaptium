@@ -139,15 +139,25 @@
 .tree-row {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 2px 1px;
+    gap: 8px;
+    padding: 6px 8px;
     border-radius: 1px;
     cursor: pointer;
-   transition: background-color 0.15s ease, color 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    margin: 1px 4px;
+    font-size: 15px;
 }
 
 .tree-label {
-    line-height: 22px;
+    line-height: 20px;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+}
+
+.tree-icon {
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
 .tree-root,
@@ -159,13 +169,13 @@
 
 .tree-root {
     margin: 0;
-    padding-left: 10px;
+    padding: 4px 6px;
 }
 
 .tree-level {
     margin: 0;
     padding-left: 0;
-    margin-left: 10px;
+    margin-left: 16px;
 }
 
 .tree-row:hover {
