@@ -226,7 +226,9 @@ function startInlineRename(nodeId) {
   input.type = 'text';
   input.className = 'tree-rename';
   input.value = node.name || '';
-  input.style.width = Math.max(120, label.offsetWidth || 120) + 'px';
+  // 计算合适的宽度：基于标签宽度，增加一些padding空间
+  const labelWidth = label.offsetWidth || 100;
+  input.style.width = Math.max(100, labelWidth + 20) + 'px';
 
   // 替换 label
   label.style.display = 'none';
@@ -236,9 +238,16 @@ function startInlineRename(nodeId) {
   input.style.position = 'relative';
   input.style.zIndex = '1000';
   input.focus();
-  input.select();
-  input.focus();
-  input.select();
+  
+  // 智能选择：如果是文件（有扩展名），只选中文件名部分，不包括扩展名
+  const lastDotIndex = input.value.lastIndexOf('.');
+  if (node.type === 'file' && lastDotIndex > 0) {
+    // 只选中扩展名之前的部分
+    input.setSelectionRange(0, lastDotIndex);
+  } else {
+    // 文件夹或没有扩展名的文件，选中全部
+    input.select();
+  }
 
   let committed = false;
   const commit = () => {

@@ -78,28 +78,33 @@ body {
    -------------------------------------------- */
 input.tree-rename {
   font: inherit;
-  padding: 6px 10px;
-  line-height: 20px;
-  height: 32px;
-  border: 2px solid var(--border);
-  border-radius: 8px;
+  padding: 2px 6px;
+  line-height: 22px;
+  height: 26px;
+  border: 1px solid var(--accent);
+  border-radius: 4px;
   outline: none;
   background: var(--surface);
   color: var(--text);
   transition: none;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 0 2px rgba(97, 98, 105, 0.15);
+  margin: 0;
 }
 
 input.tree-rename:hover {
-  border-color: var(--muted);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(97, 98, 105, 0.2);
 }
 
 input.tree-rename:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(97, 98, 105, 0.2), 0 4px 12px rgba(0, 0, 0, 0.15);
-  transform: translateY(-1px);
+  box-shadow: 0 0 0 2px rgba(97, 98, 105, 0.25);
+}
+
+input.tree-rename::selection {
+  background-color: var(--accent);
+  color: var(--accent-contrast);
 }
 
 /* ============================================
