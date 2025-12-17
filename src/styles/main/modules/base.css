@@ -390,36 +390,6 @@ input.tree-rename::selection {
   flex-direction: column;
 }
 
-/* Context Menu */
-.context-menu {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  box-shadow: var(--shadow-lg);
-  padding: 4px 0;
-  min-width: 120px;
-  font-size: 13px;
-}
-
-.menu-item {
-  padding: 8px 16px;
-  cursor: pointer;
-  color: var(--text);
-}
-
-.menu-item:hover {
-  background: var(--hover);
-  color: var(--text);
-}
-
-.menu-item:first-child {
-  border-radius: 6px 6px 0 0;
-}
-
-.menu-item:last-child {
-  border-radius: 0 0 6px 6px;
-}
-
 /* ============================================
    # 状态栏
    ============================================ */

@@ -113,6 +113,16 @@ contextBridge.exposeInMainWorld('electronAPI', {
         getVersion: () => ipcRenderer.invoke('app:getVersion'),
         openPath: (filePath) => ipcRenderer.invoke('app:openPath', filePath),
         showItemInFolder: (filePath) => ipcRenderer.invoke('app:showItemInFolder', filePath)
+    },
+
+    contextMenu: {
+        show: (menuItems, callback) => {
+            const channel = `context-menu-${Date.now()}`;
+            ipcRenderer.once(channel, (event, action) => {
+                callback(action);
+            });
+            ipcRenderer.send('context-menu:show', { menuItems, channel });
+        }
     }
 });
 

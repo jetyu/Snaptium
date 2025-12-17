@@ -89,8 +89,9 @@ function updateStatus(message) {
 /**
  * 显示文件属性对话框
  * @param {string} filePath - 文件路径
+ * @param {Object} node - 节点对象
  */
-async function showFileProperties(filePath) {
+async function showFileProperties(filePath, node = null) {
   try {
     // 检查文件是否存在
     if (!electronFs.existsSync(filePath)) {
@@ -100,19 +101,75 @@ async function showFileProperties(filePath) {
     const stats = electronFs.statSync(filePath);
     const sizeInKB = (stats.size / 1024).toFixed(2);
     
-    // 处理修改时间
-    let modifiedTime;
-    const timeValue = stats.mtime || stats.ctime || new Date();
-    const dateObj = new Date(timeValue);
-    
-    // 验证日期对象是否有效
-    if (isNaN(dateObj.getTime())) {
-      modifiedTime = t('unknown') || 'Unknown';
-    } else {
-      modifiedTime = dateObj.toLocaleString();
+    // 读取文件内容用于统计
+    let content = '';
+    try {
+      content = await electronFs.readFile(filePath, 'utf-8');
+    } catch (err) {
+      console.warn('Failed to read file content for statistics:', err);
     }
     
-    const message = `${t('property.location')}: ${electronPath.dirname(filePath)}\n${t('property.size')}: ${sizeInKB} KB\n${t('property.modifiedTime')}: ${modifiedTime}`;
+    // 字数统计（去除空白字符后的字符数）
+    const charCount = content.replace(/\s/g, '').length;
+    
+    // 行数统计
+    const lineCount = content ? content.split('\n').length : 0;
+    
+    // 处理创建时间
+    let createdTime;
+    const createdTimeValue = stats.birthtime || stats.ctime || new Date();
+    const createdDateObj = new Date(createdTimeValue);
+    
+    if (isNaN(createdDateObj.getTime())) {
+      createdTime = t('unknown');
+    } else {
+      createdTime = createdDateObj.toLocaleString();
+    }
+    
+    // 处理修改时间
+    let modifiedTime;
+    const modifiedTimeValue = stats.mtime || stats.ctime || new Date();
+    const modifiedDateObj = new Date(modifiedTimeValue);
+    
+    if (isNaN(modifiedDateObj.getTime())) {
+      modifiedTime = t('unknown');
+    } else {
+      modifiedTime = modifiedDateObj.toLocaleString();
+    }
+    
+    // 获取物理文件名
+    const physicalFileName = electronPath.basename(filePath);
+    
+    // 构建属性信息（按优先级排序）
+    let details = [];
+    
+    // 1. 显示名称
+    if (node && node.name) {
+      details.push(`${t('property.displayName')}: ${node.name}`);
+    }
+    
+    // 2. 位置
+    details.push(`${t('property.location')}: ${electronPath.dirname(filePath)}`);
+    
+    // 3. 物理文件名
+    details.push(`${t('property.physicalName')}: ${physicalFileName}`);
+    
+    // 4. 大小
+    details.push(`${t('property.size')}: ${sizeInKB} KB`);
+    
+    // 5. 字数统计
+    details.push(`${t('property.charCount')}: ${charCount.toLocaleString()}`);
+    
+    // 6. 行数
+    details.push(`${t('property.lineCount')}: ${lineCount.toLocaleString()}`);
+    
+    // 7. 创建时间
+    details.push(`${t('property.createdTime')}: ${createdTime}`);
+    
+    // 8. 修改时间
+    details.push(`${t('property.modifiedTime')}: ${modifiedTime}`);
+    
+    const message = details.join('\n');
 
     await electronAPI.dialog.showMessageBox({
       type: 'info',
@@ -176,7 +233,7 @@ async function handleMenuAction(action, node) {
           break;
         case 'properties':
           // 延迟执行，避免阻塞菜单关闭
-          setTimeout(() => showFileProperties(filePath), 100);
+          setTimeout(() => showFileProperties(filePath, node), 100);
           break;
       }
       return;
@@ -224,7 +281,22 @@ async function handleMenuAction(action, node) {
           }
           
           try {
-            const parentNode = node.parentId ? vfs.getNodeById(node.parentId) : null;
+            // 获取同级节点列表，用于删除后选中下一个
+            const siblings = vfs.listChildren(node.parentId);
+            const currentIndex = siblings.findIndex(n => n.id === node.id);
+            let nextNode = null;
+            // 优先级：同级下一个 > 同级上一个 > 父文件夹 > 第一个可用笔记
+            if (currentIndex !== -1) {
+              // 尝试选中同级下一个节点
+              if (currentIndex + 1 < siblings.length) {
+                nextNode = siblings[currentIndex + 1];
+              }
+              // 如果没有下一个，尝试选中同级上一个节点
+              else if (currentIndex > 0) {
+                nextNode = siblings[currentIndex - 1];
+              }
+            }
+            
             vfs.deleteNode(node.id);
             ipcRenderer?.send('trash-updated');
             tree.renderTree();
@@ -236,10 +308,18 @@ async function handleMenuAction(action, node) {
               }
             }
             
-            if (parentNode) {
-              await selectNode(parentNode);
+            // 选中下一个节点
+            if (nextNode) {
+              await selectNode(nextNode);
             } else {
-              renderPreview();
+              // 如果没有同级节点，选中父文件夹
+              const parentNode = node.parentId ? vfs.getNodeById(node.parentId) : null;
+              if (parentNode) {
+                await selectNode(parentNode);
+              } else {
+                // 兜底：选中第一个可用笔记
+                selectFirstAvailableNote();
+              }
             }
             
             updateStatus(t('file.movedToTrash'));
@@ -262,62 +342,47 @@ async function handleMenuAction(action, node) {
  * @param {Event} e - 触发菜单的鼠标事件
  */
 function showContextMenu(node, e) {
-  const menu = document.createElement('div');
-  menu.className = 'context-menu';
-  menu.style.position = 'fixed';
-  menu.style.left = e.clientX + 'px';
-  menu.style.top = e.clientY + 'px';
-  menu.style.zIndex = '1000';
-
+  e.preventDefault();
+  
   const isRoot = !node || node.id === 'root';
   const isFolder = !isRoot && node.type === 'folder';
   const isFile = !isRoot && node.type === 'file';
 
-  let menuHTML = [];
+  let menuItems = [];
 
   // 1. 工作区（空白区域）
   if (isRoot) {
-    menuHTML.push(
-      `<div class="menu-item" data-action="new-note">${t('contextMenu.newNote')}</div>`,
-      `<div class="menu-item" data-action="new-notebook">${t('contextMenu.newNotebook')}</div>`
-    );
+    menuItems = [
+      { label: t('contextMenu.newNote'), action: 'new-note' },
+      { label: t('contextMenu.newNotebook'), action: 'new-notebook' }
+    ];
   }
   // 2. 笔记文件
   else if (isFile) {
-    menuHTML.push(
-      `<div class="menu-item" data-action="rename">${t('contextMenu.rename')}</div>`,
-      `<div class="menu-item" data-action="delete">${t('contextMenu.delete')}</div>`,
-      `<div class="menu-item" data-action="showInFolder">${t('contextMenu.showInFolder')}</div>`,
-      `<div class="menu-item" data-action="properties">${t('contextMenu.properties')}</div>`
-    );
+    menuItems = [
+      { label: t('contextMenu.rename'), action: 'rename' },
+      { label: t('contextMenu.delete'), action: 'delete' },
+      { type: 'separator' },
+      { label: t('contextMenu.showInFolder'), action: 'showInFolder' },
+      { label: t('contextMenu.properties'), action: 'properties' }
+    ];
   }
   // 3. 笔记本文件夹
   else if (isFolder) {
-    menuHTML.push(
-      `<div class="menu-item" data-action="new-note">${t('contextMenu.newNote')}</div>`,
-      `<div class="menu-item" data-action="new-notebook">${t('contextMenu.newNotebook')}</div>`,
-      `<div class="menu-item" data-action="rename">${t('contextMenu.rename')}</div>`,
-      `<div class="menu-item" data-action="delete">${t('contextMenu.delete')}</div>`
-    );
+    menuItems = [
+      { label: t('contextMenu.newNote'), action: 'new-note' },
+      { label: t('contextMenu.newNotebook'), action: 'new-notebook' },
+      { type: 'separator' },
+      { label: t('contextMenu.rename'), action: 'rename' },
+      { label: t('contextMenu.delete'), action: 'delete' }
+    ];
   }
 
-  menu.innerHTML = menuHTML.join('\n');
-  document.body.appendChild(menu);
-
-  const close = () => { if (menu.parentNode) document.body.removeChild(menu); document.removeEventListener('click', onDocClick); };
-  const onDocClick = (ev) => { if (!menu.contains(ev.target)) close(); };
-  setTimeout(() => document.addEventListener('click', onDocClick), 0);
-
-  menu.addEventListener('click', async (ev) => {
-    const act = ev.target && ev.target.dataset && ev.target.dataset.action;
-    if (!act) return;
-    ev.stopPropagation();
-    
-    // 立即关闭菜单
-    close();
-    
-    // 执行对应的操作处理器
-    await handleMenuAction(act, node);
+  // 使用菜单
+  electronAPI.contextMenu.show(menuItems, async (action) => {
+    if (action) {
+      await handleMenuAction(action, node);
+    }
   });
 }
 
@@ -337,6 +402,14 @@ async function selectNode(node) {
 
   state.currentNodeId = node ? node.id : null;
   if (!node) return;
+  
+  // 更新树形视图的高亮
+  document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
+  const treeRow = document.querySelector(`.tree-item[data-node-id="${node.id}"] .tree-row`);
+  if (treeRow) {
+    treeRow.classList.add('active');
+  }
+  
   if (node.type === 'folder') {
     if (state.editor) state.editor.setValue('');
     updateStatus(`${t('file.openedFolder')}: ${node.name}`);
@@ -547,31 +620,19 @@ async function initializeFileWorkspace() {
   search.initSearch(fileSearch, treeContainer);
 
   newFileBtn.addEventListener('click', (e) => {
-    // 弹出新建菜单：笔记 / 笔记本
-    const menu = document.createElement('div');
-    menu.className = 'context-menu';
-    menu.style.position = 'fixed';
-    const rect = newFileBtn.getBoundingClientRect();
-    menu.style.left = (rect.left) + 'px';
-    menu.style.top = (rect.bottom + 6) + 'px';
-    menu.style.zIndex = '1000';
-    menu.innerHTML = `
-      <div class="menu-item" data-action="new-note">${t('contextMenu.newNote')}</div>
-      <div class="menu-item" data-action="new-notebook">${t('contextMenu.newNotebook')}</div>
-    `;
-    document.body.appendChild(menu);
-
-    const close = () => { if (menu.parentNode) document.body.removeChild(menu); document.removeEventListener('click', onDocClick); };
-    const onDocClick = (ev) => { if (!menu.contains(ev.target)) close(); };
-    setTimeout(() => document.addEventListener('click', onDocClick), 0);
-
-    menu.addEventListener('click', (ev) => {
-      const act = ev.target && ev.target.dataset && ev.target.dataset.action;
-      if (!act) return;
-      ev.stopPropagation();
-      close();
+    e.preventDefault();
+    
+    // 使用 Electron 原生菜单
+    const menuItems = [
+      { label: t('contextMenu.newNote'), action: 'new-note' },
+      { label: t('contextMenu.newNotebook'), action: 'new-notebook' }
+    ];
+    
+    electronAPI.contextMenu.show(menuItems, async (action) => {
+      if (!action) return;
+      
       try {
-        if (act === 'new-note') {
+        if (action === 'new-note') {
           // 在根目录下创建新笔记
           const node = vfs.createFile(null, t('default.newNote'));
           // 重新渲染树
@@ -585,13 +646,14 @@ async function initializeFileWorkspace() {
             }
           }, 50);
           updateStatus(t('status.createdNoteInRoot'));
-        } else if (act === 'new-notebook') {
+        } else if (action === 'new-notebook') {
           // 在根目录下创建新笔记本
-          const folder = vfs.createFolder(null, t('default.newNotebook'));
+          vfs.createFolder(null, t('default.newNotebook'));
           tree.renderTree();
           updateStatus(t('status.createdNotebookInRoot'));
         }
       } catch (err) {
+        console.error('Menu action error:', err);
       }
     });
   });

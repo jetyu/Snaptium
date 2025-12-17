@@ -268,6 +268,30 @@ ipcMain.handle("auto-update:toggle", async (event, enabled) => {
   }
 });
 
+// 处理右键菜单
+ipcMain.on('context-menu:show', (event, { menuItems, channel }) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  if (!win) return;
+
+  // 构建菜单模板
+  const template = menuItems.map(item => {
+    if (item.type === 'separator') {
+      return { type: 'separator' };
+    }
+    
+    return {
+      label: item.label,
+      click: () => {
+        // 将选中的操作发送回渲染进程
+        event.sender.send(channel, item.action);
+      }
+    };
+  });
+
+  const contextMenu = Menu.buildFromTemplate(template);
+  contextMenu.popup({ window: win });
+});
+
 
 // ==================== 应用启动 ====================
 app.whenReady().then(() => {
