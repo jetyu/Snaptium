@@ -592,8 +592,19 @@ async function initializeFileWorkspace() {
       onMove: (sourceId, targetNode) => {
         try {
           const src = vfs.getNodeById(sourceId);
-          if (!src || !targetNode || targetNode.type !== 'folder') return;
+          if (!src) return;
+          
+          // targetNode 为 null 表示移动到根目录
+          if (targetNode === null) {
+            vfs.moveNode(sourceId, null, Date.now());
+            tree.renderTree();
+            return;
+          }
+          
+          // 只允许拖到文件夹
+          if (targetNode.type !== 'folder') return;
           if (sourceId === targetNode.id) return;
+          
           // 防止将父节点拖入其子节点
           let p = targetNode.parentId;
           while (p) { if (p === sourceId) return; const pn = vfs.getNodeById(p); p = pn ? pn.parentId : null; }

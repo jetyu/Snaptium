@@ -10,8 +10,153 @@ let handlers = {
   onInlineRenameCommit: null, // function(node, newName)
 };
 
+// 自动滚动相关变量
+let autoScrollInterval = null;
+const SCROLL_SPEED = 10; // 每次滚动的像素
+const SCROLL_ZONE = 50; // 触发滚动的边缘区域大小（像素）
+
+// 多选相关变量
+let selectedNodes = new Set(); // 当前选中的节点ID集合
+let lastClickedNodeId = null; // 上次点击的节点ID，用于Shift范围选择
+
 function setHandlers(h) {
   handlers = { ...handlers, ...(h || {}) };
+}
+
+/**
+ * 处理拖拽时的自动滚动
+ * @param {DragEvent} e - 拖拽事件
+ * @param {HTMLElement} container - 滚动容器
+ */
+function handleAutoScroll(e, container) {
+  if (!container) return;
+  
+  const rect = container.getBoundingClientRect();
+  const mouseY = e.clientY;
+  
+  // 清除之前的滚动定时器
+  if (autoScrollInterval) {
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = null;
+  }
+  
+  // 检查是否在顶部边缘区域
+  if (mouseY < rect.top + SCROLL_ZONE) {
+    autoScrollInterval = setInterval(() => {
+      container.scrollTop -= SCROLL_SPEED;
+      if (container.scrollTop <= 0) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+      }
+    }, 20);
+  }
+  // 检查是否在底部边缘区域
+  else if (mouseY > rect.bottom - SCROLL_ZONE) {
+    autoScrollInterval = setInterval(() => {
+      const maxScroll = container.scrollHeight - container.clientHeight;
+      container.scrollTop += SCROLL_SPEED;
+      if (container.scrollTop >= maxScroll) {
+        clearInterval(autoScrollInterval);
+        autoScrollInterval = null;
+      }
+    }, 20);
+  }
+}
+
+/**
+ * 停止自动滚动
+ */
+function stopAutoScroll() {
+  if (autoScrollInterval) {
+    clearInterval(autoScrollInterval);
+    autoScrollInterval = null;
+  }
+}
+
+/**
+ * 获取所有可见节点的ID列表（按DOM顺序）
+ */
+function getAllVisibleNodeIds() {
+  const nodeIds = [];
+  document.querySelectorAll('.tree-item').forEach(item => {
+    if (item.style.display !== 'none') {
+      nodeIds.push(item.dataset.nodeId);
+    }
+  });
+  return nodeIds;
+}
+
+/**
+ * 更新选中状态的视觉显示
+ */
+function updateSelectionUI() {
+  document.querySelectorAll('.tree-row').forEach(row => {
+    const item = row.closest('.tree-item');
+    if (item && selectedNodes.has(item.dataset.nodeId)) {
+      row.classList.add('selected');
+    } else {
+      row.classList.remove('selected');
+    }
+  });
+}
+
+/**
+ * 清除所有选中状态
+ */
+function clearSelection() {
+  selectedNodes.clear();
+  updateSelectionUI();
+}
+
+/**
+ * 处理节点点击（支持Ctrl和Shift多选）
+ */
+function handleNodeClick(node, event, row) {
+  const nodeId = node.id;
+  
+  if (event.ctrlKey || event.metaKey) {
+    // Ctrl/Cmd + 点击：切换单个节点的选中状态
+    if (selectedNodes.has(nodeId)) {
+      selectedNodes.delete(nodeId);
+      row.classList.remove('selected');
+    } else {
+      selectedNodes.add(nodeId);
+      row.classList.add('selected');
+    }
+    lastClickedNodeId = nodeId;
+  } else if (event.shiftKey && lastClickedNodeId) {
+    // Shift + 点击：选中范围
+    const allNodeIds = getAllVisibleNodeIds();
+    const lastIndex = allNodeIds.indexOf(lastClickedNodeId);
+    const currentIndex = allNodeIds.indexOf(nodeId);
+    
+    if (lastIndex !== -1 && currentIndex !== -1) {
+      const start = Math.min(lastIndex, currentIndex);
+      const end = Math.max(lastIndex, currentIndex);
+      
+      // 清除之前的选择
+      clearSelection();
+      
+      // 选中范围内的所有节点
+      for (let i = start; i <= end; i++) {
+        selectedNodes.add(allNodeIds[i]);
+      }
+      updateSelectionUI();
+    }
+  } else {
+    // 普通点击：清除其他选择，只选中当前节点
+    clearSelection();
+    selectedNodes.add(nodeId);
+    row.classList.add('selected');
+    lastClickedNodeId = nodeId;
+    
+    // 移除active类（用selected替代）
+    document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
+    row.classList.add('active');
+    
+    // 触发选择回调
+    if (handlers.onSelect) handlers.onSelect(node);
+  }
 }
 
 function buildTreeDom(parentId) {
@@ -37,11 +182,12 @@ function buildTreeDom(parentId) {
     row.appendChild(label);
     li.appendChild(row);
 
-    row.addEventListener('click', () => {
-      document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
-      row.classList.add('active');
-      if (handlers.onSelect) handlers.onSelect(node);
-      if (node.type === 'folder') {
+    row.addEventListener('click', (e) => {
+      // 处理多选
+      handleNodeClick(node, e, row);
+      
+      // 文件夹展开/折叠逻辑（仅在非多选模式下）
+      if (node.type === 'folder' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
         const wasExpanded = li.classList.contains('expanded');
         li.classList.toggle('expanded');
         const existing = li.querySelector(':scope > ul.tree-level');
@@ -66,19 +212,63 @@ function buildTreeDom(parentId) {
 
     // 拖拽源
     row.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', node.id);
+      // 如果拖拽的节点不在选中列表中，清除选择并只选中当前节点
+      if (!selectedNodes.has(node.id)) {
+        clearSelection();
+        selectedNodes.add(node.id);
+        row.classList.add('selected');
+      }
+      
+      // 传递所有选中的节点ID（用逗号分隔）
+      const selectedIds = Array.from(selectedNodes).join(',');
+      e.dataTransfer.setData('text/plain', selectedIds);
       e.dataTransfer.effectAllowed = 'move';
+      
+      // 设置拖拽提示
+      if (selectedNodes.size > 1) {
+        e.dataTransfer.setData('text/html', `<div>移动 ${selectedNodes.size} 个项目</div>`);
+      }
     });
-    // 仅允许拖放到文件夹
-    if (node.type === 'folder') {
-      row.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-      row.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const sourceId = e.dataTransfer.getData('text/plain');
-        if (!sourceId || sourceId === node.id) return;
-        if (handlers.onMove) handlers.onMove(sourceId, node);
-      });
-    }
+    
+    row.addEventListener('dragend', () => {
+      stopAutoScroll();
+    });
+    
+    // 拖拽目标：文件夹可以接收，文件也可以接收（会移动到其父目录）
+    row.addEventListener('dragover', (e) => { 
+      e.preventDefault(); 
+      e.dataTransfer.dropEffect = 'move';
+      // 处理自动滚动
+      const container = document.getElementById('tree');
+      if (container) {
+        handleAutoScroll(e, container);
+      }
+    });
+    
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // 阻止事件冒泡
+      stopAutoScroll(); // 停止自动滚动
+      
+      const sourceData = e.dataTransfer.getData('text/plain');
+      if (!sourceData) return;
+      
+      // 解析源节点ID（可能是多个，用逗号分隔）
+      const sourceIds = sourceData.split(',').filter(id => id && id !== node.id);
+      if (sourceIds.length === 0) return;
+      
+      const targetNode = node.type === 'folder' ? node : (node.parentId ? vfs.getNodeById(node.parentId) : null);
+      
+      // 移动所有选中的节点
+      if (handlers.onMove) {
+        sourceIds.forEach(sourceId => {
+          handlers.onMove(sourceId, targetNode);
+        });
+      }
+      
+      // 清除选择
+      clearSelection();
+    });
 
     if (node.type === 'folder') {
       li.classList.add('collapsible');
@@ -114,6 +304,61 @@ function renderTree() {
   }
   
   container.innerHTML = '';
+  
+  // 为根容器添加拖拽支持，允许拖拽到根目录
+  // 点击空白区域清除选择
+  container.addEventListener('click', (e) => {
+    if (e.target === container || e.target.classList.contains('tree-root')) {
+      clearSelection();
+      document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
+    }
+  });
+  
+  container.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    // 处理自动滚动
+    handleAutoScroll(e, container);
+  });
+  
+  container.addEventListener('dragleave', (e) => {
+    // 当拖拽离开容器时停止自动滚动
+    if (e.target === container) {
+      stopAutoScroll();
+    }
+  });
+  
+  container.addEventListener('drop', (e) => {
+    // 停止自动滚动
+    stopAutoScroll();
+    
+    // 只在空白区域或根列表上响应
+    if (e.target === container || e.target.classList.contains('tree-root')) {
+      e.preventDefault();
+      const sourceData = e.dataTransfer.getData('text/plain');
+      if (!sourceData) return;
+      
+      // 解析源节点ID（可能是多个，用逗号分隔）
+      const sourceIds = sourceData.split(',').filter(id => id);
+      if (sourceIds.length === 0) return;
+      
+      // 移动所有选中的节点到根目录
+      if (handlers.onMove) {
+        sourceIds.forEach(sourceId => {
+          handlers.onMove(sourceId, null);
+        });
+      }
+      
+      // 清除选择
+      clearSelection();
+    }
+  });
+  
+  container.addEventListener('dragend', () => {
+    // 拖拽结束时停止自动滚动
+    stopAutoScroll();
+  });
+  
   // 根是 parentId === null 的集合，渲染为一级
   const roots = vfs.listChildren(null);
   const rootUl = document.createElement('ul');
@@ -136,14 +381,15 @@ function renderTree() {
     row.appendChild(label);
     li.appendChild(row);
 
-    row.addEventListener('click', () => {
+    row.addEventListener('click', (e) => {
       // 取消任何正在进行的重命名
       cancelCurrentRename();
       
-      document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
-      row.classList.add('active');
-      if (handlers.onSelect) handlers.onSelect(rootNode);
-      if (rootNode.type === 'folder') {
+      // 处理多选
+      handleNodeClick(rootNode, e, row);
+      
+      // 文件夹展开/折叠逻辑（仅在非多选模式下）
+      if (rootNode.type === 'folder' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
         const wasExpanded = li.classList.contains('expanded');
         li.classList.toggle('expanded');
         const existing = li.querySelector(':scope > ul.tree-level');
@@ -166,19 +412,64 @@ function renderTree() {
       if (handlers.onContext) handlers.onContext(rootNode, e);
     });
 
-    // 根节点拖拽：源始终可拖，目标仅当为文件夹时允许
+    // 根节点拖拽：源始终可拖
     row.addEventListener('dragstart', (e) => {
-      e.dataTransfer.setData('text/plain', rootNode.id);
+      // 如果拖拽的节点不在选中列表中，清除选择并只选中当前节点
+      if (!selectedNodes.has(rootNode.id)) {
+        clearSelection();
+        selectedNodes.add(rootNode.id);
+        row.classList.add('selected');
+      }
+      
+      // 传递所有选中的节点ID
+      const selectedIds = Array.from(selectedNodes).join(',');
+      e.dataTransfer.setData('text/plain', selectedIds);
       e.dataTransfer.effectAllowed = 'move';
+      
+      // 设置拖拽提示
+      if (selectedNodes.size > 1) {
+        e.dataTransfer.setData('text/html', `<div>移动 ${selectedNodes.size} 个项目</div>`);
+      }
     });
+    
+    row.addEventListener('dragend', () => {
+      stopAutoScroll();
+    });
+    
+    // 拖拽目标：文件夹可以接收，文件也可以接收（会移动到根目录）
+    row.addEventListener('dragover', (e) => { 
+      e.preventDefault(); 
+      e.dataTransfer.dropEffect = 'move';
+      // 处理自动滚动
+      handleAutoScroll(e, container);
+    });
+    
+    row.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation(); // 阻止事件冒泡到容器
+      stopAutoScroll(); // 停止自动滚动
+      
+      const sourceData = e.dataTransfer.getData('text/plain');
+      if (!sourceData) return;
+      
+      // 解析源节点ID（可能是多个，用逗号分隔）
+      const sourceIds = sourceData.split(',').filter(id => id && id !== rootNode.id);
+      if (sourceIds.length === 0) return;
+      
+      const targetNode = rootNode.type === 'folder' ? rootNode : null;
+      
+      // 移动所有选中的节点
+      if (handlers.onMove) {
+        sourceIds.forEach(sourceId => {
+          handlers.onMove(sourceId, targetNode);
+        });
+      }
+      
+      // 清除选择
+      clearSelection();
+    });
+    
     if (rootNode.type === 'folder') {
-      row.addEventListener('dragover', (e) => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; });
-      row.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const sourceId = e.dataTransfer.getData('text/plain');
-        if (!sourceId || sourceId === rootNode.id) return;
-        if (handlers.onMove) handlers.onMove(sourceId, rootNode);
-      });
       li.classList.add('collapsible');
       // 默认展开根文件夹
       li.classList.add('expanded');

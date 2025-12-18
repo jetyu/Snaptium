@@ -1,6 +1,6 @@
 # NoteWizard User Guide
 
-**Language **: [English](./NoteWizard_en-US.md) | [简体中文](./NoteWizard_zh-CN.md)
+**Language**: [English](./NoteWizard_en-US.md) | [简体中文](./NoteWizard_zh-CN.md)
 
 <div align="center">
   <img src="../../src/assets/logo/app-logo-128.png" alt="NoteWizard Logo" width="96">
@@ -77,7 +77,9 @@ NoteWizard features a clean three-column layout:
 - **Notebook Structure**: Displays hierarchical structure of all notes
 - **Search Function**: Quickly find notes
 - **Context Menu**: Create, rename, delete files/notebooks
-- **Drag & Drop**: Drag files to different notebooks
+- **Drag & Drop**: Drag files to different notebooks or root directory
+- **Multi-Select**: `Ctrl+Click` for individual selection, `Shift+Click` for range selection
+- **Auto-Scroll**: Automatically scrolls when dragging near edges
 
 ### Middle Panel - Editor
 
@@ -142,13 +144,22 @@ NoteWizard features a clean three-column layout:
 
 ### 7. Move Note
 
+**Single Note:**
 - Drag note to target notebook
+- Drag note to root directory (empty area) to move it out of notebook
+
+**Multiple Notes (Multi-Select):**
+- `Ctrl+Click` (or `Cmd+Click` on macOS): Select/deselect individual notes
+- `Shift+Click`: Select range of notes between last clicked and current clicked
+- Drag any selected note to move all selected notes together
+- Auto-scroll when dragging near top/bottom edge of file tree
 
 ### 8. Search Notes
 
 - Enter keywords in search box at top of left panel
 - Supports search by filename
 - Real-time display of search results
+- Click empty area to clear search
 
 ---
 
@@ -322,6 +333,9 @@ NoteWizard supports 19 languages:
 | Open Trash | `Ctrl+Shift+T` | `Cmd+Shift+T` |
 | Rename | `F2` | `F2` |
 | Delete | `Delete` | `Delete` |
+| Multi-Select (Add) | `Ctrl+Click` | `Cmd+Click` |
+| Multi-Select (Range) | `Shift+Click` | `Shift+Click` |
+| Clear Selection | `Click Empty Area` | `Click Empty Area` |
 
 ---
 
@@ -463,5 +477,5 @@ Happy note-taking! ✨
 ---
 
 **NoteWizard Team**  
-Version: 0.1.5  
-Last Updated: 2025-09-30
+Version: 0.2.0  
+Last Updated: 2025-12-18
