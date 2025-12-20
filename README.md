@@ -9,14 +9,15 @@
   <h2> NoteWizard </h2>
   <p>A modern cross-platform note-taking desktop application built with Electron, featuring local data storage for complete security and control.</p>
   
-[![GitHub Release](https://img.shields.io/github/v/release/jetyu/NoteWizard?style=flat-square)](https://github.com/jetyu/NoteWizard/releases/latest)
-[![GitHub pre-release](https://img.shields.io/github/v/release/jetyu/NoteWizard?include_prereleases&style=flat-square&label=pre-release)](https://github.com/jetyu/NoteWizard/releases)
-[![Build Status](https://github.com/jetyu/NoteWizard/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/jetyu/NoteWizard/actions/workflows/build.yml)
-[![Downloads](https://img.shields.io/github/downloads/jetyu/NoteWizard/total?style=flat-square&logo=github)](https://github.com/jetyu/NoteWizard/releases/)
-![GitHub repo size](https://img.shields.io/github/repo-size/jetyu/NoteWizard)
-![GitHub license](https://img.shields.io/github/license/jetyu/NoteWizard?style=flat-square)
-![GitHub last commit](https://img.shields.io/github/last-commit/jetyu/NoteWizard)
-![GitHub issues](https://img.shields.io/github/issues/jetyu/NoteWizard)
+[![Latest Release](https://img.shields.io/github/v/release/jetyu/NoteWizard?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases/latest)
+[![Pre-release Version](https://img.shields.io/github/v/release/jetyu/NoteWizard?include_prereleases&style=flat&label=pre-release)](https://github.com/jetyu/NoteWizard/releases)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20|%20Linux%20|%20macOS-blue?style=flat)]()
+[![Repo Size](https://img.shields.io/github/repo-size/jetyu/NoteWizard?style=flat)]()
+[![Last Commit](https://img.shields.io/github/last-commit/jetyu/NoteWizard?style=flat)]()
+[![Open Issues](https://img.shields.io/github/issues/jetyu/NoteWizard?style=flat)]()
+[![License](https://img.shields.io/github/license/jetyu/NoteWizard?style=flat)]()
+[![Downloads](https://img.shields.io/github/downloads/jetyu/NoteWizard/total?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases)
+
 
 </div>
 

@@ -1,6 +1,6 @@
 ### [1.0.0] - 2026-01-01
-We are pleased to announce the official release of NoteWizard 1.0.
-After 7 months of continuous iteration and optimization, this version delivers significant improvements in stability and overall user experience.
+We are pleased to announce the official release of NoteWizard v1.0.
+During 7 months of continuous iteration and optimization, this version delivers significant improvements in stability and overall user experience.
 #### New
 - Support for automatic background update checking and downloading to ensure users always stay on the latest version.
 - Real-time word count display while editing notes.

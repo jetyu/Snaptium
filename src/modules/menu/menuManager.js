@@ -307,12 +307,6 @@ export function createMenuManager(deps) {
       label: t("menu.help"),
       submenu: [
         {
-          label: t("menu.help.tutorial"),
-          click: () => {
-            shell.openExternal("https://github.com/jetyu/NoteWizard/blob/main/doc/guide/NoteWizard_en-US.md");
-          },
-        },
-        {
           label: t("menu.help.devTools"),
           click: () => {
             const win = getWindow();
@@ -327,6 +321,18 @@ export function createMenuManager(deps) {
           click: () => {
             shell.openExternal("https://github.com/jetyu/NoteWizard");
           },
+        }, 
+        {
+          label: t("menu.help.tutorial"),
+          click: () => {
+            shell.openExternal("https://github.com/jetyu/NoteWizard/blob/main/doc/User_Guide/UserGuide_en-US.md");
+          },
+        },
+        {
+          label: t("menu.help.privacyPolicy"),
+          click: () => {
+            shell.openExternal("https://github.com/jetyu/NoteWizard/blob/main/doc/Privacy_Policy/PrivacyPolicy_en-US.md");
+          },
         },
         {
           label: t("menu.help.feedback"),
@@ -335,6 +341,7 @@ export function createMenuManager(deps) {
           },
         },
         { type: "separator" },
+       
         {
           label: t("menu.help.update"),
           click: async () => {
