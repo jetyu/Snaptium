@@ -23,7 +23,7 @@
     "codemirror": "^5.65.20",
     "electron-updater": "^6.3.6",
     "icon-gen": "^5.0.0",
-    "marked": "^12.0.2",
+    "markdown-it": "^14.1.0",
     "mkdirp": "^3.0.1",
     "node-fetch": "^2.7.0",
     "sharp": "^0.34.3"
@@ -174,7 +174,7 @@
     "asar": true,
     "asarUnpack": [
       "**/node_modules/codemirror/**",
-      "**/node_modules/marked/**"
+      "**/node_modules/markdown-it/**"
     ]
   }
 }

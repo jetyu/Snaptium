@@ -1,3 +1,4 @@
+import './renderer/codemirror/codemirror-resources.js';
 import { onDomReadyInitEditor } from './renderer/editor/editor.js';
 import { setupOutlineWhenReady } from './renderer/workspace/outline.js';
 import { initializeFileWorkspace, setupEditorEvents, forceFlushAutoSave } from './renderer/workspace/files.js';
@@ -53,7 +54,7 @@ function setupLeftPanelUI() {
   if (collapseBtn && leftPanel) {
     collapseBtn.setAttribute('aria-label', '折叠面板');
     collapseBtn.title = '折叠面板';
-    
+
     collapseBtn.addEventListener('click', () => {
       leftPanel.classList.toggle('collapsed');
       const isCollapsed = leftPanel.classList.contains('collapsed');
@@ -87,7 +88,7 @@ function setupPreviewWidthPersistence() {
       previewPanel.style.flex = '0 0 auto';
       previewPanel.style.width = storedWidth + 'px';
     }
-  } catch {}
+  } catch { }
 }
 
 function setupPreviewLeftEdgeDrag() {
@@ -136,7 +137,7 @@ function setupPreviewLeftEdgeDrag() {
     previewWidth = Math.min(Math.max(previewWidth, minPreview), maxPreview);
     previewPanel.style.flex = '0 0 auto';
     previewPanel.style.width = previewWidth + 'px';
-    try { localStorage.setItem('previewPanelWidth', String(Math.round(previewWidth))); } catch {}
+    try { localStorage.setItem('previewPanelWidth', String(Math.round(previewWidth))); } catch { }
   };
 
   const onMouseUp = () => {
@@ -160,7 +161,7 @@ function setupPreviewIpcHandlers() {
   const saveCurrentPreviewWidth = () => {
     const w = Math.round(previewPanel.getBoundingClientRect().width);
     if (w > 0) {
-      try { localStorage.setItem('previewPanelWidth', String(w)); } catch {}
+      try { localStorage.setItem('previewPanelWidth', String(w)); } catch { }
     }
   };
 
@@ -171,9 +172,9 @@ function setupPreviewIpcHandlers() {
         previewPanel.style.flex = '0 0 auto';
         previewPanel.style.width = saved + 'px';
       }
-    } catch {}
+    } catch { }
     previewPanel.style.display = '';
-    try { ipcRenderer.send('preview-state-changed', { visible: true }); } catch {}
+    try { ipcRenderer.send('preview-state-changed', { visible: true }); } catch { }
   };
 
   const hidePreview = () => {
@@ -181,7 +182,7 @@ function setupPreviewIpcHandlers() {
     previewPanel.style.display = 'none';
     editorPanel.style.flex = '1 1 auto';
     editorPanel.style.width = '';
-    try { ipcRenderer.send('preview-state-changed', { visible: false }); } catch {}
+    try { ipcRenderer.send('preview-state-changed', { visible: false }); } catch { }
   };
 
   ipcRenderer.removeAllListeners('preview-show');
@@ -204,17 +205,17 @@ async function runAppInitialization() {
   setupPreviewWidthPersistence();
   setupPreviewLeftEdgeDrag();
   setupPreviewIpcHandlers();
-  
+
   await initI18n();
-  
+
   onDomReadyInitEditor();
   await initializeFileWorkspace();
   setupEditorEvents();
   initPreview();
   setupToolbar();
-  
+
   await initPreferences({ i18n });
-  
+
   initTrash();
   setupOutlineWhenReady();
   setupExportIPCListeners();
@@ -222,7 +223,7 @@ async function runAppInitialization() {
   try {
     const visible = document.getElementById('preview-panel')?.style.display !== 'none';
     ipcRenderer.send('preview-state-changed', { visible });
-  } catch {}
+  } catch { }
 }
 
 /**
@@ -238,7 +239,7 @@ function setupBeforeUnloadHandler() {
       console.error('[BeforeUnload] Save Failed:', e);
     }
   });
-  
+
   // 监听来自主进程的关闭前通知
   ipcRenderer.on('app-before-quit', async () => {
     console.log('[BeforeQuit] ForceSaveContent');

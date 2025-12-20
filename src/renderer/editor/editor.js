@@ -17,13 +17,13 @@ export function initializeEditor() {
         extraKeys: {
           'Ctrl-S': function () {
           },
-          'Tab': function(cm) {
+          'Tab': function (cm) {
             return handleTabKey(cm);
           },
-          'Esc': function(cm) {
+          'Esc': function (cm) {
             return handleEscKey(cm);
           },
-          'Ctrl-/': function() {
+          'Ctrl-/': function () {
             hideAISuggestion();
           }
         },
@@ -52,7 +52,7 @@ export function initializeEditor() {
 }
 
 function setupEditorEventListeners(editor, aiAssistant) {
-  editor.on('change', function(cm, change) {
+  editor.on('change', function (cm, change) {
     const content = cm.getValue();
     const event = new CustomEvent('editor-content-changed', {
       detail: { content, change }
@@ -60,7 +60,7 @@ function setupEditorEventListeners(editor, aiAssistant) {
     window.dispatchEvent(event);
   });
 
-  editor.on('cursorActivity', function(cm) {
+  editor.on('cursorActivity', function (cm) {
     const cursor = cm.getCursor();
     const event = new CustomEvent('editor-cursor-changed', {
       detail: { cursor }
@@ -72,18 +72,18 @@ function setupEditorEventListeners(editor, aiAssistant) {
   const scrollElement = editor.getScrollerElement();
   if (scrollElement) {
     let isSyncing = false;
-    scrollElement.addEventListener('scroll', function() {
+    scrollElement.addEventListener('scroll', function () {
       if (isSyncing) return;
-      
+
       const previewContainer = document.getElementById('preview-container');
       if (!previewContainer) return;
-      
+
       const scrollTop = scrollElement.scrollTop;
       const scrollHeight = scrollElement.scrollHeight - scrollElement.clientHeight;
       if (scrollHeight <= 0) return;
-      
+
       const scrollRatio = scrollTop / scrollHeight;
-      
+
       const previewScrollHeight = previewContainer.scrollHeight - previewContainer.clientHeight;
       if (previewScrollHeight > 0) {
         isSyncing = true;

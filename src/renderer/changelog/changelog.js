@@ -1,5 +1,5 @@
 import { initI18n, applyI18n, t, getLanguage } from "../i18n.js";
-import { marked } from "../../utils/marked.js";
+import { createMarkdownRenderer } from "../../utils/markdown-renderer.js";
 
 const CONFIG = {
   LANGUAGE_EN_US: "en-US",
@@ -31,13 +31,9 @@ async function readMarkdownFile(lang) {
 }
 
 function renderMarkdown(markdown, container) {
-  marked.setOptions({
-    gfm: true,
-    breaks: true,
-    sanitize: false,
-  });
+  const md = createMarkdownRenderer();
 
-  const renderedHtml = marked.parse(markdown);
+  const renderedHtml = md.render(markdown);
   const tempDiv = document.createElement("div");
   tempDiv.innerHTML = renderedHtml;
 

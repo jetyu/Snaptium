@@ -1,3 +1,5 @@
+import { createMarkdownRenderer } from '../../utils/markdown-renderer.js';
+
 import state from '../state.js';
 
 const styleUrl = new URL('./preview.css', import.meta.url);
@@ -64,7 +66,10 @@ function resolveImagePaths(html) {
   });
 }
 
+const md = createMarkdownRenderer();
+
 function renderPreview() {
+
   ensureStyleInjected();
 
   if (!state.editor) return;
@@ -74,8 +79,8 @@ function renderPreview() {
 
   try {
     const rawMarkdown = state.editor.getValue();
-    if (window.marked && typeof window.marked.parse === 'function') {
-      const html = window.marked.parse(rawMarkdown);
+    if (md) {
+      const html = md.render(rawMarkdown);
       previewElement.innerHTML = resolveImagePaths(html);
     } else {
       previewElement.textContent = rawMarkdown;

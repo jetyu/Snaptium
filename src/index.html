@@ -32,9 +32,11 @@
             Outline
           </button>
         </div>
-        <button id="collapse-btn" class="collapse-btn" title="折叠面板" data-i18n-title="collapsePanel" aria-label="Toggle panel">
-          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="m15 18-6-6 6-6"/>
+        <button id="collapse-btn" class="collapse-btn" title="折叠面板" data-i18n-title="collapsePanel"
+          aria-label="Toggle panel">
+          <svg class="icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m15 18-6-6 6-6" />
           </svg>
         </button>
       </div>
@@ -93,7 +95,8 @@
           <button type="button" data-act="strike" data-i18n-title="toolbar.strikethrough"
             data-i18n-aria-label="toolbar.strikethrough">
             <svg class="icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-              <text x="4" y="18" font-family="Arial" font-size="17" font-weight="bold" fill="currentColor" text-decoration="line-through">S</text>
+              <text x="4" y="18" font-family="Arial" font-size="17" font-weight="bold" fill="currentColor"
+                text-decoration="line-through">S</text>
             </svg>
           </button>
           <button type="button" data-act="ul" data-i18n-title="toolbar.bulletList"
@@ -150,7 +153,7 @@
                 d="M19 5v14H5V5h14m0-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4.86 8.86l-3 3.87L9 13.14 6 17h12l-3.86-5.14z" />
             </svg>
           </button>
-          
+
         </div>
         <!-- 编辑器 -->
         <div id="editor-wrapper">
@@ -171,9 +174,8 @@
   <div id="status" data-i18n="statusReady">Ready</div>
 
   <!-- 脚本 -->
-  <script src="../node_modules/codemirror/lib/codemirror.js"></script>
-  <script src="../node_modules/codemirror/mode/markdown/markdown.js"></script>
-  <script src="../node_modules/marked/marked.min.js"></script>
+
+  <script src="../node_modules/markdown-it/dist/markdown-it.min.js"></script>
   <script type="module" src="./renderer_bootstrap.js"></script>
 </body>
 

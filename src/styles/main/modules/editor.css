@@ -243,6 +243,20 @@
     overflow: hidden;
 }
 
+
+
+/* 
+   Raw textarea - hidden to prevent FOUC (Flash of Unstyled Content) 
+   before CodeMirror loads. 
+   Modules load asynchronously, so the raw element is rendered first.
+*/
+#editor {
+    border: none;
+    outline: none;
+    resize: none;
+    opacity: 0;
+}
+
 .CodeMirror {
     flex: 1;
     height: 100%;
