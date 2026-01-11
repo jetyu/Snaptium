@@ -334,5 +334,6 @@
   "encryptionDisabled": "Verschlüsselung deaktiviert! {decrypted} Dateien entschlüsselt.",
   "search.resultsCount": "{count} Notizen gefunden",
   "search.noResults": "Keine passenden Notizen gefunden",
-  "search.clearSearch": "Suche löschen"
+  "search.clearSearch": "Suche löschen",
+  "preview.copyCode": "Code Kopieren"
 }

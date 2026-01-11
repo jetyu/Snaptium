@@ -1,3 +1,8 @@
+### [1.0.1] - 2026-01-18
+#### New
+- Supports code highlighting for mainstream programming languages.
+- Supports copying code blocks during preview.
+
 ### [1.0.0] - 2026-01-01
 We are pleased to announce the official release of NoteWizard v1.0.
 During 7 months of continuous iteration and optimization, this version delivers significant improvements in stability and overall user experience.

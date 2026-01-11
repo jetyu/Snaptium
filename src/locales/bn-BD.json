@@ -334,5 +334,6 @@
   "encryptionDisabled": "এনক্রিপশন অক্ষম করা হয়েছে! {decrypted} টি ফাইল ডিক্রিপ্ট করা হয়েছে।",
   "search.resultsCount": "{count} টি নোট পাওয়া গেছে",
   "search.noResults": "কোনো মিল নোট পাওয়া যায়নি",
-  "search.clearSearch": "অনুসন্ধান মুছে ফেলুন"
+  "search.clearSearch": "অনুসন্ধান মুছে ফেলুন",
+  "preview.copyCode": "কোড কপি করুন"
 }

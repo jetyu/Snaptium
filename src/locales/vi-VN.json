@@ -334,5 +334,6 @@
   "encryptionDisabled": "Đã tắt mã hóa! Đã giải mã {decrypted} tệp.",
   "search.resultsCount": "Tìm thấy {count} ghi chú",
   "search.noResults": "Không tìm thấy ghi chú phù hợp",
-  "search.clearSearch": "Xóa tìm kiếm"
+  "search.clearSearch": "Xóa tìm kiếm",
+  "preview.copyCode": "Sao Chép Mã"
 }

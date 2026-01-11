@@ -334,5 +334,6 @@
   "encryptionDisabled": "加密已禁用！已解密 {decrypted} 個檔案。",
   "search.resultsCount": "找到 {count} 個筆記",
   "search.noResults": "未找到匹配的筆記",
-  "search.clearSearch": "清空搜尋"
+  "search.clearSearch": "清空搜尋",
+  "preview.copyCode": "複製代碼"
 }

@@ -334,5 +334,6 @@
   "encryptionDisabled": "암호화가 비활성화되었습니다! {decrypted}개 파일이 복호화되었습니다.",
   "search.resultsCount": "{count}개의 노트를 찾았습니다",
   "search.noResults": "일치하는 노트를 찾을 수 없습니다",
-  "search.clearSearch": "검색 지우기"
+  "search.clearSearch": "검색 지우기",
+  "preview.copyCode": "코드 복사"
 }

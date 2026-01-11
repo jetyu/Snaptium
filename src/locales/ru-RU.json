@@ -334,5 +334,6 @@
   "encryptionDisabled": "Шифрование отключено! Расшифровано {decrypted} файлов.",
   "search.resultsCount": "Найдено {count} заметок",
   "search.noResults": "Соответствующие заметки не найдены",
-  "search.clearSearch": "Очистить поиск"
+  "search.clearSearch": "Очистить поиск",
+  "preview.copyCode": "Копировать Код"
 }

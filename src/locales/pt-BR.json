@@ -334,5 +334,6 @@
   "encryptionDisabled": "Criptografia desativada! {decrypted} arquivos descriptografados.",
   "search.resultsCount": "Encontradas {count} notas",
   "search.noResults": "Nenhuma nota correspondente encontrada",
-  "search.clearSearch": "Limpar pesquisa"
+  "search.clearSearch": "Limpar pesquisa",
+  "preview.copyCode": "Copiar Código"
 }

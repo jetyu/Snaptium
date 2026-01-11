@@ -334,5 +334,6 @@
   "encryptionDisabled": "加密已禁用！已解密 {decrypted} 个文件。",
   "search.resultsCount": "找到 {count} 个笔记",
   "search.noResults": "未找到匹配的笔记",
-  "search.clearSearch": "清空搜索"
+  "search.clearSearch": "清空搜索",
+  "preview.copyCode": "复制代码"
 }

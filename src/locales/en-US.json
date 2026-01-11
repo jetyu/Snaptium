@@ -334,5 +334,6 @@
   "encryptionDisabled": "Encryption disabled! Decrypted {decrypted} files.",
   "search.resultsCount": "Found {count} notes",
   "search.noResults": "No matching notes found",
-  "search.clearSearch": "Clear search"
+  "search.clearSearch": "Clear search",
+  "preview.copyCode": "Copy Code"
 }

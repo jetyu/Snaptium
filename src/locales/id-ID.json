@@ -334,5 +334,6 @@
   "encryptionDisabled": "Enkripsi dinonaktifkan! {decrypted} file didekripsi.",
   "search.resultsCount": "Ditemukan {count} catatan",
   "search.noResults": "Tidak ada catatan yang cocok ditemukan",
-  "search.clearSearch": "Hapus pencarian"
+  "search.clearSearch": "Hapus pencarian",
+  "preview.copyCode": "Salin Kode"
 }

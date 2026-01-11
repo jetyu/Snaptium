@@ -334,5 +334,6 @@
   "encryptionDisabled": "暗号化が無効になりました！ {decrypted} ファイルを復号化しました。",
   "search.resultsCount": "{count} 件のノートが見つかりました",
   "search.noResults": "一致するノートが見つかりません",
-  "search.clearSearch": "検索をクリア"
+  "search.clearSearch": "検索をクリア",
+  "preview.copyCode": "コードをコピー"
 }

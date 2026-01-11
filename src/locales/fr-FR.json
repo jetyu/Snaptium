@@ -334,5 +334,6 @@
   "encryptionDisabled": "Chiffrement désactivé ! {decrypted} fichiers déchiffrés.",
   "search.resultsCount": "{count} notes trouvées",
   "search.noResults": "Aucune note correspondante trouvée",
-  "search.clearSearch": "Effacer la recherche"
+  "search.clearSearch": "Effacer la recherche",
+  "preview.copyCode": "Copier le Code"
 }

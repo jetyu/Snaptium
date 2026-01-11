@@ -334,5 +334,6 @@
   "encryptionDisabled": "ปิดใช้งานการเข้ารหัสแล้ว! ถอดรหัส {decrypted} ไฟล์",
   "search.resultsCount": "พบ {count} บันทึก",
   "search.noResults": "ไม่พบบันทึกที่ตรงกัน",
-  "search.clearSearch": "ล้างการค้นหา"
+  "search.clearSearch": "ล้างการค้นหา",
+  "preview.copyCode": "คัดลอกโค้ด"
 }
