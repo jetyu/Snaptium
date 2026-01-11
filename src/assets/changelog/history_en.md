@@ -1,4 +1,4 @@
-### [1.0.1] - 2026-01-18
+### [1.0.1] - 2026-01-15
 #### New
 - Supports code highlighting for mainstream programming languages.
 - Supports copying code blocks during preview.
