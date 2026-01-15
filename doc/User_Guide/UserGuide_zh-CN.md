@@ -70,7 +70,7 @@
 ## 🖥️ 界面介绍
 
 NoteWizard 采用三栏式布局，简洁高效：
-![NoteWizard 界面预览](../preview/NoteWizard_1.png)
+![NoteWizard 界面预览](../Quick_Start/QuickStart_zhCN.webp)
 
 ### 左侧面板 - 文件树
 
@@ -93,6 +93,9 @@ NoteWizard 采用三栏式布局，简洁高效：
 - **实时渲染**: 即时显示 Markdown 渲染效果
 - **可切换显示**: 通过快捷键或菜单切换预览面板
 - **同步滚动**: 编辑器和预览面板同步滚动（可选）
+
+### 属性面板
+- **信息展示**: 显示当前文档的字符数、行数和列数
 
 ---
 
@@ -270,7 +273,7 @@ NoteWizard 支持 19 种语言：
 **切换语言:**
 - 首选项 → 通用 → 语言
 
-### 导入/导出笔记(正在开发中)
+### 导入/导出笔记
 
 **导入笔记:**
 - 文件 → 打开 (或 `Ctrl+O`)
@@ -278,9 +281,8 @@ NoteWizard 支持 19 种语言：
 - 笔记内容会加载到编辑器
 
 **导出笔记:**
-- 文件 → 保存 (或 `Ctrl+S`)
 - 选择保存位置
-- 笔记会保存为 `.md` 文件
+- 笔记会保存为 `.md` 文件 或者 nwp文件
 
 ### 首选项导入/导出
 
@@ -448,9 +450,28 @@ Windows: 笔记默认保存在 `C:\Users\XXXX\Documents\NoteWizard` 目录。您
 
 - GitHub Issues: https://github.com/jetyu/NoteWizard/issues
 
----
+### 10. 临时紧急解密笔记方法
+在**已保存恢复密钥**的前提下，若因**重装系统**或**误删** `C:\Users\<用户名>\AppData\Roaming\NoteWizard` 目录导致数据无法解密，可按以下步骤进行恢复：
 
-## 📚 更多资源
+#### 恢复步骤
+1. 打开文件：
+`C:\Users\<用户名>\Documents\NoteWizard\meta.json`
+2. 使用文本编辑器编辑该文件，新增以下字段：
+`"tempRecoveryKey": "XXXX-XXXX-XXXX-XXXX-XXXX"`
+
+保存文件并重启 NoteWizard。应用将使用临时恢复密钥完成解密。解密成功后请立即导出笔记并妥善备份数据。
+
+**meta.json 示例**
+```json
+{
+  "workspaceId": "15bd8fc0-f360-4d8a-8ee4-f70ce645c2c3",
+  "version": 1,
+  "createdAt": 1768483861965,
+  "lastOpenedAt": 1768483861965,
+  "tempRecoveryKey": "XXXX-XXXX-XXXX-XXXX-XXXX",
+  "encrypted": true
+}
+```
 
 ### Markdown 学习
 

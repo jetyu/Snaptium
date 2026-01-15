@@ -448,6 +448,31 @@ Currently NoteWizard natively supports Markdown format. To export to other forma
 
 - GitHub Issues: https://github.com/jetyu/NoteWizard/issues
 
+### 10. Temporary Emergency Decryption Method
+Assuming you have **saved the recovery key**, if you cannot decrypt your data due to **system reinstallation** or **accidental deletion** of the
+`C:\Users\<username>\AppData\Roaming\NoteWizard`
+directory, you can recover by following these steps:
+
+### Recovery Steps
+1. Open the file:
+`C:\Users\<username>\Documents\NoteWizard\meta.json`
+2. Edit the file using a text editor and add the following field:
+`"tempRecoveryKey": "XXXX-XXXX-XXXX-XXXX-XXXX"`
+
+Save the file and restart NoteWizard. The application will use the temporary recovery key to complete decryption. After successful decryption, please immediately export your notes and securely backup your data.
+
+meta.json
+```json
+{
+  "workspaceId": "15bd8fc0-f360-4d8a-8ee4-f70ce645c2c3",
+  "version": 1,
+  "createdAt": 1768483861965,
+  "lastOpenedAt": 1768483861965,
+  "tempRecoveryKey": "XXXX-XXXX-XXXX-XXXX-XXXX",
+  "encrypted": true
+}
+```
+
 ---
 
 ## 📚 More Resources
