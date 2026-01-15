@@ -96,9 +96,6 @@
   "testConnectionFailed": "Dienstverbindung fehlgeschlagen",
   "testConnectionTesting": "Testen...",
   "apiFormatInvalid": "Ungültiges API-Format",
-  "startupEnabled": "Autostart aktiviert",
-  "startupDisabled": "Autostart deaktiviert",
-  "setStartupFailed": "Autostart-Einstellung fehlgeschlagen",
   "importConfirm": "Das Importieren der Konfiguration überschreibt die aktuellen Einstellungen. Fortfahren?",
   "restartAppNotify": "Einstellungen erfordern einen Neustart, um wirksam zu werden. Jetzt neu starten?",
   "importFailed": "Import fehlgeschlagen: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "{count} Notizen gefunden",
   "search.noResults": "Keine passenden Notizen gefunden",
   "search.clearSearch": "Suche löschen",
-  "preview.copyCode": "Code Kopieren"
+  "preview.copyCode": "Code Kopieren",
+  "startupEnabledStatus": "Autostart aktiviert",
+  "startupDisabledStatus": "Autostart deaktiviert",
+  "setStartupFailedStatus": "Fehler beim Einstellen des Autostarts",
+  "autoUpdateEnabledStatus": "Automatische Update-Prüfung aktiviert",
+  "autoUpdateDisabledStatus": "Automatische Update-Prüfung deaktiviert",
+  "setAutoUpdateFailed": "Fehler beim Einstellen der automatischen Updates"
 }

@@ -96,9 +96,6 @@
   "testConnectionFailed": "เชื่อมต่อบริการล้มเหลว",
   "testConnectionTesting": "กำลังทดสอบ...",
   "apiFormatInvalid": "รูปแบบ API ไม่ถูกต้อง",
-  "startupEnabled": "เปิดใช้งานการเริ่มต้นอัตโนมัติ",
-  "startupDisabled": "ปิดใช้งานการเริ่มต้นอัตโนมัติ",
-  "setStartupFailed": "ตั้งค่าการเริ่มต้นล้มเหลว",
   "importConfirm": "การนำเข้าการกำหนดค่าจะเขียนทับการตั้งค่าปัจจุบัน ดำเนินการต่อหรือไม่?",
   "restartAppNotify": "การตั้งค่าต้องรีสตาร์ทแอปจึงจะมีผล รีสตาร์ทตอนนี้หรือไม่?",
   "importFailed": "นำเข้าล้มเหลว: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "พบ {count} บันทึก",
   "search.noResults": "ไม่พบบันทึกที่ตรงกัน",
   "search.clearSearch": "ล้างการค้นหา",
-  "preview.copyCode": "คัดลอกโค้ด"
+  "preview.copyCode": "คัดลอกโค้ด",
+  "startupEnabledStatus": "เปิดใช้งานการเริ่มระบบอัตโนมัติแล้ว",
+  "startupDisabledStatus": "ปิดใช้งานการเริ่มระบบอัตโนมัติแล้ว",
+  "setStartupFailedStatus": "ตั้งค่าการเริ่มระบบอัตโนมัติล้มเหลว",
+  "autoUpdateEnabledStatus": "เปิดใช้งานการตรวจสอบการอัปเดตอัตโนมัติแล้ว",
+  "autoUpdateDisabledStatus": "ปิดใช้งานการตรวจสอบการอัปเดตอัตโนมัติแล้ว",
+  "setAutoUpdateFailed": "การตั้งค่าการอัปเดตอัตโนมัติล้มเหลว"
 }

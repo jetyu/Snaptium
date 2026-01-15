@@ -33,7 +33,7 @@
 **NoteWizard 快速上手**  
 > 提示: 本软件持续更新，以优化性能和用户体验。列出的功能仅供参考，可能随技术进步和需求变化而调整。
 
-![NoteWizard 快速上手](./doc/Quick_Start/v0.2.6_zhCN.webp)
+![NoteWizard 快速上手](./doc/Quick_Start/QuickStart_zhCN.webp)
 
 ## 支持平台
 

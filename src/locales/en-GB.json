@@ -96,9 +96,6 @@
   "testConnectionFailed": "Service connection failed",
   "testConnectionTesting": "Testing...",
   "apiFormatInvalid": "Invalid API format",
-  "startupEnabled": "Startup enabled",
-  "startupDisabled": "Startup disabled",
-  "setStartupFailed": "Failed to set startup",
   "importConfirm": "Importing configuration will overwrite current preferences. Continue?",
   "restartAppNotify": "Settings require a restart to take effect. Restart now?",
   "importFailed": "Import failed: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "Found {count} notes",
   "search.noResults": "No matching notes found",
   "search.clearSearch": "Clear search",
-  "preview.copyCode": "Copy Code"
+  "preview.copyCode": "Copy Code",
+  "startupEnabledStatus": "Startup auto-launch enabled",
+  "startupDisabledStatus": "Startup auto-launch disabled",
+  "setStartupFailedStatus": "Failed to set startup auto-launch",
+  "autoUpdateEnabledStatus": "Auto-update check enabled",
+  "autoUpdateDisabledStatus": "Auto-update check disabled",
+  "setAutoUpdateFailed": "Failed to set auto-update"
 }

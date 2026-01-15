@@ -96,9 +96,6 @@
   "testConnectionFailed": "서비스 연결 실패",
   "testConnectionTesting": "테스트 중...",
   "apiFormatInvalid": "유효하지 않은 API 형식",
-  "startupEnabled": "시작 프로그램 활성화됨",
-  "startupDisabled": "시작 프로그램 비활성화됨",
-  "setStartupFailed": "시작 프로그램 설정 실패",
   "importConfirm": "구성을 가져오면 현재 환경 설정이 덮어쓰여집니다. 계속하시겠습니까?",
   "restartAppNotify": "설정을 적용하려면 앱을 다시 시작해야 합니다. 지금 다시 시작하시겠습니까?",
   "importFailed": "가져오기 실패: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "{count}개의 노트를 찾았습니다",
   "search.noResults": "일치하는 노트를 찾을 수 없습니다",
   "search.clearSearch": "검색 지우기",
-  "preview.copyCode": "코드 복사"
+  "preview.copyCode": "코드 복사",
+  "startupEnabledStatus": "시작 시 자동 실행이 활성화되었습니다",
+  "startupDisabledStatus": "시작 시 자동 실행이 비활성화되었습니다",
+  "setStartupFailedStatus": "자동 실행 설정 실패",
+  "autoUpdateEnabledStatus": "자동 업데이트 확인이 활성화되었습니다",
+  "autoUpdateDisabledStatus": "자동 업데이트 확인이 비활성화되었습니다",
+  "setAutoUpdateFailed": "자동 업데이트 설정 실패"
 }

@@ -96,9 +96,6 @@
   "testConnectionFailed": "Connessione al servizio fallita",
   "testConnectionTesting": "Test in corso...",
   "apiFormatInvalid": "Formato API non valido",
-  "startupEnabled": "Avvio automatico abilitato",
-  "startupDisabled": "Avvio automatico disabilitato",
-  "setStartupFailed": "Impossibile impostare l'avvio",
   "importConfirm": "L'importazione della configurazione sovrascriverà le preferenze attuali. Continuare?",
   "restartAppNotify": "Le impostazioni richiedono il riavvio dell'app per avere effetto. Riavviare ora?",
   "importFailed": "Importazione fallita: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "Trovate {count} note",
   "search.noResults": "Nessuna nota corrispondente trovata",
   "search.clearSearch": "Cancella ricerca",
-  "preview.copyCode": "Copia Codice"
+  "preview.copyCode": "Copia Codice",
+  "startupEnabledStatus": "Avvio automatico abilitato",
+  "startupDisabledStatus": "Avvio automatico disabilitato",
+  "setStartupFailedStatus": "Impossibile impostare l'avvio automatico",
+  "autoUpdateEnabledStatus": "Controllo automatico aggiornamenti attivato",
+  "autoUpdateDisabledStatus": "Controllo automatico aggiornamenti disattivato",
+  "setAutoUpdateFailed": "Impossibile impostare l'aggiornamento automatico"
 }

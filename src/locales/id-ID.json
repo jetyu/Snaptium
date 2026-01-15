@@ -96,9 +96,6 @@
   "testConnectionFailed": "Koneksi layanan gagal",
   "testConnectionTesting": "Menguji...",
   "apiFormatInvalid": "Format API tidak valid",
-  "startupEnabled": "Startup otomatis diaktifkan",
-  "startupDisabled": "Startup otomatis dinonaktifkan",
-  "setStartupFailed": "Gagal mengatur startup",
   "importConfirm": "Mengimpor konfigurasi akan menimpa preferensi saat ini. Lanjutkan?",
   "restartAppNotify": "Pengaturan memerlukan restart aplikasi agar berlaku. Restart sekarang?",
   "importFailed": "Impor gagal: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "Ditemukan {count} catatan",
   "search.noResults": "Tidak ada catatan yang cocok ditemukan",
   "search.clearSearch": "Hapus pencarian",
-  "preview.copyCode": "Salin Kode"
+  "preview.copyCode": "Salin Kode",
+  "startupEnabledStatus": "Mulai otomatis saat startup diaktifkan",
+  "startupDisabledStatus": "Mulai otomatis saat startup dinonaktifkan",
+  "setStartupFailedStatus": "Gagal mengatur mulai otomatis",
+  "autoUpdateEnabledStatus": "Pemeriksaan pembaruan otomatis diaktifkan",
+  "autoUpdateDisabledStatus": "Pemeriksaan pembaruan otomatis dinonaktifkan",
+  "setAutoUpdateFailed": "Gagal mengatur pembaruan otomatis"
 }

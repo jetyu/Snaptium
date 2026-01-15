@@ -96,9 +96,6 @@
   "testConnectionFailed": "পরিষেবা সংযোগ ব্যর্থ হয়েছে",
   "testConnectionTesting": "পরীক্ষা করা হচ্ছে...",
   "apiFormatInvalid": "অবৈধ এপিআই বিন্যাস",
-  "startupEnabled": "স্বয়ংক্রিয় স্টার্টআপ সক্ষম",
-  "startupDisabled": "স্বয়ংক্রিয় স্টার্টআপ অক্ষম",
-  "setStartupFailed": "স্টার্টআপ সেট করতে ব্যর্থ হয়েছে",
   "importConfirm": "কনফিগারেশন আমদানি বর্তমান পছন্দগুলি ওভাররাইট করবে। চালিয়ে যাবেন?",
   "restartAppNotify": "সেটিংস কার্যকর হওয়ার জন্য অ্যাপ পুনরায় চালু করা প্রয়োজন। এখনই পুনরায় চালু করবেন?",
   "importFailed": "আমদানি ব্যর্থ হয়েছে: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "{count} টি নোট পাওয়া গেছে",
   "search.noResults": "কোনো মিল নোট পাওয়া যায়নি",
   "search.clearSearch": "অনুসন্ধান মুছে ফেলুন",
-  "preview.copyCode": "কোড কপি করুন"
+  "preview.copyCode": "কোড কপি করুন",
+  "startupEnabledStatus": "স্টার্টআপ অটো-লঞ্চ চালু করা হয়েছে",
+  "startupDisabledStatus": "স্টার্টআপ অটো-লঞ্চ বন্ধ করা হয়েছে",
+  "setStartupFailedStatus": "স্টার্টআপ সেট করতে ব্যর্থ",
+  "autoUpdateEnabledStatus": "স্বয়ংক্রিয় আপডেট চেক চালু করা হয়েছে",
+  "autoUpdateDisabledStatus": "স্বয়ংক্রিয় আপডেট চেক বন্ধ করা হয়েছে",
+  "setAutoUpdateFailed": "স্বয়ংক্রিয় আপডেট সেট করতে ব্যর্থ"
 }

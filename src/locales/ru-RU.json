@@ -96,9 +96,6 @@
   "testConnectionFailed": "Ошибка соединения с сервисом",
   "testConnectionTesting": "Тестирование...",
   "apiFormatInvalid": "Неверный формат API",
-  "startupEnabled": "Автозапуск включен",
-  "startupDisabled": "Автозапуск выключен",
-  "setStartupFailed": "Не удалось настроить автозапуск",
   "importConfirm": "Импорт конфигурации перезапишет текущие настройки. Продолжить?",
   "restartAppNotify": "Настройки требуют перезапуска приложения. Перезапустить сейчас?",
   "importFailed": "Ошибка импорта: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "Найдено {count} заметок",
   "search.noResults": "Соответствующие заметки не найдены",
   "search.clearSearch": "Очистить поиск",
-  "preview.copyCode": "Копировать Код"
+  "preview.copyCode": "Копировать Код",
+  "startupEnabledStatus": "Автозапуск включен",
+  "startupDisabledStatus": "Автозапуск отключен",
+  "setStartupFailedStatus": "Не удалось настроить автозапуск",
+  "autoUpdateEnabledStatus": "Автоматическая проверка обновлений включена",
+  "autoUpdateDisabledStatus": "Автоматическая проверка обновлений отключена",
+  "setAutoUpdateFailed": "Не удалось настроить автообновление"
 }

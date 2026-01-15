@@ -335,5 +335,11 @@
   "search.resultsCount": "找到 {count} 个笔记",
   "search.noResults": "未找到匹配的笔记",
   "search.clearSearch": "清空搜索",
-  "preview.copyCode": "复制代码"
+  "preview.copyCode": "复制代码",
+  "startupEnabledStatus": "已启用开机自启",
+  "startupDisabledStatus": "已禁用开机自启",
+  "setStartupFailedStatus": "设置开机自启失败",
+  "autoUpdateEnabledStatus": "已启用自动更新检查",
+  "autoUpdateDisabledStatus": "已禁用自动更新检查",
+  "setAutoUpdateFailed": "设置自动更新失败"
 }

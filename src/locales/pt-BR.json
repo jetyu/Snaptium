@@ -96,9 +96,6 @@
   "testConnectionFailed": "Falha na conexão de serviço",
   "testConnectionTesting": "Testando...",
   "apiFormatInvalid": "Formato de API inválido",
-  "startupEnabled": "Inicialização habilitada",
-  "startupDisabled": "Inicialização desabilitada",
-  "setStartupFailed": "Falha ao definir inicialização",
   "importConfirm": "A importação da configuração substituirá as preferências atuais. Continuar?",
   "restartAppNotify": "As configurações requerem reinicialização do aplicativo para entrar em vigor. Reiniciar agora?",
   "importFailed": "Falha na importação: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "Encontradas {count} notas",
   "search.noResults": "Nenhuma nota correspondente encontrada",
   "search.clearSearch": "Limpar pesquisa",
-  "preview.copyCode": "Copiar Código"
+  "preview.copyCode": "Copiar Código",
+  "startupEnabledStatus": "Início automático ativado",
+  "startupDisabledStatus": "Início automático desativado",
+  "setStartupFailedStatus": "Falha ao definir início automático",
+  "autoUpdateEnabledStatus": "Verificação automática de atualizações ativada",
+  "autoUpdateDisabledStatus": "Verificação automática de atualizações desativada",
+  "setAutoUpdateFailed": "Falha ao definir atualização automática"
 }

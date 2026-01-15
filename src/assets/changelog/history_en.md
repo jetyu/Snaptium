@@ -1,3 +1,7 @@
+### [1.0.2] - 2026-01-16
+#### Fixes
+- Fixed an issue where the status bar had missing translations in other languages.
+
 ### [1.0.1] - 2026-01-15
 #### New
 - Supports code highlighting for mainstream programming languages.

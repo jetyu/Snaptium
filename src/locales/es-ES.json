@@ -96,9 +96,6 @@
   "testConnectionFailed": "Error de conexión de servicio",
   "testConnectionTesting": "Probando...",
   "apiFormatInvalid": "Formato de API no válido",
-  "startupEnabled": "Inicio automático habilitado",
-  "startupDisabled": "Inicio automático deshabilitado",
-  "setStartupFailed": "Error al configurar el inicio",
   "importConfirm": "La importación de la configuración sobrescribirá las preferencias actuales. ¿Continuar?",
   "restartAppNotify": "La configuración requiere reiniciar la aplicación para tener efecto. ¿Reiniciar ahora?",
   "importFailed": "Error de importación: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "Se encontraron {count} notas",
   "search.noResults": "No se encontraron notas coincidentes",
   "search.clearSearch": "Limpiar búsqueda",
-  "preview.copyCode": "Copiar Código"
+  "preview.copyCode": "Copiar Código",
+  "startupEnabledStatus": "Inicio automático activado",
+  "startupDisabledStatus": "Inicio automático desactivado",
+  "setStartupFailedStatus": "Error al configurar el inicio automático",
+  "autoUpdateEnabledStatus": "Comprobación automática de actualizaciones activada",
+  "autoUpdateDisabledStatus": "Comprobación automática de actualizaciones desactivada",
+  "setAutoUpdateFailed": "Error al configurar la actualización automática"
 }

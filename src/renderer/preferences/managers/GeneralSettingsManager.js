@@ -239,15 +239,15 @@ export class GeneralSettingsManager {
             localStorage.setItem(STORAGE_KEYS.STARTUP_ON_LOGIN, String(desired));
           } catch { }
 
-          this.showStatus(desired ? '已启用开机自启' : '已禁用开机自启');
+          this.showStatus(desired ? this.i18n.t('startupEnabledStatus') : this.i18n.t('startupDisabledStatus'));
         } else {
           // 恢复原状态
           startupCheckbox.checked = !desired;
-          this.showStatus('设置开机自启失败' + (result?.error ? ': ' + result.error : ''));
+          this.showStatus(this.i18n.t('setStartupFailedStatus') + (result?.error ? ': ' + result.error : ''));
         }
       } catch (error) {
         startupCheckbox.checked = !desired;
-        this.showStatus('设置开机自启失败: ' + (error.message || error));
+        this.showStatus(this.i18n.t('setStartupFailedStatus') + ': ' + (error.message || error));
       } finally {
         startupCheckbox.disabled = false;
       }
@@ -271,10 +271,10 @@ export class GeneralSettingsManager {
         // Notify main process to start/stop auto-update check
         await this.prefsService.toggleAutoUpdate(enabled);
 
-        this.showStatus(enabled ? '已启用自动更新检查' : '已禁用自动更新检查');
+        this.showStatus(enabled ? this.i18n.t('autoUpdateEnabledStatus') : this.i18n.t('autoUpdateDisabledStatus'));
       } catch (error) {
         autoUpdateCheckbox.checked = !enabled;
-        this.showStatus('设置自动更新失败: ' + (error.message || error));
+        this.showStatus(this.i18n.t('setAutoUpdateFailed') + ': ' + (error.message || error));
       } finally {
         autoUpdateCheckbox.disabled = false;
       }

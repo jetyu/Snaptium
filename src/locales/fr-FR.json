@@ -96,9 +96,6 @@
   "testConnectionFailed": "Échec de la connexion au service",
   "testConnectionTesting": "Test en cours...",
   "apiFormatInvalid": "Format API invalide",
-  "startupEnabled": "Démarrage automatique activé",
-  "startupDisabled": "Démarrage automatique désactivé",
-  "setStartupFailed": "Échec de la configuration du démarrage",
   "importConfirm": "L'importation de la configuration écrasera les préférences actuelles. Continuer ?",
   "restartAppNotify": "Les paramètres nécessitent un redémarrage pour prendre effet. Redémarrer maintenant ?",
   "importFailed": "Échec de l'importation : ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "{count} notes trouvées",
   "search.noResults": "Aucune note correspondante trouvée",
   "search.clearSearch": "Effacer la recherche",
-  "preview.copyCode": "Copier le Code"
+  "preview.copyCode": "Copier le Code",
+  "startupEnabledStatus": "Lancement au démarrage activé",
+  "startupDisabledStatus": "Lancement au démarrage désactivé",
+  "setStartupFailedStatus": "Échec de la configuration du lancement au démarrage",
+  "autoUpdateEnabledStatus": "Vérification automatique des mises à jour activée",
+  "autoUpdateDisabledStatus": "Vérification automatique des mises à jour désactivée",
+  "setAutoUpdateFailed": "Échec de la configuration de la mise à jour automatique"
 }

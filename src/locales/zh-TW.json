@@ -96,9 +96,6 @@
   "testConnectionFailed": "服務連通性測試失敗",
   "testConnectionTesting": "測試中...",
   "apiFormatInvalid": "API 格式無效",
-  "startupEnabled": "已啟用開機自動啟動",
-  "startupDisabled": "已關閉開機自動啟動",
-  "setStartupFailed": "設定開機自動啟動失敗",
   "importConfirm": "匯入配置將覆蓋目前偏好設定，是否繼續？",
   "restartAppNotify": "設定需要重啟應用才能生效，是否現在重啟？",
   "importFailed": "匯入失敗: ",
@@ -335,5 +332,11 @@
   "search.resultsCount": "找到 {count} 個筆記",
   "search.noResults": "未找到匹配的筆記",
   "search.clearSearch": "清空搜尋",
-  "preview.copyCode": "複製代碼"
+  "preview.copyCode": "複製代碼",
+  "startupEnabledStatus": "已啟用開機自啟",
+  "startupDisabledStatus": "已停用開機自啟",
+  "setStartupFailedStatus": "設定開機自啟失敗",
+  "autoUpdateEnabledStatus": "已啟用自動更新檢查",
+  "autoUpdateDisabledStatus": "已停用自動更新檢查",
+  "setAutoUpdateFailed": "設定自動更新失敗"
 }
