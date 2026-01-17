@@ -84,7 +84,7 @@ function attachCopyHandlers(previewElement) {
       
       const wrapper = button.closest('.code-block-wrapper');
       const codeElement = wrapper.querySelector('code');
-      const codeText = codeElement.textContent;
+      const codeText = codeElement.textContent.replace(/\n$/, '');
       
       try {
         await navigator.clipboard.writeText(codeText);

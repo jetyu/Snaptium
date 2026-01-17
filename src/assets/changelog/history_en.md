@@ -1,3 +1,7 @@
+### [1.0.3] - 2026-01-17
+#### Improvements
+- Improved the experience of copying code blocks in preview mode.
+
 ### [1.0.2] - 2026-01-16
 #### Fixes
 - Fixed an issue where the status bar had missing translations in other languages.
