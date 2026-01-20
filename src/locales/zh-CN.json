@@ -335,6 +335,8 @@
   "search.resultsCount": "找到 {count} 个笔记",
   "search.noResults": "未找到匹配的笔记",
   "search.clearSearch": "清空搜索",
+  "search.searching": "正在搜索...",
+  "search.searchingLarge": "正在搜索笔记，请稍候...",
   "preview.copyCode": "复制代码",
   "startupEnabledStatus": "已启用开机自启",
   "startupDisabledStatus": "已禁用开机自启",

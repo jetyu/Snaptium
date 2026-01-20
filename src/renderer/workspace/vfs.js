@@ -483,6 +483,172 @@ function searchNodes(query, options = {}) {
 }
 
 /**
+ * 全文搜索节点（搜索标题和内容）
+ * @param {string} query - 搜索关键词
+ * @param {Object} options - 搜索选项
+ * @param {Function} onProgress - 进度回调函数
+ * @returns {Promise<Array>} 匹配的节点数组，包含匹配信息
+ */
+async function searchNodesFullText(query, options = {}, onProgress = null) {
+  const {
+    caseSensitive = false,
+    searchIn = 'all', // 'title', 'content', 'all'
+    includeTrashed = false,
+    maxResults = 100,
+    maxNodes = 1000,
+    batchSize = 50
+  } = options;
+  
+  if (!query || query.trim() === '') return [];
+  
+  const results = [];
+  const searchQuery = caseSensitive ? query : query.toLowerCase();
+  
+  // 获取所有文件节点
+  const fileNodes = [];
+  for (const node of state.nodes.values()) {
+    if (node.type !== 'file') continue;
+    if (node.trashed && !includeTrashed) continue;
+    fileNodes.push(node);
+  }
+  
+  // 按更新时间排序，优先搜索最近的笔记
+  fileNodes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  
+  // 限制搜索范围
+  const nodesToSearch = fileNodes.slice(0, maxNodes);
+  const totalNodes = nodesToSearch.length;
+  
+  // 分批处理
+  for (let i = 0; i < nodesToSearch.length; i += batchSize) {
+    // 检查是否已达到最大结果数
+    if (results.length >= maxResults) break;
+    
+    const batch = nodesToSearch.slice(i, i + batchSize);
+    const batchPromises = batch.map(async (node) => {
+      try {
+        const matchInfo = {
+          node,
+          matchInTitle: false,
+          matchInContent: false,
+          matches: []
+        };
+        
+        // 搜索标题
+        if (searchIn === 'title' || searchIn === 'all') {
+          const nodeName = caseSensitive ? node.name : node.name.toLowerCase();
+          if (nodeName.includes(searchQuery)) {
+            matchInfo.matchInTitle = true;
+            matchInfo.matches.push({
+              type: 'title',
+              text: node.name,
+              position: nodeName.indexOf(searchQuery)
+            });
+          }
+        }
+        
+        // 搜索内容
+        if ((searchIn === 'content' || searchIn === 'all') && node.contentId) {
+          const content = await readContent(node.contentId);
+          const searchContent = caseSensitive ? content : content.toLowerCase();
+          
+          if (searchContent.includes(searchQuery)) {
+            matchInfo.matchInContent = true;
+            
+            // 提取匹配的上下文（最多3个）
+            const contextMatches = extractContextMatches(content, query, caseSensitive, 3);
+            matchInfo.matches.push(...contextMatches);
+          }
+        }
+        
+        // 如果有匹配，返回结果
+        if (matchInfo.matchInTitle || matchInfo.matchInContent) {
+          return matchInfo;
+        }
+        
+        return null;
+      } catch (error) {
+        console.warn(`搜索节点 ${node.id} 时出错:`, error);
+        return null;
+      }
+    });
+    
+    const batchResults = await Promise.all(batchPromises);
+    
+    // 收集有效结果
+    for (const result of batchResults) {
+      if (result && results.length < maxResults) {
+        results.push(result);
+      }
+    }
+    
+    // 报告进度
+    if (onProgress) {
+      const progress = Math.min(100, Math.round(((i + batch.length) / totalNodes) * 100));
+      onProgress({
+        current: i + batch.length,
+        total: totalNodes,
+        progress,
+        resultsCount: results.length
+      });
+    }
+  }
+  
+  return results;
+}
+
+/**
+ * 提取匹配关键词的上下文
+ * @param {string} content - 文本内容
+ * @param {string} query - 搜索关键词
+ * @param {boolean} caseSensitive - 是否区分大小写
+ * @param {number} maxMatches - 最多返回几个匹配
+ * @returns {Array} 匹配的上下文数组
+ */
+function extractContextMatches(content, query, caseSensitive, maxMatches = 3) {
+  const matches = [];
+  const searchContent = caseSensitive ? content : content.toLowerCase();
+  const searchQuery = caseSensitive ? query : query.toLowerCase();
+  const contextLength = 50; // 前后各50个字符
+  
+  let startIndex = 0;
+  let matchCount = 0;
+  
+  while (matchCount < maxMatches) {
+    const index = searchContent.indexOf(searchQuery, startIndex);
+    if (index === -1) break;
+    
+    // 计算上下文范围
+    const contextStart = Math.max(0, index - contextLength);
+    const contextEnd = Math.min(content.length, index + query.length + contextLength);
+    
+    // 提取上下文
+    let contextText = content.substring(contextStart, contextEnd);
+    
+    // 添加省略号
+    if (contextStart > 0) contextText = '...' + contextText;
+    if (contextEnd < content.length) contextText = contextText + '...';
+    
+    // 计算行号
+    const lineNumber = content.substring(0, index).split('\n').length;
+    
+    matches.push({
+      type: 'content',
+      text: contextText,
+      position: index,
+      line: lineNumber,
+      matchStart: contextStart > 0 ? index - contextStart + 3 : index - contextStart,
+      matchLength: query.length
+    });
+    
+    matchCount++;
+    startIndex = index + query.length;
+  }
+  
+  return matches;
+}
+
+/**
  * 获取节点的完整路径
  * @param {string} nodeId - 节点ID
  * @returns {Array} 从根到该节点的路径数组
@@ -514,5 +680,6 @@ export {
   writeContent,
   emptyTrash,
   searchNodes,
+  searchNodesFullText,
   getNodePath,
 };

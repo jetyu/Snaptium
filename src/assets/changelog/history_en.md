@@ -1,3 +1,9 @@
+### [1.0.4] - 2026-01-20
+#### Fixes
+- Fixed an issue where the search function was not working.
+#### Improvements
+- Improved the performance of search function
+
 ### [1.0.3] - 2026-01-17
 #### Improvements
 - Improved the experience of copying code blocks in preview mode.

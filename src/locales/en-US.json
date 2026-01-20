@@ -332,6 +332,8 @@
   "search.resultsCount": "Found {count} notes",
   "search.noResults": "No matching notes found",
   "search.clearSearch": "Clear search",
+  "search.searching": "Searching...",
+  "search.searchingLarge": "Searching notes, please wait a moment...",
   "preview.copyCode": "Copy Code",
   "startupEnabledStatus": "Startup auto-launch enabled",
   "startupDisabledStatus": "Startup auto-launch disabled",
