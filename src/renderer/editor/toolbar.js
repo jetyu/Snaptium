@@ -4,7 +4,7 @@ import { renderPreview } from '../preview/preview.js';
 // 常量定义
 const MARKDOWN_TEMPLATES = {
   TABLE: '| Col1 | Col2 |\n| --- | --- |\n| Val1 | Val2 |',
-  CODE_BLOCK: '```\ncode\n```',
+  CODE_BLOCK: '```\n\n```',
   IMAGE: '![](http://)',
   LINK_SUFFIX: '](http://)'
 };
@@ -62,8 +62,40 @@ function insertBlock(text) {
   if (!state.editor) return;
   const doc = state.editor.getDoc();
   const cursor = doc.getCursor();
-  const insertText = `\n${text}\n`;
+  const line = doc.getLine(cursor.line);
+  
+  const prefix = line.trim() ? '\n' : '';
+  const insertText = `${prefix}${text}\n`;
+  
   doc.replaceRange(insertText, cursor);
+  state.editor.focus();
+}
+
+function insertCodeBlock() {
+  if (!state.editor) return;
+  const doc = state.editor.getDoc();
+  const cursor = doc.getCursor();
+  const selection = doc.getSelection();
+  
+  if (selection) {
+    // 如果有选中代码，将其包裹在代码块中
+    const wrappedCode = `\`\`\`\n${selection}\n\`\`\``;
+    doc.replaceSelection(wrappedCode, 'around');
+  } else {
+    // 如果没有选中代码，插入空代码块并将光标放在中间
+    const line = doc.getLine(cursor.line);
+    
+    // 如果当前行不为空，先添加换行
+    const prefix = line.trim() ? '\n' : '';
+    const codeBlock = '```\n\n```';
+    
+    doc.replaceRange(`${prefix}${codeBlock}\n`, cursor);
+    
+    // 将光标移动到代码块内部
+    const newLine = cursor.line + (prefix ? 2 : 1);
+    doc.setCursor({ line: newLine, ch: 0 });
+  }
+  
   state.editor.focus();
 }
 
@@ -88,7 +120,7 @@ const toolbarActions = new Map([
   ['ol', () => insertLinePrefix('1. ')],
   ['task', () => insertLinePrefix('- [ ] ')],
   ['quote', () => insertLinePrefix('> ')],
-  ['code', () => insertBlock(MARKDOWN_TEMPLATES.CODE_BLOCK)],
+  ['code', insertCodeBlock],
   ['table', insertTable],
   ['link', insertLink],
   ['image', insertImage]
