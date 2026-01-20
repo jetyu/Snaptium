@@ -3,11 +3,11 @@ import { onDomReadyInitEditor } from './renderer/editor/editor.js';
 import { setupOutlineWhenReady } from './renderer/workspace/outline.js';
 import { initializeFileWorkspace, setupEditorEvents, forceFlushAutoSave } from './renderer/workspace/files.js';
 import { setupToolbar } from './renderer/editor/toolbar.js';
-import i18n, { initI18n, applyI18n } from './renderer/i18n.js';
+import i18n, { initI18n} from './renderer/i18n.js';
 import { initPreferences } from './renderer/preferences/index.js';
 import { initTrash } from './renderer/trash/trash.js';
 import { initPreview } from './renderer/preview/preview.js';
-import { showInputDialog, showInputDialogWithValidation } from './renderer/preferences/ui/DialogController.js';
+import { showInputDialogWithValidation } from './renderer/preferences/ui/DialogController.js';
 
 const { ipcRenderer } = window.electronAPI;
 
@@ -110,6 +110,25 @@ function setupPreviewLeftEdgeDrag() {
     return isNaN(cssMin) ? 240 : cssMin;
   };
 
+  const adjustPreviewWidth = () => {
+    // 只在预览区有固定宽度时才调整
+    if (previewPanel.style.width && previewPanel.style.width !== '') {
+      const appRect = app.getBoundingClientRect();
+      const leftRect = leftPanel.getBoundingClientRect();
+      const available = appRect.width - leftRect.width;
+      const minEditor = getMinEditor();
+      const minPreview = getMinPreview();
+      const currentWidth = previewPanel.getBoundingClientRect().width;
+      const maxPreview = Math.max(minPreview, available - minEditor);
+      
+      // 如果当前宽度超出了最大允许宽度，调整
+      if (currentWidth > maxPreview) {
+        previewPanel.style.width = maxPreview + 'px';
+        try { localStorage.setItem('previewPanelWidth', String(Math.round(maxPreview))); } catch { }
+      }
+    }
+  };
+
   const updateCursor = (e) => {
     const rect = previewPanel.getBoundingClientRect();
     const nearLeftEdge = Math.abs(e.clientX - rect.left) <= EDGE_THRESHOLD;
@@ -146,11 +165,19 @@ function setupPreviewLeftEdgeDrag() {
     document.body.style.userSelect = '';
   };
 
+  // 使用防抖优化窗口大小改变事件
+  let resizeTimeout;
+  const onWindowResize = () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(adjustPreviewWidth, 100);
+  };
+
   previewPanel.addEventListener('mousemove', updateCursor);
   previewPanel.addEventListener('mouseleave', () => previewPanel.classList.remove('edge-resize'));
   previewPanel.addEventListener('mousedown', onMouseDown);
   window.addEventListener('mousemove', onMouseMove);
   window.addEventListener('mouseup', onMouseUp);
+  window.addEventListener('resize', onWindowResize);
 }
 
 function setupPreviewIpcHandlers() {

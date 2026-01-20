@@ -211,7 +211,7 @@
 #editor-panel {
     flex: 1;
     border-right: 1px solid var(--border);
-    min-width: 300px;
+    min-width: 450px;
     background: var(--surface);
     position: relative;
 }

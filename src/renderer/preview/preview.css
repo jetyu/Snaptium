@@ -1,8 +1,7 @@
 #preview-panel {
   flex: 0 0 auto;
   width: 40%;
-  max-width: 40%;
-  min-width: 20%;
+  min-width: 30%;
   resize: horizontal;
   overflow: auto;
 }

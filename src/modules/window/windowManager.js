@@ -90,6 +90,8 @@ export function createWindowManager(deps) {
     mainWindow = new BrowserWindow({
       width: 1200,
       height: 800,
+      minWidth: 1200,
+      minHeight: 800,
       icon: iconPath,
       webPreferences: {
         nodeIntegration: false,
