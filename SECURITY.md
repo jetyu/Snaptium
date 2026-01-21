@@ -7,14 +7,11 @@ Only the latest version of **Notewizard** are supported with security updates.
 
 ### Reporting a Vulnerability / 报告安全漏洞
 
-If you discover a security vulnerability, please **do not open a public issue**.  
-如果你发现了安全漏洞，请 **不要直接创建公开 Issue**。
+If you discover a security vulnerability, please **DO NOT open a public issue**.  
+如果你发现了安全漏洞，请 **不要创建公开的Issue**。
 
-Instead, report it responsibly using one of the following methods:  
-请通过以下方式私下报告：
-
-- Open a **GitHub Security Advisory**
-  通过 GitHub 安全公告提交。
+Instead, report it responsibly using the **GitHub Security Advisory**.  
+请通过 **GitHub 安全公告** 方式进行披露。
 
 You can expect an initial response within **48 hours**.  
 我们将在 **48 小时内**给予初步回复。
