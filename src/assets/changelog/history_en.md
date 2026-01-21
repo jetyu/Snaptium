@@ -1,10 +1,12 @@
-### [1.0.5] - 2026-01-24
+### [1.0.5] - 2026-01-22
 #### Fixed
 - Fixed an issue where the cursor was not correctly positioned after inserting a code block.
 - Fixed an issue where selected text was not properly wrapped when inserting a code block.
 - Fixed layout issues caused by resizing the application window.
 #### Improved
 - Improved the maximum draggable width in preview mode to enhance the fullscreen experience.
+#### Security
+- Fixed potential security issues in the decompression process.
 
 ### [1.0.4] - 2026-01-20
 #### Fixed
