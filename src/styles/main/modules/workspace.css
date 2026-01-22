@@ -23,11 +23,14 @@
 }
 
 .workspace-tree {
-    height: 100%;  /* 使用相对单位 */
-    max-height: 100vh;  /* 设置最大高度 */
-    overflow-y: auto;  /* 垂直滚动 */
+    height: 100%;
+    /* 使用相对单位 */
+    max-height: 100vh;
+    /* 设置最大高度 */
+    overflow-y: auto;
+    /* 垂直滚动 */
     position: relative;
-    
+
 }
 
 .tool-btn {
@@ -81,7 +84,8 @@
     transition: none;
     height: 32px;
     box-sizing: border-box;
-    width: 0; /* Allow flex to control width */
+    width: 0;
+    /* Allow flex to control width */
     line-height: 20px;
 }
 
@@ -119,10 +123,10 @@
 }
 
 .file-item.active {
-    background-color: #e5e7eb; 
+    background-color: #e5e7eb;
     color: var(--accent);
     border-left: 3px solid var(--accent-border);
-    font-weight: 500; 
+    font-weight: 500;
 }
 
 .file-item.active::before {
@@ -221,6 +225,42 @@
 :root[data-theme="dark"] .tree-row.selected.active {
     background: linear-gradient(90deg, rgba(96, 165, 250, 0.25) 0%, rgba(96, 165, 250, 0.15) 100%);
     box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.25);
+}
+
+/* 拖拽排序视觉反馈 */
+.tree-row.drag-over-before {
+    position: relative;
+}
+
+.tree-row.drag-over-before::before {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: var(--accent);
+    z-index: 10;
+}
+
+.tree-row.drag-over-after {
+    position: relative;
+}
+
+.tree-row.drag-over-after::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: var(--accent);
+    z-index: 10;
+}
+
+.tree-row.drag-over-inside {
+    background-color: var(--accent-hover);
+    box-shadow: inset 0 0 0 2px var(--accent);
 }
 
 

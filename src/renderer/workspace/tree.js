@@ -6,7 +6,7 @@ let expandedFolders = new Set();
 let handlers = {
   onSelect: null, // function(node)
   onContext: null, // function(node, event)
-  onMove: null, // function(sourceId, targetNode)
+  onMove: null, // function(sourceId, targetNode, position)
   onInlineRenameCommit: null, // function(node, newName)
 };
 
@@ -24,22 +24,53 @@ function setHandlers(h) {
 }
 
 /**
+ * 获取拖拽位置 ('before', 'after', 'inside')
+ * @param {DragEvent} e 
+ * @param {HTMLElement} row 
+ * @param {Object} node 
+ */
+function getDropPosition(e, row, node) {
+  const rect = row.getBoundingClientRect();
+  const y = e.clientY - rect.top;
+  const height = rect.height;
+
+  if (node.type === 'folder') {
+    // 文件夹：前 25% 是 before, 后 25% 是 after, 中间是 inside
+    if (y < height * 0.25) return 'before';
+    if (y > height * 0.75) return 'after';
+    return 'inside';
+  } else {
+    // 文件：前 50% 是 before, 后 50% 是 after
+    return y < height * 0.5 ? 'before' : 'after';
+  }
+}
+
+/**
+ * 清除所有拖拽状态类
+ */
+function clearDragOverStyles() {
+  document.querySelectorAll('.drag-over-before, .drag-over-after, .drag-over-inside').forEach(el => {
+    el.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
+  });
+}
+
+/**
  * 处理拖拽时的自动滚动
  * @param {DragEvent} e - 拖拽事件
  * @param {HTMLElement} container - 滚动容器
  */
 function handleAutoScroll(e, container) {
   if (!container) return;
-  
+
   const rect = container.getBoundingClientRect();
   const mouseY = e.clientY;
-  
+
   // 清除之前的滚动定时器
   if (autoScrollInterval) {
     clearInterval(autoScrollInterval);
     autoScrollInterval = null;
   }
-  
+
   // 检查是否在顶部边缘区域
   if (mouseY < rect.top + SCROLL_ZONE) {
     autoScrollInterval = setInterval(() => {
@@ -113,7 +144,7 @@ function clearSelection() {
  */
 function handleNodeClick(node, event, row) {
   const nodeId = node.id;
-  
+
   if (event.ctrlKey || event.metaKey) {
     // Ctrl/Cmd + 点击：切换单个节点的选中状态
     if (selectedNodes.has(nodeId)) {
@@ -129,14 +160,14 @@ function handleNodeClick(node, event, row) {
     const allNodeIds = getAllVisibleNodeIds();
     const lastIndex = allNodeIds.indexOf(lastClickedNodeId);
     const currentIndex = allNodeIds.indexOf(nodeId);
-    
+
     if (lastIndex !== -1 && currentIndex !== -1) {
       const start = Math.min(lastIndex, currentIndex);
       const end = Math.max(lastIndex, currentIndex);
-      
+
       // 清除之前的选择
       clearSelection();
-      
+
       // 选中范围内的所有节点
       for (let i = start; i <= end; i++) {
         selectedNodes.add(allNodeIds[i]);
@@ -149,11 +180,11 @@ function handleNodeClick(node, event, row) {
     selectedNodes.add(nodeId);
     row.classList.add('selected');
     lastClickedNodeId = nodeId;
-    
+
     // 移除active类（用selected替代）
     document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
     row.classList.add('active');
-    
+
     // 触发选择回调
     if (handlers.onSelect) handlers.onSelect(node);
   }
@@ -185,13 +216,13 @@ function buildTreeDom(parentId) {
     row.addEventListener('click', (e) => {
       // 处理多选
       handleNodeClick(node, e, row);
-      
+
       // 文件夹展开/折叠逻辑（仅在非多选模式下）
       if (node.type === 'folder' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
         const wasExpanded = li.classList.contains('expanded');
         li.classList.toggle('expanded');
         const existing = li.querySelector(':scope > ul.tree-level');
-        
+
         if (li.classList.contains('expanded')) {
           if (existing) existing.remove();
           li.appendChild(buildTreeDom(node.id));
@@ -218,54 +249,68 @@ function buildTreeDom(parentId) {
         selectedNodes.add(node.id);
         row.classList.add('selected');
       }
-      
+
       // 传递所有选中的节点ID（用逗号分隔）
       const selectedIds = Array.from(selectedNodes).join(',');
       e.dataTransfer.setData('text/plain', selectedIds);
       e.dataTransfer.effectAllowed = 'move';
-      
+
       // 设置拖拽提示
       if (selectedNodes.size > 1) {
         e.dataTransfer.setData('text/html', `<div>移动 ${selectedNodes.size} 个项目</div>`);
       }
     });
-    
+
     row.addEventListener('dragend', () => {
       stopAutoScroll();
     });
-    
+
     // 拖拽目标：文件夹可以接收，文件也可以接收（会移动到其父目录）
-    row.addEventListener('dragover', (e) => { 
-      e.preventDefault(); 
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       // 处理自动滚动
       const container = document.getElementById('tree');
       if (container) {
         handleAutoScroll(e, container);
       }
+
+      // 处理视觉反馈
+      clearDragOverStyles();
+      const position = getDropPosition(e, row, node);
+      row.classList.add(`drag-over-${position}`);
     });
-    
+
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
+    });
+
     row.addEventListener('drop', (e) => {
       e.preventDefault();
       e.stopPropagation(); // 阻止事件冒泡
       stopAutoScroll(); // 停止自动滚动
-      
+      clearDragOverStyles();
+
       const sourceData = e.dataTransfer.getData('text/plain');
       if (!sourceData) return;
-      
+
       // 解析源节点ID（可能是多个，用逗号分隔）
       const sourceIds = sourceData.split(',').filter(id => id && id !== node.id);
       if (sourceIds.length === 0) return;
-      
-      const targetNode = node.type === 'folder' ? node : (node.parentId ? vfs.getNodeById(node.parentId) : null);
-      
+
+      const position = getDropPosition(e, row, node);
+      let targetNode = node;
+
+      // 如果是 before/after，目标应该是父节点（移动到父节点下，targetNode 的前后）
+      // 如果是 inside，目标就是当前节点（如果是文件夹）
+
       // 移动所有选中的节点
       if (handlers.onMove) {
         sourceIds.forEach(sourceId => {
-          handlers.onMove(sourceId, targetNode);
+          handlers.onMove(sourceId, targetNode, position);
         });
       }
-      
+
       // 清除选择
       clearSelection();
     });
@@ -296,15 +341,15 @@ function getExpandedFolders() {
 function renderTree() {
   const container = document.getElementById('tree');
   if (!container) return;
-  
+
   // 保存当前展开的文件夹状态
   if (expandedFolders.size === 0) {
     // 只在第一次渲染时从DOM获取
     expandedFolders = getExpandedFolders();
   }
-  
+
   container.innerHTML = '';
-  
+
   // 为根容器添加拖拽支持，允许拖拽到根目录
   // 点击空白区域清除选择
   container.addEventListener('click', (e) => {
@@ -313,52 +358,52 @@ function renderTree() {
       document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
     }
   });
-  
+
   container.addEventListener('dragover', (e) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     // 处理自动滚动
     handleAutoScroll(e, container);
   });
-  
+
   container.addEventListener('dragleave', (e) => {
     // 当拖拽离开容器时停止自动滚动
     if (e.target === container) {
       stopAutoScroll();
     }
   });
-  
+
   container.addEventListener('drop', (e) => {
     // 停止自动滚动
     stopAutoScroll();
-    
+
     // 只在空白区域或根列表上响应
     if (e.target === container || e.target.classList.contains('tree-root')) {
       e.preventDefault();
       const sourceData = e.dataTransfer.getData('text/plain');
       if (!sourceData) return;
-      
+
       // 解析源节点ID（可能是多个，用逗号分隔）
       const sourceIds = sourceData.split(',').filter(id => id);
       if (sourceIds.length === 0) return;
-      
+
       // 移动所有选中的节点到根目录
       if (handlers.onMove) {
         sourceIds.forEach(sourceId => {
           handlers.onMove(sourceId, null);
         });
       }
-      
+
       // 清除选择
       clearSelection();
     }
   });
-  
+
   container.addEventListener('dragend', () => {
     // 拖拽结束时停止自动滚动
     stopAutoScroll();
   });
-  
+
   // 根是 parentId === null 的集合，渲染为一级
   const roots = vfs.listChildren(null);
   const rootUl = document.createElement('ul');
@@ -384,16 +429,16 @@ function renderTree() {
     row.addEventListener('click', (e) => {
       // 取消任何正在进行的重命名
       cancelCurrentRename();
-      
+
       // 处理多选
       handleNodeClick(rootNode, e, row);
-      
+
       // 文件夹展开/折叠逻辑（仅在非多选模式下）
       if (rootNode.type === 'folder' && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
         const wasExpanded = li.classList.contains('expanded');
         li.classList.toggle('expanded');
         const existing = li.querySelector(':scope > ul.tree-level');
-        
+
         if (li.classList.contains('expanded')) {
           if (existing) existing.remove();
           li.appendChild(buildTreeDom(rootNode.id));
@@ -420,55 +465,66 @@ function renderTree() {
         selectedNodes.add(rootNode.id);
         row.classList.add('selected');
       }
-      
+
       // 传递所有选中的节点ID
       const selectedIds = Array.from(selectedNodes).join(',');
       e.dataTransfer.setData('text/plain', selectedIds);
       e.dataTransfer.effectAllowed = 'move';
-      
+
       // 设置拖拽提示
       if (selectedNodes.size > 1) {
         e.dataTransfer.setData('text/html', `<div>移动 ${selectedNodes.size} 个项目</div>`);
       }
     });
-    
+
     row.addEventListener('dragend', () => {
       stopAutoScroll();
     });
-    
+
     // 拖拽目标：文件夹可以接收，文件也可以接收（会移动到根目录）
-    row.addEventListener('dragover', (e) => { 
-      e.preventDefault(); 
+    row.addEventListener('dragover', (e) => {
+      e.preventDefault();
       e.dataTransfer.dropEffect = 'move';
       // 处理自动滚动
       handleAutoScroll(e, container);
+
+      // 处理视觉反馈
+      clearDragOverStyles();
+      const position = getDropPosition(e, row, rootNode);
+      row.classList.add(`drag-over-${position}`);
     });
-    
+
+    row.addEventListener('dragleave', () => {
+      row.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
+    });
+
     row.addEventListener('drop', (e) => {
       e.preventDefault();
       e.stopPropagation(); // 阻止事件冒泡到容器
       stopAutoScroll(); // 停止自动滚动
-      
+      clearDragOverStyles();
+
       const sourceData = e.dataTransfer.getData('text/plain');
       if (!sourceData) return;
-      
+
       // 解析源节点ID（可能是多个，用逗号分隔）
       const sourceIds = sourceData.split(',').filter(id => id && id !== rootNode.id);
       if (sourceIds.length === 0) return;
-      
-      const targetNode = rootNode.type === 'folder' ? rootNode : null;
-      
+
+      const position = getDropPosition(e, row, rootNode);
+      const targetNode = rootNode;
+
       // 移动所有选中的节点
       if (handlers.onMove) {
         sourceIds.forEach(sourceId => {
-          handlers.onMove(sourceId, targetNode);
+          handlers.onMove(sourceId, targetNode, position);
         });
       }
-      
+
       // 清除选择
       clearSelection();
     });
-    
+
     if (rootNode.type === 'folder') {
       li.classList.add('collapsible');
       // 默认展开根文件夹
@@ -524,12 +580,12 @@ function startInlineRename(nodeId) {
   // 替换 label
   label.style.display = 'none';
   label.after(input);
-  
+
   // 确保输入框可交互
   input.style.position = 'relative';
   input.style.zIndex = '1000';
   input.focus();
-  
+
   // 智能选择：如果是文件（有扩展名），只选中文件名部分，不包括扩展名
   const lastDotIndex = input.value.lastIndexOf('.');
   if (node.type === 'file' && lastDotIndex > 0) {
@@ -580,7 +636,7 @@ function startInlineRename(nodeId) {
     nodeId: nodeId,
     cancel: cancel
   };
-  
+
   input.addEventListener('keydown', onKey);
   input.addEventListener('blur', onBlur);
 }
@@ -592,13 +648,13 @@ function startInlineRename(nodeId) {
 function applySearchFilter(matchedNodes) {
   const matchedIds = new Set(matchedNodes.map(n => n.id));
   const parentIds = new Set();
-  
+
   // 收集所有匹配节点的父路径
   matchedNodes.forEach(node => {
     const path = vfs.getNodePath(node.id);
     path.forEach(n => parentIds.add(n.id));
   });
-  
+
   // 遍历所有树节点,控制可见性
   document.querySelectorAll('.tree-item').forEach(item => {
     const nodeId = item.dataset.nodeId;
@@ -620,7 +676,7 @@ function applySearchFilter(matchedNodes) {
       item.style.display = 'none'; // 隐藏
     }
   });
-  
+
   // 标记搜索模式
   const container = document.getElementById('tree');
   if (container) container.dataset.searchMode = 'true';
@@ -634,7 +690,7 @@ function clearSearchFilter() {
   document.querySelectorAll('.tree-item').forEach(item => {
     item.style.display = '';
   });
-  
+
   // 移除搜索模式标记
   const container = document.getElementById('tree');
   if (container) delete container.dataset.searchMode;
