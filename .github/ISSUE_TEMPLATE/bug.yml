@@ -14,9 +14,9 @@ body:
   - type: input
     id: notewizard_version
     attributes:
-      label: Version / 版本
+      label: NoteWizard Version / NoteWizard版本
       description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
-      placeholder: e.g. 1.0.5
+      placeholder: 1.0.1
     validations:
       required: true
 

@@ -1,5 +1,5 @@
 name: Feature Request
-description: Request a new feature / 提出新功能
+description: Request a new feature / 提出新的功能需求
 title: "[Feature Request]: "
 labels: ["Feature"]
 
@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Feature Request / 功能请求
+        ## Feature Request / 功能需求
         Thanks for taking the time to suggest a new idea. Please provide as much detail as possible to help us understand and evaluate the feature.
         感谢你为项目提出新的想法，请尽量提供完整信息，这有助于我们更快理解和评估该功能。
 
