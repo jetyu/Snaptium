@@ -27,8 +27,8 @@ body:
      label: Operating System / 操作系统
      description: Select the operating system you are using. Required | 当前使用的操作系统（必填）
      options:
-       - Windows 10
        - Windows 11
+       - Windows 10
        - macOS (Intel)
        - macOS (Apple Silicon)
        - Linux
@@ -40,7 +40,7 @@ body:
     attributes:
       label: Operating System Version / 操作系统版本
       description: The version of OS you are using. Required | 当前使用的操作系统版本（必填）
-      placeholder: e.g. Windows 11 24H2, macOS 13.6, Ubuntu 20.04 LTS
+      placeholder: e.g. Windows 11 23H2, macOS 13.6, Ubuntu 20.04 LTS, CentOS 9 and etc.
     validations:
       required: true
 
