@@ -1,6 +1,6 @@
 # NoteWizard User Guide
 
-**Language**: [English](./NoteWizard_en-US.md) | [简体中文](./NoteWizard_zh-CN.md)
+**Language**: [English](./UserGuide_en-US.md) | [简体中文](./UserGuide_zh-CN.md)
 
 <div align="center">
   <img src="../../src/assets/logo/app-logo-128.png" alt="NoteWizard Logo" width="96">
