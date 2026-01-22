@@ -11,15 +11,6 @@ body:
         Thanks for reporting a bug. Please provide as much detail as possible to help us reproduce and fix the issue.
         感谢你提交Bug，请尽可能提供详细信息，以帮助我们复现并修复该问题。
 
-  - type: input
-    id: notewizard_version
-    attributes:
-      label: NoteWizard Version / NoteWizard版本
-      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
-      placeholder: 1.0.1
-    validations:
-      required: true
-
   - type: dropdown
     id: os
     attributes:
@@ -40,6 +31,15 @@ body:
       label: Operating System Version / 操作系统版本
       description: The version of OS you are using. Required | 当前使用的操作系统版本（必填）
       placeholder: e.g. Windows 11 23H2, macOS 13.6, Ubuntu 20.04 LTS, CentOS 9 and etc.
+    validations:
+      required: true
+
+  - type: input
+    id: notewizard_version
+    attributes:
+      label: NoteWizard Version / NoteWizard版本
+      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
+      placeholder: e.g. 1.0.1
     validations:
       required: true
 
