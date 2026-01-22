@@ -1,5 +1,5 @@
-name: Bug Report
-description: Report a bug or unexpected behavior in NoteWizard
+name: Bug Report / 缺陷报告
+description: Report a bug or unexpected behavior in NoteWizard / 报告缺陷
 title: "[Bug]: "
 labels: ["bug"]
 assignees: []
@@ -10,53 +10,60 @@ body:
       value: |
         Thanks for reporting a bug.
         Please provide as much detail as possible to help us reproduce and fix the issue.
+        
+        感谢你提交 Bug，请尽可能提供详细信息以帮助我们复现和修复问题。
 
   - type: input
     id: version
     attributes:
-      label: NoteWizard Version
-      placeholder: e.g. 1.0.5
+      label: Version / 版本
+      placeholder: e.g. 1.0.0
     validations:
       required: true
 
   - type: dropdown
     id: os
     attributes:
-      label: Operating System
+      label: Operating System / 操作系统
       options:
-        - Windows
-        - macOS
-        - Linux
+        - Windows 10 / 11
+        - macOS (Intel / Apple Silicon)
+        - Linux 
     validations:
       required: true
 
   - type: textarea
     id: steps
     attributes:
-      label: Steps to Reproduce
+      label: Steps to Reproduce / 复现步骤
       placeholder: |
+        e.g. 
         1. Open NoteWizard
         2. Insert a line
         3. Observe the cursor position
+        例：
+        1. 打开 NoteWizard
+        2. 插入一行文本
+        3. 观察光标位置
     validations:
       required: true
 
   - type: textarea
     id: expected
     attributes:
-      label: Expected Behavior
+      label: Expected Behavior / 期望结果
     validations:
       required: true
 
   - type: textarea
     id: actual
     attributes:
-      label: Actual Behavior
+      label: Actual Behavior / 实际结果
     validations:
       required: true
 
   - type: textarea
     id: logs
     attributes:
-      label: Logs / Screenshots
-      description: Attach logs or screenshots if available.
+      label: Screenshots
+      description: Attach logs or screenshots if available. / 如有相关日志或截图，请附上。
