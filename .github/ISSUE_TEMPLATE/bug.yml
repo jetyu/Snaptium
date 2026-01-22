@@ -25,15 +25,28 @@ body:
   - type: dropdown
     id: os
     attributes:
-      label: Operating System / 操作系统
-      description: The operating system where the issue occurs. Required | 发生问题的操作系统（必填）
-      options:
-        - Windows 10 / 11
-        - macOS (Intel / Apple Silicon)
-        - Linux
+     label: Operating System / 操作系统
+     description: Select the operating system where the issue occurs. Required | 选择发生问题的操作系统（必填）
+     options:
+       - Windows 10
+       - Windows 11
+       - macOS (Intel)
+       - macOS (Apple Silicon)
+       - Linux
+       - Other
     validations:
-      required: true
-
+     required: true
+  
+  - type: input
+    id: os_other
+    attributes:
+     label: Other Operating System (if applicable) / 其他操作系统（如适用）
+     description: |
+       Please specify if you selected "Other".
+       如选择“其他”，请在此填写具体操作系统。
+     placeholder: e.g. Ubuntu 24.04 / Arch Linux / Fedora
+  
+  
   - type: textarea
     id: steps
     attributes:
