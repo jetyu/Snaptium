@@ -1,4 +1,4 @@
-### [1.0.6] - 2026-01-28
+### [1.0.6] - 2026-01-24
 This release includes several critical fixes and performance improvements, further enhancing the stability and security.
 #### Fixed
 - Fixed an issue with list sorting when moving notes, ensuring note order is accurate.  
@@ -7,6 +7,7 @@ This release includes several critical fixes and performance improvements, furth
 #### Improved
 - Optimized scrolling and rendering performance in note preview mode, enhancing real-time rendering speed and responsiveness.  
 - Improved the user experience when moving notes.
+- Upgraded Electron runtime framework to v39.3.0.
 
 ### [1.0.5] - 2026-01-22
 #### Fixed
