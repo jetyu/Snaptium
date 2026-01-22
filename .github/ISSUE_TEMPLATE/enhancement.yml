@@ -1,6 +1,6 @@
-name: Enhancement / 功能改进
+name: Feature Enhancement / 功能改进
 description: Suggest an improvement to an existing feature / 改进现有功能
-title: "[Enhancement]: "
+title: "[Feature Enhancement]: "
 labels: ["enhancement"]
 
 body:
