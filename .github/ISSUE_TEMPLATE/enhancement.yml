@@ -24,7 +24,7 @@ body:
     id: current_behavior
     attributes:
       label: Current Behavior / 当前结果
-      description: How does the feature work now? / 当前功能是如何工作的？
+      description: How does the feature work now?  | 当前功能是如何工作的？
     validations:
       required: true
 
@@ -32,7 +32,7 @@ body:
     id: problem
     attributes:
       label: Problem or Insufficient / 问题或不足
-      description: What is inconvenient or insufficient? / 有哪些不便或不足之处？
+      description: What is inconvenient or insufficient? | 有哪些不便或不足之处？
     validations:
       required: true
 
@@ -40,7 +40,7 @@ body:
     id: enhancement
     attributes:
       label: Enhancement Case / 改进方案
-      description: How should it be improved? / 如何改进？
+      description: How should it be improved?  | 如何改进？
       placeholder: |
            e.g. Describe expected behavio of the feature in detail.
            例：请详细描述该功能的期望行为。

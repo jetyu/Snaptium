@@ -7,18 +7,21 @@ body:
   - type: textarea
     attributes:
       label: Problem Description / 问题描述
-      description: What problem does this feature solve? / 新功能可以解决什么问题？
+      description: What problem does this feature solve? | 新功能可以解决什么问题？
     validations:
       required: true
 
   - type: textarea
     attributes:
       label: Proposed Solution / 建议的解决方案
-      description: How should this feature work? / 希望它如何工作？
+      description: How should this feature work? | 希望它如何工作？
+      placeholder: |
+           e.g. Describe expected behavio of the feature in detail.
+           例：请详细描述该功能的期望行为。
     validations:
       required: true
 
   - type: textarea
     attributes:
       label: Alternatives Considered / 替代方案
-      description: Any alternative solutions or workarounds? / 是否考虑过其他方案？
+      description: Any alternative solutions or workarounds? | 是否考虑过其他方案？
