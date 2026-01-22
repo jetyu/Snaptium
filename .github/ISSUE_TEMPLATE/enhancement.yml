@@ -7,6 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
+        ## Feature Enhancement / 功能改进
         This template is for suggesting improvements to existing features only.
         If you are requesting a new feature, please use the Feature Request template.
 

@@ -4,6 +4,13 @@ title: "[Documentation Issue]: "
 labels: ["documentation"]
 
 body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Documentation Issue / 文档问题
+        Share feedback or suggestions to improve the documentation.
+        欢迎提出文档改进建议，帮助我们让文档更清晰、更准确。
+
   - type: textarea
     attributes:
       label: Documentation Issue / 文档问题
