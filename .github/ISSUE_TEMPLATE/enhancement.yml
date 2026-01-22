@@ -2,16 +2,15 @@ name: Enhancement / 功能改进
 description: Suggest an improvement to an existing feature / 改进现有功能
 title: "[Enhancement]: "
 labels: ["enhancement"]
-assignees: []
 
 body:
   - type: markdown
     attributes:
       value: |
-        This template is for suggesting improvements to existing features.
-        If you are requesting a completely new feature, please use the Feature Request template.
+        This template is for suggesting improvements to existing features only.
+        If you are requesting a new feature, please use the Feature Request template.
 
-        此模板用于提出对现有功能的改进建议。如果是全新的功能需求，请使用 Feature 模板。
+        此模板仅用于提出对现有功能的改进建议。如果是全新的功能需求，请使用 Feature 模板。
 
   - type: input
     id: version
@@ -45,4 +44,5 @@ body:
       placeholder: |
            e.g. Describe expected behavio of the feature in detail.
            例：请详细描述该功能的期望行为。
-       
+    validations:
+      required: true

@@ -1,8 +1,7 @@
-name: Bug Report / 缺陷报告
-description: Report a bug or unexpected behavior in NoteWizard / 报告缺陷
+name: Bug Report / Bug 反馈
+description: Report a bug or unexpected behavior / 报告缺陷或非预期行为
 title: "[Bug]: "
 labels: ["bug"]
-assignees: []
 
 body:
   - type: markdown
@@ -63,7 +62,7 @@ body:
       required: true
 
   - type: textarea
-    id: logs
+    id: screenshots
     attributes:
-      label: Screenshots
+      label: Screenshots / 截图
       description: Attach logs or screenshots if available. / 如有相关日志或截图，请附上。

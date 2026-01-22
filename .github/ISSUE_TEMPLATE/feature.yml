@@ -1,4 +1,4 @@
-name: Feature Request / 功能建议
+name: Feature / 功能建议
 description: Request a new feature / 提出新功能
 title: "[Feature]: "
 labels: ["Feature"]
@@ -7,10 +7,7 @@ body:
   - type: textarea
     attributes:
       label: Problem Description / 问题描述
-      description: What problem does this feature solve? / 这个功能解决了什么问题？
-      placeholder: |
-        I'm frustrated when...
-        我在以下场景下感到不便：
+      description: What problem does this feature solve? / 新功能可以解决什么问题？
     validations:
       required: true
 
@@ -18,6 +15,8 @@ body:
     attributes:
       label: Proposed Solution / 建议的解决方案
       description: How should this feature work? / 希望它如何工作？
+    validations:
+      required: true
 
   - type: textarea
     attributes:
