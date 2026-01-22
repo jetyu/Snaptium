@@ -1,32 +1,25 @@
-name: Feature Request
-description: New feature Request
+name: Feature Request / 功能建议
+description: Request a new feature / 提出新功能
 title: "[Feature]: "
 labels: ["Feature"]
 
 body:
   - type: textarea
     attributes:
-      label: Problem Description
-      description: What problem does this feature solve?
+      label: Problem Description / 问题描述
+      description: What problem does this feature solve? / 这个功能解决了什么问题？
       placeholder: |
         I'm frustrated when...
+        我在以下场景下感到不便：
     validations:
       required: true
 
   - type: textarea
     attributes:
-      label: Proposed Solution
-      description: How should this feature work?
+      label: Proposed Solution / 建议的解决方案
+      description: How should this feature work? / 希望它如何工作？
 
   - type: textarea
     attributes:
-      label: Alternatives Considered
-      description: Any alternative solutions or workarounds?
-
-  - type: dropdown
-    attributes:
-      label: Priority
-      options:
-        - P2
-        - P1
-        - P0
+      label: Alternatives Considered / 替代方案
+      description: Any alternative solutions or workarounds? / 是否考虑过其他方案？
