@@ -15,7 +15,7 @@ body:
     attributes:
       label: Documentation Issue / 文档问题
       description: |
-        Describe what is missing, outdated, or unclear in the documentation. |  描述文档中缺失、过期或不清楚的内容。
+        Describe what is missing, outdated, or unclear in the documentation. Require |  描述文档中缺失、过期或不清楚的内容。（必填）
       placeholder: |
         The following documentation needs to be updated...
         以下文档内容需要更新或补充：
@@ -26,7 +26,7 @@ body:
     attributes:
       label: Suggested Changes / 建议修改
       description: |
-        Explain how the documentation should be improved. |  说明你建议如何改进文档。
+        Explain how the documentation should be improved. Require |  说明你建议如何改进文档。（必填）
       placeholder: |
         Add examples or clarify the steps...
         建议补充示例或澄清操作步骤。

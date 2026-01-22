@@ -8,21 +8,20 @@ body:
     attributes:
       value: |
         ## Feature Request / 功能请求
-        Thanks for taking the time to suggest a new feature!
+        Thanks for taking the time to suggest a new idea. Please provide as much detail as possible to help us understand and evaluate the feature.
         感谢你为项目提出新的想法，请尽量提供完整信息，这有助于我们更快理解和评估该功能。
-        
 
   - type: textarea
     attributes:
-      label: Problem Description / 问题描述
-      description: What problem does this feature solve? | 新功能可以解决什么问题？
+      label: Feature Description / 功能描述
+      description: What problem does this feature solve?  Required | 新功能可以解决什么问题？（必填）
     validations:
       required: true
 
   - type: textarea
     attributes:
-      label: Proposed Solution / 建议的解决方案
-      description: How should this feature work? | 希望它如何工作？
+      label: Proposed Solution / 方案建议
+      description: How should this feature work?  Required | 希望它如何工作？（必填）
       placeholder: |
            e.g. Describe expected behavio of the feature in detail.
            例：请详细描述该功能的期望行为。
