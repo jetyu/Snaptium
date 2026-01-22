@@ -4,6 +4,14 @@ title: "[New Feature]: "
 labels: ["Feature"]
 
 body:
+  - type: markdown
+    attributes:
+      value: |
+        ## New Feature / 功能请求
+        Thanks for taking the time to suggest a new feature!
+        感谢你为项目提出新的想法，请尽量提供完整信息，这有助于我们更快理解和评估该功能。
+        
+
   - type: textarea
     attributes:
       label: Problem Description / 问题描述
