@@ -1,5 +1,5 @@
 ### [1.0.6] - 2026-01-28
-This release includes several critical fixes and performance improvements, further enhancing the stability and security of note management.
+This release includes several critical fixes and performance improvements, further enhancing the stability and security.
 #### Fixed
 - Fixed an issue with list sorting when moving notes, ensuring note order is accurate.  
 - Fixed an XSS vulnerability introduced in version v1.0.4 in the search functionality, improving overall security.  
