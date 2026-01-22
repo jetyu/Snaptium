@@ -41,6 +41,23 @@ function escapeRegex(str) {
 }
 
 /**
+ * 转义 HTML 特殊字符，防止 XSS
+ * @param {string} str - 要转义的字符串
+ * @returns {string} 转义后的字符串
+ */
+function escapeHTML(str) {
+  if (!str) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;'
+  };
+  return str.replace(/[&<>"']/g, (m) => map[m]);
+}
+
+/**
  * 高亮匹配的文本
  * @param {string} query - 搜索关键词
  */
@@ -53,7 +70,8 @@ function highlightMatches(query) {
   document.querySelectorAll('.tree-label').forEach(label => {
     const text = label.textContent;
     if (regex.test(text)) {
-      const highlighted = text.replace(regex, '<mark>$1</mark>');
+      const escapedText = escapeHTML(text);
+      const highlighted = escapedText.replace(regex, '<mark>$1</mark>');
       label.innerHTML = highlighted;
     }
   });
@@ -250,7 +268,7 @@ function initSearch(inputElement, treeContainer) {
   // 创建清空按钮
   const clearBtn = document.createElement('button');
   clearBtn.className = 'search-clear-btn';
-  clearBtn.innerHTML = '×';
+  clearBtn.textContent = '×';
   clearBtn.title = t('search.clearSearch');
   clearBtn.style.display = 'none';
 

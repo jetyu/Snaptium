@@ -1,12 +1,21 @@
+### [1.0.6] - 2026-01-28
+This release includes several critical fixes and performance improvements, further enhancing the stability and security of note management.
+#### Fixed
+- Fixed an issue with list sorting when moving notes, ensuring note order is accurate.  
+- Fixed an XSS vulnerability introduced in version v1.0.4 in the search functionality, improving overall security.  
+- Updated and patched dependencies to address security vulnerabilities.
+#### Improved
+- Optimized scrolling and rendering performance in note preview mode, enhancing real-time rendering speed and responsiveness.  
+- Improved the user experience when moving notes.
+
 ### [1.0.5] - 2026-01-22
 #### Fixed
 - Fixed an issue where the cursor was not correctly positioned after inserting a code block.
 - Fixed an issue where selected text was not properly wrapped when inserting a code block.
 - Fixed layout issues caused by resizing the application window.
+- Fixed potential security issues in the decompression process.
 #### Improved
 - Improved the maximum draggable width in preview mode to enhance the fullscreen experience.
-#### Security
-- Fixed potential security issues in the decompression process.
 
 ### [1.0.4] - 2026-01-20
 #### Fixed
