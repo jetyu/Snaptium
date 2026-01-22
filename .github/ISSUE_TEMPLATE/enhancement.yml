@@ -8,15 +8,18 @@ body:
     attributes:
       value: |
         ## Feature Enhancement / 功能改进
-        This template is for suggesting improvements to existing features only.If you are requesting a new feature, please use the Feature Request template.
-        此模板仅用于提出对现有功能的改进建议。如果是全新的功能需求，请使用 Feature 模板。
+        This template is for suggesting improvements to existing features only.
+        If you are requesting a new feature, please use the Feature Request template.
+        
+        此模板仅用于提出对现有功能的改进建议。
+        如果是全新的功能需求，请使用 Feature 模板。
 
   - type: input
     id: noteWizard_version
     attributes:
       label: NoteWizard Version / NoteWizard版本
       description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
-      placeholder: 1.0.1
+      placeholder: v1.0.1
     validations:
       required: true
 
