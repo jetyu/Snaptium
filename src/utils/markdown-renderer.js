@@ -70,5 +70,16 @@ export function createMarkdownRenderer(options = {}) {
         return { render: (text) => text };
     }
 
-    return window.markdownit(config);
+    const md = window.markdownit(config);
+
+    const defaultRenderToken = md.renderer.renderToken.bind(md.renderer);
+    md.renderer.renderToken = function (tokens, idx, options) {
+        const token = tokens[idx];
+        if (token.level === 0 && token.map && token.map[0] >= 0) {
+            token.attrJoin('data-source-line', String(token.map[0]));
+        }
+        return defaultRenderToken(tokens, idx, options);
+    };
+
+    return md;
 }

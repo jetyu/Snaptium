@@ -68,27 +68,127 @@ function setupEditorEventListeners(editor, aiAssistant) {
     window.dispatchEvent(event);
   });
 
-  // 滚动同步：编辑器滚动时同步预览面板
+  // Scroll Synchronization
   const scrollElement = editor.getScrollerElement();
-  if (scrollElement) {
-    let isSyncing = false;
-    scrollElement.addEventListener('scroll', function () {
-      if (isSyncing) return;
+  const previewContainer = document.getElementById('preview-container');
 
-      const previewContainer = document.getElementById('preview-container');
-      if (!previewContainer) return;
+  if (scrollElement && previewContainer) {
+    let isSyncingLeft = false; // Editor -> Preview
+    let isSyncingRight = false; // Preview -> Editor
+    let syncTimeout;
 
-      const scrollTop = scrollElement.scrollTop;
-      const scrollHeight = scrollElement.scrollHeight - scrollElement.clientHeight;
-      if (scrollHeight <= 0) return;
+    // Cache for mapping source lines to preview elements
+    let lineElementMap = [];
 
-      const scrollRatio = scrollTop / scrollHeight;
+    const clearSync = () => {
+      clearTimeout(syncTimeout);
+      syncTimeout = setTimeout(() => {
+        isSyncingLeft = false;
+        isSyncingRight = false;
+      }, 100);
+    };
 
-      const previewScrollHeight = previewContainer.scrollHeight - previewContainer.clientHeight;
-      if (previewScrollHeight > 0) {
-        isSyncing = true;
-        previewContainer.scrollTop = scrollRatio * previewScrollHeight;
-        requestAnimationFrame(() => { isSyncing = false; });
+    // Debounce function to prevent excessive cache updates
+    const debounce = (func, wait) => {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    };
+
+    // Build the cache mapping source lines to their DOM elements and offsets
+    const updateScrollCache = () => {
+      const elements = Array.from(previewContainer.querySelectorAll('[data-source-line]'));
+      lineElementMap = elements.map(el => {
+        const line = parseInt(el.getAttribute('data-source-line'), 10);
+        return {
+          line: isNaN(line) ? -1 : line,
+          element: el,
+          offsetTop: el.offsetTop
+        };
+      }).filter(item => item.line >= 0)
+        .sort((a, b) => a.line - b.line);
+    };
+
+    // Initial cache build
+    updateScrollCache();
+
+    // Observe changes in the preview container to update cache
+    const observer = new MutationObserver(debounce(() => {
+      updateScrollCache();
+    }, 100));
+
+    observer.observe(previewContainer, {
+      childList: true,
+      subtree: true,
+      attributes: false, // data-source-line shouldn't change on existing elements usually
+      characterData: false
+    });
+
+    // Also update cache on window resize as offsetTop might change
+    window.addEventListener('resize', debounce(() => {
+      updateScrollCache();
+    }, 100));
+
+    // Sync: Editor -> Preview
+    editor.on('scroll', () => {
+      if (isSyncingRight) return;
+
+      isSyncingLeft = true;
+      clearSync();
+
+      const scrollInfo = editor.getScrollInfo();
+      // Using 'local' coordinates is correct for CodeMirror
+      const lineNumber = editor.lineAtHeight(scrollInfo.top, 'local');
+
+      let targetOffset = -1;
+
+      // Use binary search or findLast for efficiency
+      // Since map is sorted by line, we find the last item where item.line <= lineNumber
+      // For small arrays, simple reverse iteration is fast enough
+      for (let i = lineElementMap.length - 1; i >= 0; i--) {
+        if (lineElementMap[i].line <= lineNumber) {
+          targetOffset = lineElementMap[i].element.offsetTop;
+          break;
+        }
+      }
+
+      if (targetOffset >= 0) {
+        previewContainer.scrollTop = targetOffset;
+      } else if (lineNumber === 0) {
+        previewContainer.scrollTop = 0;
+      }
+    });
+
+    // Sync: Preview -> Editor
+    previewContainer.addEventListener('scroll', () => {
+      if (isSyncingLeft) return;
+
+      isSyncingRight = true;
+      clearSync();
+
+      const scrollTop = previewContainer.scrollTop;
+      let targetLine = -1;
+
+      // Find the element that is at the top of the viewport
+      // We look for the last element whose offsetTop <= scrollTop + tolerance
+      for (let i = lineElementMap.length - 1; i >= 0; i--) {
+        if (lineElementMap[i].element.offsetTop <= scrollTop + 20) {
+          targetLine = lineElementMap[i].line;
+          break;
+        }
+      }
+
+      if (targetLine >= 0) {
+        const coords = editor.charCoords({ line: targetLine, ch: 0 }, 'local');
+        editor.scrollTo(null, coords.top);
+      } else if (scrollTop === 0) {
+        editor.scrollTo(null, 0);
       }
     });
   }
