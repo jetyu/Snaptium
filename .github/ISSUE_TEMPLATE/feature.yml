@@ -1,6 +1,6 @@
 name: Feature Request
 description: Request a new feature / 提出新的功能需求
-title: "[Feature Request]: "
+title: "[Feature Request]"
 labels: ["Feature"]
 
 body:
@@ -10,6 +10,38 @@ body:
         ## Feature Request / 功能需求
         Thanks for taking the time to suggest a new idea. Please provide as much detail as possible to help us understand and evaluate the feature.
         感谢你为项目提出新的想法，请尽量提供完整信息，这有助于我们更快理解和评估该功能。
+
+  - type: input
+    id: notewizard_version
+    attributes:
+      label: NoteWizard Version / NoteWizard版本
+      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
+      placeholder: 1.0.1
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+     label: Operating System / 操作系统
+     description: Select the operating system you are using. Required | 当前使用的操作系统（必填）
+     options:
+       - Windows 11
+       - Windows 10
+       - macOS (Intel)
+       - macOS (Apple Silicon)
+       - Linux
+    validations:
+     required: true
+
+  - type: input
+    id: os_version
+    attributes:
+      label: Operating System Version / 操作系统版本
+      description: The version of OS you are using. Required | 当前使用的操作系统版本（必填）
+      placeholder: e.g. Windows 11 23H2, macOS 13.6, Ubuntu 20.04 LTS, CentOS 9 and etc.
+    validations:
+      required: true
 
   - type: textarea
     attributes:

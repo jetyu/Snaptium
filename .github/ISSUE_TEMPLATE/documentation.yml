@@ -1,6 +1,6 @@
 name: Documentation Issue
 description: Improvements or additions to documentation / 对已有文档的改进或补充
-title: "[Documentation Issue]: "
+title: "[Documentation Issue]"
 labels: ["documentation"]
 
 body:
