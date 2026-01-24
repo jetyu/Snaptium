@@ -5,7 +5,7 @@ function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const TEMPLATE_PATH = resolve('.github/template/RELEASE_NOTES.md');
+const TEMPLATE_PATH = resolve('.github/RELEASE_TEMPLATE/release_note.md');
 const BODY_START_MARKER = '<!-- RELEASE_NOTES_BODY_START -->';
 const BODY_END_MARKER = '<!-- RELEASE_NOTES_BODY_END -->';
 
