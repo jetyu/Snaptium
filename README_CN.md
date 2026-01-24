@@ -85,7 +85,7 @@
 
 ### 环境要求
 
-- Node.js (v20 或更高版本)
+- Node.js (v22 或更高版本)
 - npm (v10 或更高版本)
 - Git (用于克隆仓库)
 
@@ -93,7 +93,7 @@
 
 - **Electron** - 使用 JavaScript, HTML 和 CSS 构建跨平台桌面应用
 - **CodeMirror** - 功能丰富的代码编辑器
-- **Marked** - Markdown 解析器和编译器
+- **markdown-it** - Markdown 解析器和编译器
 
 ## 参与贡献
 
@@ -114,7 +114,7 @@
 感谢以下开源项目的支持：
 - [Electron](https://www.electronjs.org/)
 - [CodeMirror](https://codemirror.net/)
-- [Marked](https://marked.js.org/)
+- [markdown-it](https://github.com/markdown-it/markdown-it)
 
 ---
 

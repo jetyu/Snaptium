@@ -2,7 +2,9 @@
 
 **Language**: [English](./PrivacyPolicy_en-US.md) | [简体中文](./PrivacyPolicy_zh-CN.md)
 
-**Last Updated**: December 18, 2025
+**NoteWizard Team**  
+Version: 1.1  
+Last Updated: January 24, 2026
 
 ---
 
@@ -30,11 +32,15 @@ Please read this Privacy Policy carefully. If you do not agree with our policies
 - Notes save path
 - Other application settings
 
+**AI Configuration (Optional)**
+- If you use the AI Writing Assistant, your API keys and configuration settings are stored locally on your device and encrypted.
+
 
 
 ### 2.2 Information Collected Automatically
 
-Currently, NoteWizard does not automatically collect any information. All data remains on your device.
+**Automatic Update Checks**
+- NoteWizard periodically checks for application updates via GitHub's public API. This process transmits basic system information (such as operating system version) to GitHub's servers, which is common for checking software updates. No personally identifiable information or note data is included in this process.
 
 ---
 
@@ -64,16 +70,22 @@ We use the collected information for the following purposes:
 
 We implement appropriate technical and organizational measures to protect your information:
 
-- Local encryption of sensitive data
-- Secure communication protocols (HTTPS) for any network communications
-- Regular security updates and patches
-- No transmission of personal data to third-party servers without your consent
+- **AES-256-GCM Encryption**: You can optionally enable local encryption for your notes. All encryption and decryption processes occur entirely on your device.
+- Secure communication protocols (HTTPS) for any network communications.
+- Regular security updates and patches.
+- No transmission of personal data to third-party servers without your explicit consent or action (e.g., enabling AI services).
 
 ---
 
 ## 5. Third-Party Services
 
-Currently, NoteWizard does not use any third-party services for data collection or processing. All data is processed locally on your device.
+**AI Writing Assistant (Optional)**
+- If you choose to enable the AI Writing Assistant feature and provide an API key, NoteWizard will send the note content you explicitly request assistance for to the LLM (Large Language Model) provider you have configured (e.g., OpenAI, DeepSeek, etc.).
+- This data is sent directly from your device to the service provider. We do not intermediate or store this data on our servers.
+- Use of these services is subject to the privacy policies of the respective third-party providers.
+
+**GitHub (Updates)**
+- As mentioned in Section 2.2, NoteWizard interacts with GitHub's public APIs to check for software updates.
 
 ---
 
@@ -158,6 +170,3 @@ While we strive to protect your privacy, no method of transmission over the inte
 
 ---
 
-**NoteWizard Team**  
-Version: 1.0  
-Last Updated: December 18, 2025

@@ -79,14 +79,14 @@ Built automatically using `Workflows`, click to download the latest package for 
 [![NoteWizard-Linux-x64.AppImage](https://img.shields.io/badge/NoteWizard--Linux--x64.AppImage-FCC624?style=flat-square&logo=linux&logoColor=black)](https://github.com/jetyu/NoteWizard/releases/latest/download/NoteWizard-Linux-x64.AppImage)
 
 
->   [View All Releases](https://github.com/jetyu/NoteWizard/releases/latest)
+>   [View All Releases](https://github.com/jetyu/NoteWizard/releases)
 
 
 ## Quick Start
 
 ### Requirements
 
-- Node.js (v20 or higher)
+- Node.js (v22 or higher)
 - npm (v10 or higher)
 - Git (for cloning the repository)
 
@@ -94,7 +94,7 @@ Built automatically using `Workflows`, click to download the latest package for 
 
 - **Electron** - Build cross-platform desktop apps with JavaScript, HTML, and CSS
 - **CodeMirror** - Feature-rich code editor
-- **Marked** - Markdown parser and compiler
+- **markdown-it** - Markdown parser and compiler
 
 ## Contributing
 
@@ -115,7 +115,7 @@ This project is licensed under the MIT License. See the `LICENSE` file for detai
 Thanks to the following open source projects:
 - [Electron](https://www.electronjs.org/)
 - [CodeMirror](https://codemirror.net/)
-- [Marked](https://marked.js.org/)
+- [markdown-it](https://github.com/markdown-it/markdown-it)
 
 ---
 

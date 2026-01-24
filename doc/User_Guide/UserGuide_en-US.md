@@ -2,6 +2,12 @@
 
 **Language**: [English](./UserGuide_en-US.md) | [简体中文](./UserGuide_zh-CN.md)
 
+**NoteWizard Team**  
+Version: 1.1  
+Last Updated: January 24, 2026
+
+---
+
 <div align="center">
   <img src="../../src/assets/logo/app-logo-128.png" alt="NoteWizard Logo" width="96">
   <h3>Modern Cross-Platform Markdown Note-Taking App</h3>
@@ -270,17 +276,47 @@ NoteWizard supports 19 languages:
 **Switch Language:**
 - Preferences → General → Language
 
-### Import/Export Notes (In Development)
+### Import/Export Notes
+
+NoteWizard supports full data migration and backup through multiple formats.
 
 **Import Notes:**
 - File → Open (or `Ctrl+O`)
-- Select `.md` file
-- Note content loads into editor
+- Select `.md` file to load content into the editor.
+- You can also import `.nwp` (NoteWizard Package) files through the File menu.
 
 **Export Notes:**
-- File → Save (or `Ctrl+S`)
-- Choose save location
-- Note saves as `.md` file
+- File → Export (or `Ctrl+E`)
+- **Markdown (.md)**: Standard format for use in other Markdown editors.
+- **NoteWizard Package (.nwp)**: Proprietary format that preserves all metadata and structure, ideal for backup or migration between NoteWizard instances.
+
+### AI Writing Assistant
+
+NoteWizard integrates an optional AI Writing Assistant to enhance your productivity.
+
+**Configuration:**
+1. Open **Preferences** (`Ctrl+Shift+P`) → **AI Service**.
+2. Select your provider (OpenAI, DeepSeek, etc.).
+3. Enter your **API Key**. For security, your key is stored locally and encrypted.
+4. (Optional) Customize the **System Prompt** and **API Endpoint**.
+
+**Usage:**
+- Highlight text in the editor for contextual suggestions.
+- Use the AI button in the toolbar to generate or refine content.
+- AI features are **Off by default**. Data is sent to your provider only when you explicitly trigger an AI action.
+
+### Data Security & Encryption
+
+Security is a core pillar of NoteWizard. We provide industrial-grade encryption for your sensitive notes.
+
+**Local Encryption:**
+- NoteWizard uses the **AES-256-GCM** algorithm to encrypt your notes on-device.
+- When enabled, your data is never stored in plain text on your disk.
+
+**Recovery Key:**
+- When you first enable encryption, you will be provided with a **Recovery Key**.
+- **IMPORTANT**: Store this key in a safe place (e.g., a physical copy or a password manager).
+- We do not store your recovery key or password. If you lose both, your encrypted data cannot be recovered.
 
 ### Preferences Import/Export
 
@@ -500,7 +536,3 @@ If you encounter any issues or have suggestions during use, please contact us vi
 Happy note-taking! ✨
 
 ---
-
-**NoteWizard Team**  
-Version: 0.2.0  
-Last Updated: 2025-12-18
