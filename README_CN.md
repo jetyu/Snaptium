@@ -32,7 +32,6 @@
 ## 界面预览
 **NoteWizard 快速上手**  
 > 提示: 本软件持续更新，以优化性能和用户体验。列出的功能仅供参考，可能随技术进步和需求变化而调整。
-
 ![NoteWizard 快速上手](./doc/Quick_Start/QuickStart_zhCN.webp)
 
 ## 支持平台
@@ -80,30 +79,8 @@
 
 >   [查看全部版本](https://github.com/jetyu/NoteWizard/releases)
 
-
-## 快速开始
-
-### 环境要求
-
-- Node.js (v22 或更高版本)
-- npm (v10 或更高版本)
-- Git (用于克隆仓库)
-
-## 主要依赖
-
-- **Electron** - 使用 JavaScript, HTML 和 CSS 构建跨平台桌面应用
-- **CodeMirror** - 功能丰富的代码编辑器
-- **markdown-it** - Markdown 解析器和编译器
-
-## 参与贡献
-
-我们非常欢迎和感谢所有贡献！无论是报告 Bug、讨论功能，还是提交代码，您的支持都是项目前进的动力。
-
-1. Fork 项目
-2. 创建功能分支 (`git checkout -b feature/新功能`)
-3. 提交更改 (`git commit -m '添加新功能'`)
-4. 推送到分支 (`git push origin feature/新功能`)
-5. 提交 Pull Request
+## 官方Wiki
+[![NoteWizard Wiki](https://img.shields.io/badge/NoteWizard-Wiki-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/jetyu/NoteWizard/wiki)
 
 ## 开源协议
 

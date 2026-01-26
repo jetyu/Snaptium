@@ -21,11 +21,11 @@
  * @returns {Object} 菜单管理器实例
  */
 export function createMenuManager(deps) {
-  const { 
+  const {
     Menu, BrowserWindow, dialog, shell, fs, path, app,
-    t, getWindow, closeAllWindows, 
+    t, getWindow, closeAllWindows,
     importExportManager, handleManualUpdateCheck,
-    __dirname 
+    __dirname
   } = deps;
 
   /**
@@ -42,12 +42,12 @@ export function createMenuManager(deps) {
           click: async () => {
             const win = getWindow();
             if (!win) return;
-            
+
             const { canceled, filePaths } = await dialog.showOpenDialog(win, {
               filters: [{ name: "Markdown", extensions: ["md"] }],
               properties: ["openFile"],
             });
-            
+
             if (!canceled && filePaths.length > 0) {
               const content = fs.readFileSync(filePaths[0], "utf-8");
               win.webContents.send("file-opened", {
@@ -76,7 +76,7 @@ export function createMenuManager(deps) {
               click: async () => {
                 const win = getWindow();
                 if (!win || !importExportManager) return;
-                
+
                 const result = await importExportManager.exportNotes();
                 if (result.success) {
                   let message = t("export.notewizard.success.message").replace('{count}', result.noteCount);
@@ -105,7 +105,7 @@ export function createMenuManager(deps) {
               click: async () => {
                 const win = getWindow();
                 if (!win || !importExportManager) return;
-                
+
                 const result = await importExportManager.exportMarkdown();
                 if (result.success) {
                   dialog.showMessageBox(win, {
@@ -133,7 +133,7 @@ export function createMenuManager(deps) {
               click: async () => {
                 const win = getWindow();
                 if (!win || !importExportManager) return;
-                
+
                 const result = await importExportManager.importNotes();
                 if (result.success) {
                   let message = t("import.notewizard.success.message").replace('{count}', result.noteCount);
@@ -168,7 +168,7 @@ export function createMenuManager(deps) {
               click: async () => {
                 const win = getWindow();
                 if (!win || !importExportManager) return;
-                
+
                 const result = await importExportManager.importMarkdown();
                 if (result.success) {
                   dialog.showMessageBox(win, {
@@ -321,17 +321,17 @@ export function createMenuManager(deps) {
           click: () => {
             shell.openExternal("https://github.com/jetyu/NoteWizard");
           },
-        }, 
+        },
         {
           label: t("menu.help.tutorial"),
           click: () => {
-            shell.openExternal("https://github.com/jetyu/NoteWizard/blob/main/doc/User_Guide/UserGuide_en-US.md");
+            shell.openExternal("https://github.com/jetyu/NoteWizard/wiki");
           },
         },
         {
           label: t("menu.help.privacyPolicy"),
           click: () => {
-            shell.openExternal("https://github.com/jetyu/NoteWizard/blob/main/doc/Privacy_Policy/PrivacyPolicy_en-US.md");
+            shell.openExternal("https://github.com/jetyu/NoteWizard/wiki/07_Privacy-Policy");
           },
         },
         {
@@ -341,7 +341,7 @@ export function createMenuManager(deps) {
           },
         },
         { type: "separator" },
-       
+
         {
           label: t("menu.help.update"),
           click: async () => {
@@ -451,10 +451,10 @@ export function createMenuManager(deps) {
     try {
       const currentMenu = Menu.getApplicationMenu();
       if (!currentMenu) return;
-      
+
       const openItem = currentMenu.getMenuItemById("preview-open");
       const closeItem = currentMenu.getMenuItemById("preview-close");
-      
+
       if (openItem && closeItem) {
         openItem.enabled = false;
         closeItem.enabled = true;
@@ -480,7 +480,7 @@ export function createMenuManager(deps) {
     const menuTemplate = buildMenuTemplate(iconPath);
     const menu = Menu.buildFromTemplate(menuTemplate);
     Menu.setApplicationMenu(menu);
-    
+
     setupMenuState();
   }
 
