@@ -34,6 +34,7 @@
 **NoteWizard Quick Start**  
 > Tips: software is continuously updated to enhance performance and user experience. Listed features are for reference only and may evolve with technological advancements and user needs.
 
+[![NoteWizard Wiki](https://img.shields.io/badge/NoteWizard-官方Wiki-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/jetyu/NoteWizard/wiki)
 ![NoteWizard Quick Start](./doc/Quick_Start/QuickStart_enUS.webp)
 
 ## Supported Platforms
@@ -82,29 +83,8 @@ Built automatically using `Workflows`, click to download the latest package for 
 >   [View All Releases](https://github.com/jetyu/NoteWizard/releases)
 
 
-## Quick Start
-
-### Requirements
-
-- Node.js (v22 or higher)
-- npm (v10 or higher)
-- Git (for cloning the repository)
-
-## Main Dependencies
-
-- **Electron** - Build cross-platform desktop apps with JavaScript, HTML, and CSS
-- **CodeMirror** - Feature-rich code editor
-- **markdown-it** - Markdown parser and compiler
-
-## Contributing
-
-We welcome and appreciate all contributions! Whether it's reporting bugs, discussing features, or submitting code, your support drives the project forward.
-
-1. Fork the project
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+## Official Wiki
+[![NoteWizard Wiki](https://img.shields.io/badge/NoteWizard-Wiki-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/jetyu/NoteWizard/wiki)
 
 ## License
 
