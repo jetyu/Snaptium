@@ -1,3 +1,9 @@
+### [1.0.7] - 2026-01-27
+#### Fixed
+- Fixed an issue where the copy code button tooltip text was not updated correctly when switching languages in preview mode.
+#### Updated
+- Updated the links for Privacy Policy, User Agreement, and User Manual.
+
 ### [1.0.6] - 2026-01-24
 This release includes several critical fixes and performance improvements, further enhancing the stability and security.
 #### Fixed

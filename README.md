@@ -34,7 +34,6 @@
 **NoteWizard Quick Start**  
 > Tips: software is continuously updated to enhance performance and user experience. Listed features are for reference only and may evolve with technological advancements and user needs.
 
-[![NoteWizard Wiki](https://img.shields.io/badge/NoteWizard-官方Wiki-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/jetyu/NoteWizard/wiki)
 ![NoteWizard Quick Start](./doc/Quick_Start/QuickStart_enUS.webp)
 
 ## Supported Platforms

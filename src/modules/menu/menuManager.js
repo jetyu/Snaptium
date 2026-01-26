@@ -335,13 +335,18 @@ export function createMenuManager(deps) {
           },
         },
         {
+          label: t("menu.help.termsOfService"),
+          click: () => {
+            shell.openExternal("https://github.com/jetyu/NoteWizard/wiki/08_Terms-of-Service");
+          },
+        },
+        {
           label: t("menu.help.feedback"),
           click: () => {
             shell.openExternal("https://github.com/jetyu/NoteWizard/issues");
           },
         },
         { type: "separator" },
-
         {
           label: t("menu.help.update"),
           click: async () => {
