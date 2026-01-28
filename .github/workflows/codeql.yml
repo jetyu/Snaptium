@@ -1,4 +1,4 @@
-name: "CodeQL Advanced"
+name: "Code Analyze Advanced"
 
 on:
   schedule:
