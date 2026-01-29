@@ -1,4 +1,4 @@
-name: CodeQL Security Scan
+name: Code Security Scan
 
 on:
   schedule:
