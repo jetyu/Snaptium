@@ -1,8 +1,13 @@
-name: "Code Analyze Advanced"
+name: CodeQL Security Scan
 
 on:
   schedule:
-    - cron: '0 0 * * 1'
+    - cron: '0 0 * * 5'
+  workflow_dispatch:
+
+concurrency:
+  group: codeql-js-ts
+  cancel-in-progress: true
 
 jobs:
   analyze:
@@ -16,15 +21,15 @@ jobs:
       contents: read
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@v4
-      with:
-        languages: javascript-typescript
-        build-mode: none
-        queries: security-extended
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-extended
 
-    - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@v4
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
