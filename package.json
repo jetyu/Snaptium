@@ -68,12 +68,7 @@
       ],
       "artifactName": "NoteWizard-Windows-${arch}.${ext}",
       "icon": "src/assets/logo/app-logo.ico",
-      "publisherName": "NoteWizard",
-      "verifyUpdateCodeSignature": false,
-      "signingHashAlgorithms": [
-        "sha1",
-        "sha256"
-      ]
+      "verifyUpdateCodeSignature": false
     },
     "mac": {
       "target": [
