@@ -392,9 +392,11 @@ function showContextMenu(node, e) {
  * 处理文件节点的内容加载和文件夹节点的状态更新
  */
 async function selectNode(node) {
+  const currentToken = ++state.selectNodeToken;
+
   if (state.currentNodeId && state.editor) {
     const prevNode = vfs.getNodeById(state.currentNodeId);
-    if (prevNode && prevNode.type === 'file') {
+    if (prevNode && prevNode.type === 'file' && !state.isLoadingNote) {
       const currentContent = state.editor.getValue();
       state.fileContents.set(prevNode.id, currentContent);
     }
@@ -420,9 +422,15 @@ async function selectNode(node) {
   let content = state.fileContents.get(node.id);
   if (content == null) {
     try {
+      state.isLoadingNote = true;
       content = node.contentId ? await vfs.readContent(node.contentId) : '';
     } catch (e) {
       content = '';
+    } finally {
+      if (state.selectNodeToken !== currentToken) {
+        return;
+      }
+      state.isLoadingNote = false;
     }
   }
   if (state.editor) {

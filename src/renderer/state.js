@@ -7,6 +7,8 @@ const state = {
   currentNodeId: null,
   workspaceRoot: null,
   nodes: new Map(),
+  selectNodeToken: 0,
+  isLoadingNote: false,
 };
 
 export default state;
