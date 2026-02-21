@@ -1,3 +1,7 @@
+### [1.0.8] - 2026-02-21
+#### Fixed
+- Fixed an issue where notes could be lost in special scenarios.
+
 ### [1.0.7] - 2026-01-27
 #### Fixed
 - Fixed an issue where the copy code button tooltip text was not updated correctly when switching languages in preview mode.
