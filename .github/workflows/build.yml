@@ -2,9 +2,8 @@ name: build
 
 on:
   push:
-    branches:
-      - main
-      - develop
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
   workflow_dispatch:
 
 permissions:
@@ -19,9 +18,6 @@ jobs:
     name: Build on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
-    if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && github.ref_type == 'tag')
 
     strategy:
       fail-fast: false
