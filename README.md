@@ -10,7 +10,6 @@
   <p>A modern cross-platform note-taking desktop application built with Electron, featuring local data storage for complete security and control.</p>
   
 [![Latest Release](https://img.shields.io/github/v/release/jetyu/NoteWizard?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases/latest)
-[![Pre-release Version](https://img.shields.io/github/v/release/jetyu/NoteWizard?include_prereleases&style=flat&label=pre-release)](https://github.com/jetyu/NoteWizard/releases)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20|%20Linux%20|%20macOS-blue?style=flat)]()
 [![Repo Size](https://img.shields.io/github/repo-size/jetyu/NoteWizard?style=flat)]()
 [![Last Commit](https://img.shields.io/github/last-commit/jetyu/NoteWizard?style=flat)]()
