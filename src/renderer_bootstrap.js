@@ -8,6 +8,8 @@ import { initPreferences } from './renderer/preferences/index.js';
 import { initTrash } from './renderer/trash/trash.js';
 import { initPreview } from './renderer/preview/preview.js';
 import { showInputDialogWithValidation } from './renderer/preferences/ui/DialogController.js';
+import state from './renderer/state.js';
+import * as vfs from './renderer/workspace/vfs.js';
 
 const { ipcRenderer } = window.electronAPI;
 
@@ -205,6 +207,13 @@ function setupPreviewIpcHandlers() {
   };
 
   const hidePreview = () => {
+    if (state && state.currentNodeId) {
+      const currentNode = vfs.getNodeById(state.currentNodeId);
+      if (currentNode && currentNode.locked) {
+        return;
+      }
+    }
+    
     saveCurrentPreviewWidth();
     previewPanel.style.display = 'none';
     editorPanel.style.flex = '1 1 auto';

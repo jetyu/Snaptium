@@ -85,7 +85,7 @@ function loadAllNodes(root) {
     try {
       const n = JSON.parse(line);
       nodes.set(n.id, n);
-    } catch (_) {}
+    } catch (_) { }
   }
   return nodes;
 }
@@ -110,7 +110,7 @@ async function initWorkspace(rootPath) {
       console.error('Failed to get noteSavePath from preferences:', error);
     }
   }
-  
+
   let root = rootPath || savedPath || getDefaultWorkspaceRoot();
 
   try {
@@ -191,6 +191,7 @@ function createFile(parentId, name, content = '') {
     updatedAt: Date.now(),
     contentId,
     trashed: false,
+    locked: false,
   };
   return saveNode(node);
 }
@@ -211,6 +212,13 @@ function renameNode(id, newName) {
   const node = getNodeById(id);
   if (!node) return null;
   node.name = newName;
+  return saveNode(node);
+}
+
+function toggleNodeLock(id, locked) {
+  const node = getNodeById(id);
+  if (!node) return null;
+  node.locked = !!locked;
   return saveNode(node);
 }
 
@@ -260,7 +268,7 @@ function deleteNode(id, permanent = false) {
       if (electronFs.existsSync(contentPath)) {
         electronFs.unlinkSync(contentPath);
       }
-      
+
       // 删除对应的图片文件夹
       const imagesDir = electronPath.join(state.workspaceRoot, 'Database', 'images', node.contentId);
       if (electronFs.existsSync(imagesDir)) {
@@ -306,11 +314,11 @@ async function readContent(contentId) {
   const p = electronPath.join(objectsDir(state.workspaceRoot), `${contentId}.md`);
   if (electronFs.existsSync(p)) {
     let content = electronFs.readFileSync(p, 'utf-8');
-    
+
     // 双重验证：检查 meta.json 的加密状态和文件内容的 ENCRYPTED: 前缀
     const metaPath = electronPath.join(nwDir(state.workspaceRoot), 'meta.json');
     let metaEncrypted = false;
-    
+
     try {
       if (electronFs.existsSync(metaPath)) {
         const metaContent = electronFs.readFileSync(metaPath, 'utf-8');
@@ -320,14 +328,14 @@ async function readContent(contentId) {
     } catch (error) {
       console.warn('Failed to read meta.json encryption status:', error);
     }
-    
+
     // 如果是加密内容（文件内容以 ENCRYPTED: 开头），调用 IPC 解密
     if (content.startsWith('ENCRYPTED:')) {
       // 验证 meta.json 的加密状态是否一致
       if (!metaEncrypted) {
         console.warn(`[VFS] Inconsistent encryption state: file ${contentId}.md is encrypted but meta.json shows encrypted=false`);
       }
-      
+
       try {
         const result = await ipcRenderer.invoke('encryption:decrypt-note', { content });
         if (result.success) {
@@ -346,7 +354,7 @@ async function readContent(contentId) {
         console.warn(`[VFS] Inconsistent encryption state: file ${contentId}.md is not encrypted but meta.json shows encrypted=true`);
       }
     }
-    
+
     return content;
   }
   return '';
@@ -358,13 +366,13 @@ async function writeContent(contentId, text) {
     console.error('[VFS] writeContent: Content is invalid');
     return false;
   }
-  
+
   const p = electronPath.join(objectsDir(state.workspaceRoot), `${contentId}.md`);
   const tmpPath = p + '.tmp';
   const backupPath = p + '.bak';
-  
+
   let contentToWrite = text;
-  
+
   // 检查是否启用加密
   try {
     const statusResult = await ipcRenderer.invoke('encryption:is-enabled');
@@ -381,20 +389,20 @@ async function writeContent(contentId, text) {
   } catch (error) {
     // IPC 失败时，继续使用原内容保存。
     console.error('[VFS] 检查加密状态失败:', error);
-    
+
   }
-  
+
   // 再次验证：确保最终要写入的内容有效
-  if (contentToWrite === undefined || contentToWrite === null || 
-      (typeof contentToWrite === 'string' && contentToWrite.length === 0 && text.length > 0)) {
+  if (contentToWrite === undefined || contentToWrite === null ||
+    (typeof contentToWrite === 'string' && contentToWrite.length === 0 && text.length > 0)) {
     console.error('[VFS] writeContent: 处理后内容异常，跳过写入以保护数据');
     return false;
   }
-  
+
   try {
     // 原子写入：先写临时文件
     electronFs.writeFileSync(tmpPath, contentToWrite, 'utf-8');
-    
+
     // 验证临时文件写入成功
     const writtenContent = electronFs.readFileSync(tmpPath, 'utf-8');
     if (writtenContent !== contentToWrite) {
@@ -402,7 +410,7 @@ async function writeContent(contentId, text) {
       if (electronFs.existsSync(tmpPath)) electronFs.unlinkSync(tmpPath);
       return false;
     }
-    
+
     // 如果原文件存在且有内容，创建备份
     if (electronFs.existsSync(p)) {
       const originalContent = electronFs.readFileSync(p, 'utf-8');
@@ -410,21 +418,21 @@ async function writeContent(contentId, text) {
         electronFs.writeFileSync(backupPath, originalContent, 'utf-8');
       }
     }
-    
+
     // 原子替换：重命名临时文件为目标文件
     electronFs.renameSync(tmpPath, p);
-    
+
     // 写入成功后删除备份文件
     if (electronFs.existsSync(backupPath)) {
       electronFs.unlinkSync(backupPath);
     }
-    
+
     return true;
   } catch (error) {
     console.error('[VFS] writeContent: 写入失败:', error);
     // 清理临时文件
     if (electronFs.existsSync(tmpPath)) {
-      try { electronFs.unlinkSync(tmpPath); } catch (_) {}
+      try { electronFs.unlinkSync(tmpPath); } catch (_) { }
     }
     return false;
   }
@@ -461,24 +469,24 @@ function searchNodes(query, options = {}) {
     includeFolders = false,
     includeTrashed = false
   } = options;
-  
+
   if (!query || query.trim() === '') return [];
-  
+
   const results = [];
   const searchQuery = caseSensitive ? query : query.toLowerCase();
-  
+
   // 直接遍历内存中的 Map,无IO操作
   for (const node of state.nodes.values()) {
     if (node.type === 'file' && !includeFiles) continue;
     if (node.type === 'folder' && !includeFolders) continue;
     if (node.trashed && !includeTrashed) continue;
-    
+
     const nodeName = caseSensitive ? node.name : node.name.toLowerCase();
     if (nodeName.includes(searchQuery)) {
       results.push(node);
     }
   }
-  
+
   return results;
 }
 
@@ -498,12 +506,12 @@ async function searchNodesFullText(query, options = {}, onProgress = null) {
     maxNodes = 1000,
     batchSize = 50
   } = options;
-  
+
   if (!query || query.trim() === '') return [];
-  
+
   const results = [];
   const searchQuery = caseSensitive ? query : query.toLowerCase();
-  
+
   // 获取所有文件节点
   const fileNodes = [];
   for (const node of state.nodes.values()) {
@@ -511,19 +519,19 @@ async function searchNodesFullText(query, options = {}, onProgress = null) {
     if (node.trashed && !includeTrashed) continue;
     fileNodes.push(node);
   }
-  
+
   // 按更新时间排序，优先搜索最近的笔记
   fileNodes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  
+
   // 限制搜索范围
   const nodesToSearch = fileNodes.slice(0, maxNodes);
   const totalNodes = nodesToSearch.length;
-  
+
   // 分批处理
   for (let i = 0; i < nodesToSearch.length; i += batchSize) {
     // 检查是否已达到最大结果数
     if (results.length >= maxResults) break;
-    
+
     const batch = nodesToSearch.slice(i, i + batchSize);
     const batchPromises = batch.map(async (node) => {
       try {
@@ -533,7 +541,7 @@ async function searchNodesFullText(query, options = {}, onProgress = null) {
           matchInContent: false,
           matches: []
         };
-        
+
         // 搜索标题
         if (searchIn === 'title' || searchIn === 'all') {
           const nodeName = caseSensitive ? node.name : node.name.toLowerCase();
@@ -546,42 +554,42 @@ async function searchNodesFullText(query, options = {}, onProgress = null) {
             });
           }
         }
-        
+
         // 搜索内容
         if ((searchIn === 'content' || searchIn === 'all') && node.contentId) {
           const content = await readContent(node.contentId);
           const searchContent = caseSensitive ? content : content.toLowerCase();
-          
+
           if (searchContent.includes(searchQuery)) {
             matchInfo.matchInContent = true;
-            
+
             // 提取匹配的上下文（最多3个）
             const contextMatches = extractContextMatches(content, query, caseSensitive, 3);
             matchInfo.matches.push(...contextMatches);
           }
         }
-        
+
         // 如果有匹配，返回结果
         if (matchInfo.matchInTitle || matchInfo.matchInContent) {
           return matchInfo;
         }
-        
+
         return null;
       } catch (error) {
         console.warn(`搜索节点 ${node.id} 时出错:`, error);
         return null;
       }
     });
-    
+
     const batchResults = await Promise.all(batchPromises);
-    
+
     // 收集有效结果
     for (const result of batchResults) {
       if (result && results.length < maxResults) {
         results.push(result);
       }
     }
-    
+
     // 报告进度
     if (onProgress) {
       const progress = Math.min(100, Math.round(((i + batch.length) / totalNodes) * 100));
@@ -593,7 +601,7 @@ async function searchNodesFullText(query, options = {}, onProgress = null) {
       });
     }
   }
-  
+
   return results;
 }
 
@@ -610,28 +618,28 @@ function extractContextMatches(content, query, caseSensitive, maxMatches = 3) {
   const searchContent = caseSensitive ? content : content.toLowerCase();
   const searchQuery = caseSensitive ? query : query.toLowerCase();
   const contextLength = 50; // 前后各50个字符
-  
+
   let startIndex = 0;
   let matchCount = 0;
-  
+
   while (matchCount < maxMatches) {
     const index = searchContent.indexOf(searchQuery, startIndex);
     if (index === -1) break;
-    
+
     // 计算上下文范围
     const contextStart = Math.max(0, index - contextLength);
     const contextEnd = Math.min(content.length, index + query.length + contextLength);
-    
+
     // 提取上下文
     let contextText = content.substring(contextStart, contextEnd);
-    
+
     // 添加省略号
     if (contextStart > 0) contextText = '...' + contextText;
     if (contextEnd < content.length) contextText = contextText + '...';
-    
+
     // 计算行号
     const lineNumber = content.substring(0, index).split('\n').length;
-    
+
     matches.push({
       type: 'content',
       text: contextText,
@@ -640,11 +648,11 @@ function extractContextMatches(content, query, caseSensitive, maxMatches = 3) {
       matchStart: contextStart > 0 ? index - contextStart + 3 : index - contextStart,
       matchLength: query.length
     });
-    
+
     matchCount++;
     startIndex = index + query.length;
   }
-  
+
   return matches;
 }
 
@@ -656,12 +664,12 @@ function extractContextMatches(content, query, caseSensitive, maxMatches = 3) {
 function getNodePath(nodeId) {
   const path = [];
   let current = state.nodes.get(nodeId);
-  
+
   while (current) {
     path.unshift(current);
     current = current.parentId ? state.nodes.get(current.parentId) : null;
   }
-  
+
   return path;
 }
 
@@ -676,6 +684,7 @@ export {
   deleteNode,
   restoreNode,
   getNodeById,
+  toggleNodeLock,
   readContent,
   writeContent,
   emptyTrash,

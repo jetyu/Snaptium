@@ -158,6 +158,13 @@
     letter-spacing: 0.01em;
 }
 
+.lock-icon {
+    margin-left: 4px;
+    font-size: 10px;
+    opacity: 0.8;
+    flex-shrink: 0;
+}
+
 .tree-icon {
     font-size: 16px;
     line-height: 1;

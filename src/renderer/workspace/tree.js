@@ -35,12 +35,10 @@ function getDropPosition(e, row, node) {
   const height = rect.height;
 
   if (node.type === 'folder') {
-    // 文件夹：前 25% 是 before, 后 25% 是 after, 中间是 inside
     if (y < height * 0.25) return 'before';
     if (y > height * 0.75) return 'after';
     return 'inside';
   } else {
-    // 文件：前 50% 是 before, 后 50% 是 after
     return y < height * 0.5 ? 'before' : 'after';
   }
 }
@@ -209,8 +207,14 @@ function buildTreeDom(parentId) {
     label.className = 'tree-label';
     label.textContent = node.name;
 
+    const lockIcon = document.createElement('span');
+    lockIcon.className = 'lock-icon';
+    lockIcon.textContent = node.locked ? '🔐' : '';
+    lockIcon.title = 'Locked,can not be modified';
+
     row.appendChild(icon);
     row.appendChild(label);
+    row.appendChild(lockIcon);
     li.appendChild(row);
 
     row.addEventListener('click', (e) => {

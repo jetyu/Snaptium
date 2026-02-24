@@ -329,6 +329,79 @@ async function handleMenuAction(action, node) {
           }
         }, 100);
         break;
+
+      case 'lock':
+        vfs.toggleNodeLock(node.id, true);
+        tree.renderTree();
+        // 锁定笔记时，切换到预览模式（隐藏编辑器，显示预览）
+        if (state.currentNodeId === node.id) {
+          const editorPanel = document.getElementById('editor-panel');
+          const previewPanel = document.getElementById('preview-panel');
+          if (editorPanel && previewPanel) {
+            editorPanel.style.display = 'none';
+            previewPanel.style.display = '';
+            previewPanel.style.flex = '1 1 auto';
+            previewPanel.style.width = '100%';
+            try { ipcRenderer.send('preview-state-changed', { visible: true }); } catch { }
+          }
+          // 设置编辑器为只读
+          if (state.editor) {
+            state.editor.setOption('readOnly', true);
+          }
+          // 恢复选中状态
+          setTimeout(() => {
+            const treeRow = document.querySelector(`.tree-item[data-node-id="${node.id}"] .tree-row`);
+            if (treeRow) {
+              document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
+              document.querySelectorAll('.tree-row.selected').forEach(x => x.classList.remove('selected'));
+              treeRow.classList.add('active');
+              treeRow.classList.add('selected');
+            }
+          }, 0);
+        }
+        updateStatus(`${t('file.renamedStatus')}: ${t('contextMenu.lock')}`);
+        break;
+
+      case 'unlock':
+        vfs.toggleNodeLock(node.id, false);
+        tree.renderTree();
+        // 解锁笔记时，切换到编辑模式
+        if (state.currentNodeId === node.id) {
+          const editorPanel = document.getElementById('editor-panel');
+          const previewPanel = document.getElementById('preview-panel');
+          if (editorPanel && previewPanel) {
+            editorPanel.style.display = '';
+            // 恢复预览面板的保存宽度
+            const savedWidth = localStorage.getItem('previewPanelWidth');
+            if (savedWidth) {
+              previewPanel.style.display = '';
+              previewPanel.style.flex = '0 0 auto';
+              previewPanel.style.width = savedWidth + 'px';
+            } else {
+              previewPanel.style.display = '';
+              previewPanel.style.flex = '';
+              previewPanel.style.width = '';
+            }
+            try { ipcRenderer.send('preview-state-changed', { visible: true }); } catch { }
+          }
+          // 设置编辑器为可编辑
+          if (state.editor) {
+            state.editor.setOption('readOnly', false);
+            state.editor.focus();
+          }
+          // 恢复选中状态
+          setTimeout(() => {
+            const treeRow = document.querySelector(`.tree-item[data-node-id="${node.id}"] .tree-row`);
+            if (treeRow) {
+              document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
+              document.querySelectorAll('.tree-row.selected').forEach(x => x.classList.remove('selected'));
+              treeRow.classList.add('active');
+              treeRow.classList.add('selected');
+            }
+          }, 0);
+        }
+        updateStatus(`${t('file.renamedStatus')}: ${t('contextMenu.unlock')}`);
+        break;
     }
   } catch (err) {
     console.error('Menu action error:', err);
@@ -360,6 +433,8 @@ function showContextMenu(node, e) {
   // 2. 笔记文件
   else if (isFile) {
     menuItems = [
+      { label: node.locked ? t('contextMenu.unlock') : t('contextMenu.lock'), action: node.locked ? 'unlock' : 'lock' },
+      { type: 'separator' },
       { label: t('contextMenu.rename'), action: 'rename' },
       { label: t('contextMenu.delete'), action: 'delete' },
       { type: 'separator' },
@@ -434,10 +509,37 @@ async function selectNode(node) {
     }
   }
   if (state.editor) {
+    state.editor.setOption('readOnly', node.locked || false);
     state.editor.setValue(content || '');
     state.fileContents.set(node.id, content || '');
     updateStatus(`${t('file.loadedFile')}: ${node.name}`);
   }
+
+  // 处理锁定状态下的布局
+  const editorPanel = document.getElementById('editor-panel');
+  const previewPanel = document.getElementById('preview-panel');
+  if (editorPanel && previewPanel) {
+    if (node.type === 'file' && node.locked) {
+      // 锁定的笔记：隐藏编辑器
+      editorPanel.style.display = 'none';
+      previewPanel.style.display = '';
+      previewPanel.style.flex = '1 1 auto';
+      previewPanel.style.width = '100%';
+      try { ipcRenderer.send('preview-state-changed', { visible: true }); } catch { }
+    } else {
+      // 非锁定的笔记：显示编辑器
+      editorPanel.style.display = '';
+      const savedWidth = localStorage.getItem('previewPanelWidth');
+      if (savedWidth && previewPanel.style.display !== 'none') {
+        previewPanel.style.flex = '0 0 auto';
+        previewPanel.style.width = savedWidth + 'px';
+      } else if (previewPanel.style.display !== 'none') {
+        previewPanel.style.flex = '';
+        previewPanel.style.width = '';
+      }
+    }
+  }
+
   renderPreview();
 }
 
@@ -773,26 +875,9 @@ function setupEditorEvents() {
       const node = vfs.getNodeById(nodeId);
       if (!node || node.type !== 'file') return;
       state.fileContents.set(nodeId, content);
+      // 定时自动保存功能已禁用
+      // 内容将在窗口关闭时或手动保存时写入
       if (state.autoSaveTimer) clearTimeout(state.autoSaveTimer);
-      state.autoSaveTimer = setTimeout(async () => {
-        try {
-          if (node.contentId) {
-            const currentContent = state.editor.getValue();
-            // 保存前再次验证内容有效性
-            if (currentContent !== undefined && currentContent !== null) {
-              const result = await vfs.writeContent(node.contentId, currentContent);
-              if (result) {
-                updateStatus(`${t('file.autoSaved')}: ${node.name}`);
-              } else {
-                console.warn('[AutoSave] writeContent: Content is protected');
-              }
-            }
-          }
-        } catch (e) {
-          console.error('[AutoSave] Autosave Exception:', e);
-          updateStatus(t('file.autoSaveFailed'));
-        }
-      }, 2000);
     });
   } else {
     setTimeout(setupEditorEvents, 100);

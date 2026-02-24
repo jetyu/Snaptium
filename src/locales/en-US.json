@@ -146,6 +146,8 @@
   "contextMenu.open": "Open",
   "contextMenu.rename": "Rename",
   "contextMenu.delete": "Delete",
+  "contextMenu.lock": "Lock Note",
+  "contextMenu.unlock": "Unlock Note",
   "contextMenu.showInFolder": "Show in Folder",
   "contextMenu.properties": "Properties",
   "file.notExist": "File does not exist",

@@ -9,6 +9,7 @@ const state = {
   nodes: new Map(),
   selectNodeToken: 0,
   isLoadingNote: false,
+  unsavedFiles: new Set()
 };
 
 export default state;
