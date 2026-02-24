@@ -146,6 +146,8 @@
   "contextMenu.open": "Mở",
   "contextMenu.rename": "Đổi tên",
   "contextMenu.delete": "Xóa",
+  "contextMenu.lock": "Khóa ghi chú",
+  "contextMenu.unlock": "Mở khóa ghi chú",
   "contextMenu.showInFolder": "Hiển thị trong thư mục",
   "contextMenu.properties": "Thuộc tính",
   "file.notExist": "Tệp không tồn tại",

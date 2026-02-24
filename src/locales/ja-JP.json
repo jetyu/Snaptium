@@ -146,6 +146,8 @@
   "contextMenu.open": "開く",
   "contextMenu.rename": "名前を変更",
   "contextMenu.delete": "削除",
+  "contextMenu.lock": "ノートをロック",
+  "contextMenu.unlock": "ノートのロックを解除",
   "contextMenu.showInFolder": "フォルダで表示",
   "contextMenu.properties": "プロパティ",
   "file.notExist": "ファイルが存在しません",

@@ -146,6 +146,8 @@
   "contextMenu.open": "Открыть",
   "contextMenu.rename": "Переименовать",
   "contextMenu.delete": "Удалить",
+  "contextMenu.lock": "Заблокировать заметку",
+  "contextMenu.unlock": "Разблокировать заметку",
   "contextMenu.showInFolder": "Показать в папке",
   "contextMenu.properties": "Свойства",
   "file.notExist": "Файл не существует",

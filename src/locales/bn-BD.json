@@ -146,6 +146,8 @@
   "contextMenu.open": "খুলুন",
   "contextMenu.rename": "নাম পরিবর্তন করুন",
   "contextMenu.delete": "মুছুন",
+  "contextMenu.lock": "নোট লক করুন",
+  "contextMenu.unlock": "নোটের লক মুক্ত করুন",
   "contextMenu.showInFolder": "ফোল্ডারে দেখান",
   "contextMenu.properties": "বৈশিষ্ট্য",
   "file.notExist": "ফাইল বিদ্যমান নেই",

@@ -146,6 +146,8 @@
   "contextMenu.open": "Öffnen",
   "contextMenu.rename": "Umbenennen",
   "contextMenu.delete": "Löschen",
+  "contextMenu.lock": "Notiz sperren",
+  "contextMenu.unlock": "Notiz entsperren",
   "contextMenu.showInFolder": "Im Ordner anzeigen",
   "contextMenu.properties": "Eigenschaften",
   "file.notExist": "Datei existiert nicht",

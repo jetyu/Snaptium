@@ -146,6 +146,8 @@
   "contextMenu.open": "เปิด",
   "contextMenu.rename": "เปลี่ยนชื่อ",
   "contextMenu.delete": "ลบ",
+  "contextMenu.lock": "ล็อกโน้ต",
+  "contextMenu.unlock": "ยกเลิกการล็อกโน้ต",
   "contextMenu.showInFolder": "แสดงในโฟลเดอร์",
   "contextMenu.properties": "คุณสมบัติ",
   "file.notExist": "ไม่มีไฟล์",

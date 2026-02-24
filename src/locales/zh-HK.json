@@ -146,6 +146,8 @@
   "contextMenu.open": "開啟",
   "contextMenu.rename": "重新命名",
   "contextMenu.delete": "刪除",
+  "contextMenu.lock": "鎖定筆記",
+  "contextMenu.unlock": "解鎖筆記",
   "contextMenu.showInFolder": "開啟檔案所在位置",
   "contextMenu.properties": "屬性",
   "file.notExist": "檔案不存在",

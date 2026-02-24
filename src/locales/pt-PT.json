@@ -146,6 +146,8 @@
   "contextMenu.open": "Abrir",
   "contextMenu.rename": "Renomear",
   "contextMenu.delete": "Eliminar",
+  "contextMenu.lock": "Bloquear Nota",
+  "contextMenu.unlock": "Desbloquear Nota",
   "contextMenu.showInFolder": "Mostrar na Pasta",
   "contextMenu.properties": "Propriedades",
   "file.notExist": "Ficheiro não existe",

@@ -146,6 +146,8 @@
   "contextMenu.open": "열기",
   "contextMenu.rename": "이름 바꾸기",
   "contextMenu.delete": "삭제",
+  "contextMenu.lock": "노트 잠금",
+  "contextMenu.unlock": "노트 잠금 해제",
   "contextMenu.showInFolder": "폴더에서 보기",
   "contextMenu.properties": "속성",
   "file.notExist": "파일이 존재하지 않습니다",

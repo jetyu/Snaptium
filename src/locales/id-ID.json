@@ -146,6 +146,8 @@
   "contextMenu.open": "Buka",
   "contextMenu.rename": "Ganti Nama",
   "contextMenu.delete": "Hapus",
+  "contextMenu.lock": "Kunci Catatan",
+  "contextMenu.unlock": "Buka Kunci Catatan",
   "contextMenu.showInFolder": "Tampilkan di Folder",
   "contextMenu.properties": "Properti",
   "file.notExist": "Berkas tidak ada",
