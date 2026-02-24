@@ -1,3 +1,7 @@
+### [1.1.0] - 2026-02-24
+#### New
+- Support note locking: Lock to instantly make it read-only preview mode; unlock to jump straight into editing.
+
 ### [1.0.8] - 2026-02-21
 #### Fixed
 - Fixed an issue where notes could be lost in special scenarios.
