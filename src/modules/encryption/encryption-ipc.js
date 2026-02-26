@@ -108,6 +108,22 @@ export function decryptContent(encryptedContent, recoveryKey) {
  */
 export function createEncryptionManager(deps) {
   const { ipcMain, preferencesManager, getWindow, app } = deps;
+
+  const readMetaJson = (metaPath) => {
+    const metaContent = fs.readFileSync(metaPath, 'utf-8');
+    return JSON.parse(metaContent);
+  };
+
+  const writeMetaJson = (metaPath, meta) => {
+    const payload = JSON.stringify(meta, null, 2);
+    const fd = fs.openSync(metaPath, 'r+');
+    try {
+      fs.ftruncateSync(fd, 0);
+      fs.writeFileSync(fd, payload, { encoding: 'utf-8' });
+    } finally {
+      fs.closeSync(fd);
+    }
+  };
   
   // 加密状态管理（无锁定功能）
   let encryptionEnabled = false;
@@ -150,13 +166,20 @@ export function createEncryptionManager(deps) {
     try {
       const databaseDir = path.join(app.getPath('documents'), 'NoteWizard', 'Database');
       const metaPath = path.join(databaseDir, 'meta.json');
-      
-      if (!fs.existsSync(metaPath)) {
+
+      let meta;
+      try {
+        meta = readMetaJson(metaPath);
+      } catch (error) {
+        if (error.code === 'ENOENT') {
+          return;
+        }
+        throw error;
+      }
+
+      if (!meta || typeof meta !== 'object') {
         return;
       }
-      
-      const metaContent = fs.readFileSync(metaPath, 'utf-8');
-      const meta = JSON.parse(metaContent);
       
       // 检查是否有临时恢复密钥
       if (!meta.tempRecoveryKey) {
@@ -172,7 +195,7 @@ export function createEncryptionManager(deps) {
         console.error('[Encryption] Invalid recovery key format in meta.json');
         // 清除无效的密钥
         delete meta.tempRecoveryKey;
-        fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+        writeMetaJson(metaPath, meta);
         return;
       }
       
@@ -213,7 +236,7 @@ export function createEncryptionManager(deps) {
               console.error('[Encryption] Recovery key verification failed:', error.message);
               // 密钥验证失败，清除无效密钥
               delete meta.tempRecoveryKey;
-              fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+              writeMetaJson(metaPath, meta);
               console.log('[Encryption] Invalid recovery key removed from meta.json');
               return;
             }
@@ -254,7 +277,7 @@ export function createEncryptionManager(deps) {
           
           // 清除 meta.json 中的临时密钥
           delete meta.tempRecoveryKey;
-          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+          writeMetaJson(metaPath, meta);
           console.log('[Encryption] Temporary recovery key removed from meta.json');
         }
       }
@@ -696,15 +719,14 @@ export function createEncryptionManager(deps) {
       // 更新 meta.json 的加密状态
       try {
         const metaPath = path.join(databaseDir, 'meta.json');
-        if (fs.existsSync(metaPath)) {
-          const metaContent = fs.readFileSync(metaPath, 'utf-8');
-          const meta = JSON.parse(metaContent);
-          meta.encrypted = true;
-          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-          console.log('[Encryption] Updated meta.json: encrypted = true');
-        }
+        const meta = readMetaJson(metaPath);
+        meta.encrypted = true;
+        writeMetaJson(metaPath, meta);
+        console.log('[Encryption] Updated meta.json: encrypted = true');
       } catch (error) {
-        console.error('Failed to update meta.json:', error);
+        if (error.code !== 'ENOENT') {
+          console.error('Failed to update meta.json:', error);
+        }
       }
       
       return { 
@@ -833,15 +855,14 @@ export function createEncryptionManager(deps) {
       // 更新 meta.json 的加密状态
       try {
         const metaPath = path.join(databaseDir, 'meta.json');
-        if (fs.existsSync(metaPath)) {
-          const metaContent = fs.readFileSync(metaPath, 'utf-8');
-          const meta = JSON.parse(metaContent);
-          meta.encrypted = false;
-          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-          console.log('[Encryption] Updated meta.json: encrypted = false');
-        }
+        const meta = readMetaJson(metaPath);
+        meta.encrypted = false;
+        writeMetaJson(metaPath, meta);
+        console.log('[Encryption] Updated meta.json: encrypted = false');
       } catch (error) {
-        console.error('Failed to update meta.json:', error);
+        if (error.code !== 'ENOENT') {
+          console.error('Failed to update meta.json:', error);
+        }
       }
       
       return { 

@@ -206,7 +206,12 @@ export function createExporter(dependencies) {
         if (content.startsWith('ENCRYPTED:')) {
           // 使用公共函数解密
           const decryptedContent = decryptContent(content, recoveryKey);
-          fs.writeFileSync(targetFile, decryptedContent, 'utf-8');
+          const fd = fs.openSync(targetFile, 'wx', 0o600);
+          try {
+            fs.writeFileSync(fd, decryptedContent, { encoding: 'utf-8' });
+          } finally {
+            fs.closeSync(fd);
+          }
           decrypted++;
         } else {
           // 非加密文件，直接复制
@@ -314,8 +319,7 @@ export function createExporter(dependencies) {
 
       // 如果有加密文件，创建临时目录并解密
       if (hasEncrypted && recoveryKey) {
-        tempDir = path.join(os.tmpdir(), `notewizard-export-${Date.now()}`);
-        fs.mkdirSync(tempDir, { recursive: true });
+        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'notewizard-export-'));
 
         // 处理 objects 目录
         const tempObjectsDir = path.join(tempDir, 'objects');
