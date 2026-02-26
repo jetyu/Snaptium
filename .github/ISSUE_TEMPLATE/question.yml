@@ -1,5 +1,6 @@
 name: Question
 description: Ask a question or request clarification / 提出问题或使用咨询
+issue_title: ""
 labels: ["Question"]
 assignees:
   - jetyu
@@ -24,7 +25,7 @@ body:
       placeholder: e.g., "How to configure NoteWizard on macOS?"
     validations:
       required: true
-
+      
   - type: dropdown
     id: os
     attributes:
