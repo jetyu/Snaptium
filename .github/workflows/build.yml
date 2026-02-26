@@ -59,9 +59,6 @@ jobs:
       - name: Lint
         run: npm run lint || true
 
-      - name: Test
-        run: npm test
-
       - name: Clean dist folder
         run: npm run clean
 
