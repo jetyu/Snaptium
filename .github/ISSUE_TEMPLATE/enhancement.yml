@@ -1,7 +1,9 @@
 name: Feature Enhancement
 description: Suggest an Improvement or addition to an existing feature / 已有的功能进行改进或完善
 labels: ["Enhancement"]
-
+assignees:
+  - jetyu
+  
 body:
   - type: markdown
     attributes:

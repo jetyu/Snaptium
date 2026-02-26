@@ -1,7 +1,9 @@
 name: Documentation Issue
 description: Improvements or additions to documentation / 对已有文档的改进或补充
 labels: ["Documentation"]
-
+assignees:
+  - jetyu
+  
 body:
   - type: markdown
     attributes:
