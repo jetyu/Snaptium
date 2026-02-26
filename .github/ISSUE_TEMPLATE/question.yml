@@ -1,6 +1,5 @@
 name: Question
 description: Ask a question or request clarification / 提出问题或使用咨询
-issue_title: ""
 labels: ["Question"]
 assignees:
   - jetyu
@@ -16,15 +15,6 @@ body:
 
         ⚠️ If you believe this is a bug, please use the "Bug Report" template instead.
         如果你认为这是缺陷，请使用 “Bug Report” 模板。
-
-  - type: input
-    id: issue_title
-    attributes:
-      label: Add a title / 填写标题
-      description: Provide a short descriptive title for your question | 请提供简短明了的标题
-      placeholder: e.g., "How to configure NoteWizard on macOS?"
-    validations:
-      required: true
       
   - type: dropdown
     id: os
