@@ -73,9 +73,9 @@ function bindModalEvents(modal) {
       } else {
         confirmed = confirm(t('trash.emptyConfirm'));
       }
-      
+
       if (!confirmed) return;
-      
+
       try {
         const removed = vfs.emptyTrash();
         await loadTrashItems();
@@ -164,7 +164,7 @@ function bindGlobalEvents() {
 }
 
 function ensureWorkspaceTrashDirectory() {
-  const workspaceRoot = vfs.getDefaultWorkspaceRoot();
+  const workspaceRoot = state.workspaceRoot || vfs.getDefaultWorkspaceRoot();
   const trashPath = electronPath.join(workspaceRoot, 'Database', 'trash');
   if (!electronFs.existsSync(trashPath)) {
     electronFs.mkdirSync(trashPath, { recursive: true });
@@ -252,7 +252,7 @@ async function loadTrashItems() {
         event.stopPropagation();
         const id = btn.getAttribute('data-id');
         if (!id) return;
-        
+
         // 使用 Electron 原生对话框
         let confirmed = false;
         if (electronAPI.dialog && electronAPI.dialog.showMessageBox) {
@@ -269,9 +269,9 @@ async function loadTrashItems() {
         } else {
           confirmed = confirm(t('trash.restoreConfirm'));
         }
-        
+
         if (!confirmed) return;
-        
+
         vfs.restoreNode(id);
         await loadTrashItems();
         renderTree();
@@ -284,7 +284,7 @@ async function loadTrashItems() {
         event.stopPropagation();
         const id = btn.getAttribute('data-id');
         if (!id) return;
-        
+
         // 使用 Electron 原生对话框
         let confirmed = false;
         if (electronAPI.dialog && electronAPI.dialog.showMessageBox) {
@@ -301,9 +301,9 @@ async function loadTrashItems() {
         } else {
           confirmed = confirm(t('trash.permanentDeleteConfirm'));
         }
-        
+
         if (!confirmed) return;
-        
+
         vfs.deleteNode(id, true);
         await loadTrashItems();
         renderTree();
