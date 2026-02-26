@@ -509,13 +509,6 @@ async function selectNode(node) {
       state.isLoadingNote = false;
     }
   }
-  if (state.editor) {
-    state.editor.setOption('readOnly', node.locked || false);
-    state.editor.setValue(content || '');
-    state.fileContents.set(node.id, content || '');
-    updateStatus(`${t('file.loadedFile')}: ${node.name}`);
-  }
-
   // 处理锁定状态下的布局
   const editorPanel = document.getElementById('editor-panel');
   const previewPanel = document.getElementById('preview-panel');
@@ -539,6 +532,30 @@ async function selectNode(node) {
         previewPanel.style.width = '';
       }
     }
+  }
+
+  if (state.editor) {
+    state.editor.setOption('readOnly', node.locked || false);
+    
+    // 确保编辑器内容正确设置
+    // 如果编辑器之前是隐藏的，需要先刷新再设置内容
+    if (editorPanel && editorPanel.style.display !== 'none') {
+      // 编辑器可见，直接设置内容
+      state.editor.setValue(content || '');
+      // 刷新编辑器以确保内容正确显示
+      setTimeout(() => {
+        if (state.editor) {
+          state.editor.refresh();
+          state.editor.focus();
+        }
+      }, 10);
+    } else {
+      // 编辑器不可见，先设置内容，等变为可见时再刷新
+      state.editor.setValue(content || '');
+    }
+    
+    state.fileContents.set(node.id, content || '');
+    updateStatus(`${t('file.loadedFile')}: ${node.name}`);
   }
 
   renderPreview();
