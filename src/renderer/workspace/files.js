@@ -199,11 +199,12 @@ async function showFileProperties(filePath, node = null) {
 function getFilePath(node) {
   if (!node || !node.contentId) return null;
 
+  const workspaceRoot = state.workspaceRoot || getDefaultSaveDir();
   const ext = node.name ? electronPath.extname(node.name) : '.md';
   const fileName = node.contentId + (node.contentId.endsWith(ext) ? '' : ext);
-  let filePath = electronPath.join(getDefaultSaveDir(), 'objects', fileName);
 
-  // 确保文件路径有扩展名
+  let filePath = electronPath.join(workspaceRoot, 'Database', 'objects', fileName);
+
   if (!electronPath.extname(filePath) && node.name) {
     const ext = electronPath.extname(node.name) || '.md';
     filePath += ext;
@@ -551,7 +552,8 @@ async function selectNode(node) {
 async function handleFileAction(action, fileItem) {
   const oldName = fileItem.textContent;
   const oldPath = fileItem.dataset.filePath;
-  const dir = electronPath.dirname(oldPath || getDefaultSaveDir());
+  const workspaceRoot = state.workspaceRoot || getDefaultSaveDir();
+  const dir = electronPath.dirname(oldPath || electronPath.join(workspaceRoot, 'Database', 'objects'));
 
   switch (action) {
     case 'rename': {
