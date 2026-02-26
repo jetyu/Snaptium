@@ -1,6 +1,5 @@
 name: Feature Request
 description: Request a new feature / 提出新的功能需求
-title: "[Feature Request]"
 labels: ["Feature"]
 
 body:
