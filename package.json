@@ -4,7 +4,7 @@
   "type": "module",
   "description": "NoteWizard Installer",
   "license": "MIT License",
-  "author": "Jet Yu",
+  "author": "NoteWizard Studio",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -53,7 +53,6 @@
         "provider": "github",
         "owner": "jetyu",
         "repo": "NoteWizard",
-        "releaseType": "prerelease",
         "vPrefixedTagName": true
       }
     ],
