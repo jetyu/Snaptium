@@ -509,13 +509,6 @@ async function selectNode(node) {
       state.isLoadingNote = false;
     }
   }
-  if (state.editor) {
-    state.editor.setOption('readOnly', node.locked || false);
-    state.editor.setValue(content || '');
-    state.fileContents.set(node.id, content || '');
-    updateStatus(`${t('file.loadedFile')}: ${node.name}`);
-  }
-
   // 处理锁定状态下的布局
   const editorPanel = document.getElementById('editor-panel');
   const previewPanel = document.getElementById('preview-panel');
@@ -539,6 +532,24 @@ async function selectNode(node) {
         previewPanel.style.width = '';
       }
     }
+  }
+
+  if (state.editor) {
+    state.editor.setOption('readOnly', node.locked || false);
+    if (editorPanel && editorPanel.style.display !== 'none') {
+      state.editor.setValue(content || '');
+      setTimeout(() => {
+        if (state.editor) {
+          state.editor.refresh();
+          state.editor.focus();
+        }
+      }, 10);
+    } else {
+      state.editor.setValue(content || '');
+    }
+    
+    state.fileContents.set(node.id, content || '');
+    updateStatus(`${t('file.loadedFile')}: ${node.name}`);
   }
 
   renderPreview();

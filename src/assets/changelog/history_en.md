@@ -1,3 +1,7 @@
+### [1.1.2] - 2026-02-27
+#### Fixed
+- Fixed a rendering issue introduced by the note lock feature
+
 ### [1.1.1] - 2026-02-26
 #### Fixed
 - Fixed an issue where note properties could not be obtained after changing the note save path.
