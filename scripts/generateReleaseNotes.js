@@ -56,10 +56,22 @@ function main() {
   }
 
   const version = tag.replace(/^v/, '');
+  const baseVersion = version.split('-')[0];
   const historyPath = resolve('src/assets/changelog/history_en.md');
   const historyContent = readFileSync(historyPath, 'utf8');
 
-  const sectionBody = extractSection(historyContent, version);
+  let sectionBody;
+  try {
+    sectionBody = extractSection(historyContent, version);
+  } catch (error) {
+    if (version !== baseVersion) {
+      console.log(`Version ${version} not found in changelog, trying base version ${baseVersion}...`);
+      sectionBody = extractSection(historyContent, baseVersion);
+    } else {
+      throw error;
+    }
+  }
+
   const templateContent = readFileSync(TEMPLATE_PATH, 'utf8');
   const notes = buildReleaseNotes({ templateContent, sectionBody });
 
