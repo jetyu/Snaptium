@@ -1,0 +1,65 @@
+name: Question
+description: Ask a question or request clarification / 提出问题或使用咨询
+labels: ["Question"]
+assignees:
+  - jetyu   # 改成你的 GitHub 用户名，如不需要可删除
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Question / 使用问题
+
+        Please describe your question clearly and provide enough context.
+        请清晰描述你的问题，并尽可能提供相关背景信息。
+
+        ⚠️ If you believe this is a bug, please use the "Bug Report" template instead.
+        如果你认为这是缺陷，请使用 “Bug Report” 模板。
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System / 操作系统
+      description: Select your operating system. Optional | 当前使用的操作系统（必填）
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Linux
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: NoteWizard Version / NoteWizard版本
+      description: The version you are using. Optional but recommended | 当前使用的版本（必填）
+      placeholder: e.g. 1.0.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question / 你的问题
+      description: Describe your question in detail. Required | 请详细描述你的问题（必填）
+      placeholder: |
+        e.g.
+        1. Open NoteWizard
+        2. Insert a line of text
+        3. Observe the cursor position
+
+        例：
+        1. 打开 NoteWizard
+        2. 插入一行文本
+        3. 观察光标位置
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context / 补充信息
+      description: Provide logs, screenshots, or configuration if relevant. Optional | 如有相关日志、截图或配置，请提供（可选）
