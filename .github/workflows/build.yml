@@ -51,10 +51,8 @@ jobs:
               echo "prerelease=true" >> $GITHUB_OUTPUT
               echo "make_latest=false" >> $GITHUB_OUTPUT
             else
-              echo "Warning: Tag not found on main or develop. Defaulting to prerelease."
-              echo "is_dev=true" >> $GITHUB_OUTPUT
-              echo "prerelease=true" >> $GITHUB_OUTPUT
-              echo "make_latest=false" >> $GITHUB_OUTPUT
+              echo "::error::Tag $TAG is not on main or develop branch. Build cancelled."
+              exit 1
             fi
 
             echo "version=$VERSION" >> $GITHUB_OUTPUT
