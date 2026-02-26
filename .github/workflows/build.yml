@@ -2,8 +2,6 @@ name: build
 
 on:
   push:
-    branches:
-      - develop
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -35,35 +33,51 @@ jobs:
       - name: Calculate Versioning
         id: versioning
         run: |
-          if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
-            BASE_VERSION=$(node -p "require('./package.json').version.split('-')[0]")
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            VERSION="${TAG#v}"
+            
+            BRANCHES=$(git branch -r --contains ${{ github.sha }})
+            echo "Branches containing this tag: $BRANCHES"
+            
+            if echo "$BRANCHES" | grep -q "origin/main"; then
+              echo "Target: main branch (Official Release)"
+              echo "is_dev=false" >> $GITHUB_OUTPUT
+              echo "prerelease=false" >> $GITHUB_OUTPUT
+              echo "make_latest=true" >> $GITHUB_OUTPUT
+            elif echo "$BRANCHES" | grep -q "origin/develop"; then
+              echo "Target: develop branch (Beta/Dev Release)"
+              echo "is_dev=true" >> $GITHUB_OUTPUT
+              echo "prerelease=true" >> $GITHUB_OUTPUT
+              echo "make_latest=false" >> $GITHUB_OUTPUT
+            else
+              echo "Warning: Tag not found on main or develop. Defaulting to prerelease."
+              echo "is_dev=true" >> $GITHUB_OUTPUT
+              echo "prerelease=true" >> $GITHUB_OUTPUT
+              echo "make_latest=false" >> $GITHUB_OUTPUT
+            fi
+
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "release_name=$TAG" >> $GITHUB_OUTPUT
+          else
+            # 兼容 workflow_dispatch 手动触发情况
+            VERSION=$(node -p "require('./package.json').version.split('-')[0]")
             DATE=$(date +'%y%m%d')
-            VERSION="${BASE_VERSION}-dev.${DATE}"
+            VERSION="${VERSION}-dev.${DATE}"
             echo "version=$VERSION" >> $GITHUB_OUTPUT
             echo "tag=dev" >> $GITHUB_OUTPUT
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "release_name=v$VERSION" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
-            cp .github/RELEASE_TEMPLATE/release_note.md release_note.md
-          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
-            TAG="${GITHUB_REF_NAME}"
-            VERSION="${TAG#v}"
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "tag=$TAG" >> $GITHUB_OUTPUT
-            echo "is_dev=false" >> $GITHUB_OUTPUT
-            echo "release_name=$TAG" >> $GITHUB_OUTPUT
-            echo "prerelease=false" >> $GITHUB_OUTPUT
-            echo "make_latest=true" >> $GITHUB_OUTPUT
-            # Prepare release notes script execution elsewhere or here
           fi
 
       - name: Upload Release Notes
-        if: github.ref == 'refs/heads/develop'
         uses: actions/upload-artifact@v4
         with:
           name: release-notes
-          path: release_note.md
+          path: .github/RELEASE_TEMPLATE/release_note.md
 
   build:
     name: Build on ${{ matrix.os }}-${{ matrix.arch }}
@@ -151,10 +165,9 @@ jobs:
           path: .
 
       - name: Prepare Official Notes
-        if: needs.prepare.outputs.is_dev == 'false'
         run: |
           node scripts/generateReleaseNotes.js ${{ needs.prepare.outputs.tag }}
-          # Assuming the script generates a file or we need to handle it
+          cp .github/RELEASE_TEMPLATE/release_note.md release_body.md
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -164,7 +177,7 @@ jobs:
       - name: Collect artifacts
         run: |
           mkdir release_files
-          find artifacts -type f -exec cp {} release_files/ \;
+          find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
 
       - name: Update Dev Tag
         if: needs.prepare.outputs.is_dev == 'true'
@@ -181,7 +194,7 @@ jobs:
           name: ${{ needs.prepare.outputs.release_name }}
           prerelease: ${{ needs.prepare.outputs.prerelease }}
           make_latest: ${{ needs.prepare.outputs.make_latest }}
-          body_path: ${{ needs.prepare.outputs.is_dev == 'true' && 'release_note.md' || 'release_notes.md' }}
+          body_path: release_body.md
           files: release_files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
