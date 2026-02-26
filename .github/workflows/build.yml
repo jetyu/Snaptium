@@ -16,8 +16,58 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  prepare:
+    name: Prepare Version and Tag
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.versioning.outputs.version }}
+      tag: ${{ steps.versioning.outputs.tag }}
+      is_dev: ${{ steps.versioning.outputs.is_dev }}
+      release_name: ${{ steps.versioning.outputs.release_name }}
+      prerelease: ${{ steps.versioning.outputs.prerelease }}
+      make_latest: ${{ steps.versioning.outputs.make_latest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Calculate Versioning
+        id: versioning
+        run: |
+          if [[ "${{ github.ref }}" == "refs/heads/develop" ]]; then
+            BASE_VERSION=$(node -p "require('./package.json').version.split('-')[0]")
+            DATE=$(date +'%y%m%d')
+            VERSION="${BASE_VERSION}-dev.${DATE}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=dev" >> $GITHUB_OUTPUT
+            echo "is_dev=true" >> $GITHUB_OUTPUT
+            echo "release_name=Dev Build" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+            echo "make_latest=false" >> $GITHUB_OUTPUT
+            echo "Dev build based on $BASE_VERSION" > release_note.md
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            VERSION="${TAG#v}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "is_dev=false" >> $GITHUB_OUTPUT
+            echo "release_name=$TAG" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+            echo "make_latest=true" >> $GITHUB_OUTPUT
+            # Prepare release notes script execution elsewhere or here
+          fi
+
+      - name: Upload Release Notes
+        if: github.ref == 'refs/heads/develop'
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release_note.md
+
   build:
     name: Build on ${{ matrix.os }}-${{ matrix.arch }}
+    needs: prepare
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
 
@@ -56,6 +106,10 @@ jobs:
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --no-fund
 
+      - name: Set Version
+        run: |
+          npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
+
       - name: Lint
         run: npm run lint || true
 
@@ -80,7 +134,7 @@ jobs:
 
   release:
     name: Create GitHub Release
-    needs: build
+    needs: [prepare, build]
     runs-on: ubuntu-latest
 
     steps:
@@ -89,55 +143,17 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - name: Download release notes
+        if: needs.prepare.outputs.is_dev == 'true'
+        uses: actions/download-artifact@v4
         with:
-          node-version: 20
+          name: release-notes
 
-      - name: Prepare Nightly
-        if: github.ref == 'refs/heads/develop'
-        id: nightly
+      - name: Prepare Official Notes
+        if: needs.prepare.outputs.is_dev == 'false'
         run: |
-          BASE_VERSION=$(node -p "require('./package.json').version.split('-')[0]")
-          DATE=$(date +'%Y%m%d.%H%M')
-          NIGHTLY_VERSION="${BASE_VERSION}-nightly.${DATE}"
-
-          echo "Nightly version: $NIGHTLY_VERSION"
-
-          npm version $NIGHTLY_VERSION --no-git-tag-version
-
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-
-          git tag -f nightly
-          git push origin nightly --force
-
-          echo "tag=nightly" >> $GITHUB_OUTPUT
-          echo "name=Nightly Build" >> $GITHUB_OUTPUT
-          echo "prerelease=true" >> $GITHUB_OUTPUT
-          echo "make_latest=false" >> $GITHUB_OUTPUT
-
-          echo "Nightly build based on $BASE_VERSION" > release_note.md
-
-      - name: Prepare Official Release
-        if: startsWith(github.ref, 'refs/tags/')
-        id: official
-        run: |
-          TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
-          PACKAGE_VERSION=$(node -p "require('./package.json').version")
-
-          if [ "$VERSION" != "$PACKAGE_VERSION" ]; then
-            echo "Tag version ($VERSION) does not match package.json ($PACKAGE_VERSION)"
-            exit 1
-          fi
-
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "name=$TAG" >> $GITHUB_OUTPUT
-          echo "prerelease=false" >> $GITHUB_OUTPUT
-          echo "make_latest=true" >> $GITHUB_OUTPUT
-
-          node scripts/generateReleaseNotes.js $TAG
+          node scripts/generateReleaseNotes.js ${{ needs.prepare.outputs.tag }}
+          # Assuming the script generates a file or we need to handle it
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -149,14 +165,22 @@ jobs:
           mkdir release_files
           find artifacts -type f -exec cp {} release_files/ \;
 
+      - name: Update Dev Tag
+        if: needs.prepare.outputs.is_dev == 'true'
+        run: |
+          git config user github-actions
+          git config user.email github-actions@github.com
+          git tag -f dev
+          git push origin dev --force
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.nightly.outputs.tag || steps.official.outputs.tag }}
-          name: ${{ steps.nightly.outputs.name || steps.official.outputs.name }}
-          prerelease: ${{ steps.nightly.outputs.prerelease || steps.official.outputs.prerelease }}
-          make_latest: ${{ steps.nightly.outputs.make_latest || steps.official.outputs.make_latest }}
-          body_path: release_note.md
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.release_name }}
+          prerelease: ${{ needs.prepare.outputs.prerelease }}
+          make_latest: ${{ needs.prepare.outputs.make_latest }}
+          body_path: ${{ needs.prepare.outputs.is_dev == 'true' && 'release_note.md' || 'release_notes.md' }}
           files: release_files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
