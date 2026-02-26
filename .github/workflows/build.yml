@@ -42,10 +42,10 @@ jobs:
             echo "version=$VERSION" >> $GITHUB_OUTPUT
             echo "tag=dev" >> $GITHUB_OUTPUT
             echo "is_dev=true" >> $GITHUB_OUTPUT
-            echo "release_name=Dev Build" >> $GITHUB_OUTPUT
+            echo "release_name=v$VERSION" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
-            echo "Dev build based on $BASE_VERSION" > release_note.md
+            cp .github/RELEASE_TEMPLATE/release_note.md release_note.md
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             TAG="${GITHUB_REF_NAME}"
             VERSION="${TAG#v}"
@@ -148,6 +148,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: release-notes
+          path: .
 
       - name: Prepare Official Notes
         if: needs.prepare.outputs.is_dev == 'false'
