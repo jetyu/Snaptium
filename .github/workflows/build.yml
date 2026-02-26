@@ -2,6 +2,8 @@ name: build
 
 on:
   push:
+    branches:
+      - develop
     tags:
       - 'v*.*.*'
   workflow_dispatch:
@@ -90,28 +92,74 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Determine Release Type
-        id: release_type
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Prepare Nightly
+        if: github.ref == 'refs/heads/develop'
+        id: nightly
+        run: |
+          BASE_VERSION=$(node -p "require('./package.json').version.split('-')[0]")
+          DATE=$(date +'%Y%m%d.%H%M')
+          NIGHTLY_VERSION="${BASE_VERSION}-nightly.${DATE}"
+
+          echo "Nightly version: $NIGHTLY_VERSION"
+
+          npm version $NIGHTLY_VERSION --no-git-tag-version
+
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+          git tag -f nightly
+          git push origin nightly --force
+
+          echo "tag=nightly" >> $GITHUB_OUTPUT
+          echo "name=Nightly Build" >> $GITHUB_OUTPUT
+          echo "prerelease=true" >> $GITHUB_OUTPUT
+          echo "make_latest=false" >> $GITHUB_OUTPUT
+
+          echo "Nightly build based on $BASE_VERSION" > release_note.md
+
+      - name: Prepare Official Release
+        if: startsWith(github.ref, 'refs/tags/')
+        id: official
         run: |
           TAG="${GITHUB_REF_NAME}"
           VERSION="${TAG#v}"
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
 
-          if [[ "$VERSION" =~ [a-zA-Z] ]]; then
-            echo "prerelease=true" >> $GITHUB_OUTPUT
-          else
-            echo "prerelease=false" >> $GITHUB_OUTPUT
+          if [ "$VERSION" != "$PACKAGE_VERSION" ]; then
+            echo "Tag version ($VERSION) does not match package.json ($PACKAGE_VERSION)"
+            exit 1
           fi
 
-      - name: Generate Release Notes
-        run: node scripts/generateReleaseNotes.js ${{ github.ref_name }}
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "name=$TAG" >> $GITHUB_OUTPUT
+          echo "prerelease=false" >> $GITHUB_OUTPUT
+          echo "make_latest=true" >> $GITHUB_OUTPUT
+
+          node scripts/generateReleaseNotes.js $TAG
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Collect artifacts
+        run: |
+          mkdir release_files
+          find artifacts -type f -exec cp {} release_files/ \;
 
       - name: Create GitHub Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          name: ${{ github.ref_name }}
-          body_path: .github/RELEASE_TEMPLATE/release_note.md
-          prerelease: ${{ steps.release_type.outputs.prerelease }}
-          make_latest: ${{ steps.release_type.outputs.prerelease == 'false' }}
-          append_body: false
+          tag_name: ${{ steps.nightly.outputs.tag || steps.official.outputs.tag }}
+          name: ${{ steps.nightly.outputs.name || steps.official.outputs.name }}
+          prerelease: ${{ steps.nightly.outputs.prerelease || steps.official.outputs.prerelease }}
+          make_latest: ${{ steps.nightly.outputs.make_latest || steps.official.outputs.make_latest }}
+          body_path: release_note.md
+          files: release_files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
