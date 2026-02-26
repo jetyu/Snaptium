@@ -1,3 +1,9 @@
+### [1.1.1] - 2026-02-26
+#### Fixed
+- Fixed an issue where note properties could not be obtained after changing the note save path.
+#### Improved
+- Upgraded the Electron runtime framework to v40.6.1.
+
 ### [1.1.0] - 2026-02-24
 #### New
 - Support note locking: Lock to instantly make it read-only preview mode; unlock to jump straight into editing.
