@@ -2,7 +2,7 @@ name: Question
 description: Ask a question or request clarification / 提出问题或使用咨询
 labels: ["Question"]
 assignees:
-  - jetyu   # 改成你的 GitHub 用户名，如不需要可删除
+  - jetyu
 
 body:
   - type: markdown
@@ -19,23 +19,31 @@ body:
   - type: dropdown
     id: os
     attributes:
-      label: Operating System / 操作系统
-      description: Select your operating system. Optional | 当前使用的操作系统（必填）
-      options:
-        - Windows 11
-        - Windows 10
-        - macOS (Intel)
-        - macOS (Apple Silicon)
-        - Linux
-        - Other
+     label: Operating System / 操作系统
+     description: Select the operating system you are using. Required | 当前使用的操作系统（必填）
+     options:
+       - Windows 11
+       - Windows 10
+       - macOS (Intel)
+       - macOS (Apple Silicon)
+       - Linux
+    validations:
+     required: true
+
+  - type: input
+    id: os_version
+    attributes:
+      label: Operating System Version / 操作系统版本
+      description: The version of OS you are using. Required | 当前使用的操作系统版本（必填）
+      placeholder: e.g. Windows 11 23H2, macOS 13.6, Ubuntu 20.04 LTS, CentOS 9 and etc.
     validations:
       required: true
 
   - type: input
-    id: version
+    id: notewizard_version
     attributes:
       label: NoteWizard Version / NoteWizard版本
-      description: The version you are using. Optional but recommended | 当前使用的版本（必填）
+      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
       placeholder: e.g. 1.0.1
     validations:
       required: true
