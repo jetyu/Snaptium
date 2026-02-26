@@ -4,7 +4,7 @@
   "type": "module",
   "description": "NoteWizard Installer",
   "license": "MIT License",
-  "author": "NoteWizard Studio",
+  "author": "NoteWizard Team",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
