@@ -91,7 +91,9 @@ jobs:
         include:
           - os: windows-latest
             platform: win
-            artifact_pattern: 'dist/*.exe'
+            artifact_pattern: |
+              dist/*.exe
+              dist/*.blockmap
           - os: ubuntu-latest
             platform: linux
             artifact_pattern: |
@@ -103,6 +105,7 @@ jobs:
             artifact_pattern: |
               dist/*.dmg
               dist/*.zip
+              dist/*.blockmap
 
     steps:
       - name: Checkout code
@@ -193,6 +196,5 @@ jobs:
           prerelease: ${{ needs.prepare.outputs.prerelease }}
           make_latest: ${{ needs.prepare.outputs.make_latest }}
           body_path: release_body.md
-          files: release_files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
