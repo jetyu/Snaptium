@@ -14,7 +14,7 @@
  * @returns {Object} 配置管理器实例
  */
 export function createPreferencesManager(deps) {
-  const { app, fs, path, ipcMain, dialog } = deps;
+  const { app, fs, path, ipcMain, dialog, t } = deps;
 
   /**
    * 获取配置文件路径
@@ -88,14 +88,14 @@ export function createPreferencesManager(deps) {
   async function exportPreferences(preferences) {
     try {
       const { filePath } = await dialog.showSaveDialog({
-        title: "导出首选项",
-        defaultPath: `NoteWizard_Pref_Export_${new Date()
+        title: t("export.preferences.dialog.title"),
+        defaultPath: `${t("export.preferences.backup.fileName")}_${new Date()
           .toISOString()
           .split("T")[0]
           .replace(/-/g, "")}.json`,
         filters: [
-          { name: "JSON 文件", extensions: ["json"] },
-          { name: "所有文件", extensions: ["*"] },
+          { name: t("export.preferences.dialog.filterName"), extensions: ["json"] },
+          { name: t("export.preferences.dialog.allFiles"), extensions: ["*"] },
         ],
       });
 
@@ -139,9 +139,9 @@ export function createPreferencesManager(deps) {
         );
         return { success: true, filePath };
       }
-      return { success: false, error: "用户取消导出" };
+      return { success: false, error: t("export.preferences.error.cancelled") };
     } catch (error) {
-      return { success: false, error: `导出失败: ${error.message}` };
+      return { success: false, error: `${t("exportFailed")}${error.message}` };
     }
   }
 
@@ -152,16 +152,16 @@ export function createPreferencesManager(deps) {
   async function importPreferences() {
     try {
       const { filePaths, canceled } = await dialog.showOpenDialog({
-        title: "导入首选项",
+        title: t("import.preferences.dialog.title"),
         filters: [
-          { name: "JSON 文件", extensions: ["json"] },
-          { name: "所有文件", extensions: ["*"] },
+          { name: t("import.preferences.dialog.filterName"), extensions: ["json"] },
+          { name: t("import.preferences.dialog.allFiles"), extensions: ["*"] },
         ],
         properties: ["openFile"],
       });
 
       if (canceled || filePaths.length === 0) {
-        return { success: false, error: "用户取消导入" };
+        return { success: false, error: t("import.preferences.error.cancelled") };
       }
 
       const filePath = filePaths[0];
@@ -170,7 +170,7 @@ export function createPreferencesManager(deps) {
 
       // 验证导入的数据结构
       if (!preferences.settings) {
-        throw new Error("无效的首选项文件格式");
+        throw new Error(t("preferences.import.invalidFormat"));
       }
 
       // 创建备份
@@ -241,7 +241,7 @@ export function createPreferencesManager(deps) {
         throw error;
       }
     } catch (error) {
-      return { success: false, error: `导入失败: ${error.message}` };
+      return { success: false, error: `${t("importFailed")}${error.message}` };
     }
   }
 
