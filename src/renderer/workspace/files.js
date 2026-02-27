@@ -334,75 +334,19 @@ async function handleMenuAction(action, node) {
       case 'lock':
         vfs.toggleNodeLock(node.id, true);
         tree.renderTree();
-        // 锁定笔记时，切换到预览模式（隐藏编辑器，显示预览）
-        if (state.currentNodeId === node.id) {
-          const editorPanel = document.getElementById('editor-panel');
-          const previewPanel = document.getElementById('preview-panel');
-          if (editorPanel && previewPanel) {
-            editorPanel.style.display = 'none';
-            previewPanel.style.display = '';
-            previewPanel.style.flex = '1 1 auto';
-            previewPanel.style.width = '100%';
-            try { ipcRenderer.send('preview-state-changed', { visible: true }); } catch { }
-          }
-          // 设置编辑器为只读
-          if (state.editor) {
-            state.editor.setOption('readOnly', true);
-          }
-          // 恢复选中状态
-          setTimeout(() => {
-            const treeRow = document.querySelector(`.tree-item[data-node-id="${node.id}"] .tree-row`);
-            if (treeRow) {
-              document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
-              document.querySelectorAll('.tree-row.selected').forEach(x => x.classList.remove('selected'));
-              treeRow.classList.add('active');
-              treeRow.classList.add('selected');
-            }
-          }, 0);
-        }
+        await selectNode(node);
         updateStatus(`${t('file.renamedStatus')}: ${t('contextMenu.lock')}`);
         break;
 
       case 'unlock':
+        // 解锁前清除缓存，确保从磁盘/解密服务加载最新内容
+        state.fileContents.delete(node.id);
         vfs.toggleNodeLock(node.id, false);
         tree.renderTree();
-        // 解锁笔记时，切换到编辑模式
-        if (state.currentNodeId === node.id) {
-          const editorPanel = document.getElementById('editor-panel');
-          const previewPanel = document.getElementById('preview-panel');
-          if (editorPanel && previewPanel) {
-            editorPanel.style.display = '';
-            // 恢复预览面板的保存宽度
-            const savedWidth = localStorage.getItem('previewPanelWidth');
-            if (savedWidth) {
-              previewPanel.style.display = '';
-              previewPanel.style.flex = '0 0 auto';
-              previewPanel.style.width = savedWidth + 'px';
-            } else {
-              previewPanel.style.display = '';
-              previewPanel.style.flex = '';
-              previewPanel.style.width = '';
-            }
-            try { ipcRenderer.send('preview-state-changed', { visible: true }); } catch { }
-          }
-          // 设置编辑器为可编辑
-          if (state.editor) {
-            state.editor.setOption('readOnly', false);
-            state.editor.focus();
-          }
-          // 恢复选中状态
-          setTimeout(() => {
-            const treeRow = document.querySelector(`.tree-item[data-node-id="${node.id}"] .tree-row`);
-            if (treeRow) {
-              document.querySelectorAll('.tree-row.active').forEach(x => x.classList.remove('active'));
-              document.querySelectorAll('.tree-row.selected').forEach(x => x.classList.remove('selected'));
-              treeRow.classList.add('active');
-              treeRow.classList.add('selected');
-            }
-          }, 0);
-        }
+        await selectNode(node);
         updateStatus(`${t('file.renamedStatus')}: ${t('contextMenu.unlock')}`);
         break;
+
     }
   } catch (err) {
     console.error('Menu action error:', err);
@@ -472,7 +416,7 @@ async function selectNode(node) {
 
   if (state.currentNodeId && state.editor) {
     const prevNode = vfs.getNodeById(state.currentNodeId);
-    if (prevNode && prevNode.type === 'file' && !state.isLoadingNote) {
+    if (prevNode && prevNode.id !== (node ? node.id : null) && prevNode.type === 'file' && !state.isLoadingNote) {
       const currentContent = state.editor.getValue();
       state.fileContents.set(prevNode.id, currentContent);
     }
@@ -522,6 +466,7 @@ async function selectNode(node) {
       try { ipcRenderer.send('preview-state-changed', { visible: true }); } catch { }
     } else {
       // 非锁定的笔记：显示编辑器
+      const wasHidden = editorPanel.style.display === 'none';
       editorPanel.style.display = '';
       const savedWidth = localStorage.getItem('previewPanelWidth');
       if (savedWidth && previewPanel.style.display !== 'none') {
@@ -530,6 +475,13 @@ async function selectNode(node) {
       } else if (previewPanel.style.display !== 'none') {
         previewPanel.style.flex = '';
         previewPanel.style.width = '';
+      }
+
+      // 如果编辑器从隐藏变为显示，刷新
+      if (wasHidden && state.editor) {
+        setTimeout(() => {
+          if (state.editor) state.editor.refresh();
+        }, 0);
       }
     }
   }
@@ -547,13 +499,14 @@ async function selectNode(node) {
     } else {
       state.editor.setValue(content || '');
     }
-    
+
     state.fileContents.set(node.id, content || '');
     updateStatus(`${t('file.loadedFile')}: ${node.name}`);
   }
 
   renderPreview();
 }
+
 
 /**
  * 处理文件操作
