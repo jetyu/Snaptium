@@ -58,6 +58,15 @@ if (!gotTheLock) {
   });
 }
 
+// ==================== 全局翻译函数 ====================
+/**
+ * 全局翻译函数
+ * @param {string} key - 翻译键
+ * @returns {string} 翻译后的文本
+ */
+const t = (key) => managers.i18n ? managers.i18n.t(key) : key;
+global.t = t;
+
 // ==================== 初始化管理器 ====================
 function initializeManagers() {
   // 0. 注册通用 API 桥接
@@ -79,7 +88,8 @@ function initializeManagers() {
     fs,
     path,
     ipcMain,
-    dialog
+    dialog,
+    t
   });
 
   // 2. 创建国际化管理器
@@ -106,7 +116,7 @@ function initializeManagers() {
       }
 
       // 更新应用名称
-      const appName = managers.i18n.t("appName");
+      const appName = t("appName");
       if (appName) {
         app.setName(appName);
       }
@@ -117,7 +127,7 @@ function initializeManagers() {
   managers.i18n.initLanguage();
 
   // 初始化应用名称
-  const appName = managers.i18n.t("appName");
+  const appName = t("appName");
   if (appName) {
     app.setName(appName);
   }
@@ -150,7 +160,7 @@ function initializeManagers() {
     app,
     dialog,
     shell,
-    t: managers.i18n.t,
+    t,
     getWindow: () => managers.window.getMainWindow(),
     releasePageUrl: RELEASE_PAGE_URL,
     currentVersion: app.getVersion()
@@ -162,7 +172,7 @@ function initializeManagers() {
     dialog,
     ipcMain,
     getPreference: managers.preferences.getPreference,
-    t: managers.i18n.t,
+    t,
     getWindow: () => managers.window.getMainWindow(),
     AdmZip
   });
@@ -184,7 +194,7 @@ function initializeManagers() {
     fs,
     path,
     app,
-    t: managers.i18n.t,
+    t,
     getWindow: () => managers.window.getMainWindow(),
     closeAllWindows: () => managers.window.closeAllWindows(),
     importExportManager: managers.importExport,
@@ -201,7 +211,7 @@ function initializeManagers() {
     nativeImage,
     app,
     path,
-    t: managers.i18n.t,
+    t,
     getWindow: () => managers.window.getMainWindow(),
     closeAllWindows: () => managers.window.closeAllWindows(),
     __dirname
@@ -278,7 +288,7 @@ ipcMain.on('context-menu:show', (event, { menuItems, channel }) => {
     if (item.type === 'separator') {
       return { type: 'separator' };
     }
-    
+
     return {
       label: item.label,
       click: () => {
