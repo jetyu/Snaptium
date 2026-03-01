@@ -41,17 +41,22 @@ jobs:
             echo "Branches containing this tag: $BRANCHES"
             
             if echo "$BRANCHES" | grep -q "origin/main"; then
-              echo "Target: main branch (Official Release)"
+              echo "Target: main branch (Stable Release)"
               echo "is_dev=false" >> $GITHUB_OUTPUT
               echo "prerelease=false" >> $GITHUB_OUTPUT
               echo "make_latest=true" >> $GITHUB_OUTPUT
             elif echo "$BRANCHES" | grep -q "origin/develop"; then
-              echo "Target: develop branch (Beta/Dev Release)"
+              echo "Target: develop branch (Beta Release)"
+              echo "is_dev=true" >> $GITHUB_OUTPUT
+              echo "prerelease=true" >> $GITHUB_OUTPUT
+              echo "make_latest=false" >> $GITHUB_OUTPUT
+            elif echo "$BRANCHES" | grep -q "origin/feature/*"; then
+              echo "Target: feature branch (Alpha Release)"
               echo "is_dev=true" >> $GITHUB_OUTPUT
               echo "prerelease=true" >> $GITHUB_OUTPUT
               echo "make_latest=false" >> $GITHUB_OUTPUT
             else
-              echo "::error::Tag $TAG is not on main or develop branch. Build cancelled."
+              echo "::error::Tag $TAG is not on main, develop or feature branch. Build cancelled."
               exit 1
             fi
 
