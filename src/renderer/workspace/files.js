@@ -171,13 +171,17 @@ async function showFileProperties(filePath, node = null) {
 
     const message = details.join('\n');
 
-    await electronAPI.dialog.showMessageBox({
+    const result = await electronAPI.dialog.showMessageBox({
       type: 'info',
       title: t('dialog.fileProperties'),
       message: t('dialog.fileProperties'),
       detail: message,
-      buttons: [t('dialog.ok')]
+      buttons: [t('dialog.copy')]
     });
+
+    if (result.response === 0) {
+      navigator.clipboard.writeText(message);
+    }
   } catch (error) {
     const errorMessage = `${t('dialog.cannotGetProperties')}: ${error.message}\n${t('dialog.path')}: ${filePath}`;
 
