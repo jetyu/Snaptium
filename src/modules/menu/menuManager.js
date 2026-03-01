@@ -343,7 +343,7 @@ export function createMenuManager(deps) {
         {
           label: t("menu.help.feedback"),
           click: () => {
-            shell.openExternal("https://github.com/jetyu/NoteWizard/issues");
+            shell.openExternal("https://github.com/jetyu/NoteWizard/issues/new/choose");
           },
         },
         { type: "separator" },
