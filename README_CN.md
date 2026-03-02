@@ -10,13 +10,13 @@
   <p>一款基于Electron开发的现代化跨平台桌面级笔记应用，数据本地存储，让数据始终安全可控。</p>
   
 [![Latest Release](https://img.shields.io/github/v/release/jetyu/NoteWizard?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases/latest)
+![GitHub Latest Pre-Release)](https://img.shields.io/github/v/release/jetyu/NoteWizard?include_prereleases&label=pre-release&logo=github)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20|%20Linux%20|%20macOS-blue?style=flat)]()
 [![Repo Size](https://img.shields.io/github/repo-size/jetyu/NoteWizard?style=flat)]()
 [![Last Commit](https://img.shields.io/github/last-commit/jetyu/NoteWizard?style=flat)]()
 [![Open Issues](https://img.shields.io/github/issues/jetyu/NoteWizard?style=flat)]()
 [![License](https://img.shields.io/github/license/jetyu/NoteWizard?style=flat)]()
 [![Downloads](https://img.shields.io/github/downloads/jetyu/NoteWizard/total?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases)
-
 </div>
 
 ## 功能特点
