@@ -3,7 +3,7 @@ name: build
 on:
   push:
     tags:
-      - 'v*'
+      - 'v*.*.*'
   workflow_dispatch:
 
 permissions:
@@ -18,84 +18,135 @@ jobs:
     name: Prepare Version and Tag
     runs-on: ubuntu-latest
     outputs:
-      version: ${{ steps.version.outputs.version }}
-      tag: ${{ steps.version.outputs.tag }}
-      prerelease: ${{ steps.version.outputs.prerelease }}
-      make_latest: ${{ steps.version.outputs.make_latest }}
-
+      version: ${{ steps.versioning.outputs.version }}
+      tag: ${{ steps.versioning.outputs.tag }}
+      is_dev: ${{ steps.versioning.outputs.is_dev }}
+      release_name: ${{ steps.versioning.outputs.release_name }}
+      prerelease: ${{ steps.versioning.outputs.prerelease }}
+      make_latest: ${{ steps.versioning.outputs.make_latest }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Parse Tag
-        id: version
+      - name: Calculate Versioning
+        id: versioning
         run: |
-          TAG="${GITHUB_REF_NAME}"
-          VERSION="${TAG#v}"
-
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-
-          # 判断是否为 alpha/beta
-          if [[ "$TAG" == *"-alpha"* || "$TAG" == *"-beta"* ]]; then
+          if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            TAG="${GITHUB_REF_NAME}"
+            VERSION="${TAG#v}"
+            
+            BRANCHES=$(git branch -r --contains ${{ github.sha }})
+            echo "Branches containing this tag: $BRANCHES"
+            
+            if echo "$BRANCHES" | grep -q "origin/main"; then
+              echo "Target: main branch (Stable Release)"
+              echo "is_dev=false" >> $GITHUB_OUTPUT
+              echo "prerelease=false" >> $GITHUB_OUTPUT
+              echo "make_latest=true" >> $GITHUB_OUTPUT
+            elif echo "$BRANCHES" | grep -q "origin/develop"; then
+              echo "Target: develop branch (Beta Release)"
+              echo "is_dev=true" >> $GITHUB_OUTPUT
+              echo "prerelease=true" >> $GITHUB_OUTPUT
+              echo "make_latest=false" >> $GITHUB_OUTPUT
+            elif echo "$BRANCHES" | grep -q "origin/feature/*"; then
+              echo "Target: feature branch (Alpha Release)"
+              echo "is_dev=true" >> $GITHUB_OUTPUT
+              echo "prerelease=true" >> $GITHUB_OUTPUT
+              echo "make_latest=false" >> $GITHUB_OUTPUT
+            else
+              echo "::error::Tag $TAG is not on main, develop or feature branch. Build cancelled."
+              exit 1
+            fi
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=$TAG" >> $GITHUB_OUTPUT
+            echo "release_name=$TAG" >> $GITHUB_OUTPUT
+          else
+            # 兼容 workflow_dispatch 手动触发情况
+            VERSION=$(node -p "require('./package.json').version.split('-')[0]")
+            DATE=$(date +'%y%m%d')
+            VERSION="${VERSION}-dev.${DATE}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "tag=dev" >> $GITHUB_OUTPUT
+            echo "is_dev=true" >> $GITHUB_OUTPUT
+            echo "release_name=v$VERSION" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
-          else
-            echo "prerelease=false" >> $GITHUB_OUTPUT
-            echo "make_latest=true" >> $GITHUB_OUTPUT
           fi
+      - name: Upload Release Notes
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: .github/RELEASE_TEMPLATE/release_note.md
 
   build:
+    name: Build on ${{ matrix.os }}-${{ matrix.arch }}
     needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+
     strategy:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
+        arch: [x64]
         include:
           - os: windows-latest
             platform: win
+            artifact_pattern: |
+              dist/*.exe
+              dist/*.blockmap
           - os: ubuntu-latest
             platform: linux
+            artifact_pattern: |
+              dist/*.AppImage
+              dist/*.deb
+              dist/*.rpm
           - os: macos-latest
             platform: mac
-
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 90
-
+            artifact_pattern: |
+              dist/*.dmg
+              dist/*.zip
+              dist/*.blockmap
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '20'
           cache: npm
+          check-latest: true
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --no-fund
 
       - name: Set Version
-        run: npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
+        run: |
+          npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
+      - name: Lint
+        run: npm run lint || true
 
-      - name: Clean
+      - name: Clean dist folder
         run: npm run clean
 
-      - name: Build
-        run: npm run dist:${{ matrix.platform }}
+      - name: Build for ${{ matrix.platform }}
+        run: npm run dist:${{ matrix.platform }} --verbose
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
           ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+          USE_HARD_LINKS: false
 
-      - name: Debug dist
-        run: ls -R dist || echo "No dist folder"
-
-      - name: Upload Artifacts
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: artifacts-${{ matrix.platform }}
-          path: dist/
-          if-no-files-found: error
+          name: NoteWizard-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
+          path: ${{ matrix.artifact_pattern }}
+          retention-days: 30
+          if-no-files-found: warn
 
   release:
     name: Create GitHub Release
@@ -103,31 +154,43 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Download All Artifacts
+      - name: Download release notes
+        if: needs.prepare.outputs.is_dev == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: .
+
+      - name: Prepare Official Notes
+        run: |
+          node scripts/generateReleaseNotes.js ${{ needs.prepare.outputs.tag }}
+          cp .github/RELEASE_TEMPLATE/release_note.md release_body.md
+      - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Collect Release Files
+      - name: Collect artifacts
         run: |
           mkdir release_files
-          find artifacts -type f \( -name "*.exe" -o -name "*.dmg" -o -name "*.AppImage" -o -name "*.deb" -o -name "*.rpm" -o -name "*.zip" -o -name "*.blockmap" \) \
-          -exec cp {} release_files/ \;
-
-          echo "Release files:"
-          ls -R release_files
-
-      - name: Generate Release Notes
+          find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
+      - name: Update Dev Tag
+        if: needs.prepare.outputs.is_dev == 'true'
         run: |
-          echo "Release ${{ needs.prepare.outputs.tag }}" > release_body.md
-
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git tag -f dev
+          git push origin dev --force
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
-          name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.release_name }}
           prerelease: ${{ needs.prepare.outputs.prerelease }}
           make_latest: ${{ needs.prepare.outputs.make_latest }}
           body_path: release_body.md
