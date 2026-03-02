@@ -174,7 +174,7 @@ jobs:
         with:
           path: artifacts
 
-      - name: Release Files (Total: 18 Files)
+      - name: Release Files
         run: |
           mkdir release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
