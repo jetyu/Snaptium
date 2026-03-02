@@ -1,82 +1,133 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
+const TEMPLATE_PATH = resolve('.github/RELEASE_TEMPLATE/release_note.md');
+const HISTORY_PATH = resolve('src/assets/changelog/history_en.md');
+
+const BODY_START = '<!-- RELEASE_NOTES_BODY_START -->';
+const BODY_END = '<!-- RELEASE_NOTES_BODY_END -->';
+
+const PRE_WARNING_START = '<!-- PRE_RELEASE_WARNING_START -->';
+const PRE_WARNING_END = '<!-- PRE_RELEASE_WARNING_END -->';
+
+const FULL_CHANGELOG_START = '<!-- FULL_CHANGELOG_START -->';
+const FULL_CHANGELOG_END = '<!-- FULL_CHANGELOG_END -->';
+
 function escapeRegExp(str) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-const TEMPLATE_PATH = resolve('.github/RELEASE_TEMPLATE/release_note.md');
-const BODY_START_MARKER = '<!-- RELEASE_NOTES_BODY_START -->';
-const BODY_END_MARKER = '<!-- RELEASE_NOTES_BODY_END -->';
-
-function getVersionFromArgs() {
+function getTag() {
   const raw = process.argv[2];
   if (!raw) {
     console.error('Usage: node scripts/generateReleaseNotes.js <tag>');
-    process.exitCode = 1;
-    return null;
-  }
-  return raw.trim();
-}
-
-function extractSection(historyContent, versionWithoutPrefix) {
-  const headingPattern = new RegExp(`^### \\[${escapeRegExp(versionWithoutPrefix)}\\](?: - .+)?$`, 'm');
-  const headingMatch = historyContent.match(headingPattern);
-  if (!headingMatch || headingMatch.index === undefined) {
-    throw new Error(`Unable to find changelog entry for version ${versionWithoutPrefix}`);
+    process.exit(1);
   }
 
-  const headingLine = headingMatch[0];
-  const afterHeadingIndex = headingMatch.index + headingLine.length;
-  const remaining = historyContent.slice(afterHeadingIndex);
-  const nextHeadingIndex = remaining.search(/\n### \[/);
-  const sectionBody = (nextHeadingIndex === -1 ? remaining : remaining.slice(0, nextHeadingIndex)).trim();
-
-  return sectionBody;
+  return raw
+    .replace(/^refs\/tags\//, '')
+    .trim();
 }
 
-function buildReleaseNotes({ templateContent, sectionBody }) {
-  const body = sectionBody.trim() || '_No changes for this release._';
-  const pattern = new RegExp(
-    `(${escapeRegExp(BODY_START_MARKER)}\\s*)([\\s\\S]*?)(${escapeRegExp(BODY_END_MARKER)})`
+function extractSection(history, version) {
+  const headingRegex = new RegExp(
+    `^### \\[${escapeRegExp(version)}\\](?: - .+)?\\s*$`,
+    'm'
   );
 
-  if (!pattern.test(templateContent)) {
-    throw new Error('Release notes template is missing body markers.');
+  const match = history.match(headingRegex);
+  if (!match || match.index === undefined) {
+    throw new Error(`Changelog entry not found for version ${version}`);
   }
 
-  const nextContent = templateContent.replace(pattern, `$1${body}\n\n$3`);
-  return nextContent.endsWith('\n') ? nextContent : `${nextContent}\n`;
+  const start = match.index + match[0].length;
+  const rest = history.slice(start);
+
+  const nextHeading = rest.match(/^\s*### \[/m);
+  const end = nextHeading
+    ? start + nextHeading.index
+    : history.length;
+
+  return history.slice(start, end).trim();
+}
+
+function replaceBody(template, body) {
+  const regex = new RegExp(
+    `(${escapeRegExp(BODY_START)}\\s*)([\\s\\S]*?)(\\s*${escapeRegExp(BODY_END)})`
+  );
+
+  if (!regex.test(template)) {
+    throw new Error('Missing RELEASE_NOTES body markers.');
+  }
+
+  return template.replace(regex, `$1${body}\n$3`);
+}
+
+function removeBlock(template, startMarker, endMarker) {
+  const regex = new RegExp(
+    `${escapeRegExp(startMarker)}[\\s\\S]*?${escapeRegExp(endMarker)}\\n?`,
+    'm'
+  );
+
+  return template.replace(regex, '');
+}
+
+function replaceTitle(template, isPreRelease) {
+  const titleRegex = /^### NoteWizard.*$/m;
+
+  const newTitle = isPreRelease
+    ? '### NoteWizard Pre-Release Notes'
+    : '### NoteWizard Release Notes';
+
+  if (!titleRegex.test(template)) {
+    throw new Error('Missing expected title line.');
+  }
+
+  return template.replace(titleRegex, newTitle);
 }
 
 function main() {
-  const tag = getVersionFromArgs();
-  if (!tag) {
-    return;
-  }
-
+  const tag = getTag();
   const version = tag.replace(/^v/, '');
   const baseVersion = version.split('-')[0];
-  const historyPath = resolve('src/assets/changelog/history_en.md');
-  const historyContent = readFileSync(historyPath, 'utf8');
+  const isPreRelease = version !== baseVersion;
 
-  let sectionBody;
+  const history = readFileSync(HISTORY_PATH, 'utf8');
+
+  let section;
   try {
-    sectionBody = extractSection(historyContent, version);
-  } catch (error) {
-    if (version !== baseVersion) {
-      console.log(`Version ${version} not found in changelog, trying base version ${baseVersion}...`);
-      sectionBody = extractSection(historyContent, baseVersion);
+    section = extractSection(history, version);
+  } catch (err) {
+    if (isPreRelease) {
+      console.log(`Fallback to base version ${baseVersion}`);
+      section = extractSection(history, baseVersion);
     } else {
-      throw error;
+      throw err;
     }
   }
 
-  const templateContent = readFileSync(TEMPLATE_PATH, 'utf8');
-  const notes = buildReleaseNotes({ templateContent, sectionBody });
+  let template = readFileSync(TEMPLATE_PATH, 'utf8');
 
-  writeFileSync(TEMPLATE_PATH, notes, 'utf8');
-  console.log(`Generated release notes for ${tag}`);
+  template = replaceTitle(template, isPreRelease);
+
+  let output = replaceBody(
+    template,
+    section || '_No changes for this release._'
+  );
+
+  if (isPreRelease) {
+    output = removeBlock(output, FULL_CHANGELOG_START, FULL_CHANGELOG_END);
+  } else {
+    output = removeBlock(output, PRE_WARNING_START, PRE_WARNING_END);
+  }
+
+  if (!output.endsWith('\n')) {
+    output += '\n';
+  }
+
+  writeFileSync(TEMPLATE_PATH, output, 'utf8');
+
+  console.log(`Release notes generated for ${tag}`);
 }
 
 main();
