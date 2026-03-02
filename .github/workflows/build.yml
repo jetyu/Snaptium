@@ -64,7 +64,6 @@ jobs:
             echo "tag=$TAG" >> $GITHUB_OUTPUT
             echo "release_name=$TAG" >> $GITHUB_OUTPUT
           else
-            # 兼容 workflow_dispatch 手动触发情况
             VERSION=$(node -p "require('./package.json').version.split('-')[0]")
             DATE=$(date +'%y%m%d')
             VERSION="${VERSION}-dev.${DATE}"
@@ -123,7 +122,7 @@ jobs:
           cache: npm
           check-latest: true
 
-      - name: Install dependencies
+      - name: Install Dependencies
         run: npm ci --prefer-offline --no-audit --no-fund
 
       - name: Set Version
@@ -173,7 +172,7 @@ jobs:
       - name: Prepare Official Notes
         run: |
           node scripts/generateReleaseNotes.js ${{ needs.prepare.outputs.tag }}
-          cp .github/RELEASE_TEMPLATE/release_note.md release_body.md
+          cp .github/RELEASE_TEMPLATE/release_note.md  generate_releasenote.md
 
       - name: Download artifacts
         uses: actions/download-artifact@v4
@@ -193,13 +192,13 @@ jobs:
           git tag -f dev
           git push origin dev --force
 
-      - name: Create GitHub Release
+      - name: Update GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
           name: ${{ needs.prepare.outputs.release_name }}
           prerelease: ${{ needs.prepare.outputs.prerelease }}
           make_latest: ${{ needs.prepare.outputs.make_latest }}
-          body_path: release_body.md
+          body_path: generate_releasenote.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
