@@ -312,16 +312,16 @@ function deleteNode(id, permanent = false) {
 
 async function readContent(contentId) {
   const p = electronPath.join(objectsDir(state.workspaceRoot), `${contentId}.md`);
-  if (electronFs.existsSync(p)) {
-    let content = electronFs.readFileSync(p, 'utf-8');
+  if (await electronFs.exists(p)) {
+    let content = await electronFs.readFile(p, 'utf-8');
 
     // 双重验证：检查 meta.json 的加密状态和文件内容的 ENCRYPTED: 前缀
     const metaPath = electronPath.join(nwDir(state.workspaceRoot), 'meta.json');
     let metaEncrypted = false;
 
     try {
-      if (electronFs.existsSync(metaPath)) {
-        const metaContent = electronFs.readFileSync(metaPath, 'utf-8');
+      if (await electronFs.exists(metaPath)) {
+        const metaContent = await electronFs.readFile(metaPath, 'utf-8');
         const meta = JSON.parse(metaContent);
         metaEncrypted = meta.encrypted === true;
       }
@@ -401,38 +401,38 @@ async function writeContent(contentId, text) {
 
   try {
     // 原子写入：先写临时文件
-    electronFs.writeFileSync(tmpPath, contentToWrite, 'utf-8');
+    await electronFs.writeFile(tmpPath, contentToWrite, 'utf-8');
 
     // 验证临时文件写入成功
-    const writtenContent = electronFs.readFileSync(tmpPath, 'utf-8');
+    const writtenContent = await electronFs.readFile(tmpPath, 'utf-8');
     if (writtenContent !== contentToWrite) {
       console.error('[VFS] writeContent: 临时文件验证失败，内容不匹配');
-      if (electronFs.existsSync(tmpPath)) electronFs.unlinkSync(tmpPath);
+      if (await electronFs.exists(tmpPath)) await electronFs.unlink(tmpPath);
       return false;
     }
 
     // 如果原文件存在且有内容，创建备份
-    if (electronFs.existsSync(p)) {
-      const originalContent = electronFs.readFileSync(p, 'utf-8');
+    if (await electronFs.exists(p)) {
+      const originalContent = await electronFs.readFile(p, 'utf-8');
       if (originalContent.length > 0) {
-        electronFs.writeFileSync(backupPath, originalContent, 'utf-8');
+        await electronFs.writeFile(backupPath, originalContent, 'utf-8');
       }
     }
 
     // 原子替换：重命名临时文件为目标文件
-    electronFs.renameSync(tmpPath, p);
+    await electronFs.rename(tmpPath, p);
 
     // 写入成功后删除备份文件
-    if (electronFs.existsSync(backupPath)) {
-      electronFs.unlinkSync(backupPath);
+    if (await electronFs.exists(backupPath)) {
+      await electronFs.unlink(backupPath);
     }
 
     return true;
   } catch (error) {
     console.error('[VFS] writeContent: 写入失败:', error);
     // 清理临时文件
-    if (electronFs.existsSync(tmpPath)) {
-      try { electronFs.unlinkSync(tmpPath); } catch (_) { }
+    if (await electronFs.exists(tmpPath)) {
+      try { await electronFs.unlink(tmpPath); } catch (_) { }
     }
     return false;
   }
