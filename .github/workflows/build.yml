@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   prepare:
-    name: Prepare Build Resource 
+    name: Release Preparation 
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.versioning.outputs.version }}
@@ -30,7 +30,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch Version from Tag
+      - name: Compute Release Info
         id: versioning
         run: |
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
@@ -73,7 +73,7 @@ jobs:
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
           fi
-      - name: Upload release_note File
+      - name: Upload Release Notes Template File
         uses: actions/upload-artifact@v4
         with:
           name: release-notes
@@ -128,7 +128,7 @@ jobs:
       - name: Lint
         run: npm run lint || true
 
-      - name: Clean dist folder
+      - name: Clean Dist folder
         run: npm run clean
 
       - name: Build for ${{ matrix.platform }}
@@ -148,7 +148,7 @@ jobs:
           if-no-files-found: warn
 
   release:
-    name: Create GitHub Release
+    name: Release
     needs: [prepare, build]
     runs-on: ubuntu-latest
 
@@ -165,7 +165,7 @@ jobs:
           name: release-notes
           path: .
 
-      - name: Update Pre-Release Notes or Release Notes
+      - name: Prepare Pre-Release Notes or Release Notes File
         run: |
           node scripts/generateReleaseNotes.js ${{ needs.prepare.outputs.tag }}
           cp .github/RELEASE_TEMPLATE/release_note.md updated_note.md
@@ -174,7 +174,7 @@ jobs:
         with:
           path: artifacts
 
-      - name: Release Files
+      - name: Release installers for all platforms
         run: |
           mkdir release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
