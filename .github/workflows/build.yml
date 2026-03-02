@@ -187,5 +187,6 @@ jobs:
           prerelease: ${{ needs.prepare.outputs.prerelease }}
           make_latest: ${{ needs.prepare.outputs.make_latest }}
           body_path: updated_note.md
+          files: release_files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
