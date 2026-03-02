@@ -143,9 +143,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: NoteWizard-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
-          path: ${{ matrix.artifact_pattern }}
+          path: dist/
           retention-days: 30
-          if-no-files-found: warn
+          if-no-files-found: error
 
   release:
     name: Release
@@ -177,7 +177,7 @@ jobs:
       - name: Release installers for all platforms
         run: |
           mkdir release_files
-          find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
+          cp -r artifacts/* release_files/
 
       - name: Generate GitHub Release Page
         uses: softprops/action-gh-release@v2
