@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   prepare:
-    name: Prepare Version and Tag
+    name: Prepare Build Resource 
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.versioning.outputs.version }}
@@ -30,7 +30,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Calculate Versioning
+      - name: Fetch Version from Tag
         id: versioning
         run: |
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
@@ -63,7 +63,6 @@ jobs:
             echo "tag=$TAG" >> $GITHUB_OUTPUT
             echo "release_name=$TAG" >> $GITHUB_OUTPUT
           else
-            # 兼容 workflow_dispatch 手动触发情况
             VERSION=$(node -p "require('./package.json').version.split('-')[0]")
             DATE=$(date +'%y%m%d')
             VERSION="${VERSION}-dev.${DATE}"
@@ -74,14 +73,14 @@ jobs:
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
           fi
-      - name: Upload Release Notes
+      - name: Upload release_note File
         uses: actions/upload-artifact@v4
         with:
           name: release-notes
           path: .github/RELEASE_TEMPLATE/release_note.md
 
   build:
-    name: Build on ${{ matrix.os }}-${{ matrix.arch }}
+    name: Build on ${{ matrix.os }}
     needs: prepare
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
@@ -140,7 +139,7 @@ jobs:
           ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
           USE_HARD_LINKS: false
 
-      - name: Upload artifacts
+      - name: Upload Package Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: NoteWizard-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
@@ -159,35 +158,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download release notes
+      - name: Download Release Notes File
         if: needs.prepare.outputs.is_dev == 'true'
         uses: actions/download-artifact@v4
         with:
           name: release-notes
           path: .
 
-      - name: Prepare Official Notes
+      - name: Update Pre-Release Notes or Release Notes
         run: |
           node scripts/generateReleaseNotes.js ${{ needs.prepare.outputs.tag }}
-          cp .github/RELEASE_TEMPLATE/release_note.md release_body.md
+          cp .github/RELEASE_TEMPLATE/release_note.md updated_note.md
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Collect artifacts
+      - name: Release Files (Total: 18 Files)
         run: |
           mkdir release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
 
-      - name: GitHub Release
+      - name: Generate GitHub Release Page
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
           name: ${{ needs.prepare.outputs.release_name }}
           prerelease: ${{ needs.prepare.outputs.prerelease }}
           make_latest: ${{ needs.prepare.outputs.make_latest }}
-          body_path: release_body.md
+          body_path: updated_note.md
           files: release_files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
