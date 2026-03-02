@@ -33,7 +33,7 @@
 **NoteWizard Quick Start**  
 > Tips: software is continuously updated to enhance performance and user experience. Listed features are for reference only and may evolve with technological advancements and user needs.
 
-![NoteWizard Quick Start](./doc/Quick_Start/QuickStart_enUS.webp)
+![NoteWizard Quick Start](./docs/Quick_Start/QuickStart_enUS.webp)
 
 ## Supported Platforms
 

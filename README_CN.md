@@ -22,7 +22,7 @@
 ## 功能特点
 - **极简界面**：简单纯粹无广告
 - **跨平台**：支持 Windows、macOS 和 Linux 系统
-- **便捷迁移**：支持NoteWizard专有格式(.nwp)完整导入导出，也支持Markdown(.md)格式导入导出
+- **便捷迁移**：支持NoteWizard专有格式(.nwp)完整导入导出，支持Markdown(.md)格式导入导出
 - **本地加密存储**：所有笔记数据可加密(AES-256-GCM算法)保存在本地，安全可控
 - **Markdown支持**：实时预览 Markdown 渲染效果
 - **AI智能辅助写作**：AI智能辅助写作，让您的写作更轻松(默认关闭)
@@ -31,7 +31,7 @@
 ## 界面预览
 **NoteWizard 快速上手**  
 > 提示: 本软件持续更新，以优化性能和用户体验。列出的功能仅供参考，可能随技术进步和需求变化而调整。
-![NoteWizard 快速上手](./doc/Quick_Start/QuickStart_zhCN.webp)
+![NoteWizard 快速上手](./docs/Quick_Start/QuickStart_zhCN.webp)
 
 ## 支持平台
 

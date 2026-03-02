@@ -8,13 +8,9 @@
 <!-- Optional: version/date/commit metadata  -->
 <!-- VERSION_METADATA_END -->
 
----
-
 <!-- RELEASE_NOTES_BODY_START -->
 _No changes for this release._
 <!-- RELEASE_NOTES_BODY_END -->
-
----
 
 <!-- COMPARE_LINK_START -->
 <!-- Optional: GitHub compare link -->
