@@ -1,6 +1,6 @@
 ### NoteWizard Release Notes
 
-**Pre-release build intended for testing and evaluation only. It is not suitable for production deployment. The full changelog applies to the official stable release only.**
+**⚠️ This is a pre-release version intended for testing and evaluation only.**
 
 <!-- RELEASE_NOTES_BODY_START -->
 _No changes for this release._
