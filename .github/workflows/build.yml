@@ -177,7 +177,7 @@ jobs:
       - name: Release installers for all platforms
         run: |
           mkdir release_files
-          cp -r artifacts/* release_files/
+          find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
 
       - name: Generate GitHub Release Page
         uses: softprops/action-gh-release@v2
