@@ -1,11 +1,15 @@
 ### [1.1.3] - 2026-03-06
+This update includes several important fixes and performance improvements, further enhancing the stability and security of the software.
 #### Fixed
-- Fixed incomplete translations in certain languages.
-- Fixed an issue where, in some cases, using a custom note save path could cause note encryption to fail.
+- Fixed missing translations in certain languages.
+- Fixed an issue where custom note save paths could cause encryption failures in specific cases.
 #### Improved
-- Improved the interaction experience of the note lock/unlock feature.
-- Improved the user experience of the preferences export workflow.
-- Improved the overall usability of the encryption and decryption process.
+- Updated note saving process to asynchronous writes with enhanced atomic operations, improving stability and data security.
+- Renamed locking feature: “Lock Note” is now “Read-Only Mode”, and “Unlock Note” is now “Edit Mode”.
+- Improved note properties panel, now supporting copy of note information.
+- Optimized preference export workflow.
+- Enhanced encryption and decryption experience.
+- Improved feedback workflow for submitting and viewing issues.
 
 ### [1.1.2] - 2026-02-27
 #### Fixed

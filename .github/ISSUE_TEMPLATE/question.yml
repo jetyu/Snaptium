@@ -1,5 +1,5 @@
-name: Question
-description: Ask a question or request clarification / 提出问题或使用咨询
+name: Product Support
+description: Ask a usage question or request clarification / 使用咨询或功能疑问
 labels: ["Question"]
 assignees:
   - jetyu
@@ -8,14 +8,16 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Question / 使用问题
+        ## Usage Question / 使用问题 
 
-        Please describe your question clearly and provide enough context.
-        请清晰描述你的问题，并尽可能提供相关背景信息。
+        ⚠️ This template is for **usage questions** only.  
+        If the software crashes, fails to start, or behaves incorrectly, please use the **Bug Report** template instead. 
+        ⚠️ 本模板仅用于 **使用咨询** 。 
+        如果软件出现崩溃、无法启动或功能异常，请使用 **Bug Report** 模板。 
 
-        ⚠️ If you believe this is a bug, please use the "Bug Report" template instead.
-        如果你认为这是缺陷，请使用 “Bug Report” 模板。
-      
+        Please describe your question clearly and provide sufficient context. 
+        请清晰描述你的问题，并尽可能提供相关背景信息。 
+
   - type: dropdown
     id: os
     attributes:
