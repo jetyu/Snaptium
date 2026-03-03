@@ -49,7 +49,7 @@
   "about.nodejs": "Node.js",
   "about.chromium": "Chromium",
   "about.v8": "V8",
-  "about.author": "作者: ",
+  "about.author": "著者: ",
   "about.license": "ライセンス: ",
   "unknown": "不明なエラー",
   "copyrights": "Copyright © 2026 NoteWizard Team. All rights reserved.",
