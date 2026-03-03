@@ -73,11 +73,11 @@ function removeBlock(template, startMarker, endMarker) {
 }
 
 function replaceTitle(template, isPreRelease) {
-  const titleRegex = /^### 📦 NoteWizard.*$/m;
+  const titleRegex = /^### NoteWizard.*$/m;
 
   const newTitle = isPreRelease
-    ? '### 📦 NoteWizard Pre-Release Notes'
-    : '### 📦 NoteWizard Release Notes';
+    ? '### NoteWizard Pre-Release Notes'
+    : '### NoteWizard Release Notes';
 
   if (!titleRegex.test(template)) {
     throw new Error('Missing expected title line.');
