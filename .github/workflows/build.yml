@@ -1,4 +1,4 @@
-name: NoteWizard CI/CD
+name: NoteWizard Release
 
 on:
   push:
@@ -148,7 +148,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    name: Release
+    name: Publishing Release 
     needs: [prepare, build]
     runs-on: ubuntu-latest
 
