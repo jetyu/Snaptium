@@ -164,7 +164,7 @@ export function createEncryptionManager(deps) {
       const metaPath = path.join(databaseDir, 'meta.json');
 
       if (!fs.existsSync(metaPath)) {
-        return;
+          return;
       }
 
       const metaContent = fs.readFileSync(metaPath, 'utf-8');
@@ -176,14 +176,24 @@ export function createEncryptionManager(deps) {
       }
 
       console.log('[Encryption] Found temp recovery key in meta.json, attempting emergency recovery...');
+      
+      // 如果 meta.json 中保存了数据库路径，恢复 noteSavePath 配置
+      if (meta.databasePath) {
+        const savedPath = meta.databasePath;
+        const currentNoteSavePath = preferencesManager.getPreference('noteSavePath');
+        
+        // 如果当前配置的路径与 meta.json 中的路径不一致，恢复配置
+        if (!currentNoteSavePath || currentNoteSavePath !== savedPath) {
+          await preferencesManager.setPreference('noteSavePath', savedPath);
+          console.log(`[Encryption] Restored noteSavePath from meta.json: ${savedPath}`);
+        }
+      }
 
       const recoveryKey = meta.tempRecoveryKey;
 
       // 验证密钥格式
       if (typeof recoveryKey !== 'string' || recoveryKey.length < 10) {
         console.error('[Encryption] Invalid recovery key format in meta.json');
-        // 清除无效的密钥
-        delete meta.tempRecoveryKey;
         fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
         return;
       }
@@ -222,11 +232,7 @@ export function createEncryptionManager(deps) {
                 break;
               }
             } catch (error) {
-              console.error('[Encryption] Recovery key verification failed:', error.message);
-              // 密钥验证失败，清除无效密钥
-              delete meta.tempRecoveryKey;
               fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-              console.log('[Encryption] Invalid recovery key removed from meta.json');
               return;
             }
           }
@@ -267,7 +273,7 @@ export function createEncryptionManager(deps) {
           // 清除 meta.json 中的临时密钥
           delete meta.tempRecoveryKey;
           fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-          console.log('[Encryption] Temporary recovery key removed from meta.json');
+          console.log('[Encryption] Temporary recovery key and databasePath removed from meta.json');
         }
       }
     } catch (error) {
@@ -373,6 +379,25 @@ export function createEncryptionManager(deps) {
         encryptedRecoveryKey: encryptedRecoveryKey,
         setupTime: Date.now()
       });
+
+      // 将临时恢复密钥和数据库路径保存到 meta.json 用于紧急恢复
+      try {
+        const databaseDir = getDatabaseDir();
+        const metaPath = path.join(databaseDir, 'meta.json');
+        
+        if (fs.existsSync(metaPath)) {
+          const metaContent = fs.readFileSync(metaPath, 'utf-8');
+          const meta = JSON.parse(metaContent);
+          
+          // 保存临时恢复密钥和数据库路径
+          meta.databasePath = path.dirname(databaseDir); // 保存工作区根路径
+          
+          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+          console.log('[Encryption] Saved tempRecoveryKey and databasePath to meta.json for emergency recovery');
+        }
+      } catch (error) {
+        console.error('[Encryption] Failed to save tempRecoveryKey to meta.json:', error);
+      }
 
       encryptionEnabled = true;
       currentRecoveryKey = recoveryKey;
