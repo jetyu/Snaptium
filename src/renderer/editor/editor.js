@@ -16,6 +16,8 @@ export function initializeEditor() {
         autofocus: true,
         extraKeys: {
           'Ctrl-S': function () {
+            // 触发保存逻辑
+            window.dispatchEvent(new CustomEvent('notewizard-save'));
           },
           'Tab': function (cm) {
             return handleTabKey(cm);

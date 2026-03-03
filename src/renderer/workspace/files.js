@@ -423,6 +423,12 @@ async function selectNode(node) {
     if (prevNode && prevNode.id !== (node ? node.id : null) && prevNode.type === 'file' && !state.isLoadingNote) {
       const currentContent = state.editor.getValue();
       state.fileContents.set(prevNode.id, currentContent);
+
+      if (state.unsavedFiles.has(prevNode.id)) {
+        vfs.writeContent(prevNode.id, currentContent).then(success => {
+          if (success) state.unsavedFiles.delete(prevNode.id);
+        });
+      }
     }
   }
 
@@ -505,6 +511,7 @@ async function selectNode(node) {
     }
 
     state.fileContents.set(node.id, content || '');
+    state.unsavedFiles.delete(node.id);
     updateStatus(`${t('file.loadedFile')}: ${node.name}`);
   }
 
@@ -629,6 +636,18 @@ async function initializeFileWorkspace() {
     fileSearch = document.getElementById('file-search');
     treeContainer = document.getElementById('tree');
   }
+
+  // 监听来自菜单的保存指令
+  ipcRenderer.removeAllListeners('save-file');
+  ipcRenderer.on('save-file', async () => {
+    await immediateSave();
+  });
+
+  // 监听来自编辑器内快捷键的保存指令
+  window.removeEventListener('notewizard-save', immediateSave);
+  window.addEventListener('notewizard-save', async () => {
+    await immediateSave();
+  });
 
   ipcRenderer.removeAllListeners('file-opened');
   ipcRenderer.on('file-opened', async (event, { content, filePath }) => {
@@ -844,10 +863,24 @@ function setupEditorEvents() {
       if (!nodeId) return;
       const node = vfs.getNodeById(nodeId);
       if (!node || node.type !== 'file') return;
+
       state.fileContents.set(nodeId, content);
-      // 定时自动保存功能已禁用
-      // 内容将在窗口关闭时或手动保存时写入
+      state.unsavedFiles.add(nodeId);
+
+      // 自动保存逻辑：3秒后执行
       if (state.autoSaveTimer) clearTimeout(state.autoSaveTimer);
+      state.autoSaveTimer = setTimeout(async () => {
+        if (state.currentNodeId === nodeId) {
+          updateStatus(`${t('file.status.saving')}`);
+          const success = await vfs.writeContent(node.contentId, content);
+          if (success) {
+            state.unsavedFiles.delete(nodeId);
+            updateStatus(`${t('file.status.autoSaved')}: ${node.name}`);
+          } else {
+            updateStatus(`${t('file.status.saveFailed')}: ${node.name}`);
+          }
+        }
+      }, 3000);
     });
   } else {
     setTimeout(setupEditorEvents, 100);
@@ -864,6 +897,35 @@ async function refreshWorkspace() {
   } catch (error) {
     updateStatus(t('file.refreshFailed'));
   }
+}
+
+/**
+ * 立即执行保存
+ * 用于处理 Ctrl+S 或菜单点击
+ */
+async function immediateSave() {
+  const nodeId = state.currentNodeId;
+  if (!nodeId || !state.editor) return;
+
+  const node = vfs.getNodeById(nodeId);
+  if (!node || node.type !== 'file' || !node.contentId) return;
+
+  if (state.autoSaveTimer) {
+    clearTimeout(state.autoSaveTimer);
+    state.autoSaveTimer = null;
+  }
+
+  updateStatus(`${t('file.status.saving')}`);
+  const content = state.editor.getValue();
+  const success = await vfs.writeContent(node.contentId, content);
+  if (success) {
+    state.unsavedFiles.delete(nodeId);
+    updateStatus(`${t('file.status.autoSaved')}: ${node.name}`);
+    return true;
+  } else {
+    updateStatus(`${t('file.status.saveFailed')}: ${node.name}`);
+  }
+  return false;
 }
 
 /**
