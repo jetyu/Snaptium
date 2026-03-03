@@ -66,35 +66,35 @@ export function decryptContent(encryptedContent, recoveryKey) {
     // 不是加密内容，直接返回
     return encryptedContent;
   }
-  
+
   // 解析加密格式: ENCRYPTED:v1:salt:iv:authTag:data
   const parts = encryptedContent.split(':');
   if (parts.length < 6) {
     throw new Error('加密格式无效');
   }
-  
+
   const [prefix, version, saltB64, ivB64, authTagB64, ...encryptedParts] = parts;
   const encryptedData = encryptedParts.join(':'); // 处理内容中可能包含冒号的情况
-  
+
   if (prefix !== 'ENCRYPTED' || version !== 'v1') {
     throw new Error('不支持的加密版本');
   }
-  
+
   // 解码 Base64
   const salt = Buffer.from(saltB64, 'base64');
   const iv = Buffer.from(ivB64, 'base64');
   const authTag = Buffer.from(authTagB64, 'base64');
-  
+
   // 从恢复密钥派生加密密钥
   const key = deriveKeyFromRecovery(recoveryKey, salt);
-  
+
   // AES-256-GCM 解密
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
   decipher.setAuthTag(authTag);
-  
+
   let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
   decrypted += decipher.final('utf8');
-  
+
   return decrypted;
 }
 
@@ -108,12 +108,24 @@ export function decryptContent(encryptedContent, recoveryKey) {
  */
 export function createEncryptionManager(deps) {
   const { ipcMain, preferencesManager, getWindow, app } = deps;
-  
+
   // 加密状态管理（无锁定功能）
   let encryptionEnabled = false;
   let currentRecoveryKey = null;
   let currentSalt = null;
-  
+
+  /**
+   * 获取当前数据库目录
+   */
+  const getDatabaseDir = () => {
+    const noteSavePath = preferencesManager.getPreference('noteSavePath');
+    if (noteSavePath) {
+      return path.join(noteSavePath, 'Database');
+    }
+    // 回退到默认文档路径
+    return path.join(app.getPath('documents'), 'NoteWizard', 'Database');
+  };
+
   // 应用启动时尝试自动解锁
   const initEncryption = async () => {
     try {
@@ -142,31 +154,31 @@ export function createEncryptionManager(deps) {
       console.error('Failed to initialize encryption:', error);
     }
   };
-  
+
   /**
    * 读取临时恢复密钥进行紧急恢复
    */
   const tryRecoverFromMetaJson = async () => {
     try {
-      const databaseDir = path.join(app.getPath('documents'), 'NoteWizard', 'Database');
+      const databaseDir = getDatabaseDir();
       const metaPath = path.join(databaseDir, 'meta.json');
-      
+
       if (!fs.existsSync(metaPath)) {
         return;
       }
-      
+
       const metaContent = fs.readFileSync(metaPath, 'utf-8');
       const meta = JSON.parse(metaContent);
-      
+
       // 检查是否有临时恢复密钥
       if (!meta.tempRecoveryKey) {
         return;
       }
-      
+
       console.log('[Encryption] Found temp recovery key in meta.json, attempting emergency recovery...');
-      
+
       const recoveryKey = meta.tempRecoveryKey;
-      
+
       // 验证密钥格式
       if (typeof recoveryKey !== 'string' || recoveryKey.length < 10) {
         console.error('[Encryption] Invalid recovery key format in meta.json');
@@ -175,17 +187,17 @@ export function createEncryptionManager(deps) {
         fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
         return;
       }
-      
+
       // 尝试使用密钥解密一个文件来验证
       const objectsDir = path.join(databaseDir, 'objects');
       if (fs.existsSync(objectsDir)) {
         const files = fs.readdirSync(objectsDir).filter(f => f.endsWith('.md'));
         let verified = false;
-        
+
         for (const file of files) {
           const filePath = path.join(objectsDir, file);
           const content = fs.readFileSync(filePath, 'utf-8');
-          
+
           if (content.startsWith('ENCRYPTED:')) {
             // 尝试解密验证
             try {
@@ -193,18 +205,18 @@ export function createEncryptionManager(deps) {
               if (parts.length >= 6) {
                 const [, , saltB64, ivB64, authTagB64, ...encryptedParts] = parts;
                 const encryptedData = encryptedParts.join(':');
-                
+
                 const salt = Buffer.from(saltB64, 'base64');
                 const iv = Buffer.from(ivB64, 'base64');
                 const authTag = Buffer.from(authTagB64, 'base64');
-                
+
                 const key = deriveKeyFromRecovery(recoveryKey, salt);
-                
+
                 const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
                 decipher.setAuthTag(authTag);
                 decipher.update(encryptedData, 'base64', 'utf8');
                 decipher.final('utf8');
-                
+
                 verified = true;
                 console.log('[Encryption] Recovery key verified successfully');
                 break;
@@ -219,22 +231,22 @@ export function createEncryptionManager(deps) {
             }
           }
         }
-        
+
         if (!verified && meta.encrypted) {
           // 数据库标记为加密但没有找到加密文件，可能是空数据库
           console.log('[Encryption] No encrypted files found to verify, proceeding with recovery');
           verified = true;
         }
-        
+
         if (verified || !meta.encrypted) {
           // 密钥验证成功，保存到 safeStorage
           if (safeStorage.isEncryptionAvailable()) {
             const encrypted = safeStorage.encryptString(recoveryKey);
             const encryptedRecoveryKey = encrypted.toString('base64');
-            
+
             // 生成新的盐值
             const salt = crypto.randomBytes(32).toString('hex');
-            
+
             // 保存加密配置
             await preferencesManager.setPreference('encryption', {
               enabled: true,
@@ -244,14 +256,14 @@ export function createEncryptionManager(deps) {
               setupTime: Date.now(),
               recoveredAt: Date.now() // 标记为恢复的配置
             });
-            
+
             encryptionEnabled = true;
             currentRecoveryKey = recoveryKey;
             currentSalt = salt;
-            
+
             console.log('[Encryption] Emergency recovery successful, encryption enabled');
           }
-          
+
           // 清除 meta.json 中的临时密钥
           delete meta.tempRecoveryKey;
           fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
@@ -262,10 +274,10 @@ export function createEncryptionManager(deps) {
       console.error('[Encryption] Emergency recovery failed:', error);
     }
   };
-  
+
   // 应用启动时初始化
   app.whenReady().then(initEncryption);
-  
+
   // 应用关闭时清除内存
   app.on('before-quit', () => {
     if (currentRecoveryKey) {
@@ -312,10 +324,10 @@ export function createEncryptionManager(deps) {
     try {
       const recoveryKey = generateRecoveryKey();
       console.log('Generated recovery key (length):', recoveryKey.length);
-      
-      return { 
-        success: true, 
-        recoveryKey 
+
+      return {
+        success: true,
+        recoveryKey
       };
     } catch (error) {
       console.error('Failed to generate recovery key:', error);
@@ -332,7 +344,7 @@ export function createEncryptionManager(deps) {
   ipcMain.handle('encryption:setup', async (event, { recoveryKey }) => {
     try {
       console.log('[Encryption] Setting up encryption with recovery key');
-      
+
       // 验证恢复密钥
       if (!recoveryKey || recoveryKey.length < 20) {
         return {
@@ -343,14 +355,14 @@ export function createEncryptionManager(deps) {
 
       // 生成盐值
       const salt = crypto.randomBytes(32).toString('hex');
-      
+
       // 使用 safeStorage 加密恢复密钥
       let encryptedRecoveryKey = null;
       if (safeStorage.isEncryptionAvailable()) {
         const encrypted = safeStorage.encryptString(recoveryKey);
         encryptedRecoveryKey = encrypted.toString('base64');
       }
-      
+
       // 保存加密配置
       await preferencesManager.setPreference('encryption', {
         enabled: true,
@@ -361,17 +373,17 @@ export function createEncryptionManager(deps) {
         encryptedRecoveryKey: encryptedRecoveryKey,
         setupTime: Date.now()
       });
-      
+
       encryptionEnabled = true;
       currentRecoveryKey = recoveryKey;
       currentSalt = salt;
-      
+
       // 通知渲染进程状态变化
       const win = getWindow();
       if (win) {
         win.webContents.send('encryption:status-changed', { enabled: true });
       }
-      
+
       return { success: true };
     } catch (error) {
       console.error('Failed to setup encryption:', error);
@@ -388,14 +400,14 @@ export function createEncryptionManager(deps) {
   ipcMain.handle('encryption:verify-key', async (event, { recoveryKey }) => {
     try {
       const config = await preferencesManager.getPreference('encryption');
-      
+
       if (!config || !config.enabled) {
         return {
           success: false,
           error: '加密功能未启用'
         };
       }
-      
+
       // 验证恢复密钥
       if (!recoveryKey) {
         return {
@@ -403,11 +415,11 @@ export function createEncryptionManager(deps) {
           error: '请输入恢复密钥'
         };
       }
-      
+
       // 对比哈希值
       const inputHash = crypto.createHash('sha256').update(recoveryKey).digest('hex');
       const storedHash = config.recoveryKeyHash;
-      
+
       if (inputHash === storedHash) {
         return {
           success: true,
@@ -435,17 +447,17 @@ export function createEncryptionManager(deps) {
       await preferencesManager.setPreference('encryption', {
         enabled: false
       });
-      
+
       encryptionEnabled = false;
       currentRecoveryKey = null;
       currentSalt = null;
-      
+
       // 通知渲染进程状态变化
       const win = getWindow();
       if (win) {
         win.webContents.send('encryption:status-changed', { enabled: false });
       }
-      
+
       return { success: true };
     } catch (error) {
       console.error('Failed to disable encryption:', error);
@@ -466,9 +478,9 @@ export function createEncryptionManager(deps) {
       if (!fs.existsSync(dirPath)) {
         return { success: true, hasEncrypted: false };
       }
-      
+
       const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.md'));
-      
+
       for (const file of files) {
         const filePath = path.join(dirPath, file);
         try {
@@ -481,7 +493,7 @@ export function createEncryptionManager(deps) {
           continue;
         }
       }
-      
+
       return { success: true, hasEncrypted: false };
     } catch (error) {
       console.error('Failed to check encrypted files:', error);
@@ -500,35 +512,35 @@ export function createEncryptionManager(deps) {
       if (!fs.existsSync(sourceDir)) {
         return { success: false, error: '源目录不存在' };
       }
-      
+
       // 验证恢复密钥
       const config = await preferencesManager.getPreference('encryption');
       if (config && config.enabled) {
         const inputHash = crypto.createHash('sha256').update(recoveryKey).digest('hex');
         const storedHash = config.recoveryKeyHash;
-        
+
         if (inputHash !== storedHash) {
           return { success: false, error: '恢复密钥不正确' };
         }
       }
-      
+
       // 创建目标目录
       if (!fs.existsSync(targetDir)) {
         fs.mkdirSync(targetDir, { recursive: true });
       }
-      
+
       const files = fs.readdirSync(sourceDir).filter(f => f.endsWith('.md'));
       let decrypted = 0;
       let copied = 0;
       let failed = 0;
-      
+
       for (const file of files) {
         const sourceFile = path.join(sourceDir, file);
         const targetFile = path.join(targetDir, file);
-        
+
         try {
           let content = fs.readFileSync(sourceFile, 'utf-8');
-          
+
           // 检查是否为加密内容
           if (content.startsWith('ENCRYPTED:')) {
             // 解密内容
@@ -538,31 +550,31 @@ export function createEncryptionManager(deps) {
               failed++;
               continue;
             }
-            
+
             const [prefix, version, saltB64, ivB64, authTagB64, ...encryptedParts] = parts;
             const encryptedData = encryptedParts.join(':');
-            
+
             if (prefix !== 'ENCRYPTED' || version !== 'v1') {
               console.error(`Unsupported encryption version in file ${file}`);
               failed++;
               continue;
             }
-            
+
             // 解码 Base64
             const salt = Buffer.from(saltB64, 'base64');
             const iv = Buffer.from(ivB64, 'base64');
             const authTag = Buffer.from(authTagB64, 'base64');
-            
+
             // 从恢复密钥派生加密密钥
             const key = deriveKeyFromRecovery(recoveryKey, salt);
-            
+
             // AES-256-GCM 解密
             const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
             decipher.setAuthTag(authTag);
-            
+
             let decryptedContent = decipher.update(encryptedData, 'base64', 'utf8');
             decryptedContent += decipher.final('utf8');
-            
+
             // 写入解密后的内容
             fs.writeFileSync(targetFile, decryptedContent, 'utf-8');
             decrypted++;
@@ -576,9 +588,9 @@ export function createEncryptionManager(deps) {
           failed++;
         }
       }
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         decrypted,
         copied,
         failed
@@ -599,17 +611,17 @@ export function createEncryptionManager(deps) {
       if (!encryptionEnabled || !currentRecoveryKey) {
         throw new Error('加密功能未启用');
       }
-      
+
       console.log('[Encryption] Starting batch encryption...');
-      
+
       // 获取笔记目录和回收站目录
-      const databaseDir = path.join(app.getPath('documents'), 'NoteWizard', 'Database');
+      const databaseDir = getDatabaseDir();
       const notesDir = path.join(databaseDir, 'objects');
       const trashDir = path.join(databaseDir, 'trash');
-      
+
       // 收集所有需要加密的文件
       const filesToEncrypt = [];
-      
+
       // 收集 objects 目录中的文件
       if (fs.existsSync(notesDir)) {
         const objectFiles = fs.readdirSync(notesDir)
@@ -617,7 +629,7 @@ export function createEncryptionManager(deps) {
           .map(f => ({ file: f, dir: notesDir, dirName: 'objects' }));
         filesToEncrypt.push(...objectFiles);
       }
-      
+
       // 收集 trash 目录中的文件
       if (fs.existsSync(trashDir)) {
         const trashFiles = fs.readdirSync(trashDir)
@@ -625,42 +637,42 @@ export function createEncryptionManager(deps) {
           .map(f => ({ file: f, dir: trashDir, dirName: 'trash' }));
         filesToEncrypt.push(...trashFiles);
       }
-      
+
       if (filesToEncrypt.length === 0) {
         return { success: true, encrypted: 0, failed: 0, skipped: 0 };
       }
-      
+
       const total = filesToEncrypt.length;
       let encrypted = 0;
       let failed = 0;
       let skipped = 0;
-      
+
       const win = getWindow();
-      
+
       for (let i = 0; i < filesToEncrypt.length; i++) {
         const { file, dir, dirName } = filesToEncrypt[i];
         const filePath = path.join(dir, file);
-        
+
         try {
           // 读取文件内容
           let content = fs.readFileSync(filePath, 'utf-8');
-          
+
           // 检查是否已加密
           if (content.startsWith('ENCRYPTED:')) {
             skipped++;
             continue;
           }
-          
+
           // 加密内容
           const salt = crypto.randomBytes(32);
           const iv = crypto.randomBytes(16);
           const key = deriveKeyFromRecovery(currentRecoveryKey, salt);
-          
+
           const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
           let encryptedContent = cipher.update(content, 'utf8', 'base64');
           encryptedContent += cipher.final('base64');
           const authTag = cipher.getAuthTag();
-          
+
           const result = [
             'ENCRYPTED',
             'v1',
@@ -669,13 +681,13 @@ export function createEncryptionManager(deps) {
             authTag.toString('base64'),
             encryptedContent
           ].join(':');
-          
+
           // 写回文件
           fs.writeFileSync(filePath, result, 'utf-8');
           encrypted++;
-          
+
           console.log(`[Encryption] Encrypted file in ${dirName}: ${file}`);
-          
+
           // 发送进度
           if (win) {
             win.webContents.send('encryption:progress', {
@@ -690,9 +702,9 @@ export function createEncryptionManager(deps) {
           failed++;
         }
       }
-      
+
       console.log(`[Encryption] Batch encryption completed: ${encrypted} encrypted, ${skipped} skipped, ${failed} failed`);
-      
+
       // 更新 meta.json 的加密状态
       try {
         const metaPath = path.join(databaseDir, 'meta.json');
@@ -706,9 +718,9 @@ export function createEncryptionManager(deps) {
       } catch (error) {
         console.error('Failed to update meta.json:', error);
       }
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         encrypted,
         failed,
         skipped
@@ -725,15 +737,15 @@ export function createEncryptionManager(deps) {
   ipcMain.handle('encryption:decrypt-all', async () => {
     try {
       console.log('[Encryption] Starting batch decryption...');
-      
+
       // 获取笔记目录和回收站目录
-      const databaseDir = path.join(app.getPath('documents'), 'NoteWizard', 'Database');
+      const databaseDir = getDatabaseDir();
       const notesDir = path.join(databaseDir, 'objects');
       const trashDir = path.join(databaseDir, 'trash');
-      
+
       // 收集所有需要解密的文件
       const filesToDecrypt = [];
-      
+
       // 收集 objects 目录中的文件
       if (fs.existsSync(notesDir)) {
         const objectFiles = fs.readdirSync(notesDir)
@@ -741,7 +753,7 @@ export function createEncryptionManager(deps) {
           .map(f => ({ file: f, dir: notesDir, dirName: 'objects' }));
         filesToDecrypt.push(...objectFiles);
       }
-      
+
       // 收集 trash 目录中的文件
       if (fs.existsSync(trashDir)) {
         const trashFiles = fs.readdirSync(trashDir)
@@ -749,32 +761,32 @@ export function createEncryptionManager(deps) {
           .map(f => ({ file: f, dir: trashDir, dirName: 'trash' }));
         filesToDecrypt.push(...trashFiles);
       }
-      
+
       if (filesToDecrypt.length === 0) {
         return { success: true, decrypted: 0, failed: 0, skipped: 0 };
       }
-      
+
       const total = filesToDecrypt.length;
       let decrypted = 0;
       let failed = 0;
       let skipped = 0;
-      
+
       const win = getWindow();
-      
+
       for (let i = 0; i < filesToDecrypt.length; i++) {
         const { file, dir, dirName } = filesToDecrypt[i];
         const filePath = path.join(dir, file);
-        
+
         try {
           // 读取文件内容
           let content = fs.readFileSync(filePath, 'utf-8');
-          
+
           // 检查是否为加密内容
           if (!content.startsWith('ENCRYPTED:')) {
             skipped++;
             continue;
           }
-          
+
           // 解密内容
           const parts = content.split(':');
           if (parts.length < 6) {
@@ -782,37 +794,37 @@ export function createEncryptionManager(deps) {
             failed++;
             continue;
           }
-          
+
           const [prefix, version, saltB64, ivB64, authTagB64, ...encryptedParts] = parts;
           const encryptedData = encryptedParts.join(':');
-          
+
           if (prefix !== 'ENCRYPTED' || version !== 'v1') {
             console.error(`Unsupported encryption version in file ${file} in ${dirName}`);
             failed++;
             continue;
           }
-          
+
           // 解码 Base64
           const salt = Buffer.from(saltB64, 'base64');
           const iv = Buffer.from(ivB64, 'base64');
           const authTag = Buffer.from(authTagB64, 'base64');
-          
+
           // 从恢复密钥派生加密密钥
           const key = deriveKeyFromRecovery(currentRecoveryKey, salt);
-          
+
           // AES-256-GCM 解密
           const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
           decipher.setAuthTag(authTag);
-          
+
           let decryptedContent = decipher.update(encryptedData, 'base64', 'utf8');
           decryptedContent += decipher.final('utf8');
-          
+
           // 写回文件（明文）
           fs.writeFileSync(filePath, decryptedContent, 'utf-8');
           decrypted++;
-          
+
           console.log(`[Encryption] Decrypted file in ${dirName}: ${file}`);
-          
+
           // 发送进度
           if (win) {
             win.webContents.send('encryption:progress', {
@@ -827,9 +839,9 @@ export function createEncryptionManager(deps) {
           failed++;
         }
       }
-      
+
       console.log(`[Encryption] Batch decryption completed: ${decrypted} decrypted, ${skipped} skipped, ${failed} failed`);
-      
+
       // 更新 meta.json 的加密状态
       try {
         const metaPath = path.join(databaseDir, 'meta.json');
@@ -843,17 +855,17 @@ export function createEncryptionManager(deps) {
       } catch (error) {
         console.error('Failed to update meta.json:', error);
       }
-      
-      return { 
-        success: true, 
+
+      return {
+        success: true,
         decrypted,
         failed,
         skipped
       };
     } catch (error) {
       console.error('Failed to decrypt all notes:', error);
-      return { 
-        success: false, 
+      return {
+        success: false,
         error: error.message
       };
     }
@@ -870,20 +882,20 @@ export function createEncryptionManager(deps) {
         // 未启用加密，返回原内容
         return { success: true, encrypted: content };
       }
-      
+
       // 生成独立的盐值和IV
       const salt = crypto.randomBytes(32);
       const iv = crypto.randomBytes(16);
-      
+
       // 从恢复密钥派生加密密钥
       const key = deriveKeyFromRecovery(currentRecoveryKey, salt);
-      
+
       // AES-256-GCM 加密
       const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
       let encrypted = cipher.update(content, 'utf8', 'base64');
       encrypted += cipher.final('base64');
       const authTag = cipher.getAuthTag();
-      
+
       // 格式化为: ENCRYPTED:v1:salt:iv:authTag:data
       const result = [
         'ENCRYPTED',
@@ -893,7 +905,7 @@ export function createEncryptionManager(deps) {
         authTag.toString('base64'),
         encrypted
       ].join(':');
-      
+
       return { success: true, encrypted: result };
     } catch (error) {
       console.error('Failed to encrypt note:', error);
@@ -911,39 +923,39 @@ export function createEncryptionManager(deps) {
         // 不是加密内容，直接返回
         return { success: true, decrypted: content };
       }
-      
+
       if (!encryptionEnabled || !currentRecoveryKey) {
         throw new Error('加密功能未启用或未解锁');
       }
-      
+
       // 解析加密格式: ENCRYPTED:v1:salt:iv:authTag:data
       const parts = content.split(':');
       if (parts.length < 6) {
         throw new Error('加密格式无效');
       }
-      
+
       const [prefix, version, saltB64, ivB64, authTagB64, ...encryptedParts] = parts;
       const encryptedData = encryptedParts.join(':'); // 处理内容中可能包含冒号的情况
-      
+
       if (prefix !== 'ENCRYPTED' || version !== 'v1') {
         throw new Error('不支持的加密版本');
       }
-      
+
       // 解码 Base64
       const salt = Buffer.from(saltB64, 'base64');
       const iv = Buffer.from(ivB64, 'base64');
       const authTag = Buffer.from(authTagB64, 'base64');
-      
+
       // 从恢复密钥派生加密密钥
       const key = deriveKeyFromRecovery(currentRecoveryKey, salt);
-      
+
       // AES-256-GCM 解密
       const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
       decipher.setAuthTag(authTag);
-      
+
       let decrypted = decipher.update(encryptedData, 'base64', 'utf8');
       decrypted += decipher.final('utf8');
-      
+
       return { success: true, decrypted };
     } catch (error) {
       console.error('Failed to decrypt note:', error);
@@ -952,7 +964,7 @@ export function createEncryptionManager(deps) {
   });
 
   console.log('Encryption IPC handlers registered (recovery key version)');
-  
+
   // 返回加密管理器实例
   return {
     isEnabled: () => encryptionEnabled,

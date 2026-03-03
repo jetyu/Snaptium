@@ -10,19 +10,19 @@
   <p>一款基于Electron开发的现代化跨平台桌面级笔记应用，数据本地存储，让数据始终安全可控。</p>
   
 [![Latest Release](https://img.shields.io/github/v/release/jetyu/NoteWizard?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases/latest)
+![GitHub Latest Pre-Release)](https://img.shields.io/github/v/release/jetyu/NoteWizard?include_prereleases&label=pre-release&logo=github)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20|%20Linux%20|%20macOS-blue?style=flat)]()
 [![Repo Size](https://img.shields.io/github/repo-size/jetyu/NoteWizard?style=flat)]()
 [![Last Commit](https://img.shields.io/github/last-commit/jetyu/NoteWizard?style=flat)]()
 [![Open Issues](https://img.shields.io/github/issues/jetyu/NoteWizard?style=flat)]()
 [![License](https://img.shields.io/github/license/jetyu/NoteWizard?style=flat)]()
 [![Downloads](https://img.shields.io/github/downloads/jetyu/NoteWizard/total?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases)
-
 </div>
 
 ## 功能特点
 - **极简界面**：简单纯粹无广告
 - **跨平台**：支持 Windows、macOS 和 Linux 系统
-- **便捷迁移**：支持NoteWizard专有格式(.nwp)完整导入导出，也支持Markdown(.md)格式导入导出
+- **便捷迁移**：支持NoteWizard专有格式(.nwp)完整导入导出，支持Markdown(.md)格式导入导出
 - **本地加密存储**：所有笔记数据可加密(AES-256-GCM算法)保存在本地，安全可控
 - **Markdown支持**：实时预览 Markdown 渲染效果
 - **AI智能辅助写作**：AI智能辅助写作，让您的写作更轻松(默认关闭)
@@ -31,7 +31,7 @@
 ## 界面预览
 **NoteWizard 快速上手**  
 > 提示: 本软件持续更新，以优化性能和用户体验。列出的功能仅供参考，可能随技术进步和需求变化而调整。
-![NoteWizard 快速上手](./doc/Quick_Start/QuickStart_zhCN.webp)
+![NoteWizard 快速上手](./docs/Quick_Start/QuickStart_zhCN.webp)
 
 ## 支持平台
 

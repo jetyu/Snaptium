@@ -1,3 +1,12 @@
+### [1.1.3] - 2026-03-06
+#### Fixed
+- Fixed incomplete translations in certain languages.
+- Fixed an issue where, in some cases, using a custom note save path could cause note encryption to fail.
+#### Improved
+- Improved the interaction experience of the note lock/unlock feature.
+- Improved the user experience of the preferences export workflow.
+- Improved the overall usability of the encryption and decryption process.
+
 ### [1.1.2] - 2026-02-27
 #### Fixed
 - Fixed a rendering issue introduced by the note lock feature

@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   prepare:
-    name: Prepare Version and Tag
+    name: Release Preparation 
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.versioning.outputs.version }}
@@ -30,7 +30,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Calculate Versioning
+      - name: Compute Release Info
         id: versioning
         run: |
           if [[ "${{ github.ref }}" == refs/tags/v* ]]; then
@@ -59,12 +59,10 @@ jobs:
               echo "::error::Tag $TAG is not on main, develop or feature branch. Build cancelled."
               exit 1
             fi
-
             echo "version=$VERSION" >> $GITHUB_OUTPUT
             echo "tag=$TAG" >> $GITHUB_OUTPUT
             echo "release_name=$TAG" >> $GITHUB_OUTPUT
           else
-            # 兼容 workflow_dispatch 手动触发情况
             VERSION=$(node -p "require('./package.json').version.split('-')[0]")
             DATE=$(date +'%y%m%d')
             VERSION="${VERSION}-dev.${DATE}"
@@ -75,15 +73,14 @@ jobs:
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
           fi
-
-      - name: Upload Release Notes
+      - name: Upload Release Notes Template File
         uses: actions/upload-artifact@v4
         with:
           name: release-notes
           path: .github/RELEASE_TEMPLATE/release_note.md
 
   build:
-    name: Build on ${{ matrix.os }}-${{ matrix.arch }}
+    name: Build on ${{ matrix.os }}
     needs: prepare
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
@@ -111,7 +108,6 @@ jobs:
               dist/*.dmg
               dist/*.zip
               dist/*.blockmap
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -129,11 +125,10 @@ jobs:
       - name: Set Version
         run: |
           npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
-
       - name: Lint
         run: npm run lint || true
 
-      - name: Clean dist folder
+      - name: Clean Dist folder
         run: npm run clean
 
       - name: Build for ${{ matrix.platform }}
@@ -144,16 +139,16 @@ jobs:
           ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
           USE_HARD_LINKS: false
 
-      - name: Upload artifacts
+      - name: Upload Package Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: NoteWizard-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
           path: ${{ matrix.artifact_pattern }}
           retention-days: 30
-          if-no-files-found: warn
+          if-no-files-found: error
 
   release:
-    name: Create GitHub Release
+    name: Release
     needs: [prepare, build]
     runs-on: ubuntu-latest
 
@@ -163,43 +158,35 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Download release notes
+      - name: Download Release Notes File
         if: needs.prepare.outputs.is_dev == 'true'
         uses: actions/download-artifact@v4
         with:
           name: release-notes
           path: .
 
-      - name: Prepare Official Notes
+      - name: Prepare Pre-Release Notes or Release Notes File
         run: |
           node scripts/generateReleaseNotes.js ${{ needs.prepare.outputs.tag }}
-          cp .github/RELEASE_TEMPLATE/release_note.md release_body.md
-
+          cp .github/RELEASE_TEMPLATE/release_note.md updated_note.md
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: Collect artifacts
+      - name: Release installers for all platforms
         run: |
           mkdir release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
 
-      - name: Update Dev Tag
-        if: needs.prepare.outputs.is_dev == 'true'
-        run: |
-          git config user.name github-actions
-          git config user.email github-actions@github.com
-          git tag -f dev
-          git push origin dev --force
-
-      - name: Create GitHub Release
+      - name: Generate GitHub Release Page
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ needs.prepare.outputs.tag }}
           name: ${{ needs.prepare.outputs.release_name }}
           prerelease: ${{ needs.prepare.outputs.prerelease }}
           make_latest: ${{ needs.prepare.outputs.make_latest }}
-          body_path: release_body.md
+          body_path: updated_note.md
+          files: release_files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
