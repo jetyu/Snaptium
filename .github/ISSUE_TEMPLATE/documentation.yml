@@ -8,7 +8,8 @@ body:
   - type: markdown
     attributes:
       value: |
-        ## Documentation Issue / 文档问题
+        ## Documentation Issue / 文档问题 
+        
         We welcome suggestions to improve the documentation and make it clearer and more accurate.
         欢迎提出文档改进建议，帮助我们让文档更清晰、更准确。
 
