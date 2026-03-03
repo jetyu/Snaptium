@@ -139,58 +139,83 @@ function setupEditorEventListeners(editor, aiAssistant) {
 
     // Sync: Editor -> Preview
     editor.on('scroll', () => {
-      if (isSyncingRight) return;
+      if (isSyncingRight || lineElementMap.length === 0) return;
 
       isSyncingLeft = true;
       clearSync();
 
       const scrollInfo = editor.getScrollInfo();
-      // Using 'local' coordinates is correct for CodeMirror
-      const lineNumber = editor.lineAtHeight(scrollInfo.top, 'local');
+      const topVisibleLine = editor.lineAtHeight(scrollInfo.top, 'local');
 
-      let targetOffset = -1;
+      // Find the two surrounding mapping points in the map
+      let upper = null;
+      let lower = null;
 
-      // Use binary search or findLast for efficiency
-      // Since map is sorted by line, we find the last item where item.line <= lineNumber
-      // For small arrays, simple reverse iteration is fast enough
-      for (let i = lineElementMap.length - 1; i >= 0; i--) {
-        if (lineElementMap[i].line <= lineNumber) {
-          targetOffset = lineElementMap[i].element.offsetTop;
+      for (let i = 0; i < lineElementMap.length; i++) {
+        if (lineElementMap[i].line <= topVisibleLine) {
+          upper = lineElementMap[i];
+        } else {
+          lower = lineElementMap[i];
           break;
         }
       }
 
-      if (targetOffset >= 0) {
-        previewContainer.scrollTop = targetOffset;
-      } else if (lineNumber === 0) {
+      if (!upper) {
+        // Above the first mapped element
         previewContainer.scrollTop = 0;
+      } else if (!lower) {
+        // Below the last mapped element
+        const lastEl = lineElementMap[lineElementMap.length - 1];
+        const lastOffset = lastEl.element.offsetTop;
+        previewContainer.scrollTop = lastOffset;
+      } else {
+        // Intermediate: apply linear interpolation
+        const lineDiff = lower.line - upper.line;
+        const offsetDiff = lower.offsetTop - upper.offsetTop;
+        const lineProgress = (topVisibleLine - upper.line) / lineDiff;
+
+        const interpolatedOffset = upper.offsetTop + (lineProgress * offsetDiff);
+        previewContainer.scrollTop = interpolatedOffset;
       }
     });
 
-    // Sync: Preview -> Editor
+    // sync: Preview -> Editor (Linear Interpolation)
     previewContainer.addEventListener('scroll', () => {
-      if (isSyncingLeft) return;
+      if (isSyncingLeft || lineElementMap.length === 0) return;
 
       isSyncingRight = true;
       clearSync();
 
       const scrollTop = previewContainer.scrollTop;
-      let targetLine = -1;
 
-      // Find the element that is at the top of the viewport
-      // We look for the last element whose offsetTop <= scrollTop + tolerance
-      for (let i = lineElementMap.length - 1; i >= 0; i--) {
-        if (lineElementMap[i].element.offsetTop <= scrollTop + 20) {
-          targetLine = lineElementMap[i].line;
+      let upper = null;
+      let lower = null;
+
+      for (let i = 0; i < lineElementMap.length; i++) {
+        if (lineElementMap[i].offsetTop <= scrollTop) {
+          upper = lineElementMap[i];
+        } else {
+          lower = lineElementMap[i];
           break;
         }
       }
 
-      if (targetLine >= 0) {
-        const coords = editor.charCoords({ line: targetLine, ch: 0 }, 'local');
-        editor.scrollTo(null, coords.top);
-      } else if (scrollTop === 0) {
+      if (!upper) {
         editor.scrollTo(null, 0);
+      } else if (!lower) {
+        const lastEl = lineElementMap[lineElementMap.length - 1];
+        const coords = editor.charCoords({ line: lastEl.line, ch: 0 }, 'local');
+        editor.scrollTo(null, coords.top);
+      } else {
+        const offsetDiff = lower.offsetTop - upper.offsetTop;
+        const lineDiff = lower.line - upper.line;
+        const offsetProgress = (scrollTop - upper.offsetTop) / offsetDiff;
+
+        const interpolatedLine = upper.line + (offsetProgress * lineDiff);
+        const coords = editor.charCoords({ line: Math.floor(interpolatedLine), ch: 0 }, 'local');
+
+        // Refine with fractional line height if needed, but floor is usually fine for CM5
+        editor.scrollTo(null, coords.top);
       }
     });
   }
