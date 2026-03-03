@@ -10,9 +10,9 @@ body:
       value: |
         ## Usage Question / 使用问题 
 
-        ⚠️ This template is for **usage questions only**.  
+        ⚠️ This template is for **usage questions** only.  
         If the software crashes, fails to start, or behaves incorrectly, please use the **Bug Report** template instead. 
-        ⚠️ 本模板仅用于“使用咨询”。 
+        ⚠️ 本模板仅用于 **使用咨询** 。 
         如果软件出现崩溃、无法启动或功能异常，请使用 **Bug Report** 模板。 
 
         Please describe your question clearly and provide sufficient context. 

@@ -11,9 +11,9 @@ body:
         ## Feature Enhancement / 功能改进 
 
         This template is for suggesting improvements to existing features only. 
-        If you are requesting a new feature, please use the "Feature Request" template.
+        If you are requesting a new feature, please use the **Feature Request** template.
         此模板仅用于提出对现有功能的改进建议。
-        如果是全新的功能需求，请使用 "Feature Request" 模板。
+        如果是全新的功能需求，请使用 **Feature Request** 模板。
 
   - type: dropdown
     id: os
