@@ -1,4 +1,4 @@
-name: build
+name: NoteWizard CI/CD
 
 on:
   push:
