@@ -68,12 +68,12 @@ jobs:
             echo "is_dev=false" >> $GITHUB_OUTPUT
             echo "prerelease=false" >> $GITHUB_OUTPUT
             echo "make_latest=true" >> $GITHUB_OUTPUT
-          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-b[0-9]+ ]]; then
+          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(b|r).*$ ]]; then
             echo "Beta Release (develop)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
-          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-a[0-9]+ ]]; then
+          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-a.*$ ]]; then
             echo "Alpha Release (feature)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
