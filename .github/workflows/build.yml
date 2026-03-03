@@ -85,7 +85,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "release_name=$TAG" >> $GITHUB_OUTPUT
-          fi
+
       - name: Upload Release Notes Template File
         uses: actions/upload-artifact@v4
         with:
