@@ -314,8 +314,7 @@ export function createExporter(dependencies) {
 
       // 如果有加密文件，创建临时目录并解密
       if (hasEncrypted && recoveryKey) {
-        tempDir = path.join(os.tmpdir(), `notewizard-export-${Date.now()}`);
-        fs.mkdirSync(tempDir, { recursive: true });
+        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'notewizard-export-'));
 
         // 处理 objects 目录
         const tempObjectsDir = path.join(tempDir, 'objects');
