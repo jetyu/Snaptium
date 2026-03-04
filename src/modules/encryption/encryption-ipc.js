@@ -126,6 +126,91 @@ export function createEncryptionManager(deps) {
     return path.join(app.getPath('documents'), 'NoteWizard', 'Database');
   };
 
+  /**
+   * 检查当前数据库目录是否已经存在加密数据。
+   * 优先读取 meta.json 的 encrypted 标记；若无标记，再扫描对象文件前缀。
+   * @returns {boolean}
+   */
+  const hasEncryptedDataInDatabase = () => {
+    try {
+      const databaseDir = getDatabaseDir();
+      if (!fs.existsSync(databaseDir)) {
+        return false;
+      }
+
+      const metaPath = path.join(databaseDir, 'meta.json');
+      if (fs.existsSync(metaPath)) {
+        try {
+          const metaContent = fs.readFileSync(metaPath, 'utf-8');
+          const meta = JSON.parse(metaContent);
+          if (meta?.encrypted === true) {
+            return true;
+          }
+        } catch (error) {
+          console.warn('[Encryption] Failed to parse meta.json while checking encryption state:', error);
+        }
+      }
+
+      const dirsToScan = [
+        path.join(databaseDir, 'objects'),
+        path.join(databaseDir, 'trash')
+      ];
+
+      for (const dirPath of dirsToScan) {
+        if (!fs.existsSync(dirPath)) {
+          continue;
+        }
+
+        const files = fs.readdirSync(dirPath).filter(f => f.endsWith('.md'));
+        for (const file of files) {
+          const filePath = path.join(dirPath, file);
+          try {
+            const content = fs.readFileSync(filePath, 'utf-8');
+            if (content.startsWith('ENCRYPTED:')) {
+              return true;
+            }
+          } catch (error) {
+            // 单文件读取失败不影响整体判断
+            continue;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[Encryption] Failed to detect encrypted files from database:', error);
+    }
+
+    return false;
+  };
+
+
+  /**
+   * 更新 meta.json
+   * @param {string} databaseDir - 数据库目录
+   * @param {(meta: Record<string, any>) => void} updater - 对 meta 的更新函数
+   * @param {Object} options - 选项
+   * @param {string} options.errorMessage - 错误日志前缀
+   * @returns {boolean} 是否更新成功
+   */
+  const updateMetaJson = (databaseDir, updater, options = {}) => {
+    const { errorMessage = 'Failed to update meta.json:' } = options;
+
+    try {
+      const metaPath = path.join(databaseDir, 'meta.json');
+      if (!fs.existsSync(metaPath)) {
+        return false;
+      }
+
+      const metaContent = fs.readFileSync(metaPath, 'utf-8');
+      const meta = JSON.parse(metaContent);
+      updater(meta);
+      fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
+      return true;
+    } catch (error) {
+      console.error(errorMessage, error);
+      return false;
+    }
+  };
+
   // 应用启动时尝试自动解锁
   const initEncryption = async () => {
     try {
@@ -164,7 +249,7 @@ export function createEncryptionManager(deps) {
       const metaPath = path.join(databaseDir, 'meta.json');
 
       if (!fs.existsSync(metaPath)) {
-          return;
+        return;
       }
 
       const metaContent = fs.readFileSync(metaPath, 'utf-8');
@@ -176,12 +261,12 @@ export function createEncryptionManager(deps) {
       }
 
       console.log('[Encryption] Found temp recovery key in meta.json, attempting emergency recovery...');
-      
+
       // 如果 meta.json 中保存了数据库路径，恢复 noteSavePath 配置
       if (meta.databasePath) {
         const savedPath = meta.databasePath;
         const currentNoteSavePath = preferencesManager.getPreference('noteSavePath');
-        
+
         // 如果当前配置的路径与 meta.json 中的路径不一致，恢复配置
         if (!currentNoteSavePath || currentNoteSavePath !== savedPath) {
           await preferencesManager.setPreference('noteSavePath', savedPath);
@@ -300,8 +385,9 @@ export function createEncryptionManager(deps) {
    */
   ipcMain.handle('encryption:is-enabled', async () => {
     try {
-      const config = await preferencesManager.getPreference('encryption');
-      encryptionEnabled = config?.enabled || false;
+      // 仅根据数据库真实加密状态判断，避免配置丢失/残留导致误判
+      encryptionEnabled = hasEncryptedDataInDatabase();
+
       return { success: true, enabled: encryptionEnabled };
     } catch (error) {
       console.error('Failed to check encryption status:', error);
@@ -381,22 +467,18 @@ export function createEncryptionManager(deps) {
       });
 
       // 将临时恢复密钥和数据库路径保存到 meta.json 用于紧急恢复
-      try {
-        const databaseDir = getDatabaseDir();
-        const metaPath = path.join(databaseDir, 'meta.json');
-        
-        if (fs.existsSync(metaPath)) {
-          const metaContent = fs.readFileSync(metaPath, 'utf-8');
-          const meta = JSON.parse(metaContent);
-          
-          // 保存临时恢复密钥和数据库路径
+      const databaseDir = getDatabaseDir();
+      const setupMetaUpdated = updateMetaJson(
+        databaseDir,
+        (meta) => {
+          // 保存临时恢复密钥和数据库路径，并标记数据库为加密状态
           meta.databasePath = path.dirname(databaseDir); // 保存工作区根路径
-          
-          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-          console.log('[Encryption] Saved tempRecoveryKey and databasePath to meta.json for emergency recovery');
-        }
-      } catch (error) {
-        console.error('[Encryption] Failed to save tempRecoveryKey to meta.json:', error);
+          meta.encrypted = true;
+        },
+        { errorMessage: '[Encryption] Failed to save tempRecoveryKey to meta.json:' }
+      );
+      if (setupMetaUpdated) {
+        console.log('[Encryption] Updated meta.json: encrypted = true');
       }
 
       encryptionEnabled = true;
@@ -426,10 +508,10 @@ export function createEncryptionManager(deps) {
     try {
       const config = await preferencesManager.getPreference('encryption');
 
-      if (!config || !config.enabled) {
+      if (!config) {
         return {
           success: false,
-          error: '加密功能未启用'
+          error: '获取配置失败，无法验证密钥，请使用Temp RecoveryKey进行验证！'
         };
       }
 
@@ -472,6 +554,18 @@ export function createEncryptionManager(deps) {
       await preferencesManager.setPreference('encryption', {
         enabled: false
       });
+
+      // 同步更新 meta.json 的加密状态，保证状态判断来源一致
+      const disableMetaUpdated = updateMetaJson(
+        getDatabaseDir(),
+        (meta) => {
+          meta.encrypted = false;
+        },
+        { errorMessage: 'Failed to update meta.json while disabling encryption:' }
+      );
+      if (disableMetaUpdated) {
+        console.log('[Encryption] Updated meta.json: encrypted = false');
+      }
 
       encryptionEnabled = false;
       currentRecoveryKey = null;
@@ -731,17 +825,14 @@ export function createEncryptionManager(deps) {
       console.log(`[Encryption] Batch encryption completed: ${encrypted} encrypted, ${skipped} skipped, ${failed} failed`);
 
       // 更新 meta.json 的加密状态
-      try {
-        const metaPath = path.join(databaseDir, 'meta.json');
-        if (fs.existsSync(metaPath)) {
-          const metaContent = fs.readFileSync(metaPath, 'utf-8');
-          const meta = JSON.parse(metaContent);
+      const encryptAllMetaUpdated = updateMetaJson(
+        databaseDir,
+        (meta) => {
           meta.encrypted = true;
-          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-          console.log('[Encryption] Updated meta.json: encrypted = true');
         }
-      } catch (error) {
-        console.error('Failed to update meta.json:', error);
+      );
+      if (encryptAllMetaUpdated) {
+        console.log('[Encryption] Updated meta.json: encrypted = true');
       }
 
       return {
@@ -868,17 +959,14 @@ export function createEncryptionManager(deps) {
       console.log(`[Encryption] Batch decryption completed: ${decrypted} decrypted, ${skipped} skipped, ${failed} failed`);
 
       // 更新 meta.json 的加密状态
-      try {
-        const metaPath = path.join(databaseDir, 'meta.json');
-        if (fs.existsSync(metaPath)) {
-          const metaContent = fs.readFileSync(metaPath, 'utf-8');
-          const meta = JSON.parse(metaContent);
+      const decryptAllMetaUpdated = updateMetaJson(
+        databaseDir,
+        (meta) => {
           meta.encrypted = false;
-          fs.writeFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-          console.log('[Encryption] Updated meta.json: encrypted = false');
         }
-      } catch (error) {
-        console.error('Failed to update meta.json:', error);
+      );
+      if (decryptAllMetaUpdated) {
+        console.log('[Encryption] Updated meta.json: encrypted = false');
       }
 
       return {
