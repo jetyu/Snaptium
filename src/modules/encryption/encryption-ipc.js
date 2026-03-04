@@ -249,7 +249,7 @@ export function createEncryptionManager(deps) {
       const metaPath = path.join(databaseDir, 'meta.json');
 
       if (!fs.existsSync(metaPath)) {
-          return;
+        return;
       }
 
       const metaContent = fs.readFileSync(metaPath, 'utf-8');
@@ -261,12 +261,12 @@ export function createEncryptionManager(deps) {
       }
 
       console.log('[Encryption] Found temp recovery key in meta.json, attempting emergency recovery...');
-      
+
       // 如果 meta.json 中保存了数据库路径，恢复 noteSavePath 配置
       if (meta.databasePath) {
         const savedPath = meta.databasePath;
         const currentNoteSavePath = preferencesManager.getPreference('noteSavePath');
-        
+
         // 如果当前配置的路径与 meta.json 中的路径不一致，恢复配置
         if (!currentNoteSavePath || currentNoteSavePath !== savedPath) {
           await preferencesManager.setPreference('noteSavePath', savedPath);
@@ -508,10 +508,10 @@ export function createEncryptionManager(deps) {
     try {
       const config = await preferencesManager.getPreference('encryption');
 
-      if (!config || !config.enabled) {
+      if (!config) {
         return {
           success: false,
-          error: '加密功能未启用'
+          error: '获取配置失败，无法验证密钥，请使用Temp RecoveryKey进行验证！'
         };
       }
 
