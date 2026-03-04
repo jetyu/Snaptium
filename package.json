@@ -146,7 +146,7 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "license": "src/assets/UserAgreement/USER_AGREEMENT.txt",
+      "license": "src/assets/useragreement/USER_AGREEMENT.txt",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "NoteWizard",

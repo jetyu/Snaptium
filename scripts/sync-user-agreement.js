@@ -7,7 +7,7 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
 
 const wikiRawUrl = 'https://raw.githubusercontent.com/wiki/jetyu/NoteWizard/08_Terms-of-Service.md';
-const outputPath = path.join(repoRoot, 'src', 'assets', 'UserAgreement', 'USER_AGREEMENT.txt');
+const outputPath = path.join(repoRoot, 'src', 'assets', 'useragreement', 'USER_AGREEMENT.txt');
 
 function markdownToText(markdown) {
   return markdown

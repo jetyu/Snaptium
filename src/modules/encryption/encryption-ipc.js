@@ -511,7 +511,7 @@ export function createEncryptionManager(deps) {
       if (!config) {
         return {
           success: false,
-          error: '获取配置失败，无法验证密钥，请使用Temp RecoveryKey进行验证！'
+          error: '读取配置文件失败，无法验证密钥！请使用 Temporary Emergency Recovery 方式进行验证！'
         };
       }
 
