@@ -38,7 +38,7 @@ async function main() {
 
     const markdown = await response.text();
     const text = markdownToText(markdown) + '\n';
-    await fs.writeFile(outputPath, text, 'utf8');
+    await fs.writeFile(outputPath, '\ufeff' + text, 'utf8');
     console.log(`Synced USER_AGREEMENT from wiki: ${wikiRawUrl}`);
     return;
   } catch (error) {
