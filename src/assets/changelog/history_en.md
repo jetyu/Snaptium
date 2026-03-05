@@ -1,11 +1,18 @@
+### [1.1.4] - 2026-03-08
+#### Fixed
+- Fixed an issue that caused key verification to fail when the configuration file was missing.
+- Fix a potential file system race condition when updating encryption metadata.
+#### Improved
+- Optimize the preview interface rendering mechanism to improve scrolling smoothness.
+
 ### [1.1.3] - 2026-03-04
 This update includes several important fixes and performance improvements, further enhancing the stability and security of the software.
 #### Fixed
 - Fixed an issue where custom note save paths could cause encryption failures in specific cases.
 - Fixed missing translations in certain languages.
 #### Improved
-- Refactored the note read/write mechanism by adopting asynchronous writes and improving the atomic write workflow, significantly enhancing system stability and data consistency.
-- Renamed locking feature: “Lock Note” is now “Read-Only Mode”, and “Unlock Note” is now “Edit Mode”.
+- Refactored the note read/write mechanism by adopting asynchronous writes and improving the atomic write workflow, ensuring data consistency.
+- Renamed locking/unlocking feature: “Lock Note” is now “Read-Only Mode”, and “Unlock Note” is now “Edit Mode”.
 - Improved note properties panel, now supporting copy of note information.
 - Optimized preference export workflow.
 - Enhanced encryption and decryption experience.

@@ -9,13 +9,14 @@
   "scripts": {
     "start": "electron .",
     "dev": "nodemon --watch main.js --watch src --exec electron .",
-    "dist": "node build.js",
-    "dist:win": "electron-builder --win --x64 --publish always",
-    "dist:mac": "electron-builder --mac --x64 --arm64 --publish always",
-    "dist:linux": "electron-builder --linux --publish always",
-    "dist:all": "electron-builder -wml",
+    "dist": "npm run sync:user-agreement && node build.js",
+    "dist:win": "npm run sync:user-agreement && electron-builder --win --x64 --publish always",
+    "dist:mac": "npm run sync:user-agreement && electron-builder --mac --x64 --arm64 --publish always",
+    "dist:linux": "npm run sync:user-agreement && electron-builder --linux --publish always",
+    "dist:all": "npm run sync:user-agreement && electron-builder -wml",
     "generate-icons": "node scripts/generate-icons.js",
-    "clean": "rimraf dist"
+    "clean": "rimraf dist",
+    "sync:user-agreement": "node scripts/sync-terms-of-service.js"
   },
   "dependencies": {
     "@material-design-icons/svg": "^0.14.15",
@@ -145,6 +146,7 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
+      "license": "src/assets/terms-of-service/USER_AGREEMENT.txt",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "NoteWizard",

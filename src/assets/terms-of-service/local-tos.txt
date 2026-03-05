@@ -1,0 +1,91 @@
+Terms of Service | 服务条款
+
+1. Acceptance of Terms | 接受协议
+当您下载、安装、访问或使用 NoteWizard (以下称为本应用)，即表示您已经阅读、理解并同意受本《用户协议》的全部条款约束。如果您不同意本协议的任何内容，请勿使用本应用。
+
+By downloading, installing, accessing, or using the NoteWizard App(called the Application), you confirm that you have read, understood, and agreed to be bound by these Terms of Service. If you do not agree to any part of these Terms, do not use the Application.
+
+2. Eligibility | 使用资格
+您确认并保证您具备签署并履行本协议的法律能力；若您未达到您所在司法辖区的法定成年年龄，您已获得父母或法定监护人的同意。
+
+You represent and warrant that you have the legal capacity to enter into this agreement, and if you are under the legal age of majority in your jurisdiction, you have obtained consent from a parent or legal guardian.
+
+3. Description of the Service | 服务说明
+NoteWizard 是一款本地优先的笔记与写作工具，提供本地笔记创建、编辑、搜索、导出等功能，并可通过第三方服务启用 AI 写作辅助。本应用默认不提供云端存储，也不会收集或上传您的内容。
+
+NoteWizard is a local-first note-taking and writing application. It includes features such as local note creation, editing, search, export, and optional AI-assisted writing via third-party services. The Application does not provide cloud-based storage by default and does not collect or upload your content.
+
+4. User Responsibilities | 用户责任
+您同意遵守所有适用法律，不得利用本应用从事违法、侵权或滥用行为。您不得对本应用进行逆向工程、篡改或滥用。您应妥善保管本地数据和第三方 API 密钥，并自行承担相关责任。
+
+You agree to comply with all applicable laws and not use the Application for unlawful, infringing, or abusive purposes. You will not reverse engineer, tamper with, or misuse the Application. You are solely responsible for safeguarding your local data and third-party API keys.
+
+5. Data Ownership | 数据所有权
+您对通过本应用创建的所有笔记、内容和数据拥有完整所有权。本应用不主张对您的内容拥有任何权利。除非您明确启用第三方服务，否则您的数据不会离开您的设备。
+
+You retain full ownership of all notes, content, and data you create using the Application. The Application does not claim any rights over your content. Your data remains on your device unless you explicitly enable third-party services.
+
+6. Third-Party Services | 第三方服务
+本应用集成第三方服务。所有数据交互均直接从您的设备发送至您配置的服务商。我们不对该类服务的可用性、准确性或安全性负责。您与第三方之间的任何纠纷由您自行承担。
+
+The Application may integrate with third-party services. All data exchanged is transmitted directly from your device to the provider you configure. We are not responsible for the availability, accuracy, or security of such services. Disputes with third parties are your sole responsibility.
+
+如您启用 AI 写作辅助功能，我们不会存储、转发或分析任何相关数据。您应自行承担所有风险，包括数据泄露、内容错误、服务中断或政策变更等。
+
+If you enable AI-assisted writing, we do not store, relay, or analyze any related data. You assume all risks, including data leakage, content errors, service interruptions, or policy changes.
+
+7. Intellectual Property & Open Source License | 知识产权与开源许可
+本应用整体（包括名称、界面、图标和文档）受知识产权法律保护。您获得非排他性、可撤销的使用权。未经许可，不得将本应用作为闭源商业产品重新分发。
+
+The Application as a whole (including its name, UI, icons, and documentation) is protected by intellectual property laws. You are granted a non-exclusive, revocable right to use it. Redistribution as a closed-source commercial product is prohibited without permission.
+
+本应用源代码遵循 MIT 协议开源发布。本协议不限制或替代该协议授予的任何权利。
+
+The source code is released under the MIT License. Nothing in these Terms limits or replaces the rights granted under that license.
+
+8. Updates and Modifications | 更新与修改
+我们可能随时更新本应用或本协议。重大变更将通过更新“最后更新”日期提示。您在变更后继续使用本应用，即视为接受更新内容。
+
+We may update the Application or these Terms at any time. Significant changes will be reflected in the “Last Updated” date. Continued use after changes constitutes acceptance.
+
+9. Termination | 协议终止
+我们可因任何原因（包括违反本协议）随时暂停或终止您对本应用的访问。您可通过卸载本应用终止协议。以下条款在协议终止后仍然有效：第 5、6、7、9、10、11、12 条。
+
+We may suspend or terminate your access at any time for any reason, including violation of these Terms. You may terminate by uninstalling the Application. The following sections will survive termination: 5, 6, 7, 9, 10, 11, 12.
+
+10. Disclaimer and Limitation of Liability | 免责声明与责任限制
+本应用按“现状”（AS IS）提供，不附带任何形式的明示或暗示保证，包括但不限于适销性、特定用途适用性、无错误或不中断运行的保证。
+
+The Application is provided “AS IS” without warranties of any kind, express or implied, including but not limited to warranties of merchantability, fitness for a particular purpose, or error-free or uninterrupted operation.
+
+在适用法律允许的最大范围内，开发者不对因使用或无法使用本应用而引起的任何直接、间接、附带、特殊、惩罚性或后果性损害承担责任，包括但不限于：
+
+数据丢失或损坏
+第三方服务故障或内容错误
+设备故障、操作失误或安全漏洞
+服务中断或功能不可用
+经济损失、收入损失、商业中断、预期利益损失或其他财务损害
+To the fullest extent permitted by applicable law, the developers shall not be liable for any direct, indirect, incidental, special, punitive, or consequential damages arising out of or in connection with your use of or inability to use the Application, including but not limited to:
+
+Loss or corruption of data
+Failures or inaccuracies in third-party services
+Device malfunction, user error, or security breaches
+Service interruptions or feature unavailability
+Financial loss, loss of income, business interruption, loss of anticipated profits, or other monetary damages
+即使我们已被告知可能发生此类损害，亦不构成责任承担。所有使用风险由您自行承担。
+
+Even if we have been advised of the possibility of such damages, we shall not be held liable. You assume all risks associated with your use of the Application.
+
+11. Governing Law and Dispute Resolution | 适用法律与争议解决
+本协议适用您所在司法辖区的法律，除非适用法律另有规定。如有争议，双方应先协商解决；协商不成的，提交至开发者所在地有管辖权的法院，除非法律另有要求。
+
+These Terms are governed by the laws of your jurisdiction unless otherwise required. Disputes shall first be resolved amicably. If unresolved, they shall be submitted to the competent court in the developer’s jurisdiction unless otherwise required by law.
+
+12. Miscellaneous | 附则
+本协议构成您与开发者之间的完整协议。如任何条款被认定为不可执行，其余条款仍保持有效。
+
+These Terms constitute the entire agreement between you and the developers. If any provision is found unenforceable, the remainder remains in effect.
+
+本协议提供多种语言版本。如中英文版本存在不一致，以中文版本为准，除非适用法律另有规定。
+
+These Terms provided in multiple languages. In the event of inconsistency, the Chinese version shall prevail unless otherwise required by law.
