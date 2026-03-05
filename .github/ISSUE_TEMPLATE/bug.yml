@@ -11,6 +11,7 @@ body:
         ## Bug Report / 报告缺陷 
 
         Thanks for reporting a bug. Please provide as much detail as possible to help us reproduce and fix the issue.
+        
         感谢你提交Bug，请尽可能提供详细信息，以帮助我们复现并修复该问题。
 
   - type: dropdown
