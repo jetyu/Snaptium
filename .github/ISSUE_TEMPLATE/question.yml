@@ -10,13 +10,12 @@ body:
       value: |
         ## Usage Question / 使用问题 
 
-        ⚠️ This template is for **usage questions** only.  
-        If the software crashes, fails to start, or behaves incorrectly, please use the [Bug Report](https://github.com/jetyu/NoteWizard/issues/new?template=bug.yml) template instead. 
-        Please describe your question clearly and provide sufficient context. 
+        This template is for **usage questions** only. Please describe your question clearly and provide sufficient context. 
+        If the software crashes, behaves incorrectly, please use the [Bug Report](https://github.com/jetyu/NoteWizard/issues/new?template=bug.yml) template.  
+              
+        本模板仅用于 **使用咨询** , 请清晰描述你的问题，并尽可能提供相关背景信息。 
+        如果软件出现崩溃、功能异常，请使用 [Bug Report](https://github.com/jetyu/NoteWizard/issues/new?template=bug.yml) 模板。 
         
-        ⚠️ 本模板仅用于 **使用咨询** 。 
-        如果软件出现崩溃、无法启动或功能异常，请使用 [Bug Report](https://github.com/jetyu/NoteWizard/issues/new?template=bug.yml) 模板。 
-        请清晰描述你的问题，并尽可能提供相关背景信息。 
 
   - type: dropdown
     id: os

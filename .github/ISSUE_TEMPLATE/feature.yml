@@ -10,10 +10,9 @@ body:
       value: |
         ## Feature Request / 功能需求 
 
-        Thanks for taking the time to suggest a new idea. 
-        Please provide as much detail as possible to help us understand and evaluate the feature. 
-        感谢你为项目提出新的想法。 
-        请尽量提供完整信息，这有助于我们更快理解和评估该功能。 
+        Thanks for suggesting a new feature request. Please provide as much detail as possible to help us understand and evaluate the feature.  
+        
+        感谢你为项目提出新的需求，请尽量提供完整信息，这有助于我们更快理解和评估该功能。 
         
   - type: dropdown
     id: os
