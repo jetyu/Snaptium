@@ -1,7 +1,7 @@
 ### [1.1.4] - 2026-03-08
 #### Fixed
 - Fixed an issue that caused key verification to fail when the configuration file was missing.
-- Fixed several known issues.
+- Fix a potential file system race condition when updating encryption metadata.
 #### Improved
 - Optimize the preview interface rendering mechanism to improve scrolling smoothness.
 
