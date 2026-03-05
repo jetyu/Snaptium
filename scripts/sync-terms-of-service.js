@@ -6,8 +6,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '..');
 
-const wikiRawUrl = 'https://raw.githubusercontent.com/wiki/jetyu/NoteWizard/08_Terms-of-Service.md';
-const outputPath = path.join(repoRoot, 'src', 'assets', 'useragreement', 'USER_AGREEMENT.txt');
+const wikiRawUrl = 'https://raw.githubusercontent.com/wiki/jetyu/NoteWizard/T01_Terms-of-Service.md';
+
+const outputPath = path.join(repoRoot, 'src', 'assets', 'terms-of-service', 'local-tos.txt');
 
 function markdownToText(markdown) {
   return markdown
@@ -39,12 +40,12 @@ async function main() {
     const markdown = await response.text();
     const text = markdownToText(markdown) + '\n';
     await fs.writeFile(outputPath, '\ufeff' + text, 'utf8');
-    console.log(`Synced USER_AGREEMENT from wiki: ${wikiRawUrl}`);
+    console.log(`Synced Terms of Service from wiki: ${wikiRawUrl}`);
     return;
   } catch (error) {
-    console.warn(`Failed to fetch wiki terms (${error.message}). Keeping local USER_AGREEMENT.`);
+    console.warn(`Failed to fetch wiki terms (${error.message}). Keeping local Terms of Service.`);
     if (!existing) {
-      throw new Error('No local USER_AGREEMENT.txt available as fallback.');
+      throw new Error('No local Terms of Service file available as fallback.');
     }
   }
 }

@@ -16,7 +16,7 @@
     "dist:all": "npm run sync:user-agreement && electron-builder -wml",
     "generate-icons": "node scripts/generate-icons.js",
     "clean": "rimraf dist",
-    "sync:user-agreement": "node scripts/sync-user-agreement.js"
+    "sync:user-agreement": "node scripts/sync-terms-of-service.js"
   },
   "dependencies": {
     "@material-design-icons/svg": "^0.14.15",
@@ -146,7 +146,7 @@
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
-      "license": "src/assets/useragreement/USER_AGREEMENT.txt",
+      "license": "src/assets/terms-of-service/USER_AGREEMENT.txt",
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "NoteWizard",

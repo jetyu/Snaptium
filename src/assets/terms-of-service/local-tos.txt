@@ -1,17 +1,9 @@
-Terms of Service | 用户协议
-更新版本：1.3
-最后更新：2026 年 1 月 27 日
-
-Version: 1.3
-Last Updated: January 27, 2026
-
-最终条款以 https://github.com/jetyu/NoteWizard/wiki/08_Terms-of-Service 发布版本为准。
-The final and controlling version is published at https://github.com/jetyu/NoteWizard/wiki/08_Terms-of-Service.
+Terms of Service | 服务条款
 
 1. Acceptance of Terms | 接受协议
-当您下载、安装、访问或使用本应用，即表示您已经阅读、理解并同意受本《用户协议》的全部条款约束。如果您不同意本协议的任何内容，请勿使用本应用。
+当您下载、安装、访问或使用 NoteWizard (以下称为本应用)，即表示您已经阅读、理解并同意受本《用户协议》的全部条款约束。如果您不同意本协议的任何内容，请勿使用本应用。
 
-By downloading, installing, accessing, or using the Application, you confirm that you have read, understood, and agreed to be bound by these Terms of Service. If you do not agree to any part of these Terms, do not use the Application.
+By downloading, installing, accessing, or using the NoteWizard App(called the Application), you confirm that you have read, understood, and agreed to be bound by these Terms of Service. If you do not agree to any part of these Terms, do not use the Application.
 
 2. Eligibility | 使用资格
 您确认并保证您具备签署并履行本协议的法律能力；若您未达到您所在司法辖区的法定成年年龄，您已获得父母或法定监护人的同意。
