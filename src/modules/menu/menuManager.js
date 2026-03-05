@@ -331,13 +331,13 @@ export function createMenuManager(deps) {
         {
           label: t("menu.help.privacyPolicy"),
           click: () => {
-            shell.openExternal("https://github.com/jetyu/NoteWizard/wiki/07_Privacy-Policy");
+            shell.openExternal("https://github.com/jetyu/NoteWizard/wiki/P01_Privacy-Policy");
           },
         },
         {
           label: t("menu.help.termsOfService"),
           click: () => {
-            shell.openExternal("https://github.com/jetyu/NoteWizard/wiki/08_Terms-of-Service");
+            shell.openExternal("https://github.com/jetyu/NoteWizard/wiki/T01_Terms-of-Service");
           },
         },
         {

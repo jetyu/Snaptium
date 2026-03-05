@@ -20,7 +20,7 @@ function escapeRegExp(str) {
 function getTag() {
   const raw = process.argv[2];
   if (!raw) {
-    console.error('Usage: node scripts/generateReleaseNotes.js <tag>');
+    console.error('Usage: node scripts/generate-release-notes.js <tag>');
     process.exit(1);
   }
 

@@ -145,6 +145,17 @@ function setupEditorEventListeners(editor, aiAssistant) {
       clearSync();
 
       const scrollInfo = editor.getScrollInfo();
+
+      if (scrollInfo.top <= 0) {
+        previewContainer.scrollTop = 0;
+        return;
+      }
+
+      if (scrollInfo.top + scrollInfo.clientHeight >= scrollInfo.height - 1) {
+        previewContainer.scrollTop = previewContainer.scrollHeight - previewContainer.clientHeight;
+        return;
+      }
+
       const topVisibleLine = editor.lineAtHeight(scrollInfo.top, 'local');
 
       // Find the two surrounding mapping points in the map
@@ -187,6 +198,16 @@ function setupEditorEventListeners(editor, aiAssistant) {
       clearSync();
 
       const scrollTop = previewContainer.scrollTop;
+
+      if (scrollTop <= 0) {
+        editor.scrollTo(null, 0);
+        return;
+      }
+
+      if (scrollTop + previewContainer.clientHeight >= previewContainer.scrollHeight - 1) {
+        editor.scrollTo(null, editor.getScrollInfo().height);
+        return;
+      }
 
       let upper = null;
       let lower = null;

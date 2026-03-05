@@ -180,7 +180,7 @@ jobs:
 
       - name: Prepare Pre-Release Notes or Release Notes File
         run: |
-          node scripts/generateReleaseNotes.js ${{ needs.prepare.outputs.tag }}
+          node scripts/generate-release-notes.js ${{ needs.prepare.outputs.tag }}
           cp .github/RELEASE_TEMPLATE/release_note.md updated_note.md
       - name: Download artifacts
         uses: actions/download-artifact@v4
