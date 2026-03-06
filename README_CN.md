@@ -29,9 +29,16 @@
 - **国际化**：支持全球19种语言及地区设置
 
 ## 界面预览
-**NoteWizard 快速上手**  
-> 提示: 本软件持续更新，以优化性能和用户体验。列出的功能仅供参考，可能随技术进步和需求变化而调整。
-![NoteWizard 快速上手](./docs/Quick_Start/QuickStart_zhCN.webp)
+#### 编辑模式
+![NoteWizard 编辑模式](./docs/Quick_Start/zh-CN/Edit-mode.jpg)
+#### 只读模式
+![NoteWizard 只读模式](./docs/Quick_Start/zh-CN/Read-mode.jpg)
+#### 首选项通用
+![NoteWizard 首选项通用](./docs/Quick_Start/zh-CN/General.jpg)
+#### 首选项安全
+![NoteWizard 首选项安全](./docs/Quick_Start/zh-CN/Security.jpg)
+#### 首选项AI配置
+![NoteWizard AI辅助写作](./docs/Quick_Start/zh-CN/AI-Config.jpg)
 
 ## 支持平台
 
