@@ -2,9 +2,10 @@
 #### Fixed
 - Fixed an issue that caused key verification to fail when the configuration file was missing.
 - Fixed an issue where the note read-only icon was not displayed in read-only mode.
-- Fixed an potential data inconsistency issue.
+- Fixed potential data inconsistency issue.
 #### Improved
 - Optimize the preview interface rendering mechanism to improve scrolling smoothness.
+- Enhanced context menu of editor. 
 
 ### [1.1.3] - 2026-03-04
 This update includes several important fixes and performance improvements, further enhancing the stability and security of the software.

@@ -1,4 +1,5 @@
 import * as vfs from './vfs.js';
+import { t } from '../i18n.js';
 
 // 跟踪展开的文件夹ID
 let expandedFolders = new Set();
@@ -50,6 +51,19 @@ function clearDragOverStyles() {
   document.querySelectorAll('.drag-over-before, .drag-over-after, .drag-over-inside').forEach(el => {
     el.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
   });
+}
+/**
+ * 只读模式图标
+ * @param {Object} node - 节点对象
+ * @returns {HTMLElement} 锁定图标元素
+ */
+function createLockIcon(node) {
+  const lockIcon = document.createElement('span');
+  lockIcon.className = 'lock-icon';
+  lockIcon.textContent = node.locked ? '🔐' : '';
+  lockIcon.setAttribute('data-i18n-title', 'readOnly.tooltip');
+  lockIcon.title = t('readOnly.tooltip');
+  return lockIcon;
 }
 
 /**
@@ -207,16 +221,11 @@ function buildTreeDom(parentId) {
     label.className = 'tree-label';
     label.textContent = node.name;
 
-    const lockIcon = document.createElement('span');
-    lockIcon.className = 'lock-icon';
-    lockIcon.textContent = node.locked ? '🔐' : '';
-    lockIcon.title = 'Locked,can not be modified';
-
     row.appendChild(icon);
     row.appendChild(label);
-    row.appendChild(lockIcon);
+    row.appendChild(createLockIcon(node));
     li.appendChild(row);
-
+    
     row.addEventListener('click', (e) => {
       // 处理多选
       handleNodeClick(node, e, row);
@@ -428,6 +437,7 @@ function renderTree() {
 
     row.appendChild(icon);
     row.appendChild(label);
+    row.appendChild(createLockIcon(rootNode));
     li.appendChild(row);
 
     row.addEventListener('click', (e) => {

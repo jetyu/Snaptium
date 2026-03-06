@@ -33,15 +33,15 @@
 ## Screenshots
 
 #### Edit mode
-![NoteWizard Edit mode](./docs/Quick_Start/en-US/Edit-mode.jpg)
-#### Read mode
-![NoteWizard Read mode](./docs/Quick_Start/en-US/Read-mode.jpg)
+![NoteWizard Edit mode](./docs/Screenshots/en-US/Edit-mode.jpg)
+#### Read-only mode
+![NoteWizard Read-only mode](./docs/Screenshots/en-US/Read-mode.jpg)
 #### General 
-![NoteWizard General](./docs/Quick_Start/en-US/General.jpg)
+![NoteWizard General](./docs/Screenshots/en-US/General.jpg)
 #### Security 
-![NoteWizard Security](./docs/Quick_Start/en-US/Security.jpg)
+![NoteWizard Security](./docs/Screenshots/en-US/Security.jpg)
 #### AI configuration
-![NoteWizard AI configuration](./docs/Quick_Start/en-US/AI-Config.jpg)
+![NoteWizard AI configuration](./docs/Screenshots/en-US/AI-Config.jpg)
 
 ## Supported Platforms
 

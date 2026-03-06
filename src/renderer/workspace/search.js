@@ -269,6 +269,7 @@ function initSearch(inputElement, treeContainer) {
   const clearBtn = document.createElement('button');
   clearBtn.className = 'search-clear-btn';
   clearBtn.textContent = '×';
+  clearBtn.setAttribute('data-i18n-title', 'search.clearSearch');
   clearBtn.title = t('search.clearSearch');
   clearBtn.style.display = 'none';
 

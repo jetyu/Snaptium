@@ -24,7 +24,14 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (schedule -> develop)
+        if: github.event_name == 'schedule'
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Checkout repository (non-schedule)
+        if: github.event_name != 'schedule'
         uses: actions/checkout@v4
 
       - name: Initialize CodeQL
