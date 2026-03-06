@@ -30,15 +30,15 @@
 
 ## 界面预览
 #### 编辑模式
-![NoteWizard 编辑模式](./docs/Quick_Start/zh-CN/Edit-mode.jpg)
+![NoteWizard 编辑模式](./docs/Screenshots/zh-CN/Edit-mode.jpg)
 #### 只读模式
-![NoteWizard 只读模式](./docs/Quick_Start/zh-CN/Read-mode.jpg)
-#### 首选项通用
-![NoteWizard 首选项通用](./docs/Quick_Start/zh-CN/General.jpg)
-#### 首选项安全
-![NoteWizard 首选项安全](./docs/Quick_Start/zh-CN/Security.jpg)
-#### 首选项AI配置
-![NoteWizard AI辅助写作](./docs/Quick_Start/zh-CN/AI-Config.jpg)
+![NoteWizard 只读模式](./docs/Screenshots/zh-CN/Read-mode.jpg)
+#### 通用
+![NoteWizard 通用](./docs/Screenshots/zh-CN/General.jpg)
+#### 安全
+![NoteWizard 安全](./docs/Screenshots/zh-CN/Security.jpg)
+#### AI配置
+![NoteWizard AI配置](./docs/Screenshots/zh-CN/AI-Config.jpg)
 
 ## 支持平台
 
