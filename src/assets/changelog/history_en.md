@@ -5,6 +5,7 @@
 - Fixed potential data inconsistency issue.
 #### Improved
 - Optimize the preview interface rendering mechanism to improve scrolling smoothness.
+- Enhanced context menu of editor. 
 
 ### [1.1.3] - 2026-03-04
 This update includes several important fixes and performance improvements, further enhancing the stability and security of the software.

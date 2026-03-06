@@ -2,6 +2,7 @@ import state from '../state.js';
 import { getAIAssistant } from '../ai-service/ai-assistant.js';
 import { renderPreview } from '../preview/preview.js';
 import { getNodeById } from '../workspace/vfs.js';
+import { t } from '../i18n.js';
 
 export function initializeEditor() {
   const editorElement = document.getElementById('editor');
@@ -378,6 +379,9 @@ function registerImagePasteHandler(editor) {
   wrapper.addEventListener('paste', handlePaste);
   wrapper.addEventListener('dragover', handleDragOver);
   wrapper.addEventListener('drop', handleDrop);
+
+  // 右键菜单
+  registerContextMenu(editor);
 }
 
 function insertImageMarkdown(editor, markdownPath) {
@@ -392,6 +396,80 @@ function insertImageMarkdown(editor, markdownPath) {
   doc.replaceSelection(contentToInsert, 'around');
   editor.focus();
   renderPreview();
+}
+
+function registerContextMenu(editor) {
+  if (!editor || typeof editor.getWrapperElement !== 'function') return;
+  const wrapper = editor.getWrapperElement();
+  if (!wrapper) return;
+
+  wrapper.addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+
+    const { electronAPI } = window;
+    if (!electronAPI || !electronAPI.contextMenu) {
+      console.warn('Missing electronAPI.contextMenu interface');
+      return;
+    }
+
+    const doc = editor.getDoc();
+    const hasSelection = doc.getSelection().length > 0;
+
+    // 检查剪贴板是否有内容
+    const canPaste = navigator.clipboard && typeof navigator.clipboard.readText === 'function';
+
+    const menuItems = [
+      {
+        label: t('contextMenu.copy'),
+        action: 'copy',
+        enabled: hasSelection
+      },
+      {
+        label: t('contextMenu.cut'),
+        action: 'cut',
+        enabled: hasSelection
+      },
+      {
+        label: t('contextMenu.paste'),
+        action: 'paste',
+        enabled: canPaste
+      }
+    ];
+
+    electronAPI.contextMenu.show(menuItems, (action) => {
+      switch (action) {
+        case 'copy':
+          if (hasSelection) {
+            const selectedText = doc.getSelection();
+            navigator.clipboard.writeText(selectedText).catch(err => {
+              console.error('Failed to copy:', err);
+            });
+          }
+          break;
+
+        case 'cut':
+          if (hasSelection) {
+            const selectedText = doc.getSelection();
+            navigator.clipboard.writeText(selectedText).then(() => {
+              doc.replaceSelection('');
+            }).catch(err => {
+              console.error('Failed to cut:', err);
+            });
+          }
+          break;
+
+        case 'paste':
+          navigator.clipboard.readText().then(text => {
+            if (text) {
+              doc.replaceSelection(text);
+            }
+          }).catch(err => {
+            console.error('Failed to paste:', err);
+          });
+          break;
+      }
+    });
+  });
 }
 
 export function onDomReadyInitEditor() {

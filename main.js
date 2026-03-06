@@ -291,6 +291,7 @@ ipcMain.on('context-menu:show', (event, { menuItems, channel }) => {
 
     return {
       label: item.label,
+      enabled: item.enabled === undefined ? true : item.enabled, // 默认启用，除非明确设置为 false
       click: () => {
         // 将选中的操作发送回渲染进程
         event.sender.send(channel, item.action);
