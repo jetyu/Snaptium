@@ -61,6 +61,7 @@ function createLockIcon(node) {
   const lockIcon = document.createElement('span');
   lockIcon.className = 'lock-icon';
   lockIcon.textContent = node.locked ? '🔐' : '';
+  lockIcon.setAttribute('data-i18n-title', 'readOnly.tooltip');
   lockIcon.title = t('readOnly.tooltip');
   return lockIcon;
 }
@@ -224,7 +225,7 @@ function buildTreeDom(parentId) {
     row.appendChild(label);
     row.appendChild(createLockIcon(node));
     li.appendChild(row);
-
+    
     row.addEventListener('click', (e) => {
       // 处理多选
       handleNodeClick(node, e, row);

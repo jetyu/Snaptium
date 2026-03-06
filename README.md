@@ -34,8 +34,8 @@
 
 #### Edit mode
 ![NoteWizard Edit mode](./docs/Screenshots/en-US/Edit-mode.jpg)
-#### Read mode
-![NoteWizard Read mode](./docs/Screenshots/en-US/Read-mode.jpg)
+#### Read-only mode
+![NoteWizard Read-only mode](./docs/Screenshots/en-US/Read-mode.jpg)
 #### General 
 ![NoteWizard General](./docs/Screenshots/en-US/General.jpg)
 #### Security 
