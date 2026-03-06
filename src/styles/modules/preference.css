@@ -26,7 +26,7 @@
     color: var(--text, #222);
     z-index: 1000;
     height: 85vh;
-    max-height: 700px;
+    max-height: 750px;
     margin: 20px;
     padding: 20px;
     border-radius: 8px;
@@ -36,6 +36,11 @@
     border: 1px solid var(--border);
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+}
+
+.modal-content * {
+    box-sizing: border-box;
 }
 
 .pref-header {
@@ -145,7 +150,7 @@
 }
 
 .pref-content {
-    padding-left: 12px;
+    padding: 0 12px;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -161,9 +166,6 @@
     max-width: 480px;
 }
 
-.pref-section {
-    margin-bottom: 16px;
-}
 
 .pref-section label {
     display: block;
@@ -222,10 +224,12 @@
 
 .pref-pane {
     display: none;
+    flex-direction: column;
+    gap: 12px;
 }
 
 .pref-pane.active {
-    display: block;
+    display: flex;
 }
 
 /* Pref hint text */
