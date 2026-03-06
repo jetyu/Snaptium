@@ -31,10 +31,17 @@
 - **Internationalization**: Supports 19 languages and regional settings worldwide
 
 ## Screenshots
-**NoteWizard Quick Start**  
-> Tips: software is continuously updated to enhance performance and user experience. Listed features are for reference only and may evolve with technological advancements and user needs.
 
-![NoteWizard Quick Start](./docs/Quick_Start/QuickStart_enUS.webp)
+#### Edit mode
+![NoteWizard Edit mode](./docs/Quick_Start/en-US/Edit-mode.jpg)
+#### Read mode
+![NoteWizard Read mode](./docs/Quick_Start/en-US/Read-mode.jpg)
+#### General 
+![NoteWizard General](./docs/Quick_Start/en-US/General.jpg)
+#### Security 
+![NoteWizard Security](./docs/Quick_Start/en-US/Security.jpg)
+#### AI configuration
+![NoteWizard AI configuration](./docs/Quick_Start/en-US/AI-Config.jpg)
 
 ## Supported Platforms
 
