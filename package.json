@@ -23,6 +23,7 @@
     "adm-zip": "^0.5.10",
     "codemirror": "^5.65.20",
     "electron-updater": "^6.3.6",
+    "electron-log": "^5.2.4",
     "icon-gen": "^5.0.0",
     "markdown-it": "^14.1.1",
     "mkdirp": "^3.0.1",

@@ -17,6 +17,7 @@ import { createAutoUpdaterManager } from "./src/modules/updater/auto-updater.js"
 import { createImportExportManager } from "./src/modules/import-export/import-export-ipc.js";
 import { createEncryptionManager } from "./src/modules/encryption/encryption-ipc.js";
 import { registerApiBridge } from "./src/modules/api-bridge/api-bridge.js";
+import { createLoggerManager } from "./src/modules/logger/index.js";
 
 const require = createRequire(import.meta.url);
 const AdmZip = require('adm-zip');
@@ -69,6 +70,16 @@ global.t = t;
 
 // ==================== 初始化管理器 ====================
 function initializeManagers() {
+  // 0. 创建日志管理器
+  managers.logger = createLoggerManager({
+    app,
+    dialog,
+    shell,
+    AdmZip
+  });
+
+  const appLogger = managers.logger.appLogger;
+
   // 0. 注册通用 API 桥接
   registerApiBridge({
     ipcMain,
@@ -201,6 +212,7 @@ function initializeManagers() {
     handleManualUpdateCheck: async () => {
       await managers.updater.checkForUpdates();
     },
+    loggerManager: managers.logger,
     __dirname
   });
 
@@ -216,6 +228,8 @@ function initializeManagers() {
     closeAllWindows: () => managers.window.closeAllWindows(),
     __dirname
   });
+
+  appLogger.info("NoteWizard managers initialized");
 }
 
 // ==================== 业务相关 IPC 处理器 ====================
@@ -341,7 +355,7 @@ app.whenReady().then(() => {
     }
   })();
 
-  console.log('NoteWizard Started');
+  managers.logger?.appLogger.info("NoteWizard started");
 });
 
 // ==================== 应用事件 ====================
@@ -353,20 +367,9 @@ app.on('window-all-closed', () => {
   }
 });
 
-// 未捕获的异常处理
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
-  dialog.showErrorBox('Application Error', 'Unhandled error occurred: ' + error.message);
-});
-
-// 未处理的 Promise 拒绝
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Promise rejection:', reason);
-  dialog.showErrorBox('Promise Error', 'Unhandled Promise rejection: ' + (reason instanceof Error ? reason.message : String(reason)));
-});
-
 // 应用即将退出
 app.on('will-quit', (event) => {
-  console.log('NoteWizard will quit');
+  managers.logger?.appLogger.info('NoteWizard will quit');
+  managers.logger?.destroy();
   // 可以在这里执行清理操作
 });
