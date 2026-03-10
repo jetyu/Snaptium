@@ -3,7 +3,7 @@ name: NoteWizard Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*.*'
   workflow_dispatch:
 
 permissions:
@@ -63,17 +63,18 @@ jobs:
           if echo "$BRANCHES" | grep -qE "origin/feature/"; then
             IS_FEATURE=true
           fi
-          if [[ "$IS_MAIN" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+          
+          if [[ "$IS_MAIN" == true && "$VERSION" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
             echo "Stable Release (main)"
             echo "is_dev=false" >> $GITHUB_OUTPUT
             echo "prerelease=false" >> $GITHUB_OUTPUT
             echo "make_latest=true" >> $GITHUB_OUTPUT
-          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-(b|r).*$ ]]; then
-            echo "Beta Release (develop)"
+          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^v[0-9]+(\.[0-9]+){1,2}-[bBrR].*$ ]]; then
+            echo "Beta/RC Release (develop)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
-          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-a.*$ ]]; then
+          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^v[0-9]+(\.[0-9]+){1,2}-[aA].*$ ]]; then
             echo "Alpha Release (feature)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
@@ -85,7 +86,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "release_name=$TAG" >> $GITHUB_OUTPUT
-
+          
       - name: Upload Release Notes Template File
         uses: actions/upload-artifact@v4
         with:
