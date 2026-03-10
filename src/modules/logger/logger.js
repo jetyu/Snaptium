@@ -1,5 +1,5 @@
 import * as fs from "node:fs";
-import log from "electron-log/main";
+import log from "electron-log";
 import { getLogDirectory, getLogFileName } from "./config.js";
 
 export function createGlobalLogger(app) {
@@ -21,3 +21,4 @@ export function createGlobalLogger(app) {
     logDir
   };
 }
+
