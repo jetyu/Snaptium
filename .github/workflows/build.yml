@@ -3,7 +3,7 @@ name: NoteWizard Release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - 'v*'
   workflow_dispatch:
 
 permissions:
