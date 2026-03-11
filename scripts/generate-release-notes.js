@@ -37,7 +37,8 @@ function extractSection(history, version) {
 
   const match = history.match(headingRegex);
   if (!match || match.index === undefined) {
-    throw new Error(`Changelog entry not found for version ${version}`);
+    console.warn(`Changelog entry not found for version ${version}`);
+    return null;
   }
 
   const start = match.index + match[0].length;
@@ -94,16 +95,11 @@ function main() {
 
   const history = readFileSync(HISTORY_PATH, 'utf8');
 
-  let section;
-  try {
-    section = extractSection(history, version);
-  } catch (err) {
-    if (isPreRelease) {
-      console.log(`Fallback to base version ${baseVersion}`);
-      section = extractSection(history, baseVersion);
-    } else {
-      throw err;
-    }
+  let section = extractSection(history, version);
+
+  if (!section && isPreRelease) {
+    console.log(`Fallback to base version ${baseVersion}`);
+    section = extractSection(history, baseVersion);
   }
 
   let template = readFileSync(TEMPLATE_PATH, 'utf8');

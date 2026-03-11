@@ -55,7 +55,7 @@ export function createImporter(dependencies) {
         fs.rmSync(tempDir, { recursive: true, force: true });
       }
     } catch (error) {
-      logger?.warn('NoteWizard Importer: Failed to clean up temp directory:', error);
+      logger?.warn('NoteWizard Importer: Failed to clean up temp dir:', error);
     }
   }
 
@@ -214,7 +214,7 @@ export function createImporter(dependencies) {
 
         // 检查节点 ID 是否已存在（避免重复导入文件夹等）
         if (existingNodeIds.has(node.id)) {
-          logger?.info(`NoteWizard Importer: Skipped existing node: ${node.id} (${node.name})`);
+          logger?.info(`NoteWizard Importer: Skipped Node ID:[${node.id}] Note Name:[${node.name}]`);
           skippedCount++;
           // 如果是笔记文件，单独统计
           if (node.type === 'file') {
