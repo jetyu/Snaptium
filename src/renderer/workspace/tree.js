@@ -575,6 +575,8 @@ function startInlineRename(nodeId) {
 
   const li = document.querySelector(`.tree-item[data-node-id="${nodeId}"]`);
   if (!li) return;
+  const row = li.querySelector('.tree-row');
+  if (!row) return;
   const label = li.querySelector('.tree-label');
   if (!label) return;
   const node = vfs.getNodeById(nodeId);
@@ -594,6 +596,10 @@ function startInlineRename(nodeId) {
   // 替换 label
   label.style.display = 'none';
   label.after(input);
+
+  // 重命名时禁止该行拖拽，避免鼠标拖动文本时触发拖拽而无法选择部分文字
+  const originalDraggable = row.draggable;
+  row.draggable = false;
 
   // 确保输入框可交互
   input.style.position = 'relative';
@@ -617,8 +623,13 @@ function startInlineRename(nodeId) {
     const newName = (input.value || '').trim();
     input.removeEventListener('keydown', onKey);
     input.removeEventListener('blur', onBlur);
+    input.removeEventListener('mousedown', stopPropagation);
+    input.removeEventListener('click', stopPropagation);
+    input.removeEventListener('dblclick', stopPropagation);
+    input.removeEventListener('dragstart', preventDragStart);
     input.parentNode && input.parentNode.removeChild(input);
     label.style.display = '';
+    row.draggable = originalDraggable;
     if (newName && newName !== node.name) {
       if (handlers.onInlineRenameCommit) handlers.onInlineRenameCommit(node, newName);
     }
@@ -628,8 +639,13 @@ function startInlineRename(nodeId) {
     committed = true;
     input.removeEventListener('keydown', onKey);
     input.removeEventListener('blur', onBlur);
+    input.removeEventListener('mousedown', stopPropagation);
+    input.removeEventListener('click', stopPropagation);
+    input.removeEventListener('dblclick', stopPropagation);
+    input.removeEventListener('dragstart', preventDragStart);
     input.parentNode && input.parentNode.removeChild(input);
     label.style.display = '';
+    row.draggable = originalDraggable;
     // 清除当前重命名状态
     if (currentRename.nodeId === nodeId) {
       currentRename = { nodeId: null, cancel: null };
@@ -645,6 +661,8 @@ function startInlineRename(nodeId) {
     }
   };
   const onBlur = () => commit();
+  const stopPropagation = (e) => e.stopPropagation();
+  const preventDragStart = (e) => e.preventDefault();
   // 保存当前重命名状态
   currentRename = {
     nodeId: nodeId,
@@ -653,6 +671,10 @@ function startInlineRename(nodeId) {
 
   input.addEventListener('keydown', onKey);
   input.addEventListener('blur', onBlur);
+  input.addEventListener('mousedown', stopPropagation);
+  input.addEventListener('click', stopPropagation);
+  input.addEventListener('dblclick', stopPropagation);
+  input.addEventListener('dragstart', preventDragStart);
 }
 
 /**
