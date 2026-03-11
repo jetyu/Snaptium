@@ -19,7 +19,7 @@ import { calculateFileHash } from "../../utils/fileHashUtils.js";
  * @returns {Object} 导入管理器实例
  */
 export function createImporter(dependencies) {
-  const { app, dialog, getPreference, t, AdmZip } = dependencies;
+  const { app, dialog, getPreference, t, AdmZip, logger } = dependencies;
 
   /**
    * 获取数据库目录路径
@@ -55,7 +55,7 @@ export function createImporter(dependencies) {
         fs.rmSync(tempDir, { recursive: true, force: true });
       }
     } catch (error) {
-      console.warn('[Importer] Failed to clean up temp directory:', error);
+      logger?.warn('NoteWizard Importer: Failed to clean up temp directory:', error);
     }
   }
 
@@ -69,15 +69,15 @@ export function createImporter(dependencies) {
     const nodesPath = path.join(tempDir, 'nodes.jsonl');
 
     if (!fs.existsSync(manifestPath)) {
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         error: t('import.notewizard.error.invalidPackage')
       };
     }
 
     if (!fs.existsSync(nodesPath)) {
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         error: t('import.notewizard.error.noNodes')
       };
     }
@@ -86,8 +86,8 @@ export function createImporter(dependencies) {
       const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));
       return { valid: true, manifest };
     } catch (error) {
-      return { 
-        valid: false, 
+      return {
+        valid: false,
         error: t('import.notewizard.error.invalidManifest')
       };
     }
@@ -116,7 +116,7 @@ export function createImporter(dependencies) {
         const node = JSON.parse(line);
         if (node.contentId) {
           contentIds.add(node.contentId);
-          
+
           // 计算现有文件的哈希值
           const filePath = path.join(objectsDir, `${node.contentId}.md`);
           const hash = calculateFileHash(filePath);
@@ -125,7 +125,7 @@ export function createImporter(dependencies) {
           }
         }
       } catch (error) {
-        console.warn('[Importer] Failed to parse node:', error);
+        logger?.error('NoteWizard Importer: Failed to parse node 1:', error);
       }
     }
 
@@ -145,7 +145,7 @@ export function createImporter(dependencies) {
 
     let counter = 1;
     let newId = `${originalId}_${counter}`;
-    
+
     while (existingIds.has(newId)) {
       counter++;
       newId = `${originalId}_${counter}`;
@@ -177,7 +177,7 @@ export function createImporter(dependencies) {
           nodeIds.add(node.id);
         }
       } catch (error) {
-        console.warn('[Importer] Failed to parse node:', error);
+        logger?.error('NoteWizard Importer: Failed to parse node 2: ', error);
       }
     }
 
@@ -211,10 +211,10 @@ export function createImporter(dependencies) {
     for (const line of lines) {
       try {
         const node = JSON.parse(line);
-        
+
         // 检查节点 ID 是否已存在（避免重复导入文件夹等）
         if (existingNodeIds.has(node.id)) {
-          console.log(`[Importer] Skipped existing node: ${node.id} (${node.name})`);
+          logger?.info(`NoteWizard Importer: Skipped existing node: ${node.id} (${node.name})`);
           skippedCount++;
           // 如果是笔记文件，单独统计
           if (node.type === 'file') {
@@ -222,35 +222,35 @@ export function createImporter(dependencies) {
           }
           continue;
         }
-        
+
         if (node.contentId) {
           const originalId = node.contentId;
-          
+
           // 检查 contentId 是否冲突
           if (existingIds.has(originalId)) {
             // 计算导入文件的哈希值
             const importFilePath = path.join(tempObjectsDir, `${originalId}.md`);
             const importHash = calculateFileHash(importFilePath);
-            
+
             // 获取现有文件的哈希值
             const existingHash = hashMap.get(originalId);
-            
+
             // 如果哈希值相同，说明内容完全一致，跳过导入
             if (importHash && existingHash && importHash === existingHash) {
-              console.log(`[Importer] Skipped duplicate content: ${originalId} (${node.name})`);
+              logger?.info(`NoteWizard Importer: Skipped duplicate content: ${originalId} (${node.name})`);
               skippedNodes.push(node);
               skippedCount++;
               skippedNoteCount++;
               continue; // 跳过此节点
             }
-            
+
             // 内容不同，生成新的 contentId
             const newId = generateUniqueContentId(originalId, existingIds);
             contentIdMap.set(originalId, newId);
             node.contentId = newId;
             conflictCount++;
             existingIds.add(newId);
-            
+
             // 更新哈希映射
             if (importHash) {
               hashMap.set(newId, importHash);
@@ -258,7 +258,7 @@ export function createImporter(dependencies) {
           } else {
             // 没有冲突，直接添加
             existingIds.add(originalId);
-            
+
             // 计算并保存哈希值
             const importFilePath = path.join(tempObjectsDir, `${originalId}.md`);
             const importHash = calculateFileHash(importFilePath);
@@ -276,17 +276,16 @@ export function createImporter(dependencies) {
             activeCount++;
           }
         }
-
         processedNodes.push(node);
       } catch (error) {
-        console.warn('[Importer] Failed to parse node:', error);
+        logger?.error('NoteWizard Importer: Failed to parse node 3:', error);
       }
     }
 
-    return { 
-      processedNodes, 
-      contentIdMap, 
-      conflictCount, 
+    return {
+      processedNodes,
+      contentIdMap,
+      conflictCount,
       skippedCount,
       skippedNoteCount,
       skippedNodes,
@@ -358,7 +357,7 @@ export function createImporter(dependencies) {
   function mergeNodes(processedNodes, databaseDir) {
     const nodesPath = path.join(databaseDir, 'nodes.jsonl');
     const newLines = processedNodes.map(node => JSON.stringify(node));
-    
+
     // 追加到现有文件
     fs.appendFileSync(nodesPath, '\n' + newLines.join('\n'), 'utf-8');
   }
@@ -375,8 +374,8 @@ export function createImporter(dependencies) {
       // 检查数据库目录
       const databaseDir = getDatabaseDir();
       if (!databaseDir) {
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: t('import.notewizard.error.noWorkspace')
         };
       }
@@ -389,21 +388,21 @@ export function createImporter(dependencies) {
       const { filePaths, canceled } = await dialog.showOpenDialog(win, {
         title: t('import.notewizard.dialog.title'),
         filters: [
-          { 
-            name: t('import.notewizard.dialog.filterName'), 
-            extensions: ['nwp'] 
+          {
+            name: t('import.notewizard.dialog.filterName'),
+            extensions: ['nwp']
           },
-          { 
-            name: t('import.notewizard.dialog.allFiles'), 
-            extensions: ['*'] 
+          {
+            name: t('import.notewizard.dialog.allFiles'),
+            extensions: ['*']
           }
         ],
         properties: ['openFile']
       });
 
       if (canceled || filePaths.length === 0) {
-        return { 
-          success: false, 
+        return {
+          success: false,
           cancelled: true
         };
       }
@@ -423,15 +422,15 @@ export function createImporter(dependencies) {
 
       // 获取现有的 contentId 和哈希映射
       const { contentIds: existingIds, hashMap } = getExistingContentIds(databaseDir);
-      
+
       // 获取现有的节点 ID 集合
       const existingNodeIds = getExistingNodeIds(databaseDir);
 
       // 处理节点数据（包含去重逻辑）
-      const { 
-        processedNodes, 
-        contentIdMap, 
-        conflictCount, 
+      const {
+        processedNodes,
+        contentIdMap,
+        conflictCount,
         skippedCount,
         skippedNoteCount,
         skippedNodes,
@@ -458,7 +457,7 @@ export function createImporter(dependencies) {
       mergeNodes(processedNodes, databaseDir);
 
       const totalNotes = activeCount + trashedCount;
-      console.log(`[Importer] Successfully imported ${totalNotes} notes, ${conflictCount} conflicts renamed, ${skippedNoteCount} duplicate notes skipped`);
+      logger?.info(`Successfully imported ${totalNotes} Notewizard Package notes, ${conflictCount} conflicts renamed, ${skippedNoteCount} duplicate notes skipped`);
 
       return {
         success: true,
@@ -470,10 +469,10 @@ export function createImporter(dependencies) {
         manifest: validation.manifest
       };
     } catch (error) {
-      console.error('[Importer] Import failed:', error);
-      return { 
-        success: false, 
-        error: error.message 
+      logger?.error('NoteWizard Importer: Import failed:', error);
+      return {
+        success: false,
+        error: error.message
       };
     } finally {
       // 清理临时目录

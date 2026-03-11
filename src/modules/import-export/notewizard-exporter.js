@@ -18,7 +18,7 @@ import { verifyRecoveryKeyHash, decryptContent } from "../encryption/encryption-
  * @returns {Object} 导出管理器实例
  */
 export function createExporter(dependencies) {
-  const { app, dialog, getPreference, t, AdmZip, ipcMain } = dependencies;
+  const { app, dialog, getPreference, t, AdmZip, ipcMain, logger } = dependencies;
 
   /**
    * 获取数据库目录路径
@@ -177,7 +177,7 @@ export function createExporter(dependencies) {
       // 使用公共函数验证
       return verifyRecoveryKeyHash(recoveryKey, config.recoveryKeyHash);
     } catch (error) {
-      console.error('Failed to verify recovery key:', error);
+      logger?.error('Failed to verify recovery key:', error);
       return false;
     }
   }
@@ -208,13 +208,15 @@ export function createExporter(dependencies) {
           const decryptedContent = decryptContent(content, recoveryKey);
           fs.writeFileSync(targetFile, decryptedContent, 'utf-8');
           decrypted++;
+          logger?.info(`NoteWizard Exporter: Successfully decrypted file: ${targetFile}`);
         } else {
           // 非加密文件，直接复制
           fs.copyFileSync(sourceFile, targetFile);
           copied++;
+          logger?.info(`NoteWizard Exporter: Successfully copied file: ${targetFile}`);
         }
       } catch (error) {
-        console.error(`Failed to process file ${file}:`, error);
+        logger?.error(`NoteWizard Exporter: Failed to process file ${file}:`, error);
         failed++;
       }
     }
@@ -327,15 +329,15 @@ export function createExporter(dependencies) {
           fs.mkdirSync(tempTrashDir, { recursive: true });
           const trashDecryptResult = decryptFilesToTemp(trashDir, tempTrashDir, recoveryKey);
 
-          console.log(`[Exporter] Decryption result: Objects(${objectsDecryptResult.decrypted}) Trash(${trashDecryptResult.decrypted})`);
+          logger?.info(`NoteWizard Exporter: Decryption result: Objects(${objectsDecryptResult.decrypted}) Trash(${trashDecryptResult.decrypted})`);
 
           if (objectsDecryptResult.failed > 0 || trashDecryptResult.failed > 0) {
-            console.warn(`[Exporter] Some files failed to decrypt: Objects(${objectsDecryptResult.failed}) Trash(${trashDecryptResult.failed})`);
+            logger?.warn(`NoteWizard Exporter: Some files failed to decrypt: Objects(${objectsDecryptResult.failed}) Trash(${trashDecryptResult.failed})`);
           }
         } else {
-          console.log(`[Exporter] Decryption result: Objects(${objectsDecryptResult.decrypted})`);
+          logger?.info(`NoteWizard Exporter: Decryption result: Objects(${objectsDecryptResult.decrypted})`);
           if (objectsDecryptResult.failed > 0) {
-            console.warn(`[Exporter] Some files failed to decrypt: Objects(${objectsDecryptResult.failed})`);
+            logger?.warn(`NoteWizard Exporter: Some files failed to decrypt: Objects(${objectsDecryptResult.failed})`);
           }
         }
       }
@@ -378,6 +380,8 @@ export function createExporter(dependencies) {
       // 写入 ZIP 文件
       zip.writeZip(filePath);
 
+      logger?.info(`Successfully exported  ${filePath} with ${noteStats.total} NoteWizard Package notes`);
+
       return {
         success: true,
         filePath: filePath,
@@ -386,7 +390,7 @@ export function createExporter(dependencies) {
         trashedNotes: noteStats.trashed
       };
     } catch (error) {
-      console.error('[Exporter] Export failed:', error);
+      logger?.error('NoteWizard Exporter: Export failed:', error);
       return {
         success: false,
         error: error.message
@@ -396,9 +400,9 @@ export function createExporter(dependencies) {
       if (tempDir && fs.existsSync(tempDir)) {
         try {
           fs.rmSync(tempDir, { recursive: true, force: true });
-          console.log('[Exporter] Temporary directory cleaned up');
+          logger?.info('NoteWizard Exporter: Temporary directory cleaned up');
         } catch (error) {
-          console.error('[Exporter] Failed to clean up temporary directory:', error);
+          logger?.error('NoteWizard Exporter: Failed to clean up temporary directory:', error);
         }
       }
     }

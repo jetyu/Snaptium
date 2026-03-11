@@ -17,7 +17,7 @@ import { verifyRecoveryKeyHash, decryptContent } from "../encryption/encryption-
  * @returns {Object} Markdown 导出器实例
  */
 export function createMarkdownExporter(dependencies) {
-  const { dialog, getPreference, t, ipcMain } = dependencies;
+  const { dialog, getPreference, t, ipcMain, logger } = dependencies;
 
   /**
    * 获取数据库目录路径
@@ -119,7 +119,7 @@ export function createMarkdownExporter(dependencies) {
         }
       }
     } catch (error) {
-      console.error('Error scanning for encrypted files:', error);
+      logger?.error('Error scanning for encrypted files:', error);
     }
 
     return false;
@@ -161,7 +161,7 @@ export function createMarkdownExporter(dependencies) {
 
       return verifyRecoveryKeyHash(recoveryKey, config.recoveryKeyHash);
     } catch (error) {
-      console.error('Failed to verify recovery key:', error);
+      logger?.error('Failed to verify recovery key:', error);
       return false;
     }
   }
@@ -197,17 +197,21 @@ export function createMarkdownExporter(dependencies) {
             if (content.startsWith('ENCRYPTED:')) {
               const decryptedContent = decryptContent(content, recoveryKey);
               fs.writeFileSync(destPath, decryptedContent, 'utf-8');
+              logger?.info(`Successfully exported Markdown file (decrypted): ${destPath}`);
             } else {
               fs.copyFileSync(srcPath, destPath);
+              logger?.info(`Successfully exported Markdown file (plain): ${destPath}`);
             }
           } catch (error) {
-            console.error(`Failed to process note ${entry.name}:`, error);
+            logger?.error(`Failed to process note ${entry.name}:`, error);
             // 失败时复制原文件作为兜底，或跳过
             fs.copyFileSync(srcPath, destPath);
+            logger?.info(`Successfully exported Markdown file (fallback): ${destPath}`);
           }
         } else {
           // 普通复制
           fs.copyFileSync(srcPath, destPath);
+          logger?.info(`Successfully exported Markdown file (normal copy): ${destPath}`);
         }
       }
     }
@@ -295,7 +299,7 @@ export function createMarkdownExporter(dependencies) {
       const destImagesDir = path.join(exportDir, 'images');
       copyDirectory(srcImagesDir, destImagesDir);
 
-      console.log(`[MarkdownExporter] Successfully exported ${noteCount} notes to ${exportDir}`);
+      logger?.info(`Successfully exported ${noteCount} notes to ${exportDir}`);
 
       return {
         success: true,
@@ -303,7 +307,7 @@ export function createMarkdownExporter(dependencies) {
         noteCount: noteCount
       };
     } catch (error) {
-      console.error('[MarkdownExporter] Export failed:', error);
+      logger?.error('Export failed:', error);
       return {
         success: false,
         error: error.message

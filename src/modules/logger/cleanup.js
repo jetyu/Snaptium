@@ -13,6 +13,7 @@ export function cleanupLogs({ logDir, retentionDays = LOG_RETENTION_DAYS, logger
 
   for (const file of files) {
     if (!file.startsWith(`${LOG_FILE_PREFIX}_`) || !file.endsWith(".log")) {
+      logger?.debug(`Skipped non-log file during cleanup: ${file}`);
       continue;
     }
 
@@ -22,7 +23,7 @@ export function cleanupLogs({ logDir, retentionDays = LOG_RETENTION_DAYS, logger
     if (ageInDays > retentionDays) {
       fs.unlinkSync(fullPath);
       removed += 1;
-      logger?.info?.(`Removed outdated log file: ${file}`);
+      logger?.info(`Removed outdated log file: ${file}`);
     }
   }
 
@@ -33,13 +34,14 @@ export function scheduleLogCleanup({ logDir, logger, retentionDays = LOG_RETENTI
   const run = () => {
     try {
       const result = cleanupLogs({ logDir, logger, retentionDays });
-      logger?.info?.(`Log cleanup finished (removed= ${result.removed} files)`);
+      logger?.debug(`Cleanup Log completed (removed= ${result.removed} files)`);
     } catch (error) {
-      logger?.error?.("Log cleanup failed:", error);
+      logger?.error("Cleanup Log failed:", error);
     }
   };
 
   run();
   const timer = setInterval(run, ONE_DAY_MS);
+
   return () => clearInterval(timer);
 }

@@ -278,7 +278,6 @@ export function createEncryptionManager(deps) {
 
       // 检查是否有临时恢复密钥
       if (!meta.tempRecoveryKey) {
-        logger?.debug('TempRecoveryKey not found in meta.json');
         return;
       }
 
