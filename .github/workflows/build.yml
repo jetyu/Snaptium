@@ -64,17 +64,17 @@ jobs:
             IS_FEATURE=true
           fi
           
-          if [[ "$IS_MAIN" == true && "$VERSION" =~ ^v[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+          if [[ "$IS_MAIN" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
             echo "Stable Release (main)"
             echo "is_dev=false" >> $GITHUB_OUTPUT
             echo "prerelease=false" >> $GITHUB_OUTPUT
             echo "make_latest=true" >> $GITHUB_OUTPUT
-          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^v[0-9]+(\.[0-9]+){1,2}-[bBrR].*$ ]]; then
+          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[bBrR].*$ ]]; then
             echo "Beta/RC Release (develop)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
-          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^v[0-9]+(\.[0-9]+){1,2}-[aA].*$ ]]; then
+          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[aA].*$ ]]; then
             echo "Alpha Release (feature)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
