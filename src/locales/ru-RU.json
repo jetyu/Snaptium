@@ -13,7 +13,7 @@
   "paneGeneral": "Общие",
   "paneAppearance": "Внешний вид",
   "paneSecurity": "Безопасность",
-  "paneAIConfiguration": "Конфигурация ИИ",
+  "paneAIAssistant": "Конфигурация ИИ",
   "labelLanguage": "Язык",
   "labelThemeMode": "Тема",
   "labelEditorFontSize": "Размер шрифта редактора (px)",

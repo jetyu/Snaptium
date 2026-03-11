@@ -5,9 +5,9 @@ import { createLogger } from "./createLogger.js";
 import { cleanupLogs, scheduleLogCleanup } from "./cleanup.js";
 import { registerExceptionHandlers } from "./exception.js";
 
-export function createLoggerManager({ app, dialog, shell, AdmZip }) {
+export function createLoggerManager({ app, dialog, shell, AdmZip, appLoggerCategory = "LogManager-Box" }) {
   const { logger, logDir } = createGlobalLogger(app);
-  const appLogger = createLogger(logger, "app");
+  const appLogger = createLogger(logger, appLoggerCategory);
   const stopCleanup = scheduleLogCleanup({ logDir, logger: appLogger });
 
   registerExceptionHandlers({ logger: appLogger, dialog });

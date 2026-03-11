@@ -16,7 +16,7 @@ import { createMarkdownImporter } from './markdown-importer.js';
  * @returns {Object} 导入导出管理器实例
  */
 export function createImportExportManager(dependencies) {
-  const { ipcMain } = dependencies;
+  const { ipcMain, logger } = dependencies;
   const noteWizardExporter = createExporter(dependencies);
   const noteWizardImporter = createImporter(dependencies);
   const markdownExporter = createMarkdownExporter(dependencies);

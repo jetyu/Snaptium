@@ -25,7 +25,7 @@ export function createMenuManager(deps) {
   const {
     Menu, BrowserWindow, dialog, shell, fs, path, app,
     t, getWindow, closeAllWindows,
-    importExportManager, handleManualUpdateCheck, loggerManager,
+    importExportManager, handleManualUpdateCheck, loggerManager, logger,
     __dirname
   } = deps;
 
@@ -391,52 +391,6 @@ export function createMenuManager(deps) {
             shell.openExternal("https://github.com/jetyu/NoteWizard/issues/new/choose");
           },
         },
-
-        { type: "separator" },
-        {
-          label: t("menu.help.logManagement"),
-          submenu: [
-            {
-              label: t("menu.help.logManagement.openLogDirectory"),
-              click: async () => {
-                if (loggerManager) {
-                  await loggerManager.openLogDirectory();
-                }
-              },
-            },
-            {
-              label: t("menu.help.logManagement.exportLogs"),
-              click: async () => {
-                const win = getWindow();
-                if (!loggerManager || !win) return;
-
-                const result = await loggerManager.exportLogs(win);
-                if (result.success) {
-                  dialog.showMessageBox(win, {
-                    type: "info",
-                    title: t("menu.help.logManagement.exportSuccessTitle"),
-                    message: t("menu.help.logManagement.exportSuccessMessage"),
-                    detail: result.filePath
-                  });
-                }
-              },
-            },
-            {
-              label: t("menu.help.logManagement.cleanupNow"),
-              click: async () => {
-                const win = getWindow();
-                if (!loggerManager || !win) return;
-
-                const result = loggerManager.cleanupNow();
-                dialog.showMessageBox(win, {
-                  type: "info",
-                  title: t("menu.help.logManagement.cleanupSuccessTitle"),
-                  message: t("menu.help.logManagement.cleanupSuccessMessage").replace("{count}", String(result.removed))
-                });
-              },
-            },
-          ],
-        },
         { type: "separator" },
         {
           label: t("menu.help.update"),
@@ -556,7 +510,7 @@ export function createMenuManager(deps) {
         closeItem.enabled = true;
       }
     } catch (error) {
-      console.error("[Menu] Failed to setup menu state:", error);
+      logger?.error("Failed to setup menu state: " + error.message);
     }
   }
 

@@ -13,7 +13,7 @@
   "paneGeneral": "一般",
   "paneAppearance": "外観",
   "paneSecurity": "セキュリティ",
-  "paneAIConfiguration": "AI 設定",
+  "paneAIAssistant": "AI 設定",
   "labelLanguage": "言語",
   "labelThemeMode": "テーマモード",
   "labelEditorFontSize": "エディタのフォントサイズ (px)",

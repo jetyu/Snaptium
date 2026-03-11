@@ -13,7 +13,7 @@
   "paneGeneral": "일반",
   "paneAppearance": "모양",
   "paneSecurity": "보안",
-  "paneAIConfiguration": "AI 구성",
+  "paneAIAssistant": "AI 구성",
   "labelLanguage": "언어",
   "labelThemeMode": "테마 모드",
   "labelEditorFontSize": "에디터 글꼴 크기 (px)",

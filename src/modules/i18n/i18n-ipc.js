@@ -18,7 +18,7 @@ const DEFAULT_LANG = "en-US";
  * @returns {Object} 国际化管理器实例
  */
 export function createI18nManager(deps) {
-  const { fs, path, ipcMain, localesDir, getPreference, setPreference, onLanguageChanged } = deps;
+  const { fs, path, ipcMain, localesDir, getPreference, setPreference, onLanguageChanged, logger } = deps;
   
   let currentLang = DEFAULT_LANG;
   let translations = {};
@@ -38,7 +38,7 @@ export function createI18nManager(deps) {
         return true;
       }
     } catch (error) {
-      console.error(`Failed to load language ${lang}:`, error);
+      logger?.error(`Failed to load language ${lang}: ` + error.message);
     }
     return false;
   }

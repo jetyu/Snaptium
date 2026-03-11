@@ -4,14 +4,13 @@
  * @param {string} category - 日志分类
  * @returns {Object}
  */
-export function createLogger(baseLogger, category = "app") {
-  const scoped = baseLogger.scope(category);
+export function createLogger(baseLogger, category = "Logs") {
+  const paddedCategory = `[${category}]`.padEnd(1, ' ');
 
   return {
-    debug: (...args) => scoped.debug(...args),
-    info: (...args) => scoped.info(...args),
-    warn: (...args) => scoped.warn(...args),
-    error: (...args) => scoped.error(...args),
-    verbose: (...args) => scoped.verbose(...args)
+    debug: (...args) => baseLogger.debug(paddedCategory, ...args),
+    info: (...args) => baseLogger.info(paddedCategory, ...args),
+    warn: (...args) => baseLogger.warn(paddedCategory, ...args),
+    error: (...args) => baseLogger.error(paddedCategory, ...args),
   };
 }

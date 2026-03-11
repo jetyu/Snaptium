@@ -22,7 +22,7 @@ export function cleanupLogs({ logDir, retentionDays = LOG_RETENTION_DAYS, logger
     if (ageInDays > retentionDays) {
       fs.unlinkSync(fullPath);
       removed += 1;
-      logger?.info?.(`[app] Removed outdated log file: ${file}`);
+      logger?.info?.(`Removed outdated log file: ${file}`);
     }
   }
 
@@ -33,9 +33,9 @@ export function scheduleLogCleanup({ logDir, logger, retentionDays = LOG_RETENTI
   const run = () => {
     try {
       const result = cleanupLogs({ logDir, logger, retentionDays });
-      logger?.info?.(`[app] Log cleanup finished, removed ${result.removed} files`);
+      logger?.info?.(`Log cleanup finished (removed= ${result.removed} files)`);
     } catch (error) {
-      logger?.error?.("[app] Log cleanup failed:", error);
+      logger?.error?.("Log cleanup failed:", error);
     }
   };
 

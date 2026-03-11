@@ -13,7 +13,7 @@
   "paneGeneral": "Umum",
   "paneAppearance": "Tampilan",
   "paneSecurity": "Keamanan",
-  "paneAIConfiguration": "Konfigurasi AI",
+  "paneAIAssistant": "Konfigurasi AI",
   "labelLanguage": "Bahasa",
   "labelThemeMode": "Mode Tema",
   "labelEditorFontSize": "Ukuran Font Editor (px)",

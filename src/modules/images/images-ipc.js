@@ -12,7 +12,7 @@
  * @returns {Object} 图片管理器实例
  */
 export function createImagesManager(deps) {
-  const { fs, path, ipcMain } = deps;
+  const { fs, path, ipcMain, logger } = deps;
 
   /**
    * 确保目录存在
@@ -26,7 +26,7 @@ export function createImagesManager(deps) {
       }
       return true;
     } catch (error) {
-      console.error('Failed to create directory:', dirPath, error);
+      logger?.error(`Failed to create directory: ${dirPath} - ` + error.message);
       return false;
     }
   }
@@ -122,7 +122,7 @@ export function createImagesManager(deps) {
         markdownPath,
       };
     } catch (error) {
-      console.error('Failed to save pasted image:', error);
+      logger?.error('Failed to save pasted image: ' + error.message);
       return { success: false, error: error.message };
     }
   }

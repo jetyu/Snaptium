@@ -13,7 +13,7 @@
   "paneGeneral": "ทั่วไป",
   "paneAppearance": "รูปลักษณ์",
   "paneSecurity": "ความปลอดภัย",
-  "paneAIConfiguration": "การกำหนดค่า AI",
+  "paneAIAssistant": "การกำหนดค่า AI",
   "labelLanguage": "ภาษา",
   "labelThemeMode": "โหมดธีม",
   "labelEditorFontSize": "ขนาดฟอนต์ตัวแก้ไข (px)",

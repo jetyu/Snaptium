@@ -14,7 +14,7 @@
  * @returns {Object} 配置管理器实例
  */
 export function createPreferencesManager(deps) {
-  const { app, fs, path, ipcMain, dialog, t } = deps;
+  const { app, fs, path, ipcMain, dialog, t, logger } = deps;
 
   /**
    * 获取配置文件路径
@@ -36,7 +36,7 @@ export function createPreferencesManager(deps) {
         return JSON.parse(data);
       }
     } catch (error) {
-      console.error("[Preferences] Failed to load preferences:", error);
+      logger?.error("Failed to load preferences: " + error.message);
     }
     return {};
   }
@@ -52,7 +52,7 @@ export function createPreferencesManager(deps) {
       fs.writeFileSync(prefsPath, JSON.stringify(prefs, null, 2), "utf8");
       return true;
     } catch (error) {
-      console.error("[Preferences] Failed to save preferences:", error);
+      logger?.error("Failed to save preferences: " + error.message);
       return false;
     }
   }
@@ -235,7 +235,7 @@ export function createPreferencesManager(deps) {
               "utf8"
             );
           } catch (restoreError) {
-            console.error("[Preferences] Failed to restore backup:", restoreError);
+            logger?.error("Failed to restore backup: " + restoreError.message);
           }
         }
         throw error;

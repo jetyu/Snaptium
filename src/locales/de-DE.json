@@ -13,7 +13,7 @@
   "paneGeneral": "Allgemein",
   "paneAppearance": "Erscheinungsbild",
   "paneSecurity": "Sicherheit",
-  "paneAIConfiguration": "KI-Konfiguration",
+  "paneAIAssistant": "KI-Konfiguration",
   "labelLanguage": "Sprache",
   "labelThemeMode": "Design-Modus",
   "labelEditorFontSize": "Editor-Schriftgröße (px)",

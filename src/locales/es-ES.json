@@ -13,7 +13,7 @@
   "paneGeneral": "General",
   "paneAppearance": "Apariencia",
   "paneSecurity": "Seguridad",
-  "paneAIConfiguration": "Configuración de IA",
+  "paneAIAssistant": "Configuración de IA",
   "labelLanguage": "Idioma",
   "labelThemeMode": "Modo de tema",
   "labelEditorFontSize": "Tamaño de fuente del editor (px)",
