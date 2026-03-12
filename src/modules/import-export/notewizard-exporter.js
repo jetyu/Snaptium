@@ -196,6 +196,7 @@ export function createExporter(dependencies) {
     let failed = 0;
 
     for (const file of files) {
+      logger?.debug(`Decryption check / process for export: ${file}`);
       const sourceFile = path.join(sourceDir, file);
       const targetFile = path.join(tempDir, file);
 

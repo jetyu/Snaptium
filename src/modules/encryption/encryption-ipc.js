@@ -449,6 +449,7 @@ export function createEncryptionManager(deps) {
    * 生成新的恢复密钥
    */
   ipcMain.handle('encryption:generate-recovery-key', async () => {
+    logger?.debug('IPC received: encryption:generate-recovery-key');
     try {
       const recoveryKey = generateRecoveryKey();
       logger?.info('Generated new recovery key');
@@ -470,6 +471,7 @@ export function createEncryptionManager(deps) {
    * 设置加密（使用恢复密钥）
    */
   ipcMain.handle('encryption:setup', async (event, { recoveryKey }) => {
+    logger?.debug('IPC received: encryption:setup');
     try {
       logger?.info('Setup encryption with recovery key');
 
@@ -528,6 +530,7 @@ export function createEncryptionManager(deps) {
         win.webContents.send('encryption:status-changed', { enabled: true });
       }
 
+      logger?.info('Encryption setup successful');
       return { success: true };
     } catch (error) {
       logger?.error('Failed to setup encryption: ' + error.message);
@@ -586,6 +589,7 @@ export function createEncryptionManager(deps) {
    * 禁用加密
    */
   ipcMain.handle('encryption:disable', async () => {
+    logger?.debug('IPC received: encryption:disable');
     try {
       // 清除加密配置
       await preferencesManager.setPreference('encryption', {
@@ -614,6 +618,7 @@ export function createEncryptionManager(deps) {
         win.webContents.send('encryption:status-changed', { enabled: false });
       }
 
+      logger?.info('Encryption disabled');
       return { success: true };
     } catch (error) {
       logger?.error('Failed to disable encryption: ' + error.message);
@@ -822,6 +827,7 @@ export function createEncryptionManager(deps) {
 
       for (let i = 0; i < filesToEncrypt.length; i++) {
         const { file, dir, dirName } = filesToEncrypt[i];
+        logger?.debug(`Encrypting file: ${file} in ${dirName}`);
         const filePath = path.join(dir, file);
 
         try {

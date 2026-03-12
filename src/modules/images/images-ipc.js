@@ -133,6 +133,7 @@ export function createImagesManager(deps) {
   function registerIpcHandlers() {
     // 保存粘贴的图片
     ipcMain.handle('images:save-paste', async (_event, payload) => {
+      logger?.debug('IPC received: images:save-paste');
       return await saveImageFromPaste(payload);
     });
   }

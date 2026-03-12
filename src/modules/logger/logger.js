@@ -30,16 +30,27 @@ export function updateLoggerConfig(settings) {
   if (!settings) return;
 
   const { enabled, level } = settings;
-  const validLevels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
-  
+  const validLevels = ['error', 'warn', 'info', 'debug'];
+
   // 校验参数
   const finalEnabled = typeof enabled === 'boolean' ? enabled : true;
   const finalLevel = validLevels.includes(level) ? level : 'info';
-  
-  // 控制台日志始终开启，但级别可调
-  log.transports.console.level = finalEnabled ? finalLevel : false;
-  
-  // 文件日志
-  log.transports.file.level = finalEnabled ? finalLevel : false;
+
+  if (finalEnabled) {
+    log.transports.console.level = finalLevel;
+    log.transports.file.level = finalLevel;
+  }
+
+  // 记录配置变更调试信息
+  log.debug(`Logging status changed: ${finalEnabled ? 'Enabled' : 'Disabled'}`);
+  if (finalEnabled) {
+    log.debug(`Log level set to: ${finalLevel}`);
+  }
+
+  if (!finalEnabled) {
+    log.transports.console.level = false;
+    log.transports.file.level = false;
+  }
 }
+
 

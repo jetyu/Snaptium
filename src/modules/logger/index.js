@@ -1,14 +1,14 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { createGlobalLogger, updateLoggerConfig } from "./logger.js";
+import { formatDateForFile } from "./config.js";
 import { createLogger } from "./createLogger.js";
 import { cleanupLogs, scheduleLogCleanup } from "./cleanup.js";
 import { registerExceptionHandlers } from "./exception.js";
 
-export function createLoggerManager({ app, dialog, shell, AdmZip, settings, appLoggerCategory = "LogManager-Box" }) {
+export function createLoggerManager({ app, dialog, shell, t, AdmZip, settings, appLoggerCategory = "LogManager-Box" }) {
   const { logger, logDir } = createGlobalLogger(app);
-  
-  // 如果提供了设置，则应用它们
+
   if (settings) {
     updateLoggerConfig(settings);
   }
@@ -22,11 +22,14 @@ export function createLoggerManager({ app, dialog, shell, AdmZip, settings, appL
   }
 
   async function exportLogs(parentWindow) {
-    const defaultPath = path.join(app.getPath("documents"), `notewizard_logs_${Date.now()}.zip`);
+    const dateStr = formatDateForFile();
+    const defaultPath = path.join(app.getPath("downloads"), `notewizard_logs_${dateStr}.zip`);
     const { canceled, filePath } = await dialog.showSaveDialog(parentWindow, {
-      title: "Export Logs",
+      title: t("menu.help.logManagement.exportLogs"),
       defaultPath,
-      filters: [{ name: "Zip Archive", extensions: ["zip"] }]
+      filters: [
+        { name: "Zip Archive", extensions: ["zip"] }
+      ]
     });
 
     if (canceled || !filePath) {
@@ -64,3 +67,4 @@ export function createLoggerManager({ app, dialog, shell, AdmZip, settings, appL
     destroy
   };
 }
+

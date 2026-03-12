@@ -88,11 +88,13 @@ export function createImportExportManager(dependencies) {
   function registerIpcHandlers() {
     // 导出笔记
     ipcMain.handle("notes:export", async () => {
+      logger?.debug('IPC received: notes:export');
       return await exportNotes();
     });
 
     // 导入笔记
     ipcMain.handle("notes:import", async () => {
+      logger?.debug('IPC received: notes:import');
       return await importNotes();
     });
   }

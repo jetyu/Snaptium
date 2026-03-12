@@ -243,7 +243,8 @@ export class PreferencesManager {
         language: allPrefs.language || DEFAULTS.LANGUAGE,
         aiSettings: completeAISettings,
         startupOnLogin: allPrefs.startupOnLogin || false,
-        autoUpdate: allPrefs.autoUpdate !== undefined ? allPrefs.autoUpdate : true
+        autoUpdate: allPrefs.autoUpdate !== undefined ? allPrefs.autoUpdate : true,
+        loggingSettings: allPrefs.loggingSettings || DEFAULTS.LOGGING_SETTINGS
       };
 
       // 调用主进程导出
@@ -390,6 +391,14 @@ export class PreferencesManager {
     if (typeof prefs.autoUpdate !== 'undefined') {
       await this.prefsService.set('autoUpdate', !!prefs.autoUpdate);
       await this.prefsService.toggleAutoUpdate(!!prefs.autoUpdate);
+    }
+
+    // 应用日志设置
+    if (prefs.loggingSettings) {
+      await this.prefsService.set('loggingSettings', prefs.loggingSettings);
+      if (window.electronAPI?.ipcRenderer) {
+        await window.electronAPI.ipcRenderer.invoke('logger:update-config', prefs.loggingSettings);
+      }
     }
 
     // 重新加载所有设置到 UI

@@ -82,13 +82,14 @@ function initializeManagers() {
   });
 
   // 2. 加载日志配置
-  const loggingSettings = managers.preferences.getPreference('loggingSettings');
+  const loggingSettings = managers.preferences.getPreference('loggingSettings', { enabled: true, level: 'info' });
 
   // 3. 创建日志管理器
   managers.logger = createLoggerManager({
     app,
     dialog,
     shell,
+    t,
     AdmZip,
     settings: loggingSettings,
     appLoggerCategory: "LogManager-Box"
@@ -251,6 +252,7 @@ function initializeManagers() {
 
 // 处理保存请求
 ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
+  managers.logger?.appLogger.debug('IPC received: save-file-content');
   const win = managers.window?.getMainWindow();
   if (!win) return { success: false, error: "Window not initialized" };
 
@@ -271,6 +273,7 @@ ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
     }
 
     await fs.promises.writeFile(targetPath, content, "utf-8");
+    managers.logger?.appLogger.info('File saved successfully: ' + targetPath);
     return { success: true, filePath: targetPath };
   } catch (error) {
     managers.logger?.appLogger.error('Failed to save file: ' + error.message);
@@ -280,6 +283,7 @@ ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
 
 // 处理目录选择对话框
 ipcMain.handle("select-directory", async (event, defaultPath) => {
+  managers.logger?.appLogger.debug('IPC received: select-directory');
   const win = managers.window?.getMainWindow();
   if (!win) return null;
 
@@ -288,6 +292,18 @@ ipcMain.handle("select-directory", async (event, defaultPath) => {
     properties: ["openDirectory", "createDirectory"],
   });
   return result.canceled ? null : result.filePaths[0];
+});
+
+// 处理日志配置更新
+ipcMain.handle("logger:update-config", async (event, settings) => {
+  managers.logger?.appLogger.debug('IPC received: logger:update-config');
+  try {
+    managers.logger?.updateLoggerConfig(settings);
+    return { success: true };
+  } catch (error) {
+    managers.logger?.appLogger.error('Failed to update logger config: ' + error.message);
+    return { success: false, error: error.message };
+  }
 });
 
 // 处理自动更新切换
@@ -385,3 +401,4 @@ app.on('will-quit', (event) => {
   managers.logger?.destroy();
   // 可以在这里执行清理操作
 });
+

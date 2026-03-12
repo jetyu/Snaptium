@@ -11,7 +11,7 @@
  * @returns {Object} 开机启动管理器实例
  */
 export function createStartupManager(deps) {
-  const { app, ipcMain } = deps;
+  const { app, ipcMain, logger } = deps;
 
   /**
    * 获取当前开机启动状态
@@ -56,11 +56,13 @@ export function createStartupManager(deps) {
   function registerIpcHandlers() {
     // 查询当前开机启动设置
     ipcMain.handle("get-startup-enabled", () => {
+      logger?.debug('IPC received: get-startup-enabled');
       return getStartupEnabled();
     });
 
     // 设置开机启动
     ipcMain.handle("set-startup-enabled", (event, enabled) => {
+      logger?.debug('IPC received: set-startup-enabled');
       return setStartupEnabled(enabled);
     });
   }

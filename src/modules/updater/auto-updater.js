@@ -72,6 +72,7 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
       isCheckingForUpdates = false;
       resetProgress();
 
+      logger?.info(`Update available: ${info.version}`);
       const detail = formatReleaseNotes(info);
       const { response } = await dialog.showMessageBox(getActiveWindow() ?? undefined, {
         type: "info",
@@ -91,6 +92,7 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
         isDownloadingUpdate = true;
         setProgress(0);
         try {
+          logger?.info('Starting update download');
           await autoUpdater.downloadUpdate();
         } catch (error) {
           isDownloadingUpdate = false;
@@ -145,6 +147,7 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
     });
 
     autoUpdater.on("update-downloaded", async () => {
+      logger?.info('Update downloaded successfully');
       isDownloadingUpdate = false;
       resetProgress();
       const { response } = await dialog.showMessageBox(getActiveWindow() ?? undefined, {

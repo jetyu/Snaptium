@@ -78,6 +78,8 @@ export function createPreferencesManager(deps) {
   function setPreference(key, value) {
     const prefs = loadPreferences();
     prefs[key] = value;
+    const logValue = key.toLowerCase().includes('apikey') ? '********' : value;
+    logger?.info(`Preference changed: ${key} = ${logValue}`);
     return savePreferences(prefs);
   }
 
@@ -123,7 +125,7 @@ export function createPreferencesManager(deps) {
             minInputLength: preferences.aiSettings?.minInputLength || DEFAULT_SETTINGS.aiSettings.minInputLength,
           },
           loggingSettings: {
-            enabled: preferences.loggingSettings?.enabled || DEFAULT_SETTINGS.loggingSettings.enabled,
+            enabled: preferences.loggingSettings?.enabled !== undefined ? !!preferences.loggingSettings.enabled : DEFAULT_SETTINGS.loggingSettings.enabled,
             level: preferences.loggingSettings?.level || DEFAULT_SETTINGS.loggingSettings.level,
           },
           noteSavePath: preferences.noteSavePath || DEFAULT_SETTINGS.noteSavePath,
@@ -142,6 +144,7 @@ export function createPreferencesManager(deps) {
           JSON.stringify(data, null, 2),
           "utf8"
         );
+        logger?.info(`Preferences exported to: ${filePath}`);
         return { success: true, filePath };
       }
       return { success: false, error: t("export.preferences.error.cancelled") };
@@ -223,6 +226,7 @@ export function createPreferencesManager(deps) {
           JSON.stringify(mergedSettings, null, 2),
           "utf8"
         );
+        logger?.info(`Preferences imported successfully, backup created at: ${backupPath}`);
 
         return {
           success: true,
@@ -256,31 +260,37 @@ export function createPreferencesManager(deps) {
   function registerIpcHandlers() {
     // 获取所有配置
     ipcMain.handle("preferences:getAll", () => {
+      logger?.debug('IPC received: preferences:getAll');
       return loadPreferences();
     });
 
     // 获取单个配置
     ipcMain.handle("preferences:get", (event, key, defaultValue) => {
+      logger?.debug(`IPC received: preferences:get (${key})`);
       return getPreference(key, defaultValue);
     });
 
     // 设置单个配置
     ipcMain.handle("preferences:set", (event, key, value) => {
+      logger?.debug(`IPC received: preferences:set (${key})`);
       return setPreference(key, value);
     });
 
     // 保存所有配置
     ipcMain.handle("preferences:saveAll", (event, prefs) => {
+      logger?.debug('IPC received: preferences:saveAll');
       return savePreferences(prefs);
     });
 
     // 导出首选项
     ipcMain.handle("export-preferences", async (event, preferences) => {
+      logger?.debug('IPC received: export-preferences');
       return await exportPreferences(preferences);
     });
 
     // 导入首选项
     ipcMain.handle("import-preferences", async () => {
+      logger?.debug('IPC received: import-preferences');
       return await importPreferences();
     });
   }
@@ -309,3 +319,4 @@ export function createPreferencesManager(deps) {
     setLogger
   };
 }
+

@@ -65,6 +65,7 @@ export function createWindowManager(deps) {
     ipcMain.removeAllListeners("preview-state-changed");
     
     ipcMain.on("preview-state-changed", (event, payload) => {
+      logger?.debug('IPC received: preview-state-changed');
       const { visible } = payload || {};
       const currentMenu = Menu.getApplicationMenu();
       
