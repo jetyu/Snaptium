@@ -22,3 +22,24 @@ export function createGlobalLogger(app) {
   };
 }
 
+/**
+ * 更新日志配置
+ * @param {Object} settings - { enabled, level }
+ */
+export function updateLoggerConfig(settings) {
+  if (!settings) return;
+
+  const { enabled, level } = settings;
+  const validLevels = ['error', 'warn', 'info', 'verbose', 'debug', 'silly'];
+  
+  // 校验参数
+  const finalEnabled = typeof enabled === 'boolean' ? enabled : true;
+  const finalLevel = validLevels.includes(level) ? level : 'info';
+  
+  // 控制台日志始终开启，但级别可调
+  log.transports.console.level = finalEnabled ? finalLevel : false;
+  
+  // 文件日志
+  log.transports.file.level = finalEnabled ? finalLevel : false;
+}
+

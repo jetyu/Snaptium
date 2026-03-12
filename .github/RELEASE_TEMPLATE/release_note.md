@@ -9,7 +9,7 @@
 <!-- VERSION_METADATA_END -->
 
 <!-- RELEASE_NOTES_BODY_START -->
-_No changes for this release._
+_No changelog available for this release_
 <!-- RELEASE_NOTES_BODY_END -->
 
 <!-- COMPARE_LINK_START -->

@@ -1,3 +1,7 @@
+### [1.2.0] - 2026-03-27
+### New
+- Added log recording module, supporting multi-level log output.
+
 ### [1.1.5] - 2026-03-11
 #### Fixed
 - Fixed an issue where the note name edit state was not displayed correctly.

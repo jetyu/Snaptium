@@ -11,6 +11,7 @@ import { AppearanceSettingsManager } from './managers/AppearanceSettingsManager.
 import { PathSettingsManager } from './managers/PathSettingsManager.js';
 import { EncryptionSettingsManager } from './managers/EncryptionSettingsManager.js';
 import { AISettingsManager } from './managers/AISettingsManager.js';
+import { LoggingSettingsManager } from './managers/LoggingSettingsManager.js';
 import { SELECTORS, DEFAULTS } from './constants.js';
 
 export class PreferencesManager {
@@ -45,6 +46,7 @@ export class PreferencesManager {
     this.path = new PathSettingsManager(managerDeps);
     this.encryption = new EncryptionSettingsManager(managerDeps);
     this.ai = new AISettingsManager(managerDeps);
+    this.logging = new LoggingSettingsManager(managerDeps);
 
     this.isInitialized = false;
   }
@@ -89,6 +91,8 @@ export class PreferencesManager {
       await this.path.init();
       await this.encryption.init();
       await this.ai.init();
+      await this.logging.loadSettings();
+      this.logging.bindEvents();
 
       // 绑定全局事件
       this.bindGlobalEvents();
@@ -191,6 +195,7 @@ export class PreferencesManager {
       this.appearance.loadToUI(),
       this.path.loadSettings(),
       this.ai.loadSettings(),
+      this.logging.loadSettings(),
     ]);
   }
 
@@ -423,6 +428,7 @@ export class PreferencesManager {
     await this.appearance.reset();
     await this.path.reset();
     await this.ai.reset();
+    await this.logging.reset();
   }
 
   /**

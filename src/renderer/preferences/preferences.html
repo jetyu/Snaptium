@@ -17,6 +17,7 @@
         <li data-pane="appearance" data-i18n="paneAppearance"></li>
         <li data-pane="security" data-i18n="paneSecurity"></li>
         <li data-pane="ai" data-i18n="paneAIAssistant"></li>
+        <li data-pane="logging" data-i18n="paneLogging"></li>
       </ul>
     </nav>
     <section class="pref-content">
@@ -201,6 +202,24 @@
             <button id="pref-ai-test" class="testSetting-btn" data-i18n="btnTestConnection"></button>
             <span id="pref-ai-test-status" class="test-status"></span>
           </div>
+        </div>
+      </div>
+      <div id="pane-logging" class="pref-pane">
+        <div class="pref-section">
+          <label for="pref-logging-enabled" data-i18n="labelLoggingEnabled"></label>
+          <label class="startup-switch">
+            <input type="checkbox" id="pref-logging-enabled" checked>
+            <span id="pref-logging-enabled-text" data-i18n="textLoggingEnabled"></span>
+          </label>
+        </div>
+        <div class="pref-section">
+          <label for="pref-logging-level" data-i18n="labelLoggingLevel"></label>
+          <select id="pref-logging-level">
+            <option value="debug" data-i18n="levelDebug"></option>
+            <option value="info" data-i18n="levelInfo"></option>
+            <option value="warn" data-i18n="levelWarn"></option>
+            <option value="error" data-i18n="levelError"></option>
+          </select>
         </div>
       </div>
     </section>

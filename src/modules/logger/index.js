@@ -1,12 +1,17 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { createGlobalLogger } from "./logger.js";
+import { createGlobalLogger, updateLoggerConfig } from "./logger.js";
 import { createLogger } from "./createLogger.js";
 import { cleanupLogs, scheduleLogCleanup } from "./cleanup.js";
 import { registerExceptionHandlers } from "./exception.js";
 
-export function createLoggerManager({ app, dialog, shell, AdmZip, appLoggerCategory = "LogManager-Box" }) {
+export function createLoggerManager({ app, dialog, shell, AdmZip, settings, appLoggerCategory = "LogManager-Box" }) {
   const { logger, logDir } = createGlobalLogger(app);
+  
+  // 如果提供了设置，则应用它们
+  if (settings) {
+    updateLoggerConfig(settings);
+  }
   const appLogger = createLogger(logger, appLoggerCategory);
   const stopCleanup = scheduleLogCleanup({ logDir, logger: appLogger });
 
@@ -55,6 +60,7 @@ export function createLoggerManager({ app, dialog, shell, AdmZip, appLoggerCateg
     openLogDirectory,
     exportLogs,
     cleanupNow,
+    updateLoggerConfig,
     destroy
   };
 }

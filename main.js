@@ -70,16 +70,34 @@ global.t = t;
 
 // ==================== 初始化管理器 ====================
 function initializeManagers() {
-  // 0. 创建日志管理器
+  // 1. 创建配置管理器
+  managers.preferences = createPreferencesManager({
+    app,
+    fs,
+    path,
+    ipcMain,
+    dialog,
+    t,
+    logger: console
+  });
+
+  // 2. 加载日志配置
+  const loggingSettings = managers.preferences.getPreference('loggingSettings');
+
+  // 3. 创建日志管理器
   managers.logger = createLoggerManager({
     app,
     dialog,
     shell,
     AdmZip,
+    settings: loggingSettings,
     appLoggerCategory: "LogManager-Box"
   });
 
-  // 0. 注册通用 API 桥接
+  // 4. 为配置管理器注入真正的日志记录器
+  managers.preferences.setLogger(managers.logger.createLogger("Preference-Box"));
+
+  // 5. 注册通用 API 桥接
   registerApiBridge({
     ipcMain,
     app,
@@ -91,17 +109,6 @@ function initializeManagers() {
     require,
     getWindow: () => managers.window?.getMainWindow(),
     logger: managers.logger.createLogger("APIsBridge-Box")
-  });
-
-  // 1. 创建配置管理器
-  managers.preferences = createPreferencesManager({
-    app,
-    fs,
-    path,
-    ipcMain,
-    dialog,
-    t,
-    logger: managers.logger.createLogger("Preference-Box")
   });
 
   // 2. 创建国际化管理器

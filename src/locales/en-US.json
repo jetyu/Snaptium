@@ -14,6 +14,7 @@
   "paneAppearance": "Appearance",
   "paneSecurity": "Security",
   "paneAIAssistant": "AI Configuration",
+  "paneLogging": "Local Logs",
   "labelLanguage": "Language",
   "labelThemeMode": "Theme Mode",
   "labelEditorFontSize": "Editor Font Size (px)",
@@ -365,5 +366,12 @@
   "setStartupFailedStatus": "Failed to set startup auto-launch",
   "autoUpdateEnabledStatus": "Auto-update check enabled",
   "autoUpdateDisabledStatus": "Auto-update check disabled",
-  "setAutoUpdateFailed": "Failed to set auto-update"
+  "setAutoUpdateFailed": "Failed to set auto-update",
+  "labelLoggingEnabled": "Local Logs",
+  "textLoggingEnabled": "Enable Local Logs",
+  "labelLoggingLevel": "Log Level",
+  "levelDebug": "Debug",
+  "levelInfo": "Info",
+  "levelWarn": "Warn",
+  "levelError": "Error"
 }

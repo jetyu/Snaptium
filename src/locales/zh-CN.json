@@ -14,6 +14,7 @@
   "paneAppearance": "外观",
   "paneSecurity": "安全",
   "paneAIAssistant": "AI辅助写作",
+  "paneLogging": "本地日志",
   "labelLanguage": "语言",
   "labelThemeMode": "主题模式",
   "labelEditorFontSize": "编辑器字体大小 (px)",
@@ -365,5 +366,12 @@
   "setStartupFailedStatus": "设置开机自启失败",
   "autoUpdateEnabledStatus": "已启用自动更新检查",
   "autoUpdateDisabledStatus": "已禁用自动更新检查",
-  "setAutoUpdateFailed": "设置自动更新失败"
+  "setAutoUpdateFailed": "设置自动更新失败",
+  "labelLoggingEnabled": "本地日志",
+  "textLoggingEnabled": "启用本地日志",
+  "labelLoggingLevel": "日志级别",
+  "levelDebug": "调试",
+  "levelInfo": "信息",
+  "levelWarn": "警告",
+  "levelError": "错误"
 }
