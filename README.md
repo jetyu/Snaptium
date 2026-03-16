@@ -1,111 +1,67 @@
-<div align="center">
+# NoteWizard Scaffold (Electron + Vue 3 + CodeMirror 6 + Markdown-It)
 
-**Language / 语言:** [English](README.md) | [简体中文](README_CN.md)
+你提到的这些能力（TypeScript / ESLint / Vitest / Pinia / Zod / Playwright）**非常适合企业级项目**，不仅适合学习，而且是长期维护的基础设施。
 
-</div>
+## 企业级路线（已落地在本仓库）
 
-<div align="center">
-  <img src="src/assets/logo/app-logo-128.png" alt="NoteWizard Logo" width="72">
-  <h2> NoteWizard </h2>
-  <p>A modern cross-platform note-taking desktop application built with Electron, featuring local data storage for complete security and control.</p>
+- ✅ TypeScript：建立 `tsconfig.json`，主入口与核心业务开始迁移到 TS
+- ✅ ESLint：统一代码规范和潜在问题检查
+- ✅ Vitest：单元测试框架
+- ✅ Playwright：E2E 测试框架与配置
+- ✅ Pinia：状态管理（文档状态已放入 store）
+- ✅ Zod：IPC 入参 schema 校验
+- ✅ Markdown 安全增强：允许 HTML 时进行白名单清洗
 
-[![Latest Release](https://img.shields.io/github/v/release/jetyu/NoteWizard?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases/latest)
-![GitHub Pre-release](https://img.shields.io/github/v/release/jetyu/NoteWizard?include_prereleases&label=pre-release&logo=github)
-[![Downloads](https://img.shields.io/github/downloads/jetyu/NoteWizard/total?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20|%20Linux%20|%20macOS-blue?style=flat)]()
-[![Last Commit](https://img.shields.io/github/last-commit/jetyu/NoteWizard?style=flat)]()
+## 目录建议（可长期扩展）
 
-[![Open Issues](https://img.shields.io/github/issues/jetyu/NoteWizard?style=flat&color=orange)]()
-[![Closed Issues](https://img.shields.io/github/issues-closed/jetyu/NoteWizard?style=flat&color=brightgreen)]()
+```text
+src/renderer/
+├── app/
+├── views/
+├── layouts/
+├── features/
+│   ├── editor/
+│   ├── workspace/
+│   ├── preview/
+│   └── settings/
+├── shared/
+│   ├── constants/
+│   ├── utils/
+│   ├── composables/
+│   ├── services/
+│   ├── components/
+│   ├── directives/
+│   ├── hooks/
+│   └── types/
+├── stores/
+├── config/
+└── router/
 
-[![Repo Size](https://img.shields.io/github/repo-size/jetyu/NoteWizard?style=flat)]()
-[![License](https://img.shields.io/github/license/jetyu/NoteWizard?style=flat)]()
+electron/main/
+├── constants/
+├── services/
+├── utils/
+└── ipc/
+    ├── index.js
+    ├── editor.js
+    └── modules/
+```
 
-</div>
+## 命令
 
-## Features
-- **Minimalist Interface**: Simple, pure, and ad-free
-- **Cross-Platform**: Supports Windows, macOS, and Linux
-- **Easy Migration**: Supports complete NoteWizard proprietary format (.nwp) for full import/export, as well as Markdown (.md) format import/export
-- **Local Encrypted Storage**: All note data can be encrypte(AES-256-GCM algorithm) and stored under the user's local control.
-- **Markdown Support**: Real-time preview of Markdown rendering
-- **AI-Powered Writing Assistant**: AI-powered writing assistance to make your writing easier (Off by default)
-- **Internationalization**: Supports 19 languages and regional settings worldwide
+```bash
+npm install
+npm run dev
+npm run lint
+npm run typecheck
+npm run test:unit
+npm run test:e2e
+npm run build
+```
 
-## Screenshots
+## 学习顺序（企业实战导向）
 
-#### Edit mode
-![NoteWizard Edit mode](./docs/Screenshots/en-US/Edit-mode.jpg)
-#### Read-only mode
-![NoteWizard Read-only mode](./docs/Screenshots/en-US/Read-mode.jpg)
-#### General 
-![NoteWizard General](./docs/Screenshots/en-US/General.jpg)
-#### Security 
-![NoteWizard Security](./docs/Screenshots/en-US/Security.jpg)
-#### AI configuration
-![NoteWizard AI configuration](./docs/Screenshots/en-US/AI-Config.jpg)
-
-## Supported Platforms
-
-Current supported operating systems and architectures:
-| Platform | Supported Versions | Architecture | Package Format | Notes |
-|----------|-------------------|--------------|----------------|-------|
-| **Windows** | Windows 10 and above | x64 | `.exe` | Windows XP ~ 8.1 not supported |
-| **macOS** | macOS Big Sur (11.0) and above | x64 / arm64 | `.dmg`, `.zip` | Supports Intel and Apple Silicon |
-| **Linux** | Ubuntu 18.04 / Debian 10 / Fedora 32 and above | x64 | `.deb`, `.rpm`, `.AppImage` | Compatible with mainstream Linux distributions |
-
->  **Note:** Please download the appropriate package for your platform and ensure your system meets the minimum version requirements.
-
-## Download & Installation
-Built automatically using `Workflows`, click to download the latest package for your platform:
-
-### Windows
-
-[![NoteWizard-Windows-x64.exe](https://img.shields.io/badge/NoteWizard--Windows--x64.exe-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/jetyu/NoteWizard/releases/latest/download/NoteWizard-Windows-x64.exe)
-
-### macOS
-
-**Intel Chip**
-
-[![NoteWizard-macOS-x64.dmg](https://img.shields.io/badge/NoteWizard--macOS--x64.dmg-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/NoteWizard/releases/latest/download/NoteWizard-macOS-x64.dmg)
-[![NoteWizard-macOS-x64.zip](https://img.shields.io/badge/NoteWizard--macOS--x64.zip-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/NoteWizard/releases/latest/download/NoteWizard-macOS-x64.zip)
-
-**Apple Silicon**
-
-[![NoteWizard-macOS-arm64.dmg](https://img.shields.io/badge/NoteWizard--macOS--arm64.dmg-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/NoteWizard/releases/latest/download/NoteWizard-macOS-arm64.dmg)
-[![NoteWizard-macOS-arm64.zip](https://img.shields.io/badge/NoteWizard--macOS--arm64.zip-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/NoteWizard/releases/latest/download/NoteWizard-macOS-arm64.zip)
-
-
-### Linux
-
-**DEB Package (Debian/Ubuntu)**  
-[![NoteWizard-Linux-x64.deb](https://img.shields.io/badge/NoteWizard--Linux--x64.deb-FCC624?style=flat-square&logo=debian&logoColor=black)](https://github.com/jetyu/NoteWizard/releases/latest/download/NoteWizard-Linux-x64.deb)
-
-**RPM Package (Fedora/RHEL)**  
-[![NoteWizard-Linux-x64.rpm](https://img.shields.io/badge/NoteWizard--Linux--x64.rpm-FCC624?style=flat-square&logo=redhat&logoColor=black)](https://github.com/jetyu/NoteWizard/releases/latest/download/NoteWizard-Linux-x64.rpm)
-
-**AppImage (Universal)**  
-[![NoteWizard-Linux-x64.AppImage](https://img.shields.io/badge/NoteWizard--Linux--x64.AppImage-FCC624?style=flat-square&logo=linux&logoColor=black)](https://github.com/jetyu/NoteWizard/releases/latest/download/NoteWizard-Linux-x64.AppImage)
-
-
->   [View All Releases](https://github.com/jetyu/NoteWizard/releases)
-
-
-## Official Wiki
-[![NoteWizard Wiki](https://img.shields.io/badge/NoteWizard-Wiki-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/jetyu/NoteWizard/wiki)
-
-## License
-
-This project is licensed under the MIT License. See the `LICENSE` file for details.
-
-## Acknowledgments
-
-Thanks to the following open source projects:
-- [Electron](https://www.electronjs.org/)
-- [CodeMirror](https://codemirror.net/)
-- [markdown-it](https://github.com/markdown-it/markdown-it)
-
----
-
-### Star History
-[![Star History Chart](https://api.star-history.com/svg?repos=jetyu/NoteWizard)](https://star-history.com/#jetyu/NoteWizard)  
+1. 先看 `stores/documentStore.ts` + `composables/useEditorDocument.ts`（状态流）
+2. 再看 `electron/preload/index.js` + `electron/main/ipc/editor.js`（安全边界 + schema）
+3. 再看 `core/markdown/markdownService.ts`（安全渲染）
+4. 最后看 `tests/unit` 与 `tests/e2e`（测试闭环）
