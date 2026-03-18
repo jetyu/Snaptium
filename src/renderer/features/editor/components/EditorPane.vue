@@ -1,7 +1,7 @@
 <template>
-  <section class="panel">
+  <div class="editor-pane">
     <div ref="editorHost" class="editor-host" />
-  </section>
+  </div>
 </template>
 
 <script setup lang="ts">

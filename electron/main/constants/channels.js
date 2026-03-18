@@ -1,4 +1,8 @@
 export const IPC_CHANNELS = {
   OPEN_FILE: 'editor:open-file',
   SAVE_FILE: 'editor:save-file',
+  VFS_INIT: 'vfs:init',
+  VFS_CREATE_FILE: 'vfs:create-file',
+  VFS_READ_CONTENT: 'vfs:read-content',
+  VFS_WRITE_CONTENT: 'vfs:write-content',
 };

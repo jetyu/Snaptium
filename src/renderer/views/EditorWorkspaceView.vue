@@ -1,30 +1,47 @@
 <template>
-  <main class="layout">
-    <header class="topbar">
-      <div>
-        <h1>NoteWizard</h1>
-        <p class="subtitle">{{ title }}</p>
+  <div class="app-layout">
+    <!-- 左侧笔记栏 -->
+    <WorkspaceSidebar />
+
+    <!-- 中间编辑器 -->
+    <section class="editor-col panel">
+      <div v-if="activeNote" class="col-header">
+        <span class="col-title">{{ $t('editorHeader') }}</span>
+        <span class="header-separator">/</span>
+        <span class="header-note-title" :title="activeNote.title">{{ activeNote.title }}</span>
       </div>
-
-      <div class="actions">
-        <button :disabled="isBusy" @click="openFile">Open</button>
-        <button :disabled="isBusy" @click="saveFile">Save</button>
+      <div v-if="activeNote" class="editor-wrapper">
+        <EditorPane
+          :model-value="activeNote.content"
+          @update:model-value="updateActiveContent"
+        />
       </div>
-    </header>
-
-    <p v-if="error" class="error-banner">{{ error }}</p>
-
-    <section class="workspace">
-      <EditorPane v-model="markdown" />
-      <PreviewPane :markdown="markdown" />
+      <div v-else class="col-empty">
+        <p>{{ $t('selectOrCreate') }}</p>
+      </div>
     </section>
-  </main>
+
+    <!-- 右侧预览 -->
+    <section class="preview-col panel">
+      <div class="col-header">
+        <span class="col-title">{{ $t('previewHeader') }}</span>
+      </div>
+      <PreviewPane
+        v-if="activeNote"
+        :markdown="activeNote.content"
+      />
+      <div v-else class="col-empty">
+        <p>{{ $t('noPreviewHeader') }}</p>
+      </div>
+    </section>
+  </div>
 </template>
 
 <script setup lang="ts">
-import EditorPane from '@renderer/components/EditorPane.vue';
-import PreviewPane from '@renderer/components/PreviewPane.vue';
-import { useEditorDocument } from '@renderer/composables/useEditorDocument';
+import WorkspaceSidebar from '@renderer/features/workspace/components/WorkspaceSidebar.vue';
+import { EditorPane } from '@renderer/features/editor';
+import { PreviewPane } from '@renderer/features/preview';
+import { useWorkspace } from '@renderer/features/workspace';
 
-const { markdown, title, isBusy, error, openFile, saveFile } = useEditorDocument();
+const { activeNote, updateActiveContent } = useWorkspace();
 </script>

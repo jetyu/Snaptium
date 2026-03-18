@@ -5,8 +5,15 @@ export {};
 declare global {
   interface Window {
     electronAPI: {
-      openFile: () => Promise<OpenFileResult | null>;
-      saveFile: (payload: SaveFilePayload) => Promise<SaveFileResult | null>;
+      openFile: () => Promise<import('./services/electronApi').OpenFileResult | null>;
+      saveFile: (payload: import('./services/electronApi').SaveFilePayload) => Promise<import('./services/electronApi').SaveFileResult | null>;
+      log: (payload: { level: string; source: string; message: string }) => void;
+      vfs?: {
+        initWorkspace: (rootPath?: string) => Promise<{ root: string, nodes: any[] }>;
+        createFile: (payload: { parentId: string | null, name: string, content?: string }) => Promise<any>;
+        readContent: (contentId: string) => Promise<string>;
+        writeContent: (payload: { contentId: string, content: string }) => Promise<boolean>;
+      }
     };
   }
 }

@@ -445,3 +445,20 @@ renderer
 ├─ ai
 └─ platform
 ```
+## 18. 多国语言
+不允许语言硬编码，所有界面显示内容必须从语言包中获取。使用：i18n实现多语言
+目前可以只支持中文和英文，后续可以扩展。
+语言文件命名规则：
+zh-CN.json
+en-US.json
+示例：
+
+```json
+{
+  "appName": "NoteWizard",
+  "workspace": "Workspace",
+  "outline": "Outline",
+  "collapsePanel": "Collapse Panel",
+  "newNote": "New Note"
+}
+```

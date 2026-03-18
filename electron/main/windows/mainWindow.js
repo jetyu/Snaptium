@@ -22,7 +22,7 @@ export function createMainWindow({ isDev, appPath }) {
 
   if (isDev) {
     mainWindow.loadURL('http://127.0.0.1:5173');
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
+    // mainWindow.webContents.openDevTools({ mode: 'detach' });
   } else {
     mainWindow.loadFile(path.join(appPath, 'dist/renderer/index.html'));
   }

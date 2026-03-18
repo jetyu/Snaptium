@@ -1,97 +1,300 @@
+/* ===== Design Tokens ===== */
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  --bg: #161a21;
-  --panel: #1f2530;
-  --panel-border: #2f3847;
-  --text: #d9e0ee;
-  --accent: #5c8dff;
-  --error: #ff6b6b;
+
+  --bg:             #f0f2f5;
+  --panel:          #ffffff;
+  --panel-hover:    #f5f7fa;
+  --panel-border:   #dde1e9;
+  --text:           #1e2330;
+  --text-muted:     #8792a8;
+  --accent:         #3b72f6;
+  --accent-hover:   #2563eb;
+  --danger:         #e5484d;
+  --sidebar-width:  260px;
+  --col-header-h:   40px;
+  --radius:         0.6rem;
 }
 
-* { box-sizing: border-box; }
+/* ===== Reset ===== */
+*, *::before, *::after { box-sizing: border-box; }
 
 body {
   margin: 0;
   color: var(--text);
   background: var(--bg);
+  overflow: hidden;
 }
 
-.layout {
-  min-height: 100vh;
+/* ===== Three-Column App Layout ===== */
+.app-layout {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  gap: 0;
+  overflow: hidden;
+}
+
+/* ===== Sidebar (Left Column) ===== */
+.sidebar {
+  width: var(--sidebar-width);
+  min-width: var(--sidebar-width);
+  max-width: var(--sidebar-width);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border-right: 1px solid var(--panel-border);
+  overflow: hidden;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  height: var(--col-header-h);
+  border-bottom: 1px solid var(--panel-border);
+  flex-shrink: 0;
+}
+
+.sidebar-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.btn-new-note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--panel-border);
+  border-radius: 0.4rem;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.btn-new-note:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* Note List */
+.note-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.note-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 14px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background 0.12s, border-color 0.12s;
+}
+
+.note-item:hover {
+  background: var(--panel-hover);
+}
+
+.note-item.active {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-left-color: var(--accent);
+}
+
+.note-item-title {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-item.active .note-item-title {
+  color: var(--accent-hover);
+}
+
+.note-item-date {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+/* Empty State */
+.sidebar-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 2rem;
+  text-align: center;
+}
+
+.sidebar-empty p { margin: 0; }
+
+.btn-create-first {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-create-first:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ===== Middle (Editor) & Right (Preview) Columns ===== */
+.editor-col,
+.preview-col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--panel);
+}
+
+.editor-col {
+  border-right: 1px solid var(--panel-border);
+}
+
+/* Column Header */
+.col-header {
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  height: var(--col-header-h);
+  border-bottom: 1px solid var(--panel-border);
+  flex-shrink: 0;
+}
+
+.col-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+/* Editor fills the column */
+.editor-wrapper {
+  flex: 1;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--panel-border);
-}
-
-.topbar h1 {
-  margin: 0;
-}
-
-.subtitle {
-  margin: 0.2rem 0 0;
-  color: #94a1b6;
-  font-size: 0.85rem;
-}
-
-.error-banner {
-  margin: 0.75rem;
-  border: 1px solid color-mix(in srgb, var(--error) 70%, black);
-  background: color-mix(in srgb, var(--error) 15%, transparent);
-  color: #ffd1d1;
-  border-radius: 0.5rem;
-  padding: 0.5rem 0.7rem;
-}
-
-.actions button {
-  border: 1px solid var(--panel-border);
-  background: var(--panel);
-  color: var(--text);
-  padding: 0.4rem 0.75rem;
-  border-radius: 0.45rem;
-  cursor: pointer;
-  margin-left: 0.5rem;
-}
-
-.actions button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.workspace {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  padding: 0.75rem;
-  height: calc(100vh - 65px);
-}
-
 .panel {
-  border: 1px solid var(--panel-border);
-  border-radius: 0.65rem;
-  background: var(--panel);
-  overflow: auto;
+  border: none;
 }
 
+/* Empty column state */
+.col-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.col-empty p { margin: 0; }
+
+/* ===== EditorPane (CodeMirror host) ===== */
 .editor-host {
   height: 100%;
+  overflow: hidden;
 }
 
+/* ===== Preview Pane ===== */
 .preview {
-  padding: 1rem;
-  line-height: 1.7;
+  flex: 1;
+  padding: 1.25rem 1.5rem;
+  overflow-y: auto;
+  line-height: 1.75;
+  font-size: 0.95rem;
 }
 
 .preview h1,
 .preview h2,
 .preview h3 {
   border-bottom: 1px solid var(--panel-border);
-  padding-bottom: 0.35rem;
+  padding-bottom: 0.3rem;
+  margin-top: 1.4rem;
 }
+
+.preview h1 { font-size: 1.7rem; }
+.preview h2 { font-size: 1.35rem; }
+.preview h3 { font-size: 1.1rem; }
+
+.preview code {
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  border-radius: 0.3rem;
+  padding: 0.15em 0.4em;
+  font-size: 0.87em;
+  font-family: 'JetBrains Mono', Consolas, monospace;
+}
+
+.preview pre {
+  background: #f3f5f8;
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  overflow-x: auto;
+}
+
+.preview pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+}
+
+.preview blockquote {
+  border-left: 3px solid var(--accent);
+  margin: 0;
+  padding: 0.5rem 1rem;
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--text-muted);
+}
+
+.preview a {
+  color: var(--accent-hover);
+  text-decoration: none;
+}
+
+.preview a:hover {
+  text-decoration: underline;
+}
+
+/* ===== Editor Pane Container ===== */
+.editor-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
