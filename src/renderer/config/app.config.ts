@@ -1,5 +1,5 @@
 export const appConfig = {
-  appName: 'NoteWizard',
+  appName: 'Pilotra',
   defaultLocale: 'zh-CN',
   fallbackLocale: 'en-US',
 } as const;

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_CHANNELS } from '../main/constants/channels.js';
+import { IPC_CHANNELS } from '../main/constants/channels.constants.js';
 
 const electronAPI = Object.freeze({
   openFile: () => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE),

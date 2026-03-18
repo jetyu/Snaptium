@@ -8,7 +8,7 @@ export function createMainWindow({ isDev, appPath }) {
     minWidth: 960,
     minHeight: 680,
     show: false,
-    title: 'NoteWizard',
+    title: 'Pilotra',
     webPreferences: {
       preload: path.join(appPath, 'electron/preload/index.js'),
       contextIsolation: true,

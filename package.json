@@ -54,8 +54,8 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.app.notewizard",
-    "productName": "NoteWizard",
+    "appId": "com.app.pilotra",
+    "productName": "Pilotra",
     "directories": {
       "output": "dist"
     },

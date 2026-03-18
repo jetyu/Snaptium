@@ -11,6 +11,16 @@ export interface Note {
   updatedAt: number;
 }
 
+interface WorkspaceNode {
+  id: string;
+  type: string;
+  name: string;
+  contentId?: string;
+  createdAt: number;
+  updatedAt: number;
+  trashed?: boolean;
+}
+
 // Generate UUID
 function generateUUID(): string {
   return crypto.randomUUID();
@@ -31,12 +41,34 @@ function createDefaultNotes(): Note[] {
   ];
 }
 
+function createFallbackNotes(): Note[] {
+  return createDefaultNotes();
+}
+
+function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
+  if (node.type !== 'file' || !node.contentId || node.trashed) {
+    return null;
+  }
+
+  const title = node.name?.trim() || i18n.global.t('newNote');
+
+  return {
+    id: node.id,
+    contentId: node.contentId,
+    title,
+    content,
+    createdAt: node.createdAt,
+    updatedAt: node.updatedAt,
+  };
+}
+
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => {
     const notes = createDefaultNotes();
     return {
       notes,
       activeNoteId: notes[0].id as string | null,
+      initialized: false,
     };
   },
 
@@ -53,6 +85,43 @@ export const useWorkspaceStore = defineStore('workspace', {
   },
 
   actions: {
+    async initializeWorkspace() {
+      if (this.initialized) {
+        return;
+      }
+
+      if (!window.electronAPI?.vfs) {
+        logger.warn('electronAPI.vfs not available, falling back to in-memory notes.');
+        this.notes = createFallbackNotes();
+        this.activeNoteId = this.notes[0]?.id ?? null;
+        this.initialized = true;
+        return;
+      }
+
+      try {
+        const { nodes } = await window.electronAPI.vfs.initWorkspace();
+        const fileNodes = (nodes as WorkspaceNode[])
+          .filter((node) => node.type === 'file' && node.contentId && !node.trashed);
+
+        const loadedNotes = (await Promise.all(
+          fileNodes.map(async (node) => {
+            const content = await window.electronAPI.vfs!.readContent(node.contentId as string);
+            return mapNodeToNote(node, content);
+          }),
+        )).filter((note): note is Note => note !== null);
+
+        this.notes = loadedNotes.length > 0 ? loadedNotes : createFallbackNotes();
+        this.activeNoteId = this.notes[0]?.id ?? null;
+        logger.info(`Workspace initialized with ${this.notes.length} note(s).`);
+      } catch (err: unknown) {
+        logger.error(`Failed to initialize workspace: ${err instanceof Error ? err.message : String(err)}`);
+        this.notes = createFallbackNotes();
+        this.activeNoteId = this.notes[0]?.id ?? null;
+      } finally {
+        this.initialized = true;
+      }
+    },
+
     // 选中指定笔记
     selectNote(id: string) {
       if (this.notes.some((n) => n.id === id)) {
@@ -70,13 +139,13 @@ export const useWorkspaceStore = defineStore('workspace', {
         }
 
         const title = i18n.global.t('newNote');
-        const content = `# ${title}\n\n...`;
+        const content = `# ${title}\n\n`;
 
         // Wait for main process VFS to create actual file & register in nodes.jsonl
         const node = await window.electronAPI.vfs.createFile({
           parentId: null,
           name: title,
-          content
+          content,
         });
 
         const newNote: Note = {
@@ -91,14 +160,15 @@ export const useWorkspaceStore = defineStore('workspace', {
         this.notes.unshift(newNote);
         this.activeNoteId = newNote.id;
         logger.info(`Created new note: ${node.id} with contentId ${node.contentId}`);
-      } catch (err: any) {
-        logger.error(`Failed to invoke VFS createFile: ${err}`);
-        alert(`Failed to save! Error: ${err.message || err}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error(`Failed to invoke VFS createFile: ${message}`);
+        alert(`Failed to save! Error: ${message}`);
       }
     },
 
     // 更新当前激活笔记的内容
-    updateActiveContent(content: string) {
+    async updateActiveContent(content: string) {
       const note = this.notes.find((n) => n.id === this.activeNoteId);
       if (!note) return;
       note.content = content;
@@ -108,6 +178,18 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (match) {
         note.title = match[1].trim();
       }
+
+      if (window.electronAPI?.vfs) {
+        const saved = await window.electronAPI.vfs.writeContent({
+          contentId: note.contentId,
+          content,
+        });
+
+        if (!saved) {
+          logger.warn(`Failed to persist content for note: ${this.activeNoteId}`);
+        }
+      }
+
       logger.debug(`Updated content for note: ${this.activeNoteId}`);
     },
 
