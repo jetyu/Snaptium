@@ -14,10 +14,10 @@ export function useWorkspace() {
     sortedNotes,
     activeNote,
     activeNoteId,
-    initializeWorkspace: store.initializeWorkspace,
-    selectNote: store.selectNote,
-    createNote: store.createNote,
-    updateActiveContent: store.updateActiveContent,
-    deleteNote: store.deleteNote,
+    initializeWorkspace: () => store.initializeWorkspace(),
+    selectNote: (id: string) => store.selectNote(id),
+    createNote: () => store.createNote(),
+    updateActiveContent: (content: string) => store.updateActiveContent(content),
+    deleteNote: (id: string) => store.deleteNote(id),
   };
 }
