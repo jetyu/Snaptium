@@ -14,6 +14,7 @@ export function useWorkspace() {
     sortedNotes,
     activeNote,
     activeNoteId,
+    initializeWorkspace: store.initializeWorkspace,
     selectNote: store.selectNote,
     createNote: store.createNote,
     updateActiveContent: store.updateActiveContent,

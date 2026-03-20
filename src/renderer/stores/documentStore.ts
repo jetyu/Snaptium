@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 
 export const useDocumentStore = defineStore('document', {
   state: () => ({
-    markdown: '# Welcome to NoteWizard\n\nStart writing Markdown here.',
+    markdown: '# Welcome to Pilotra\n\nStart writing Markdown here.',
     filePath: null as string | null,
     isBusy: false,
     error: '',
