@@ -1,16 +1,27 @@
-import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_CHANNELS } from '../main/constants/channels.constants.js';
+// Generated from electron/preload/src/index.js. Edit the source file, not this build artifact.
+'use strict';
 
-const electronAPI = Object.freeze({
-  openFile: () => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE),
-  saveFile: (payload) => ipcRenderer.invoke(IPC_CHANNELS.SAVE_FILE, payload),
-  log: (payload) => ipcRenderer.send('logger:log', payload),
-  vfs: {
-    initWorkspace: (rootPath) => ipcRenderer.invoke(IPC_CHANNELS.VFS_INIT, rootPath),
-    createFile: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_CREATE_FILE, payload),
-    readContent: (contentId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_READ_CONTENT, contentId),
-    writeContent: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_WRITE_CONTENT, payload)
-  }
+const electron = require('electron');
+
+const IPC_CHANNELS = Object.freeze({
+  OPEN_FILE: 'editor:open-file',
+  SAVE_FILE: 'editor:save-file',
+  VFS_INIT: 'vfs:init',
+  VFS_CREATE_FILE: 'vfs:create-file',
+  VFS_READ_CONTENT: 'vfs:read-content',
+  VFS_WRITE_CONTENT: 'vfs:write-content'
 });
 
-contextBridge.exposeInMainWorld('electronAPI', electronAPI);
+const electronAPI = Object.freeze({
+  openFile: () => electron.ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE),
+  saveFile: (payload) => electron.ipcRenderer.invoke(IPC_CHANNELS.SAVE_FILE, payload),
+  log: (payload) => electron.ipcRenderer.send('logger:log', payload),
+  vfs: Object.freeze({
+    initWorkspace: (rootPath) => electron.ipcRenderer.invoke(IPC_CHANNELS.VFS_INIT, rootPath),
+    createFile: (payload) => electron.ipcRenderer.invoke(IPC_CHANNELS.VFS_CREATE_FILE, payload),
+    readContent: (contentId) => electron.ipcRenderer.invoke(IPC_CHANNELS.VFS_READ_CONTENT, contentId),
+    writeContent: (payload) => electron.ipcRenderer.invoke(IPC_CHANNELS.VFS_WRITE_CONTENT, payload)
+  })
+});
+
+electron.contextBridge.exposeInMainWorld('electronAPI', electronAPI);
