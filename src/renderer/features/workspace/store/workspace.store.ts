@@ -62,12 +62,19 @@ function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
   };
 }
 
+function createEmptyWorkspaceState() {
+  return {
+    notes: [] as Note[],
+    activeNoteId: null as string | null,
+  };
+}
+
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => {
-    const notes = createDefaultNotes();
+    const { notes, activeNoteId } = createEmptyWorkspaceState();
     return {
       notes,
-      activeNoteId: notes[0].id as string | null,
+      activeNoteId,
       initialized: false,
     };
   },
@@ -110,7 +117,7 @@ export const useWorkspaceStore = defineStore('workspace', {
           }),
         )).filter((note): note is Note => note !== null);
 
-        this.notes = loadedNotes.length > 0 ? loadedNotes : createFallbackNotes();
+        this.notes = loadedNotes;
         this.activeNoteId = this.notes[0]?.id ?? null;
         logger.info(`Workspace initialized with ${this.notes.length} note(s).`);
       } catch (err: unknown) {
@@ -138,6 +145,10 @@ export const useWorkspaceStore = defineStore('workspace', {
           return;
         }
 
+        if (!this.initialized) {
+          await this.initializeWorkspace();
+        }
+
         const title = i18n.global.t('newNote');
         const content = `# ${title}\n\n`;
 
@@ -157,7 +168,7 @@ export const useWorkspaceStore = defineStore('workspace', {
           updatedAt: node.updatedAt,
         };
 
-        this.notes.unshift(newNote);
+        this.notes = [newNote, ...this.notes.filter((note) => note.id !== newNote.id)];
         this.activeNoteId = newNote.id;
         logger.info(`Created new note: ${node.id} with contentId ${node.contentId}`);
       } catch (err: unknown) {
