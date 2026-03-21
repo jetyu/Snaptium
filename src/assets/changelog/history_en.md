@@ -1,3 +1,9 @@
+### [1.2.0] - 2026-03-27
+#### New
+- Added log recording module, supporting multi-level log output.
+#### Improved
+- Upgraded Electron runtime framework to v41.0.2.
+
 ### [1.1.5] - 2026-03-11
 #### Fixed
 - Fixed an issue where the note name edit state was not displayed correctly.
@@ -288,3 +294,4 @@ During 7 months of continuous iteration and optimization, this version delivers 
 - Initial release of the application.
 - Implemented core Markdown editor with real-time preview.
 - Added support for Windows 7 and later operating systems.
+

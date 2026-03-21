@@ -17,6 +17,7 @@ import { createAutoUpdaterManager } from "./src/modules/updater/auto-updater.js"
 import { createImportExportManager } from "./src/modules/import-export/import-export-ipc.js";
 import { createEncryptionManager } from "./src/modules/encryption/encryption-ipc.js";
 import { registerApiBridge } from "./src/modules/api-bridge/api-bridge.js";
+import { createLoggerManager } from "./src/modules/logger/index.js";
 
 const require = createRequire(import.meta.url);
 const AdmZip = require('adm-zip');
@@ -69,7 +70,35 @@ global.t = t;
 
 // ==================== 初始化管理器 ====================
 function initializeManagers() {
-  // 0. 注册通用 API 桥接
+  // 1. 创建配置管理器
+  managers.preferences = createPreferencesManager({
+    app,
+    fs,
+    path,
+    ipcMain,
+    dialog,
+    t,
+    logger: console
+  });
+
+  // 2. 加载日志配置
+  const loggingSettings = managers.preferences.getPreference('loggingSettings', { enabled: true, level: 'info' });
+
+  // 3. 创建日志管理器
+  managers.logger = createLoggerManager({
+    app,
+    dialog,
+    shell,
+    t,
+    AdmZip,
+    settings: loggingSettings,
+    appLoggerCategory: "LogManager-Box"
+  });
+
+  // 4. 为配置管理器注入真正的日志记录器
+  managers.preferences.setLogger(managers.logger.createLogger("Preference-Box"));
+
+  // 5. 注册通用 API 桥接
   registerApiBridge({
     ipcMain,
     app,
@@ -79,17 +108,8 @@ function initializeManagers() {
     path,
     os,
     require,
-    getWindow: () => managers.window?.getMainWindow()
-  });
-
-  // 1. 创建配置管理器
-  managers.preferences = createPreferencesManager({
-    app,
-    fs,
-    path,
-    ipcMain,
-    dialog,
-    t
+    getWindow: () => managers.window?.getMainWindow(),
+    logger: managers.logger.createLogger("APIsBridge-Box")
   });
 
   // 2. 创建国际化管理器
@@ -100,6 +120,7 @@ function initializeManagers() {
     localesDir: path.join(__dirname, "src", "locales"),
     getPreference: managers.preferences.getPreference,
     setPreference: managers.preferences.setPreference,
+    logger: managers.logger.createLogger("AppLocales-Box"),
     onLanguageChanged: (lang) => {
       // 语言切换后的回调：重建菜单和托盘
       const iconPath = managers.window?.getIconPath();
@@ -135,14 +156,16 @@ function initializeManagers() {
   // 3. 创建开机启动管理器
   managers.startup = createStartupManager({
     app,
-    ipcMain
+    ipcMain,
+    logger: managers.logger.createLogger("AppStartup-Box")
   });
 
   // 4. 创建图片管理器
   managers.images = createImagesManager({
     fs,
     path,
-    ipcMain
+    ipcMain,
+    logger: managers.logger.createLogger("PasteImage-Box")
   });
 
   // 5. 创建窗口管理器
@@ -152,7 +175,8 @@ function initializeManagers() {
     app,
     path,
     ipcMain,
-    __dirname
+    __dirname,
+    logger: managers.logger.createLogger("AppWindows-Box")
   });
 
   // 6. 创建更新管理器
@@ -163,7 +187,8 @@ function initializeManagers() {
     t,
     getWindow: () => managers.window.getMainWindow(),
     releasePageUrl: RELEASE_PAGE_URL,
-    currentVersion: app.getVersion()
+    currentVersion: app.getVersion(),
+    logger: managers.logger.createLogger("AppUpdater-Box")
   });
 
   // 7. 创建导入导出管理器
@@ -174,7 +199,8 @@ function initializeManagers() {
     getPreference: managers.preferences.getPreference,
     t,
     getWindow: () => managers.window.getMainWindow(),
-    AdmZip
+    AdmZip,
+    logger: managers.logger.createLogger("ImOrExport-Box")
   });
 
   // 8. 创建加密管理器
@@ -182,7 +208,8 @@ function initializeManagers() {
     ipcMain,
     preferencesManager: managers.preferences,
     app,
-    getWindow: () => managers.window.getMainWindow()
+    getWindow: () => managers.window.getMainWindow(),
+    logger: managers.logger.createLogger("Encryption-Box")
   });
 
   // 9. 创建菜单管理器
@@ -201,6 +228,7 @@ function initializeManagers() {
     handleManualUpdateCheck: async () => {
       await managers.updater.checkForUpdates();
     },
+    loggerManager: managers.logger,
     __dirname
   });
 
@@ -214,14 +242,17 @@ function initializeManagers() {
     t,
     getWindow: () => managers.window.getMainWindow(),
     closeAllWindows: () => managers.window.closeAllWindows(),
-    __dirname
+    __dirname,
+    logger: managers.logger.createLogger("WindowTray-Box")
   });
+
 }
 
 // ==================== 业务相关 IPC 处理器 ====================
 
 // 处理保存请求
 ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
+  managers.logger?.appLogger.debug('IPC received: save-file-content');
   const win = managers.window?.getMainWindow();
   if (!win) return { success: false, error: "Window not initialized" };
 
@@ -242,15 +273,17 @@ ipcMain.handle("save-file-content", async (event, { content, filePath }) => {
     }
 
     await fs.promises.writeFile(targetPath, content, "utf-8");
+    managers.logger?.appLogger.info('File saved successfully: ' + targetPath);
     return { success: true, filePath: targetPath };
   } catch (error) {
-    console.error('Failed to save file:', error);
+    managers.logger?.appLogger.error('Failed to save file: ' + error.message);
     return { success: false, error: error.message };
   }
 });
 
 // 处理目录选择对话框
 ipcMain.handle("select-directory", async (event, defaultPath) => {
+  managers.logger?.appLogger.debug('IPC received: select-directory');
   const win = managers.window?.getMainWindow();
   if (!win) return null;
 
@@ -261,19 +294,31 @@ ipcMain.handle("select-directory", async (event, defaultPath) => {
   return result.canceled ? null : result.filePaths[0];
 });
 
+// 处理日志配置更新
+ipcMain.handle("logger:update-config", async (event, settings) => {
+  managers.logger?.appLogger.debug('IPC received: logger:update-config');
+  try {
+    managers.logger?.updateLoggerConfig(settings);
+    return { success: true };
+  } catch (error) {
+    managers.logger?.appLogger.error('Failed to update logger config: ' + error.message);
+    return { success: false, error: error.message };
+  }
+});
+
 // 处理自动更新切换
 ipcMain.handle("auto-update:toggle", async (event, enabled) => {
   try {
     if (enabled) {
-      console.log('[Auto-Update] Enabling auto-update checks');
+      managers.logger?.appLogger.debug('Enabling auto-update checks');
       managers.updater.startAutoUpdateCheck();
     } else {
-      console.log('[Auto-Update] Disabling auto-update checks');
+      managers.logger?.appLogger.debug('Disabling auto-update checks');
       managers.updater.stopAutoUpdateCheck();
     }
     return { success: true };
   } catch (error) {
-    console.error('[Auto-Update] Failed to toggle auto-update:', error);
+    managers.logger?.appLogger.error('Failed to toggle auto-update: ' + error.message);
     return { success: false, error: error.message };
   }
 });
@@ -334,14 +379,11 @@ app.whenReady().then(() => {
   (async () => {
     const autoUpdate = managers.preferences.getPreference('autoUpdate', true);
     if (autoUpdate) {
-      console.log('[Auto-Update] Auto-update is enabled, starting background checks');
       managers.updater.startAutoUpdateCheck();
     } else {
-      console.log('[Auto-Update] Auto-update is disabled');
+      managers.logger?.appLogger.info('Auto-updater is disabled');
     }
   })();
-
-  console.log('NoteWizard Started');
 });
 
 // ==================== 应用事件 ====================
@@ -353,20 +395,10 @@ app.on('window-all-closed', () => {
   }
 });
 
-// 未捕获的异常处理
-process.on('uncaughtException', (error) => {
-  console.error('Uncaught exception:', error);
-  dialog.showErrorBox('Application Error', 'Unhandled error occurred: ' + error.message);
-});
-
-// 未处理的 Promise 拒绝
-process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Promise rejection:', reason);
-  dialog.showErrorBox('Promise Error', 'Unhandled Promise rejection: ' + (reason instanceof Error ? reason.message : String(reason)));
-});
-
 // 应用即将退出
 app.on('will-quit', (event) => {
-  console.log('NoteWizard will quit');
+  managers.logger?.appLogger.info('NoteWizard will quit');
+  managers.logger?.destroy();
   // 可以在这里执行清理操作
 });
+

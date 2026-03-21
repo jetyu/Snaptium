@@ -17,6 +17,7 @@
  * @param {Function} deps.closeAllWindows - 关闭所有窗口函数
  * @param {Object} deps.importExportManager - 导入导出管理器
  * @param {Function} deps.handleManualUpdateCheck - 手动检查更新函数
+ * @param {Object} deps.loggerManager - 日志管理器
  * @param {string} deps.__dirname - 应用根目录
  * @returns {Object} 菜单管理器实例
  */
@@ -24,7 +25,7 @@ export function createMenuManager(deps) {
   const {
     Menu, BrowserWindow, dialog, shell, fs, path, app,
     t, getWindow, closeAllWindows,
-    importExportManager, handleManualUpdateCheck,
+    importExportManager, handleManualUpdateCheck, loggerManager, logger,
     __dirname
   } = deps;
 
@@ -315,6 +316,50 @@ export function createMenuManager(deps) {
             }
           },
         },
+        {
+          label: t("menu.help.logManagement"),
+          submenu: [
+            {
+              label: t("menu.help.logManagement.openLogDirectory"),
+              click: async () => {
+                if (loggerManager) {
+                  await loggerManager.openLogDirectory();
+                }
+              },
+            },
+            {
+              label: t("menu.help.logManagement.exportLogs"),
+              click: async () => {
+                const win = getWindow();
+                if (!loggerManager || !win) return;
+
+                const result = await loggerManager.exportLogs(win);
+                if (result.success) {
+                  dialog.showMessageBox(win, {
+                    type: "info",
+                    title: t("menu.help.logManagement.exportSuccessTitle"),
+                    message: t("menu.help.logManagement.exportSuccessMessage"),
+                    detail: result.filePath
+                  });
+                }
+              },
+            },
+            {
+              label: t("menu.help.logManagement.cleanupNow"),
+              click: async () => {
+                const win = getWindow();
+                if (!loggerManager || !win) return;
+
+                const result = loggerManager.cleanupNow();
+                dialog.showMessageBox(win, {
+                  type: "info",
+                  title: t("menu.help.logManagement.cleanupSuccessTitle"),
+                  message: t("menu.help.logManagement.cleanupSuccessMessage").replace("{count}", String(result.removed))
+                });
+              },
+            },
+          ],
+        },
         { type: "separator" },
         {
           label: t("menu.help.website"),
@@ -465,7 +510,7 @@ export function createMenuManager(deps) {
         closeItem.enabled = true;
       }
     } catch (error) {
-      console.error("[Menu] Failed to setup menu state:", error);
+      logger?.error("Failed to setup menu state: " + error.message);
     }
   }
 

@@ -18,7 +18,7 @@ const DEFAULT_LANG = "en-US";
  * @returns {Object} 国际化管理器实例
  */
 export function createI18nManager(deps) {
-  const { fs, path, ipcMain, localesDir, getPreference, setPreference, onLanguageChanged } = deps;
+  const { fs, path, ipcMain, localesDir, getPreference, setPreference, onLanguageChanged, logger } = deps;
   
   let currentLang = DEFAULT_LANG;
   let translations = {};
@@ -38,7 +38,7 @@ export function createI18nManager(deps) {
         return true;
       }
     } catch (error) {
-      console.error(`Failed to load language ${lang}:`, error);
+      logger?.error(`Failed to load language ${lang}: ` + error.message);
     }
     return false;
   }
@@ -87,6 +87,7 @@ export function createI18nManager(deps) {
   function switchLanguage(lang) {
     if (loadLanguage(lang)) {
       setPreference('language', lang);
+      logger?.info(`Language switched to: ${lang}`);
       
       // 触发语言切换回调（重建菜单、托盘等）
       if (onLanguageChanged) {
@@ -104,6 +105,7 @@ export function createI18nManager(deps) {
   function registerIpcHandlers() {
     // 监听语言切换
     ipcMain.on("language-changed", (event, lang) => {
+      logger?.debug('IPC received: language-changed');
       switchLanguage(lang);
     });
   }

@@ -15,7 +15,7 @@ import * as path from "node:path";
  * @returns {Object} Markdown 导入器实例
  */
 export function createMarkdownImporter(dependencies) {
-  const { dialog, getPreference, t } = dependencies;
+  const { dialog, getPreference, t, logger } = dependencies;
 
   /**
    * 获取数据库目录路径
@@ -108,7 +108,7 @@ export function createMarkdownImporter(dependencies) {
           contentIds.add(node.contentId);
         }
       } catch (error) {
-        console.warn('[MarkdownImporter] Failed to parse node:', error);
+        logger?.error('Markdown Importer: Failed to parse node:', error);
       }
     }
 
@@ -125,8 +125,8 @@ export function createMarkdownImporter(dependencies) {
       // 检查数据库目录
       const databaseDir = getDatabaseDir();
       if (!databaseDir) {
-        return { 
-          success: false, 
+        return {
+          success: false,
           error: t('import.markdown.error.noWorkspace')
         };
       }
@@ -146,8 +146,8 @@ export function createMarkdownImporter(dependencies) {
       });
 
       if (canceled || filePaths.length === 0) {
-        return { 
-          success: false, 
+        return {
+          success: false,
           cancelled: true
         };
       }
@@ -195,12 +195,13 @@ export function createMarkdownImporter(dependencies) {
           trashed: false,
         };
 
-        // 追加到 nodes.jsonl
         fs.appendFileSync(nodesPath, JSON.stringify(node) + '\n', 'utf-8');
         importedCount++;
+
+        logger?.info(`Successfully imported Markdown file: ${filePath}`);
       }
 
-      console.log(`[MarkdownImporter] Successfully imported ${importedCount} notes`);
+      logger?.info(`Successfully imported ${importedCount} Markdown files`);
 
       return {
         success: true,
@@ -208,10 +209,10 @@ export function createMarkdownImporter(dependencies) {
         skippedCount: 0
       };
     } catch (error) {
-      console.error('[MarkdownImporter] Import failed:', error);
-      return { 
-        success: false, 
-        error: error.message 
+      logger?.error('Markdown Importer: Import failed:', error);
+      return {
+        success: false,
+        error: error.message
       };
     }
   }

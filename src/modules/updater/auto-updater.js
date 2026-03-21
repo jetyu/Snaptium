@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const { autoUpdater } = require("electron-updater");
 
-function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePageUrl, currentVersion }) {
+function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePageUrl, currentVersion, logger }) {
   let isCheckingForUpdates = false;
   let isDownloadingUpdate = false;
   let autoUpdaterInitialized = false;
@@ -72,6 +72,7 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
       isCheckingForUpdates = false;
       resetProgress();
 
+      logger?.info(`Update available: ${info.version}`);
       const detail = formatReleaseNotes(info);
       const { response } = await dialog.showMessageBox(getActiveWindow() ?? undefined, {
         type: "info",
@@ -91,6 +92,7 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
         isDownloadingUpdate = true;
         setProgress(0);
         try {
+          logger?.info('Starting update download');
           await autoUpdater.downloadUpdate();
         } catch (error) {
           isDownloadingUpdate = false;
@@ -131,7 +133,7 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
           error instanceof Error ? error.message : String(error)
         );
       } else {
-        console.error("[Auto-Update] Background check failed:", error);
+        logger?.error("Background check failed: " + (error instanceof Error ? error.message : String(error)));
       }
       isBackgroundCheck = false;
     });
@@ -145,6 +147,7 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
     });
 
     autoUpdater.on("update-downloaded", async () => {
+      logger?.info('Update downloaded successfully');
       isDownloadingUpdate = false;
       resetProgress();
       const { response } = await dialog.showMessageBox(getActiveWindow() ?? undefined, {
@@ -241,17 +244,17 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
     } catch (error) {
       isCheckingForUpdates = false;
       isBackgroundCheck = false;
-      console.error("[Auto-Update] Background check failed:", error);
+      logger?.error("Auto-update Background check failed: " + (error instanceof Error ? error.message : String(error)));
     }
   }
 
   function startAutoUpdateCheck() {
     if (autoUpdateIntervalId) {
-      console.log("[Auto-Update] Auto-update check already running");
+      logger?.info("Auto-update check already running");
       return;
     }
 
-    console.log("[Auto-Update] Starting auto-update check with interval:", AUTO_UPDATE_INTERVAL / 1000 / 60, "minutes");
+    logger?.info(`Auto-update Check started (interval= ${AUTO_UPDATE_INTERVAL / 1000 / 60} mins)`);
 
     // Perform initial check after 5 minutes
     setTimeout(() => {
@@ -266,7 +269,7 @@ function createAutoUpdaterManager({ app, dialog, shell, t, getWindow, releasePag
 
   function stopAutoUpdateCheck() {
     if (autoUpdateIntervalId) {
-      console.log("[Auto-Update] Stopping auto-update check");
+      logger?.info("Auto-update Check stopped");
       clearInterval(autoUpdateIntervalId);
       autoUpdateIntervalId = null;
     }

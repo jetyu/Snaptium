@@ -16,7 +16,7 @@ import { createMarkdownImporter } from './markdown-importer.js';
  * @returns {Object} 导入导出管理器实例
  */
 export function createImportExportManager(dependencies) {
-  const { ipcMain } = dependencies;
+  const { ipcMain, logger } = dependencies;
   const noteWizardExporter = createExporter(dependencies);
   const noteWizardImporter = createImporter(dependencies);
   const markdownExporter = createMarkdownExporter(dependencies);
@@ -88,11 +88,13 @@ export function createImportExportManager(dependencies) {
   function registerIpcHandlers() {
     // 导出笔记
     ipcMain.handle("notes:export", async () => {
+      logger?.debug('IPC received: notes:export');
       return await exportNotes();
     });
 
     // 导入笔记
     ipcMain.handle("notes:import", async () => {
+      logger?.debug('IPC received: notes:import');
       return await importNotes();
     });
   }
