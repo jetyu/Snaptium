@@ -5,7 +5,7 @@ export function useWorkspace() {
   const store = useWorkspaceStore();
 
   const notes = computed(() => store.notes);
-  const notebooks = computed(() => store.notebooks);
+  const notebooks = computed(() => store.sortedNotebooks);
   const sortedNotes = computed(() => store.sortedNotes);
   const activeNote = computed(() => store.activeNote);
   const activeNoteId = computed(() => store.activeNoteId);

@@ -15,6 +15,9 @@ const electronAPI = Object.freeze({
     readContent: (contentId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_READ_CONTENT, contentId),
     writeContent: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_WRITE_CONTENT, payload),
   }),
+  workspace: Object.freeze({
+    showContextMenu: (payload) => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, payload),
+  }),
 });
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

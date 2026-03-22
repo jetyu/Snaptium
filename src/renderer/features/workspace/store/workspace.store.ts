@@ -7,8 +7,10 @@ export interface Note {
   contentId: string;
   title: string;
   content: string;
+  parentId: string | null;
   createdAt: number;
   updatedAt: number;
+  locked?: boolean;
 }
 
 export interface Notebook {
@@ -17,6 +19,7 @@ export interface Notebook {
   parentId: string | null;
   createdAt: number;
   updatedAt: number;
+  locked?: boolean;
 }
 
 interface WorkspaceNode {
@@ -28,6 +31,7 @@ interface WorkspaceNode {
   createdAt: number;
   updatedAt: number;
   trashed?: boolean;
+  locked?: boolean;
 }
 
 function generateUUID(): string {
@@ -42,8 +46,10 @@ function createDefaultNotes(): Note[] {
       contentId: generateUUID(),
       title: i18n.global.t('welcome'),
       content: i18n.global.t('welcomeContent'),
+      parentId: null,
       createdAt: now - 60000,
       updatedAt: now - 60000,
+      locked: false,
     },
   ];
 }
@@ -57,15 +63,15 @@ function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
     return null;
   }
 
-  const title = node.name?.trim() || i18n.global.t('newNote');
-
   return {
     id: node.id,
     contentId: node.contentId,
-    title,
+    title: node.name?.trim() || i18n.global.t('newNote'),
     content,
+    parentId: node.parentId ?? null,
     createdAt: node.createdAt,
     updatedAt: node.updatedAt,
+    locked: node.locked ?? false,
   };
 }
 
@@ -80,6 +86,7 @@ function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
     parentId: node.parentId ?? null,
     createdAt: node.createdAt,
     updatedAt: node.updatedAt,
+    locked: node.locked ?? false,
   };
 }
 
@@ -97,7 +104,7 @@ export const useWorkspaceStore = defineStore('workspace', {
   getters: {
     activeNote: (state): Note | null => {
       if (!state.activeNoteId) return null;
-      return state.notes.find((n) => n.id === state.activeNoteId) ?? null;
+      return state.notes.find((note) => note.id === state.activeNoteId) ?? null;
     },
 
     sortedNotes: (state): Note[] =>
@@ -129,10 +136,7 @@ export const useWorkspaceStore = defineStore('workspace', {
         const folderNodes = workspaceNodes.filter((node) => node.type === 'folder' && !node.trashed);
 
         const loadedNotes = (await Promise.all(
-          fileNodes.map(async (node) => {
-            const content = await window.electronAPI.vfs!.readContent(node.contentId as string);
-            return mapNodeToNote(node, content);
-          }),
+          fileNodes.map(async (node) => mapNodeToNote(node, await window.electronAPI.vfs!.readContent(node.contentId as string))),
         )).filter((note): note is Note => note !== null);
 
         this.notes = loadedNotes.length > 0 ? loadedNotes : createFallbackNotes();
@@ -152,13 +156,13 @@ export const useWorkspaceStore = defineStore('workspace', {
     },
 
     selectNote(id: string) {
-      if (this.notes.some((n) => n.id === id)) {
+      if (this.notes.some((note) => note.id === id)) {
         this.activeNoteId = id;
         logger.info(`Selected note: ${id}`);
       }
     },
 
-    async createNote() {
+    async createNote(parentId: string | null = null) {
       try {
         if (!window.electronAPI?.vfs) {
           logger.warn('electronAPI.vfs not available, cannot physically save note.');
@@ -168,18 +172,20 @@ export const useWorkspaceStore = defineStore('workspace', {
         const title = i18n.global.t('newNote');
         const content = `# ${title}\n\n`;
         const node = await window.electronAPI.vfs.createFile({
-          parentId: null,
+          parentId,
           name: title,
           content,
         });
 
         const newNote: Note = {
           id: node.id,
-          contentId: node.contentId,
+          contentId: node.contentId!,
           title: node.name,
           content,
+          parentId: node.parentId ?? null,
           createdAt: node.createdAt,
           updatedAt: node.updatedAt,
+          locked: node.locked ?? false,
         };
 
         this.notes.unshift(newNote);
@@ -192,7 +198,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
     },
 
-    async createNotebook() {
+    async createNotebook(parentId: string | null = null) {
       try {
         if (!window.electronAPI?.vfs) {
           logger.warn('electronAPI.vfs not available, cannot physically save notebook.');
@@ -201,7 +207,7 @@ export const useWorkspaceStore = defineStore('workspace', {
 
         const name = i18n.global.t('default.newNotebook');
         const node = await window.electronAPI.vfs.createFolder({
-          parentId: null,
+          parentId,
           name,
         });
 
@@ -211,6 +217,7 @@ export const useWorkspaceStore = defineStore('workspace', {
           parentId: node.parentId ?? null,
           createdAt: node.createdAt,
           updatedAt: node.updatedAt,
+          locked: node.locked ?? false,
         });
         logger.info(`Created new notebook: ${node.id}`);
       } catch (err: unknown) {
@@ -221,8 +228,9 @@ export const useWorkspaceStore = defineStore('workspace', {
     },
 
     async updateActiveContent(content: string) {
-      const note = this.notes.find((n) => n.id === this.activeNoteId);
+      const note = this.notes.find((candidate) => candidate.id === this.activeNoteId);
       if (!note) return;
+
       note.content = content;
       note.updatedAt = Date.now();
       const match = content.match(/^#\s+(.+)$/m);
@@ -245,9 +253,10 @@ export const useWorkspaceStore = defineStore('workspace', {
     },
 
     deleteNote(id: string) {
-      const idx = this.notes.findIndex((n) => n.id === id);
-      if (idx === -1) return;
-      this.notes.splice(idx, 1);
+      const index = this.notes.findIndex((note) => note.id === id);
+      if (index === -1) return;
+
+      this.notes.splice(index, 1);
       if (this.activeNoteId === id) {
         this.activeNoteId = this.notes[0]?.id ?? null;
       }

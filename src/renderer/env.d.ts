@@ -9,11 +9,25 @@ interface WorkspaceNodePayload {
   createdAt: number;
   updatedAt: number;
   trashed?: boolean;
+  locked?: boolean;
 }
 
 interface WorkspaceRootPayload {
   root: string;
   nodes: WorkspaceNodePayload[];
+}
+
+interface WorkspaceContextMenuItemPayload {
+  action: string;
+  labelKey?: string;
+  label?: string;
+  type?: 'normal' | 'separator';
+  enabled?: boolean;
+}
+
+interface WorkspaceContextMenuPayload {
+  items: WorkspaceContextMenuItemPayload[];
+  labels?: Record<string, string>;
 }
 
 declare global {
@@ -28,6 +42,9 @@ declare global {
         createFolder: (payload: { parentId: string | null; name: string }) => Promise<WorkspaceNodePayload>;
         readContent: (contentId: string) => Promise<string>;
         writeContent: (payload: { contentId: string; content: string }) => Promise<boolean>;
+      };
+      workspace?: {
+        showContextMenu: (payload: WorkspaceContextMenuPayload) => Promise<string | null>;
       };
     };
   }

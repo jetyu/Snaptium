@@ -6,4 +6,5 @@ export const IPC_CHANNELS = {
   VFS_CREATE_FOLDER: 'vfs:create-folder',
   VFS_READ_CONTENT: 'vfs:read-content',
   VFS_WRITE_CONTENT: 'vfs:write-content',
+  WORKSPACE_SHOW_CONTEXT_MENU: 'workspace:show-context-menu',
 };

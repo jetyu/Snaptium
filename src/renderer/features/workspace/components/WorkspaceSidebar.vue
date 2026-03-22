@@ -1,24 +1,23 @@
 <template>
-  <aside class="sidebar" @click="closeCreateMenu">
+  <aside class="sidebar" @contextmenu.prevent="handleRootContextMenu">
     <div class="sidebar-header">
       <span class="sidebar-title">{{ $t('notes') }}</span>
-      <div class="create-menu-wrapper" @click.stop>
-        <button class="btn-new-note" :title="$t('newNote')" @click="toggleCreateMenu">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-          </svg>
-        </button>
-        <div v-if="isCreateMenuOpen" class="create-menu">
-          <button class="create-menu-item" @click="handleCreateNote">{{ $t('contextMenu.newNote') }}</button>
-          <button class="create-menu-item" @click="handleCreateNotebook">{{ $t('contextMenu.newNotebook') }}</button>
-        </div>
-      </div>
+      <button class="btn-new-note" :title="$t('newNote')" @click="openCreateMenu">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </button>
     </div>
 
     <section v-if="notebooks.length > 0" class="notebook-section">
       <p class="section-label">{{ $t('contextMenu.newNotebook') }}</p>
       <ul class="notebook-list">
-        <li v-for="notebook in notebooks" :key="notebook.id" class="notebook-item">
+        <li
+          v-for="notebook in notebooks"
+          :key="notebook.id"
+          class="notebook-item"
+          @contextmenu.prevent.stop="handleNodeContextMenu('folder', notebook)"
+        >
           <span class="notebook-icon">📁</span>
           <span class="notebook-name">{{ notebook.name }}</span>
         </li>
@@ -32,6 +31,7 @@
         class="note-item"
         :class="{ active: note.id === activeNoteId }"
         @click="selectNote(note.id)"
+        @contextmenu.prevent.stop="handleNodeContextMenu('file', note)"
       >
         <span class="note-item-title">{{ note.title }}</span>
         <span class="note-item-date">{{ formatDate(note.updatedAt) }}</span>
@@ -49,9 +49,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { logger } from '@renderer/features/logger';
 import { useWorkspace } from '@renderer/features/workspace';
+import type { Note, Notebook } from '@renderer/features/workspace/store/workspace.store';
 
 const {
   notes,
@@ -64,24 +65,109 @@ const {
 } = useWorkspace();
 
 const { t, locale } = useI18n();
-const isCreateMenuOpen = ref(false);
 
-function toggleCreateMenu() {
-  isCreateMenuOpen.value = !isCreateMenuOpen.value;
+type WorkspaceEntry = Note | Notebook;
+type WorkspaceEntryType = 'file' | 'folder';
+type WorkspaceAction =
+  | 'create-note'
+  | 'create-notebook'
+  | 'rename'
+  | 'delete'
+  | 'toggle-lock'
+  | 'show-in-folder'
+  | 'properties';
+
+const labels = {
+  'contextMenu.newNote': t('contextMenu.newNote'),
+  'contextMenu.newNotebook': t('contextMenu.newNotebook'),
+  'contextMenu.rename': t('contextMenu.rename'),
+  'contextMenu.delete': t('contextMenu.delete'),
+  'contextMenu.lock': t('contextMenu.lock'),
+  'contextMenu.showInFolder': t('contextMenu.showInFolder'),
+  'contextMenu.properties': t('contextMenu.properties'),
+};
+
+async function showContextMenu(items: Array<{ action?: WorkspaceAction; labelKey?: string; type?: 'normal' | 'separator' }>) {
+  if (!window.electronAPI?.workspace) {
+    logger.warn('electronAPI.workspace not available, cannot show native workspace context menu.');
+    return null;
+  }
+
+  return window.electronAPI.workspace.showContextMenu({
+    labels,
+    items: items.map((item) => ({
+      action: item.action ?? 'noop',
+      labelKey: item.labelKey,
+      type: item.type ?? 'normal',
+    })),
+  }) as Promise<WorkspaceAction | null>;
 }
 
-function closeCreateMenu() {
-  isCreateMenuOpen.value = false;
+function getTargetParentId(type: WorkspaceEntryType, entry: WorkspaceEntry): string | null {
+  if (type === 'folder') {
+    return entry.id;
+  }
+
+  return entry.parentId ?? null;
 }
 
-async function handleCreateNote() {
-  await createNote();
-  closeCreateMenu();
+async function runAction(action: WorkspaceAction | null, parentId: string | null = null) {
+  switch (action) {
+    case 'create-note':
+      await createNote(parentId);
+      break;
+    case 'create-notebook':
+      await createNotebook(parentId);
+      break;
+    case 'rename':
+    case 'delete':
+    case 'toggle-lock':
+    case 'show-in-folder':
+    case 'properties':
+      logger.info(`Workspace context menu action selected: ${action}`);
+      break;
+    default:
+      break;
+  }
 }
 
-async function handleCreateNotebook() {
-  await createNotebook();
-  closeCreateMenu();
+async function openCreateMenu() {
+  const action = await showContextMenu([
+    { action: 'create-note', labelKey: 'contextMenu.newNote' },
+    { action: 'create-notebook', labelKey: 'contextMenu.newNotebook' },
+  ]);
+
+  await runAction(action, null);
+}
+
+async function handleRootContextMenu() {
+  const action = await showContextMenu([
+    { action: 'create-note', labelKey: 'contextMenu.newNote' },
+    { action: 'create-notebook', labelKey: 'contextMenu.newNotebook' },
+    { type: 'separator' },
+    { action: 'properties', labelKey: 'contextMenu.properties' },
+  ]);
+
+  await runAction(action, null);
+}
+
+async function handleNodeContextMenu(type: WorkspaceEntryType, entry: WorkspaceEntry) {
+  if (type === 'file') {
+    selectNote(entry.id);
+  }
+
+  const action = await showContextMenu([
+    { action: 'create-note', labelKey: 'contextMenu.newNote' },
+    { action: 'create-notebook', labelKey: 'contextMenu.newNotebook' },
+    { type: 'separator' },
+    { action: 'rename', labelKey: 'contextMenu.rename' },
+    { action: 'delete', labelKey: 'contextMenu.delete' },
+    { action: 'toggle-lock', labelKey: 'contextMenu.lock' },
+    { action: 'show-in-folder', labelKey: 'contextMenu.showInFolder' },
+    { action: 'properties', labelKey: 'contextMenu.properties' },
+  ]);
+
+  await runAction(action, getTargetParentId(type, entry));
 }
 
 function formatDate(ts: number): string {
@@ -101,42 +187,6 @@ function formatDate(ts: number): string {
 </script>
 
 <style scoped>
-.create-menu-wrapper {
-  position: relative;
-}
-
-.create-menu {
-  position: absolute;
-  top: calc(100% + 6px);
-  right: 0;
-  min-width: 148px;
-  padding: 6px;
-  border-radius: 10px;
-  background: var(--color-surface, #fff);
-  border: 1px solid var(--color-border, #e5e7eb);
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
-  z-index: 20;
-}
-
-.create-menu-item,
-.btn-create-first.secondary {
-  width: 100%;
-}
-
-.create-menu-item {
-  display: block;
-  padding: 8px 10px;
-  border: none;
-  background: transparent;
-  text-align: left;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.create-menu-item:hover {
-  background: rgba(59, 130, 246, 0.08);
-}
-
 .notebook-section {
   padding: 8px 0 4px;
 }
@@ -160,6 +210,10 @@ function formatDate(ts: number): string {
   gap: 8px;
   padding: 8px 10px;
   border-radius: 8px;
+}
+
+.notebook-item:hover {
+  background: rgba(59, 130, 246, 0.08);
 }
 
 .notebook-icon {
