@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useWorkspace } from "@renderer/features/workspace";
 import type { Note, Notebook } from "../store/workspace.store";
@@ -148,6 +148,23 @@ function cancelRename() {
   renameTarget.value = null;
   renameDraft.value = "";
 }
+
+watch([activeNoteId, activeNotebookId], ([nextActiveNoteId, nextActiveNotebookId]) => {
+  const target = renameTarget.value;
+
+  if (!target) {
+    return;
+  }
+
+  const isTargetStillActive =
+    target.kind === "note"
+      ? target.id === nextActiveNoteId
+      : target.id === nextActiveNotebookId;
+
+  if (!isTargetStillActive) {
+    cancelRename();
+  }
+});
 
 async function commitRename() {
   const target = renameTarget.value;
