@@ -15,6 +15,7 @@ interface UseWorkspaceContextMenuOptions {
   createNote: (parentId?: string | null) => Promise<void>;
   createNotebook: (parentId?: string | null) => Promise<void>;
   selectNote: (id: string) => void;
+  selectNotebook: (id: string) => void;
 }
 
 function resolveContextParentId(entry: Note | Notebook, type: 'file' | 'folder') {
@@ -77,6 +78,7 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
   }
 
   async function openNotebookMenu(notebook: Notebook) {
+    options.selectNotebook(notebook.id);
     const action = await showContextMenu(getNotebookContextMenu(notebook));
     await runAction(action, resolveContextParentId(notebook, 'folder'));
   }

@@ -9,6 +9,7 @@ export function useWorkspace() {
   const sortedNotes = computed(() => store.sortedNotes);
   const activeNote = computed(() => store.activeNote);
   const activeNoteId = computed(() => store.activeNoteId);
+  const activeNotebookId = computed(() => store.activeNotebookId);
 
   return {
     notes,
@@ -16,8 +17,10 @@ export function useWorkspace() {
     sortedNotes,
     activeNote,
     activeNoteId,
+    activeNotebookId,
     initializeWorkspace: store.initializeWorkspace,
     selectNote: store.selectNote,
+    selectNotebook: store.selectNotebook,
     createNote: store.createNote,
     createNotebook: store.createNotebook,
     updateActiveContent: store.updateActiveContent,

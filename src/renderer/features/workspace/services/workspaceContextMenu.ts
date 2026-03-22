@@ -46,9 +46,6 @@ export function getRootWorkspaceMenu(): WorkspaceMenuItem[] {
 
 export function getNoteContextMenu(_note: Note): WorkspaceMenuItem[] {
   return [
-    { action: 'create-note', labelKey: 'contextMenu.newNote' },
-    { action: 'create-notebook', labelKey: 'contextMenu.newNotebook' },
-    { type: 'separator' },
     { action: 'rename', labelKey: 'contextMenu.rename' },
     { action: 'delete', labelKey: 'contextMenu.delete' },
     { action: 'toggle-lock', labelKey: 'contextMenu.lock' },

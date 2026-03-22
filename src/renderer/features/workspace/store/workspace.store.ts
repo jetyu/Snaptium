@@ -97,6 +97,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       notes,
       notebooks: [] as Notebook[],
       activeNoteId: notes[0].id as string | null,
+      activeNotebookId: null as string | null,
       initialized: false,
     };
   },
@@ -107,8 +108,13 @@ export const useWorkspaceStore = defineStore('workspace', {
       return state.notes.find((note) => note.id === state.activeNoteId) ?? null;
     },
 
+    activeNotebook: (state): Notebook | null => {
+      if (!state.activeNotebookId) return null;
+      return state.notebooks.find((notebook) => notebook.id === state.activeNotebookId) ?? null;
+    },
+
     sortedNotes: (state): Note[] =>
-      [...state.notes].sort((a, b) => b.createdAt - a.createdAt || b.updatedAt - a.updatedAt),
+      [...state.notes].sort((a, b) => a.createdAt - b.createdAt || a.updatedAt - b.updatedAt),
 
     sortedNotebooks: (state): Notebook[] =>
       [...state.notebooks].sort((a, b) => a.createdAt - b.createdAt || a.name.localeCompare(b.name)),
@@ -125,6 +131,7 @@ export const useWorkspaceStore = defineStore('workspace', {
         this.notes = createFallbackNotes();
         this.notebooks = [];
         this.activeNoteId = this.notes[0]?.id ?? null;
+        this.activeNotebookId = null;
         this.initialized = true;
         return;
       }
@@ -144,12 +151,14 @@ export const useWorkspaceStore = defineStore('workspace', {
           .map((node) => mapNodeToNotebook(node))
           .filter((notebook): notebook is Notebook => notebook !== null);
         this.activeNoteId = this.notes[0]?.id ?? null;
+        this.activeNotebookId = null;
         logger.info(`Workspace initialized with ${this.notes.length} note(s) and ${this.notebooks.length} notebook(s).`);
       } catch (err: unknown) {
         logger.error(`Failed to initialize workspace: ${err instanceof Error ? err.message : String(err)}`);
         this.notes = createFallbackNotes();
         this.notebooks = [];
         this.activeNoteId = this.notes[0]?.id ?? null;
+        this.activeNotebookId = null;
       } finally {
         this.initialized = true;
       }
@@ -158,7 +167,16 @@ export const useWorkspaceStore = defineStore('workspace', {
     selectNote(id: string) {
       if (this.notes.some((note) => note.id === id)) {
         this.activeNoteId = id;
+        this.activeNotebookId = null;
         logger.info(`Selected note: ${id}`);
+      }
+    },
+
+    selectNotebook(id: string) {
+      if (this.notebooks.some((notebook) => notebook.id === id)) {
+        this.activeNotebookId = id;
+        this.activeNoteId = null;
+        logger.info(`Selected notebook: ${id}`);
       }
     },
 
@@ -188,8 +206,9 @@ export const useWorkspaceStore = defineStore('workspace', {
           locked: node.locked ?? false,
         };
 
-        this.notes.unshift(newNote);
+        this.notes.push(newNote);
         this.activeNoteId = newNote.id;
+        this.activeNotebookId = null;
         logger.info(`Created new note: ${node.id} with contentId ${node.contentId}`);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
@@ -219,6 +238,8 @@ export const useWorkspaceStore = defineStore('workspace', {
           updatedAt: node.updatedAt,
           locked: node.locked ?? false,
         });
+        this.activeNotebookId = node.id;
+        this.activeNoteId = null;
         logger.info(`Created new notebook: ${node.id}`);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
