@@ -11,8 +11,13 @@ const electronAPI = Object.freeze({
   vfs: Object.freeze({
     initWorkspace: (rootPath) => ipcRenderer.invoke(IPC_CHANNELS.VFS_INIT, rootPath),
     createFile: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_CREATE_FILE, payload),
+    createFolder: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_CREATE_FOLDER, payload),
+    renameNode: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_RENAME_NODE, payload),
     readContent: (contentId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_READ_CONTENT, contentId),
     writeContent: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_WRITE_CONTENT, payload),
+  }),
+  workspace: Object.freeze({
+    showContextMenu: (payload) => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, payload),
   }),
 });
 
