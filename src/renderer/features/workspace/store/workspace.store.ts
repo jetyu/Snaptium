@@ -7,26 +7,37 @@ export interface Note {
   contentId: string;
   title: string;
   content: string;
+  parentId: string | null;
   createdAt: number;
   updatedAt: number;
+  locked?: boolean;
+}
+
+export interface Notebook {
+  id: string;
+  name: string;
+  parentId: string | null;
+  createdAt: number;
+  updatedAt: number;
+  locked?: boolean;
 }
 
 interface WorkspaceNode {
   id: string;
   type: string;
   name: string;
+  parentId?: string | null;
   contentId?: string;
   createdAt: number;
   updatedAt: number;
   trashed?: boolean;
+  locked?: boolean;
 }
 
-// Generate UUID
 function generateUUID(): string {
   return crypto.randomUUID();
 }
 
-// Default notes for initial state
 function createDefaultNotes(): Note[] {
   const now = Date.now();
   return [
@@ -35,8 +46,10 @@ function createDefaultNotes(): Note[] {
       contentId: generateUUID(),
       title: i18n.global.t('welcome'),
       content: i18n.global.t('welcomeContent'),
+      parentId: null,
       createdAt: now - 60000,
       updatedAt: now - 60000,
+      locked: false,
     },
   ];
 }
@@ -50,16 +63,45 @@ function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
     return null;
   }
 
-  const title = node.name?.trim() || i18n.global.t('newNote');
-
   return {
     id: node.id,
     contentId: node.contentId,
-    title,
+    title: node.name?.trim() || i18n.global.t('newNote'),
     content,
+    parentId: node.parentId ?? null,
     createdAt: node.createdAt,
     updatedAt: node.updatedAt,
+    locked: node.locked ?? false,
   };
+}
+
+function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
+  if (node.type !== 'folder' || node.trashed) {
+    return null;
+  }
+
+  return {
+    id: node.id,
+    name: node.name?.trim() || i18n.global.t('default.newNotebook'),
+    parentId: node.parentId ?? null,
+    createdAt: node.createdAt,
+    updatedAt: node.updatedAt,
+    locked: node.locked ?? false,
+  };
+}
+
+function renameNoteContent(content: string, nextTitle: string) {
+  const normalizedTitle = nextTitle.trim();
+
+  if (!normalizedTitle) {
+    return content;
+  }
+
+  if (/^#\s+.+$/m.test(content)) {
+    return content.replace(/^#\s+.+$/m, `# ${normalizedTitle}`);
+  }
+
+  return `# ${normalizedTitle}\n\n${content}`;
 }
 
 export const useWorkspaceStore = defineStore('workspace', {
@@ -67,21 +109,29 @@ export const useWorkspaceStore = defineStore('workspace', {
     const notes = createDefaultNotes();
     return {
       notes,
+      notebooks: [] as Notebook[],
       activeNoteId: notes[0].id as string | null,
+      activeNotebookId: null as string | null,
       initialized: false,
     };
   },
 
   getters: {
-    // 当前激活的笔记
     activeNote: (state): Note | null => {
       if (!state.activeNoteId) return null;
-      return state.notes.find((n) => n.id === state.activeNoteId) ?? null;
+      return state.notes.find((note) => note.id === state.activeNoteId) ?? null;
     },
 
-    // 按创建时间降序排序的笔记列表
+    activeNotebook: (state): Notebook | null => {
+      if (!state.activeNotebookId) return null;
+      return state.notebooks.find((notebook) => notebook.id === state.activeNotebookId) ?? null;
+    },
+
     sortedNotes: (state): Note[] =>
-      [...state.notes].sort((a, b) => b.createdAt - a.createdAt || b.updatedAt - a.updatedAt),
+      [...state.notes].sort((a, b) => a.createdAt - b.createdAt || a.updatedAt - b.updatedAt),
+
+    sortedNotebooks: (state): Notebook[] =>
+      [...state.notebooks].sort((a, b) => a.createdAt - b.createdAt || a.name.localeCompare(b.name)),
   },
 
   actions: {
@@ -93,45 +143,58 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (!window.electronAPI?.vfs) {
         logger.warn('electronAPI.vfs not available, falling back to in-memory notes.');
         this.notes = createFallbackNotes();
+        this.notebooks = [];
         this.activeNoteId = this.notes[0]?.id ?? null;
+        this.activeNotebookId = null;
         this.initialized = true;
         return;
       }
 
       try {
         const { nodes } = await window.electronAPI.vfs.initWorkspace();
-        const fileNodes = (nodes as WorkspaceNode[])
-          .filter((node) => node.type === 'file' && node.contentId && !node.trashed);
+        const workspaceNodes = nodes as WorkspaceNode[];
+        const fileNodes = workspaceNodes.filter((node) => node.type === 'file' && node.contentId && !node.trashed);
+        const folderNodes = workspaceNodes.filter((node) => node.type === 'folder' && !node.trashed);
 
         const loadedNotes = (await Promise.all(
-          fileNodes.map(async (node) => {
-            const content = await window.electronAPI.vfs!.readContent(node.contentId as string);
-            return mapNodeToNote(node, content);
-          }),
+          fileNodes.map(async (node) => mapNodeToNote(node, await window.electronAPI.vfs!.readContent(node.contentId as string))),
         )).filter((note): note is Note => note !== null);
 
         this.notes = loadedNotes.length > 0 ? loadedNotes : createFallbackNotes();
+        this.notebooks = folderNodes
+          .map((node) => mapNodeToNotebook(node))
+          .filter((notebook): notebook is Notebook => notebook !== null);
         this.activeNoteId = this.notes[0]?.id ?? null;
-        logger.info(`Workspace initialized with ${this.notes.length} note(s).`);
+        this.activeNotebookId = null;
+        logger.info(`Workspace initialized with ${this.notes.length} note(s) and ${this.notebooks.length} notebook(s).`);
       } catch (err: unknown) {
         logger.error(`Failed to initialize workspace: ${err instanceof Error ? err.message : String(err)}`);
         this.notes = createFallbackNotes();
+        this.notebooks = [];
         this.activeNoteId = this.notes[0]?.id ?? null;
+        this.activeNotebookId = null;
       } finally {
         this.initialized = true;
       }
     },
 
-    // 选中指定笔记
     selectNote(id: string) {
-      if (this.notes.some((n) => n.id === id)) {
+      if (this.notes.some((note) => note.id === id)) {
         this.activeNoteId = id;
+        this.activeNotebookId = null;
         logger.info(`Selected note: ${id}`);
       }
     },
 
-    // 新建笔记并自动选中
-    async createNote() {
+    selectNotebook(id: string) {
+      if (this.notebooks.some((notebook) => notebook.id === id)) {
+        this.activeNotebookId = id;
+        this.activeNoteId = null;
+        logger.info(`Selected notebook: ${id}`);
+      }
+    },
+
+    async createNote(parentId: string | null = null) {
       try {
         if (!window.electronAPI?.vfs) {
           logger.warn('electronAPI.vfs not available, cannot physically save note.');
@@ -140,25 +203,26 @@ export const useWorkspaceStore = defineStore('workspace', {
 
         const title = i18n.global.t('newNote');
         const content = `# ${title}\n\n`;
-
-        // Wait for main process VFS to create actual file & register in nodes.jsonl
         const node = await window.electronAPI.vfs.createFile({
-          parentId: null,
+          parentId,
           name: title,
           content,
         });
 
         const newNote: Note = {
           id: node.id,
-          contentId: node.contentId,
+          contentId: node.contentId!,
           title: node.name,
           content,
+          parentId: node.parentId ?? null,
           createdAt: node.createdAt,
           updatedAt: node.updatedAt,
+          locked: node.locked ?? false,
         };
 
-        this.notes.unshift(newNote);
+        this.notes.push(newNote);
         this.activeNoteId = newNote.id;
+        this.activeNotebookId = null;
         logger.info(`Created new note: ${node.id} with contentId ${node.contentId}`);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
@@ -167,13 +231,101 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
     },
 
-    // 更新当前激活笔记的内容
+    async createNotebook(parentId: string | null = null) {
+      try {
+        if (!window.electronAPI?.vfs) {
+          logger.warn('electronAPI.vfs not available, cannot physically save notebook.');
+          return;
+        }
+
+        const name = i18n.global.t('default.newNotebook');
+        const node = await window.electronAPI.vfs.createFolder({
+          parentId,
+          name,
+        });
+
+        this.notebooks.push({
+          id: node.id,
+          name: node.name,
+          parentId: node.parentId ?? null,
+          createdAt: node.createdAt,
+          updatedAt: node.updatedAt,
+          locked: node.locked ?? false,
+        });
+        this.activeNotebookId = node.id;
+        this.activeNoteId = null;
+        logger.info(`Created new notebook: ${node.id}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error(`Failed to invoke VFS createFolder: ${message}`);
+        alert(`Failed to save! Error: ${message}`);
+      }
+    },
+
+    async renameNote(id: string, title: string) {
+      const note = this.notes.find((candidate) => candidate.id === id);
+      const nextTitle = title.trim();
+
+      if (!note || !nextTitle) {
+        return;
+      }
+
+      try {
+        if (!window.electronAPI?.vfs) {
+          logger.warn('electronAPI.vfs not available, cannot rename note.');
+          return;
+        }
+
+        const renamedNode = await window.electronAPI.vfs.renameNode({ nodeId: id, name: nextTitle });
+        const nextContent = renameNoteContent(note.content, renamedNode.name);
+
+        await window.electronAPI.vfs.writeContent({
+          contentId: note.contentId,
+          content: nextContent,
+        });
+
+        note.title = renamedNode.name;
+        note.content = nextContent;
+        note.updatedAt = Math.max(renamedNode.updatedAt, Date.now());
+        logger.info(`Renamed note: ${id} -> ${renamedNode.name}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error(`Failed to rename note ${id}: ${message}`);
+        alert(`Failed to rename! Error: ${message}`);
+      }
+    },
+
+    async renameNotebook(id: string, name: string) {
+      const notebook = this.notebooks.find((candidate) => candidate.id === id);
+      const nextName = name.trim();
+
+      if (!notebook || !nextName) {
+        return;
+      }
+
+      try {
+        if (!window.electronAPI?.vfs) {
+          logger.warn('electronAPI.vfs not available, cannot rename notebook.');
+          return;
+        }
+
+        const renamedNode = await window.electronAPI.vfs.renameNode({ nodeId: id, name: nextName });
+        notebook.name = renamedNode.name;
+        notebook.updatedAt = renamedNode.updatedAt;
+        logger.info(`Renamed notebook: ${id} -> ${renamedNode.name}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error(`Failed to rename notebook ${id}: ${message}`);
+        alert(`Failed to rename! Error: ${message}`);
+      }
+    },
+
     async updateActiveContent(content: string) {
-      const note = this.notes.find((n) => n.id === this.activeNoteId);
+      const note = this.notes.find((candidate) => candidate.id === this.activeNoteId);
       if (!note) return;
+
       note.content = content;
       note.updatedAt = Date.now();
-      // Auto-generate title from first h1 heading
       const match = content.match(/^#\s+(.+)$/m);
       if (match) {
         note.title = match[1].trim();
@@ -193,12 +345,11 @@ export const useWorkspaceStore = defineStore('workspace', {
       logger.debug(`Updated content for note: ${this.activeNoteId}`);
     },
 
-    // 删除指定笔记
     deleteNote(id: string) {
-      const idx = this.notes.findIndex((n) => n.id === id);
-      if (idx === -1) return;
-      this.notes.splice(idx, 1);
-      // Select next available note
+      const index = this.notes.findIndex((note) => note.id === id);
+      if (index === -1) return;
+
+      this.notes.splice(index, 1);
       if (this.activeNoteId === id) {
         this.activeNoteId = this.notes[0]?.id ?? null;
       }

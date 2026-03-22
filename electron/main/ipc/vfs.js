@@ -253,6 +253,30 @@ async function ensureWorkspaceInitialized(rootPath) {
   return workspaceState.root;
 }
 
+async function createFolder(parentId, name) {
+  const root = await ensureWorkspaceInitialized();
+  const displayName = assertNonEmptyString(name, 'name');
+  const now = Date.now();
+
+  const node = {
+    id: crypto.randomUUID(),
+    type: 'folder',
+    name: displayName,
+    parentId: typeof parentId === 'string' && parentId.trim().length > 0 ? parentId : null,
+    order: now,
+    createdAt: now,
+    updatedAt: now,
+    trashed: false,
+    locked: false,
+  };
+
+  workspaceState.nodes.set(node.id, node);
+  await persistAllNodes(root);
+  loggerService.info(VFS_LOG_SOURCE, `Created notebook ${node.id} in workspace ${root}`);
+
+  return node;
+}
+
 async function createFile(parentId, name, content = '') {
   const root = await ensureWorkspaceInitialized();
   const displayName = normalizeNoteName(name);
@@ -279,6 +303,25 @@ async function createFile(parentId, name, content = '') {
   workspaceState.nodes.set(node.id, node);
   await persistAllNodes(root);
   loggerService.info(VFS_LOG_SOURCE, `Created note ${node.id} in workspace ${root}`);
+
+  return node;
+}
+
+async function renameNode(nodeId, name) {
+  const root = await ensureWorkspaceInitialized();
+  const safeNodeId = assertNonEmptyString(nodeId, 'nodeId');
+  const node = workspaceState.nodes.get(safeNodeId);
+
+  if (!node || node.trashed) {
+    throw new Error(`Node not found: ${safeNodeId}`);
+  }
+
+  const nextName = node.type === 'file' ? normalizeNoteName(name) : assertNonEmptyString(name, 'name');
+  node.name = nextName;
+  node.updatedAt = Date.now();
+  workspaceState.nodes.set(node.id, node);
+  await persistAllNodes(root);
+  loggerService.info(VFS_LOG_SOURCE, `Renamed ${node.type} ${node.id} to ${nextName}`);
 
   return node;
 }
@@ -355,6 +398,8 @@ async function writeContent(contentId, text) {
 export function registerVfsIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.VFS_INIT);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_CREATE_FILE);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_CREATE_FOLDER);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_RENAME_NODE);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_READ_CONTENT);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_WRITE_CONTENT);
 
@@ -364,6 +409,14 @@ export function registerVfsIpcHandlers() {
 
   ipcMain.handle(IPC_CHANNELS.VFS_CREATE_FILE, async (_event, payload = {}) => {
     return createFile(payload.parentId ?? null, payload.name, payload.content ?? '');
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_CREATE_FOLDER, async (_event, payload = {}) => {
+    return createFolder(payload.parentId ?? null, payload.name);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_RENAME_NODE, async (_event, payload = {}) => {
+    return renameNode(payload.nodeId, payload.name);
   });
 
   ipcMain.handle(IPC_CHANNELS.VFS_READ_CONTENT, async (_event, contentId) => {
