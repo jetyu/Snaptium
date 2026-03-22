@@ -9,7 +9,7 @@ export function createPreloadBuildConfig(outDir = path.resolve(__dirname), empty
     build: {
       emptyOutDir,
       lib: {
-        entry: path.resolve(__dirname, 'src/index.js'),
+        entry: path.resolve(__dirname, 'src/initPreloadCore.js'),
         formats: ['cjs'],
         fileName: () => 'index.js',
       },
@@ -17,7 +17,7 @@ export function createPreloadBuildConfig(outDir = path.resolve(__dirname), empty
       rollupOptions: {
         external: ['electron'],
         output: {
-          banner: '// Generated from electron/preload/src/index.js. Edit the source file, not this build artifact.',
+          banner: '// Generated from electron/preload/src/initPreloadCore.js. Edit the source file, not this build artifact.',
           exports: 'named',
         },
       },

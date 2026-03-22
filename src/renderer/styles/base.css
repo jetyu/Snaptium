@@ -1,0 +1,44 @@
+:root {
+  font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --sidebar-width:  260px;
+  --col-header-h:   40px;
+  --radius:         0.6rem;
+}
+
+/* ===== Light Theme (Default) ===== */
+:root, [data-theme='light'] {
+  color-scheme: light;
+  --bg:             #f0f2f5;
+  --panel:          #ffffff;
+  --panel-hover:    #f5f7fa;
+  --panel-border:   #dde1e9;
+  --text:           #1e2330;
+  --text-muted:     #8792a8;
+  --accent:         #3b72f6;
+  --accent-hover:   #2563eb;
+  --danger:         #e5484d;
+}
+
+/* ===== Dark Theme ===== */
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg:             #12141a;
+  --panel:          #1c1f26;
+  --panel-hover:    #252932;
+  --panel-border:   #2d333d;
+  --text:           #e1e3e8;
+  --text-muted:     #9ba3b3;
+  --accent:         #4c82f8;
+  --accent-hover:   #6091fa;
+  --danger:         #f85a5e;
+}
+
+/* ===== Reset ===== */
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  color: var(--text);
+  background: var(--bg);
+  overflow: hidden;
+}

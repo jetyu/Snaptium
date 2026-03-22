@@ -1,1 +1,1 @@
-import './electron/preload/index.js';
+import './electron/preload/initPreloadCore.js';

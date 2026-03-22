@@ -6,6 +6,7 @@ import {
   highlightActiveLineGutter,
   drawSelection,
   highlightActiveLine,
+  placeholder,
 } from '@codemirror/view';
 import { history, defaultKeymap, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
@@ -33,6 +34,7 @@ export function createCodeEditor({ target, initialValue, onChange }: CreateCodeE
       highlightActiveLine(),
       markdown(),
       keymap.of([...defaultKeymap, ...historyKeymap]),
+      placeholder('Start typing your note here...'),
       updateListener,
     ],
   });

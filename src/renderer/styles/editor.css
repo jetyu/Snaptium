@@ -1,0 +1,52 @@
+/* ===== EditorPane  ===== */
+.editor-wrapper {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.editor-host {
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--panel);
+}
+
+.editor-host .cm-editor {
+  height: 100%;
+  min-height: 100%;
+  outline: none !important;
+}
+
+.editor-host .cm-scroller {
+  overflow: auto;
+}
+
+.editor-host .cm-placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.editor-host .cm-gutter {
+  background-color: var(--panel-hover);
+  border-right: 1px solid var(--panel-border);
+  color: var(--text-muted);
+}
+
+.editor-host .cm-activeLineGutter {
+  background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+}
+
+.editor-host .cm-activeLine {
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+}
