@@ -357,5 +357,6 @@
   "setStartupFailedStatus": "设置开机自启失败",
   "autoUpdateEnabledStatus": "已启用自动更新检查",
   "autoUpdateDisabledStatus": "已禁用自动更新检查",
+  "selectOrCreate": "选择或创建笔记开始写作",
   "setAutoUpdateFailed": "设置自动更新失败"
 }

@@ -14,6 +14,8 @@ interface UseWorkspaceContextMenuOptions {
   t: (key: string, named?: Record<string, unknown>) => string;
   createNote: (parentId?: string | null) => Promise<void>;
   createNotebook: (parentId?: string | null) => Promise<void>;
+  showNoteInFolder: (id: string) => Promise<void>;
+  deleteNote: (id: string) => Promise<void>;
   selectNote: (id: string) => void;
   selectNotebook: (id: string) => void;
   beginRenamingNote: (note: Note) => void;
@@ -62,10 +64,20 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
         }
         break;
       case 'delete':
+        if (context.note) {
+          await options.deleteNote(context.note.id);
+        } else if (context.notebook) {
+          logger.info('Notebook deletion is not hooked into VFS yet.');
+        }
+        break;
       case 'toggle-lock':
-      case 'show-in-folder':
       case 'properties':
         logger.info(`Workspace context menu action selected: ${action}`);
+        break;
+      case 'show-in-folder':
+        if (context.note) {
+          await options.showNoteInFolder(context.note.id);
+        }
         break;
       default:
         break;

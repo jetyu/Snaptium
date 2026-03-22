@@ -345,9 +345,45 @@ export const useWorkspaceStore = defineStore('workspace', {
       logger.debug(`Updated content for note: ${this.activeNoteId}`);
     },
 
-    deleteNote(id: string) {
+    async showNoteInFolder(id: string) {
+      const note = this.notes.find((candidate) => candidate.id === id);
+
+      if (!note) {
+        logger.warn(`Cannot show note in folder, note not found: ${id}`);
+        return;
+      }
+
+      try {
+        if (!window.electronAPI?.vfs) {
+          logger.warn('electronAPI.vfs not available, cannot show note in folder.');
+          return;
+        }
+
+        await window.electronAPI.vfs.showNoteInFolder(id);
+        logger.info(`Revealed note in folder: ${id}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error(`Failed to show note ${id} in folder: ${message}`);
+        alert(`Failed to open note location! Error: ${message}`);
+      }
+    },
+
+    async deleteNote(id: string) {
       const index = this.notes.findIndex((note) => note.id === id);
       if (index === -1) return;
+
+      try {
+        if (window.electronAPI?.vfs) {
+          await window.electronAPI.vfs.deleteNode(id);
+        } else {
+          logger.warn('electronAPI.vfs not available, cannot persist note deletion.');
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error(`Failed to delete note ${id}: ${message}`);
+        alert(`Failed to delete note! Error: ${message}`);
+        return;
+      }
 
       this.notes.splice(index, 1);
       if (this.activeNoteId === id) {

@@ -43,6 +43,8 @@ declare global {
         renameNode: (payload: { nodeId: string; name: string }) => Promise<WorkspaceNodePayload>;
         readContent: (contentId: string) => Promise<string>;
         writeContent: (payload: { contentId: string; content: string }) => Promise<boolean>;
+        showNoteInFolder: (nodeId: string) => Promise<boolean>;
+        deleteNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
       };
       workspace?: {
         showContextMenu: (payload: WorkspaceContextMenuPayload) => Promise<string | null>;
@@ -50,3 +52,5 @@ declare global {
     };
   }
 }
+
+

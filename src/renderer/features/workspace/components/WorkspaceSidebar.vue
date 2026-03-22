@@ -68,7 +68,7 @@
     </ul>
 
     <div v-else class="sidebar-empty">
-      <p>{{ $t("noNotes") || "还没有笔记" }}</p>
+      <p>{{ $t("noNotes") }}</p>
       <div class="empty-actions">
         <button class="btn-create-first" @click="createNote()">
           {{ $t("newNote") }}
@@ -82,7 +82,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useWorkspace } from "@renderer/features/workspace";
 import type { Note, Notebook } from "../store/workspace.store";
@@ -106,6 +106,8 @@ const {
   selectNotebook,
   createNote,
   createNotebook,
+  showNoteInFolder,
+  deleteNote,
   renameNote,
   renameNotebook,
 } = useWorkspace();
@@ -149,6 +151,26 @@ function cancelRename() {
   renameDraft.value = "";
 }
 
+watch(
+  [activeNoteId, activeNotebookId],
+  ([nextActiveNoteId, nextActiveNotebookId]) => {
+    const target = renameTarget.value;
+
+    if (!target) {
+      return;
+    }
+
+    const isTargetStillActive =
+      target.kind === "note"
+        ? target.id === nextActiveNoteId
+        : target.id === nextActiveNotebookId;
+
+    if (!isTargetStillActive) {
+      cancelRename();
+    }
+  }
+);
+
 async function commitRename() {
   const target = renameTarget.value;
   const nextName = renameDraft.value.trim();
@@ -181,6 +203,8 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     t,
     createNote,
     createNotebook,
+    showNoteInFolder,
+    deleteNote,
     selectNote,
     selectNotebook,
     beginRenamingNote,

@@ -1,4 +1,4 @@
-import { app, ipcMain } from 'electron';
+import { app, ipcMain, shell } from 'electron';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
@@ -7,7 +7,7 @@ import { VFS_CONSTANTS } from '../constants/vfs.js';
 import { writeUtf8 } from '../services/file.service.js';
 import { loggerService } from '../services/logger.service.js';
 
-const VFS_LOG_SOURCE = 'vfs';
+const VFS_LOG_SOURCE = 'VFS-IPC';
 
 const workspaceState = {
   root: null,
@@ -395,6 +395,56 @@ async function writeContent(contentId, text) {
   }
 }
 
+async function showNoteInFolder(nodeId) {
+  const root = await ensureWorkspaceInitialized();
+  const safeNodeId = assertNonEmptyString(nodeId, 'nodeId');
+  const node = workspaceState.nodes.get(safeNodeId);
+
+  if (!node || node.trashed) {
+    throw new Error(`Node not found: ${safeNodeId}`);
+  }
+
+  if (node.type !== 'file' || !node.contentId) {
+    throw new Error(`Node is not a note: ${safeNodeId}`);
+  }
+
+  const filePath = getObjectFilePath(root, node.contentId);
+
+  if (!(await pathExists(filePath))) {
+    throw new Error(`Note file not found: ${filePath}`);
+  }
+
+  shell.showItemInFolder(filePath);
+  loggerService.info(VFS_LOG_SOURCE, `Revealed note ${safeNodeId} in folder.`);
+  return true;
+}
+
+async function deleteNode(nodeId) {
+  const root = await ensureWorkspaceInitialized();
+  const safeNodeId = assertNonEmptyString(nodeId, 'nodeId');
+  const node = workspaceState.nodes.get(safeNodeId);
+
+  if (!node || node.trashed) {
+    throw new Error(`Node not found: ${safeNodeId}`);
+  }
+
+  if (node.type === 'file' && node.contentId) {
+    const source = getObjectFilePath(root, node.contentId);
+    const destination = path.join(trashDir(root), `${node.contentId}.md`);
+
+    if (await pathExists(source)) {
+      await fs.rename(source, destination);
+    }
+  }
+
+  node.trashed = true;
+  node.updatedAt = Date.now();
+  workspaceState.nodes.set(node.id, node);
+  await persistAllNodes(root);
+  loggerService.info(VFS_LOG_SOURCE, `Moved node ${safeNodeId} to trash.`);
+  return node;
+}
+
 export function registerVfsIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.VFS_INIT);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_CREATE_FILE);
@@ -402,6 +452,8 @@ export function registerVfsIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.VFS_RENAME_NODE);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_READ_CONTENT);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_WRITE_CONTENT);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_DELETE_NODE);
 
   ipcMain.handle(IPC_CHANNELS.VFS_INIT, async (_event, rootPath) => {
     return initializeWorkspace(rootPath);
@@ -425,6 +477,14 @@ export function registerVfsIpcHandlers() {
 
   ipcMain.handle(IPC_CHANNELS.VFS_WRITE_CONTENT, async (_event, payload = {}) => {
     return writeContent(payload.contentId, payload.content);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER, async (_event, nodeId) => {
+    return showNoteInFolder(nodeId);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_DELETE_NODE, async (_event, nodeId) => {
+    return deleteNode(nodeId);
   });
 }
 

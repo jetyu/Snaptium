@@ -23,9 +23,10 @@ export function useWorkspace() {
     selectNotebook: store.selectNotebook,
     createNote: store.createNote,
     createNotebook: store.createNotebook,
+    showNoteInFolder: store.showNoteInFolder,
     renameNote: store.renameNote,
+    deleteNote: store.deleteNote,
     renameNotebook: store.renameNotebook,
     updateActiveContent: store.updateActiveContent,
-    deleteNote: store.deleteNote,
   };
 }

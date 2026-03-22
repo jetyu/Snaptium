@@ -7,7 +7,7 @@ export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 class Logger {
   private source: string;
 
-  constructor(source: string = 'Renderer') {
+  constructor(source: string = 'Default') {
     this.source = source;
   }
 

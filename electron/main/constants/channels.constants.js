@@ -7,5 +7,7 @@ export const IPC_CHANNELS = {
   VFS_RENAME_NODE: 'vfs:rename-node',
   VFS_READ_CONTENT: 'vfs:read-content',
   VFS_WRITE_CONTENT: 'vfs:write-content',
+  VFS_DELETE_NODE: 'vfs:delete-node',
+  VFS_SHOW_NOTE_IN_FOLDER: 'vfs:show-note-in-folder',
   WORKSPACE_SHOW_CONTEXT_MENU: 'workspace:show-context-menu',
 };

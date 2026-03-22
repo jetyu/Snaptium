@@ -15,6 +15,8 @@ const electronAPI = Object.freeze({
     renameNode: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_RENAME_NODE, payload),
     readContent: (contentId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_READ_CONTENT, contentId),
     writeContent: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_WRITE_CONTENT, payload),
+    showNoteInFolder: (nodeId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER, nodeId),
+    deleteNode: (nodeId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_DELETE_NODE, nodeId),
   }),
   workspace: Object.freeze({
     showContextMenu: (payload) => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, payload),

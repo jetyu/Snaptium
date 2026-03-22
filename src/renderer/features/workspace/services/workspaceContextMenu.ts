@@ -62,7 +62,6 @@ export function getNotebookContextMenu(_notebook: Notebook): WorkspaceMenuItem[]
     { action: 'rename', labelKey: 'contextMenu.rename' },
     { action: 'delete', labelKey: 'contextMenu.delete' },
     { action: 'toggle-lock', labelKey: 'contextMenu.lock' },
-    { action: 'show-in-folder', labelKey: 'contextMenu.showInFolder' },
     { action: 'properties', labelKey: 'contextMenu.properties' },
   ];
 }

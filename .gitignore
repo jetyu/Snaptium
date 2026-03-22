@@ -2,3 +2,4 @@
 /dist/*
 /electron-cache/*
 /electron/preload/index.js
+electron/preload/index.js
