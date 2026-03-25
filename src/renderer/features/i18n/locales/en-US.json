@@ -368,9 +368,12 @@
   "notes": "Notes",
   "notebookDashboardTitle": "Notebook Overview",
   "notebookDashboardStatsTotalNotes": "Total Notes",
-  "notebookDashboardStatsLastModified": "Last Modified",
+  "notebookDashboardStatsTotalSubNotebooks": "Sub-notebooks",
   "notebookDashboardActionsNewNote": "New Note in this Notebook",
-  "notebookDashboardNoNotes": "No notes in this notebook"
+  "notebookDashboardNoNotes": "No notes in this notebook",
+  "notebookDashboardNotesList": "Notes",
+  "notebookDashboardSubNotebooks": "Sub-notebooks",
+  "notebookDashboardNoSubNotebooks": "No sub-notebooks in this notebook"
 }
 
 

@@ -364,7 +364,9 @@
   "setAutoUpdateFailed": "设置自动更新失败",
   "notebookDashboardTitle": "笔记本概览",
   "notebookDashboardStatsTotalNotes": "笔记总数",
-  "notebookDashboardStatsLastModified": "最后修改",
+  "notebookDashboardStatsTotalSubNotebooks": "子笔记本数",
   "notebookDashboardActionsNewNote": "在此笔记本下新建笔记",
-  "notebookDashboardNoNotes": "此笔记本下尚无笔记"
+  "notebookDashboardNoNotes": "此笔记本下尚无笔记",
+  "notebookDashboardSubNotebooks": "子笔记本",
+  "notebookDashboardNoSubNotebooks": "此笔记本下尚无子笔记本"
 }

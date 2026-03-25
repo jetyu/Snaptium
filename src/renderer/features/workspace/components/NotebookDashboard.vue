@@ -30,9 +30,27 @@
         </div>
         <div class="stat-card">
           <span class="stat-label">{{
-            $t("notebookDashboardStatsLastModified")
+            $t("notebookDashboardStatsTotalSubNotebooks")
           }}</span>
-          <span class="stat-value">{{ lastModifiedStr }}</span>
+          <span class="stat-value">{{ subNotebooks.length }}</span>
+        </div>
+      </section>
+
+      <section v-if="subNotebooks.length > 0" class="notebooks-section">
+        <h2>{{ $t("notebookDashboardSubNotebooks") }}</h2>
+        <div class="notebooks-grid">
+          <div
+            v-for="nb in subNotebooks"
+            :key="nb.id"
+            class="notebook-card"
+            @click="selectNotebook(nb.id)"
+          >
+            <span class="notebook-icon">📓</span>
+            <div class="notebook-info">
+              <span class="notebook-name">{{ nb.name }}</span>
+              <span class="notebook-meta">{{ formatDate(nb.updatedAt) }}</span>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -65,7 +83,7 @@ import { computed } from "vue";
 import { useWorkspace } from "@renderer/features/workspace";
 import { useI18n } from "vue-i18n";
 
-const { activeNotebookId, notebooks, notes, selectNote, createNote } =
+const { activeNotebookId, notebooks, notes, selectNote, createNote, selectNotebook } =
   useWorkspace();
 
 const { locale } = useI18n();
@@ -76,22 +94,17 @@ const currentNotebook = computed(() =>
 
 const notebookName = computed(() => currentNotebook.value?.name || "");
 
+const subNotebooks = computed(() =>
+  notebooks.value
+    .filter((nb) => nb.parentId === activeNotebookId.value)
+    .sort((a, b) => a.createdAt - b.createdAt)
+);
+
 const notebookNotes = computed(() =>
   notes.value
     .filter((n) => n.parentId === activeNotebookId.value)
     .sort((a, b) => b.updatedAt - a.updatedAt)
 );
-
-const lastModifiedNote = computed(() =>
-  notebookNotes.value.length > 0
-    ? notebookNotes.value[0]
-    : currentNotebook.value
-);
-
-const lastModifiedStr = computed(() => {
-  if (!lastModifiedNote.value) return "-";
-  return formatDate(lastModifiedNote.value.updatedAt);
-});
 
 function formatDate(timestamp: number) {
   const date = new Date(timestamp);
@@ -252,6 +265,67 @@ function formatDate(timestamp: number) {
 
 .note-date {
   font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.notebooks-section {
+  margin-bottom: 32px;
+}
+
+.notebooks-section h2 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+
+.notebooks-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.notebook-card {
+  background: var(--panel);
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  border: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.notebook-card:hover {
+  border-color: var(--accent);
+  background: var(--panel-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.notebook-icon {
+  font-size: 1.2rem;
+}
+
+.notebook-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.notebook-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.notebook-meta {
+  font-size: 0.75rem;
   color: var(--text-muted);
 }
 

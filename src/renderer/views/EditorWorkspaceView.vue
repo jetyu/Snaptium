@@ -31,7 +31,7 @@
     </section>
 
     <!-- 右侧预览 -->
-    <section class="preview-col panel">
+    <section v-if="activeNote || !activeNotebookId" class="preview-col panel">
       <div class="col-header">
         <span class="col-title">{{ $t("previewHeader") }}</span>
       </div>
