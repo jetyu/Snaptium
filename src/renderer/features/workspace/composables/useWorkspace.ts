@@ -26,7 +26,9 @@ export function useWorkspace() {
     showNoteInFolder: store.showNoteInFolder,
     renameNote: store.renameNote,
     deleteNote: store.deleteNote,
+    deleteNotebook: store.deleteNotebook,
     renameNotebook: store.renameNotebook,
     updateActiveContent: store.updateActiveContent,
+    toggleNodeLock: store.toggleNodeLock,
   };
 }

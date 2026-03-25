@@ -4,7 +4,7 @@
     <WorkspaceSidebar />
 
     <!-- 中间编辑器/笔记本概览 -->
-    <section class="editor-col panel">
+    <section v-if="!activeNote?.locked" class="editor-col panel">
       <div v-if="activeNote" class="col-header">
         <span class="col-title">{{ $t("editorHeader") }}</span>
         <span class="header-separator">/</span>

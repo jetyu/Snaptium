@@ -419,13 +419,27 @@ async function showNoteInFolder(nodeId) {
   return true;
 }
 
-async function deleteNode(nodeId) {
-  const root = await ensureWorkspaceInitialized();
+/**
+ * Recursive deletion logic
+ * @param {string} root workspace root
+ * @param {string} nodeId node ID to delete
+ */
+async function deleteNodeRecursive(root, nodeId) {
   const safeNodeId = assertNonEmptyString(nodeId, 'nodeId');
   const node = workspaceState.nodes.get(safeNodeId);
 
   if (!node || node.trashed) {
-    throw new Error(`Node not found: ${safeNodeId}`);
+    return;
+  }
+
+  // If it's a folder, recursively delete child nodes
+  if (node.type === 'folder') {
+    const children = Array.from(workspaceState.nodes.values()).filter(
+      (n) => n.parentId === node.id && !n.trashed,
+    );
+    for (const child of children) {
+      await deleteNodeRecursive(root, child.id);
+    }
   }
 
   if (node.type === 'file' && node.contentId) {
@@ -440,8 +454,39 @@ async function deleteNode(nodeId) {
   node.trashed = true;
   node.updatedAt = Date.now();
   workspaceState.nodes.set(node.id, node);
-  await persistAllNodes(root);
   loggerService.info(VFS_LOG_SOURCE, `Moved node ${safeNodeId} to trash.`);
+}
+
+async function deleteNode(nodeId) {
+  const root = await ensureWorkspaceInitialized();
+  const safeNodeId = assertNonEmptyString(nodeId, 'nodeId');
+  const node = workspaceState.nodes.get(safeNodeId);
+
+  if (!node || node.trashed) {
+    throw new Error(`Node not found: ${safeNodeId}`);
+  }
+
+  await deleteNodeRecursive(root, nodeId);
+  await persistAllNodes(root);
+
+  return node;
+}
+
+async function toggleNodeLock(nodeId, locked) {
+  const root = await ensureWorkspaceInitialized();
+  const safeNodeId = assertNonEmptyString(nodeId, 'nodeId');
+  const node = workspaceState.nodes.get(safeNodeId);
+
+  if (!node || node.trashed) {
+    throw new Error(`Node not found: ${safeNodeId}`);
+  }
+
+  node.locked = Boolean(locked);
+  node.updatedAt = Date.now();
+  workspaceState.nodes.set(node.id, node);
+  await persistAllNodes(root);
+  loggerService.info(VFS_LOG_SOURCE, `${node.locked ? 'Locked' : 'Unlocked'} ${node.type} ${node.id}`);
+
   return node;
 }
 
@@ -485,6 +530,10 @@ export function registerVfsIpcHandlers() {
 
   ipcMain.handle(IPC_CHANNELS.VFS_DELETE_NODE, async (_event, nodeId) => {
     return deleteNode(nodeId);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK, async (_event, payload = {}) => {
+    return toggleNodeLock(payload.nodeId, payload.locked);
   });
 }
 

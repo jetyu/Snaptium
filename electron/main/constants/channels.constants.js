@@ -9,5 +9,6 @@ export const IPC_CHANNELS = {
   VFS_WRITE_CONTENT: 'vfs:write-content',
   VFS_DELETE_NODE: 'vfs:delete-node',
   VFS_SHOW_NOTE_IN_FOLDER: 'vfs:show-note-in-folder',
+  VFS_TOGGLE_NODE_LOCK: 'vfs:toggle-node-lock',
   WORKSPACE_SHOW_CONTEXT_MENU: 'workspace:show-context-menu',
 };

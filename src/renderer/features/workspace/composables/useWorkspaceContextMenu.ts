@@ -16,10 +16,12 @@ interface UseWorkspaceContextMenuOptions {
   createNotebook: (parentId?: string | null) => Promise<void>;
   showNoteInFolder: (id: string) => Promise<void>;
   deleteNote: (id: string) => Promise<void>;
+  deleteNotebook: (id: string) => Promise<void>;
   selectNote: (id: string) => void;
   selectNotebook: (id: string) => void;
   beginRenamingNote: (note: Note) => void;
   beginRenamingNotebook: (notebook: Notebook) => void;
+  toggleNodeLock: (id: string, locked: boolean) => Promise<void>;
 }
 
 function resolveContextParentId(entry: Note | Notebook, type: 'file' | 'folder') {
@@ -67,13 +69,17 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
         if (context.note) {
           await options.deleteNote(context.note.id);
         } else if (context.notebook) {
-          logger.info('Notebook deletion is not hooked into VFS yet.');
+          await options.deleteNotebook(context.notebook.id);
         }
         break;
       case 'toggle-lock':
-      case 'properties':
-        logger.info(`Workspace context menu action selected: ${action}`);
+        if (context.note) {
+          await options.toggleNodeLock(context.note.id, !context.note.locked);
+        } else if (context.notebook) {
+          await options.toggleNodeLock(context.notebook.id, !context.notebook.locked);
+        }
         break;
+      case 'properties':
       case 'show-in-folder':
         if (context.note) {
           await options.showNoteInFolder(context.note.id);

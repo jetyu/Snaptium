@@ -38,25 +38,6 @@ function generateUUID(): string {
   return crypto.randomUUID();
 }
 
-function createDefaultNotes(): Note[] {
-  const now = Date.now();
-  return [
-    {
-      id: generateUUID(),
-      contentId: generateUUID(),
-      title: i18n.global.t('welcome'),
-      content: i18n.global.t('welcomeContent'),
-      parentId: null,
-      createdAt: now - 60000,
-      updatedAt: now - 60000,
-      locked: false,
-    },
-  ];
-}
-
-function createFallbackNotes(): Note[] {
-  return createDefaultNotes();
-}
 
 function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
   if (node.type !== 'file' || !node.contentId || node.trashed) {
@@ -106,11 +87,10 @@ function renameNoteContent(content: string, nextTitle: string) {
 
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => {
-    const notes = createDefaultNotes();
     return {
-      notes,
+      notes: [] as Note[],
       notebooks: [] as Notebook[],
-      activeNoteId: notes[0].id as string | null,
+      activeNoteId: null as string | null,
       activeNotebookId: null as string | null,
       initialized: false,
     };
@@ -141,10 +121,10 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
 
       if (!window.electronAPI?.vfs) {
-        logger.warn('electronAPI.vfs not available, falling back to in-memory notes.');
-        this.notes = createFallbackNotes();
+        logger.warn('electronAPI.vfs not available, starting with empty workspace.');
+        this.notes = [];
         this.notebooks = [];
-        this.activeNoteId = this.notes[0]?.id ?? null;
+        this.activeNoteId = null;
         this.activeNotebookId = null;
         this.initialized = true;
         return;
@@ -160,7 +140,7 @@ export const useWorkspaceStore = defineStore('workspace', {
           fileNodes.map(async (node) => mapNodeToNote(node, await window.electronAPI.vfs!.readContent(node.contentId as string))),
         )).filter((note): note is Note => note !== null);
 
-        this.notes = loadedNotes.length > 0 ? loadedNotes : createFallbackNotes();
+        this.notes = loadedNotes;
         this.notebooks = folderNodes
           .map((node) => mapNodeToNotebook(node))
           .filter((notebook): notebook is Notebook => notebook !== null);
@@ -169,9 +149,9 @@ export const useWorkspaceStore = defineStore('workspace', {
         logger.info(`Workspace initialized with ${this.notes.length} note(s) and ${this.notebooks.length} notebook(s).`);
       } catch (err: unknown) {
         logger.error(`Failed to initialize workspace: ${err instanceof Error ? err.message : String(err)}`);
-        this.notes = createFallbackNotes();
+        this.notes = [];
         this.notebooks = [];
-        this.activeNoteId = this.notes[0]?.id ?? null;
+        this.activeNoteId = null;
         this.activeNotebookId = null;
       } finally {
         this.initialized = true;
@@ -340,9 +320,8 @@ export const useWorkspaceStore = defineStore('workspace', {
         if (!saved) {
           logger.warn(`Failed to persist content for note: ${this.activeNoteId}`);
         }
+        logger.debug(`Updated content for note: ${this.activeNoteId}`);
       }
-
-      logger.debug(`Updated content for note: ${this.activeNoteId}`);
     },
 
     async showNoteInFolder(id: string) {
@@ -385,11 +364,81 @@ export const useWorkspaceStore = defineStore('workspace', {
         return;
       }
 
-      this.notes.splice(index, 1);
+      this.notes = this.notes.filter((note) => note.id !== id);
       if (this.activeNoteId === id) {
         this.activeNoteId = this.notes[0]?.id ?? null;
       }
       logger.info(`Deleted note: ${id}`);
+    },
+
+    async deleteNotebook(id: string) {
+      const notebook = this.notebooks.find((nb) => nb.id === id);
+      if (!notebook) return;
+
+      try {
+        if (window.electronAPI?.vfs) {
+          await window.electronAPI.vfs.deleteNode(id);
+        } else {
+          logger.warn('electronAPI.vfs not available, cannot persist notebook deletion.');
+        }
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error(`Failed to delete notebook ${id}: ${message}`);
+        alert(`Failed to delete notebook! Error: ${message}`);
+        return;
+      }
+
+      const getDescendantIds = (parentId: string): string[] => {
+        const childNotes = this.notes.filter((n) => n.parentId === parentId).map((n) => n.id);
+        const childNotebooks = this.notebooks.filter((nb) => nb.parentId === parentId);
+
+        let descendantIds = [...childNotes];
+        for (const childNb of childNotebooks) {
+          descendantIds.push(childNb.id);
+          descendantIds = descendantIds.concat(getDescendantIds(childNb.id));
+        }
+        return descendantIds;
+      };
+
+      const idsToRemove = new Set([id, ...getDescendantIds(id)]);
+
+      this.notes = this.notes.filter((note) => !idsToRemove.has(note.id));
+      this.notebooks = this.notebooks.filter((nb) => !idsToRemove.has(nb.id));
+
+      if (idsToRemove.has(this.activeNoteId ?? '')) {
+        this.activeNoteId = this.notes[0]?.id ?? null;
+      }
+      if (idsToRemove.has(this.activeNotebookId ?? '')) {
+        this.activeNotebookId = null;
+      }
+
+      logger.info(`Deleted notebook and descendants: ${id} (Total items removed: ${idsToRemove.size})`);
+    },
+
+    async toggleNodeLock(id: string, locked: boolean) {
+      try {
+        if (!window.electronAPI?.vfs) {
+          logger.warn('electronAPI.vfs not available, cannot toggle lock.');
+          return;
+        }
+
+        const note = this.notes.find((n) => n.id === id);
+        if (!note) {
+          logger.warn(`Cannot lock node ${id}: not a note or not found.`);
+          return;
+        }
+
+        await window.electronAPI.vfs.toggleNodeLock({ nodeId: id, locked });
+
+        note.locked = locked;
+        note.updatedAt = Date.now();
+
+        logger.info(`${locked ? 'Locked' : 'Unlocked'} note: ${id}`);
+      } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err);
+        logger.error(`Failed to toggle lock for note ${id}: ${message}`);
+        alert(`Failed to toggle lock! Error: ${message}`);
+      }
     },
   },
 });

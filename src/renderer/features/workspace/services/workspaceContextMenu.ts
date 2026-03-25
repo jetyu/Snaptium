@@ -24,6 +24,7 @@ export function createWorkspaceContextMenuLabels(t: Translate) {
     'contextMenu.rename': t('contextMenu.rename'),
     'contextMenu.delete': t('contextMenu.delete'),
     'contextMenu.lock': t('contextMenu.lock'),
+    'contextMenu.unlock': t('contextMenu.unlock'),
     'contextMenu.showInFolder': t('contextMenu.showInFolder'),
     'contextMenu.properties': t('contextMenu.properties'),
   };
@@ -38,9 +39,7 @@ export function getCreateButtonMenu(): WorkspaceMenuItem[] {
 
 export function getRootWorkspaceMenu(): WorkspaceMenuItem[] {
   return [
-    ...getCreateButtonMenu(),
-    { type: 'separator' },
-    { action: 'properties', labelKey: 'contextMenu.properties' },
+    ...getCreateButtonMenu()
   ];
 }
 
@@ -48,7 +47,7 @@ export function getNoteContextMenu(_note: Note): WorkspaceMenuItem[] {
   return [
     { action: 'rename', labelKey: 'contextMenu.rename' },
     { action: 'delete', labelKey: 'contextMenu.delete' },
-    { action: 'toggle-lock', labelKey: 'contextMenu.lock' },
+    { action: 'toggle-lock', labelKey: _note.locked ? 'contextMenu.unlock' : 'contextMenu.lock' },
     { action: 'show-in-folder', labelKey: 'contextMenu.showInFolder' },
     { action: 'properties', labelKey: 'contextMenu.properties' },
   ];
@@ -61,7 +60,6 @@ export function getNotebookContextMenu(_notebook: Notebook): WorkspaceMenuItem[]
     { type: 'separator' },
     { action: 'rename', labelKey: 'contextMenu.rename' },
     { action: 'delete', labelKey: 'contextMenu.delete' },
-    { action: 'toggle-lock', labelKey: 'contextMenu.lock' },
     { action: 'properties', labelKey: 'contextMenu.properties' },
   ];
 }

@@ -45,6 +45,7 @@ declare global {
         writeContent: (payload: { contentId: string; content: string }) => Promise<boolean>;
         showNoteInFolder: (nodeId: string) => Promise<boolean>;
         deleteNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
+        toggleNodeLock: (payload: { nodeId: string; locked: boolean }) => Promise<WorkspaceNodePayload>;
       };
       workspace?: {
         showContextMenu: (payload: WorkspaceContextMenuPayload) => Promise<string | null>;

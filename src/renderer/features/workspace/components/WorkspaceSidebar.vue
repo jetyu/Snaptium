@@ -44,9 +44,17 @@
             : openNotebookMenu(entry.item)
         "
       >
-        <span class="workspace-row__icon">{{
-          entry.kind === "notebook" ? "📁" : "📝"
-        }}</span>
+        <div class="workspace-row__icon">
+          <NoteModeIcon
+            v-if="entry.kind === 'note' && entry.item.locked"
+            name="lockedIcon"
+          />
+          <NoteModeIcon
+            v-else-if="entry.kind === 'notebook'"
+            name="notebookIcon"
+          />
+          <NoteModeIcon v-else name="noteIcon" />
+        </div>
         <div class="workspace-row__content">
           <input
             v-if="isEditing(entry)"
@@ -68,7 +76,7 @@
     </ul>
 
     <div v-else class="sidebar-empty">
-      <p>{{ $t("noNotes") }}</p>
+      <p>{{ $t("createFirstNoteOrNotebook") }}</p>
       <div class="empty-actions">
         <button class="btn-create-first" @click="createNote()">
           {{ $t("newNote") }}
@@ -87,6 +95,7 @@ import { useI18n } from "vue-i18n";
 import { useWorkspace } from "@renderer/features/workspace";
 import type { Note, Notebook } from "../store/workspace.store";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
+import NoteModeIcon from "@renderer/components/common/NoteModeIcon.vue";
 
 type WorkspaceTreeEntry =
   | { id: string; depth: number; kind: "notebook"; item: Notebook }
@@ -108,8 +117,10 @@ const {
   createNotebook,
   showNoteInFolder,
   deleteNote,
+  deleteNotebook,
   renameNote,
   renameNotebook,
+  toggleNodeLock,
 } = useWorkspace();
 
 const { t, locale } = useI18n();
@@ -205,10 +216,12 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     createNotebook,
     showNoteInFolder,
     deleteNote,
+    deleteNotebook,
     selectNote,
     selectNotebook,
     beginRenamingNote,
     beginRenamingNotebook,
+    toggleNodeLock,
   });
 
 const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
@@ -297,8 +310,9 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
   min-width: 0;
   display: flex;
   flex: 1;
-  flex-direction: column;
-  gap: 2px;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
 }
 
 .workspace-row__title {
