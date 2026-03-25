@@ -365,5 +365,12 @@
   "welcomeContent": "# Welcome to Pilotra\n\nStart your writing here...",
   "edit": "Edit",
   "preview": "Preview",
-  "notes": "Notes"
+  "notes": "Notes",
+  "notebookDashboardTitle": "Notebook Overview",
+  "notebookDashboardStatsTotalNotes": "Total Notes",
+  "notebookDashboardStatsLastModified": "Last Modified",
+  "notebookDashboardActionsNewNote": "New Note in this Notebook",
+  "notebookDashboardNoNotes": "No notes in this notebook"
 }
+
+

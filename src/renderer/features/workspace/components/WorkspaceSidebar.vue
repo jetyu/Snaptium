@@ -1,7 +1,7 @@
 <template>
   <aside class="sidebar" @contextmenu.prevent="openRootMenu">
     <div class="sidebar-header">
-      <span class="sidebar-title">{{ $t("notes") }}</span>
+      <span class="sidebar-title">{{ $t("labelNoteList") }}</span>
       <button
         class="btn-new-note"
         :title="$t('newNote')"

@@ -3,6 +3,7 @@
   "workspace": "工作区",
   "outline": "大纲",
   "collapsePanel": "折叠面板",
+  "labelNoteList": "笔记列表",
   "newNote": "新建笔记",
   "searchPlaceholder": "搜索笔记...",
   "outlinePlaceholder": "大纲将在这里显示",
@@ -352,11 +353,18 @@
   "search.searching": "正在搜索...",
   "search.searchingLarge": "正在搜索笔记，请稍候...",
   "preview.copyCode": "复制代码",
+  "preview.noPreviewContent": "没有内容可供预览",
   "startupEnabledStatus": "已启用开机自启",
   "startupDisabledStatus": "已禁用开机自启",
   "setStartupFailedStatus": "设置开机自启失败",
   "autoUpdateEnabledStatus": "已启用自动更新检查",
   "autoUpdateDisabledStatus": "已禁用自动更新检查",
   "selectOrCreate": "选择或创建笔记开始写作",
-  "setAutoUpdateFailed": "设置自动更新失败"
+  "notebookDashboardNotesList": "笔记列表",
+  "setAutoUpdateFailed": "设置自动更新失败",
+  "notebookDashboardTitle": "笔记本概览",
+  "notebookDashboardStatsTotalNotes": "笔记总数",
+  "notebookDashboardStatsLastModified": "最后修改",
+  "notebookDashboardActionsNewNote": "在此笔记本下新建笔记",
+  "notebookDashboardNoNotes": "此笔记本下尚无笔记"
 }
