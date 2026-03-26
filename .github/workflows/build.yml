@@ -3,7 +3,7 @@ name: NoteWizard Release
 on:
   push:
     tags:
-      - 'v*.*'
+      - "v*.*"
   workflow_dispatch:
 
 permissions:
@@ -12,13 +12,10 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
- 
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   prepare:
-    name: Release Preparation 
+    name: Release Preparation
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.versioning.outputs.version }}
@@ -66,7 +63,7 @@ jobs:
           if echo "$BRANCHES" | grep -qE "origin/feature/"; then
             IS_FEATURE=true
           fi
-          
+
           if [[ "$IS_MAIN" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
             echo "Stable Release (main)"
             echo "is_dev=false" >> $GITHUB_OUTPUT
@@ -89,7 +86,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "release_name=$TAG" >> $GITHUB_OUTPUT
-          
+
       - name: Upload Release Notes Template File
         uses: actions/upload-artifact@v4
         with:
@@ -132,7 +129,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: npm
           check-latest: true
 
@@ -165,7 +162,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    name: Publishing Release 
+    name: Publishing Release
     needs: [prepare, build]
     runs-on: ubuntu-latest
 
@@ -207,4 +204,3 @@ jobs:
           files: release_files/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
