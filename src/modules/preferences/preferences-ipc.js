@@ -2,6 +2,7 @@
  * 配置管理模块
  * 负责应用配置的读写和导入导出
  */
+import { DEFAULT_SETTINGS } from "./defaults.js";
 
 /**
  * 创建配置管理器
@@ -14,7 +15,7 @@
  * @returns {Object} 配置管理器实例
  */
 export function createPreferencesManager(deps) {
-  const { app, fs, path, ipcMain, dialog, t } = deps;
+  const { app, fs, path, ipcMain, dialog, t, logger } = deps;
 
   /**
    * 获取配置文件路径
@@ -36,9 +37,9 @@ export function createPreferencesManager(deps) {
         return JSON.parse(data);
       }
     } catch (error) {
-      console.error("[Preferences] Failed to load preferences:", error);
+      logger?.error("Failed to load preferences: " + error.message);
     }
-    return {};
+    return DEFAULT_SETTINGS;
   }
 
   /**
@@ -52,7 +53,7 @@ export function createPreferencesManager(deps) {
       fs.writeFileSync(prefsPath, JSON.stringify(prefs, null, 2), "utf8");
       return true;
     } catch (error) {
-      console.error("[Preferences] Failed to save preferences:", error);
+      logger?.error("Failed to save preferences: " + error.message);
       return false;
     }
   }
@@ -77,6 +78,8 @@ export function createPreferencesManager(deps) {
   function setPreference(key, value) {
     const prefs = loadPreferences();
     prefs[key] = value;
+    const logValue = key.toLowerCase().includes('apikey') ? '********' : value;
+    logger?.info(`Preference changed: ${key} = ${logValue}`);
     return savePreferences(prefs);
   }
 
@@ -102,28 +105,32 @@ export function createPreferencesManager(deps) {
       if (filePath) {
         // 转换格式以匹配导入的预期结构
         const exportData = {
-          language: preferences.language || "en-US",
-          theme: preferences.themeMode || "system",
+          language: preferences.language || DEFAULT_SETTINGS.language,
+          theme: preferences.themeMode || DEFAULT_SETTINGS.theme,
           editor: {
-            fontSize: preferences.editorFontSize || "16",
-            fontFamily: preferences.editorFontFamily || "'Arial', sans-serif",
+            fontSize: preferences.editorFontSize || DEFAULT_SETTINGS.editor.fontSize,
+            fontFamily: preferences.editorFontFamily || DEFAULT_SETTINGS.editor.fontFamily,
           },
           preview: {
-            fontSize: preferences.previewFontSize || "16",
-            fontFamily: preferences.previewFontFamily || "'Arial', sans-serif",
+            fontSize: preferences.previewFontSize || DEFAULT_SETTINGS.preview.fontSize,
+            fontFamily: preferences.previewFontFamily || DEFAULT_SETTINGS.preview.fontFamily,
           },
           aiSettings: {
-            enabled: preferences.aiSettings?.enabled || false,
-            model: preferences.aiSettings?.model || "",
-            apiKey: preferences.aiSettings?.apiKey || "",
-            endpoint: preferences.aiSettings?.endpoint || "",
-            systemPrompt: preferences.aiSettings?.systemPrompt || "",
-            typingDelay: preferences.aiSettings?.typingDelay || 2000,
-            minInputLength: preferences.aiSettings?.minInputLength || 10,
+            enabled: preferences.aiSettings?.enabled || DEFAULT_SETTINGS.aiSettings.enabled,
+            model: preferences.aiSettings?.model || DEFAULT_SETTINGS.aiSettings.model,
+            apiKey: preferences.aiSettings?.apiKey || DEFAULT_SETTINGS.aiSettings.apiKey,
+            endpoint: preferences.aiSettings?.endpoint || DEFAULT_SETTINGS.aiSettings.endpoint,
+            systemPrompt: preferences.aiSettings?.systemPrompt || DEFAULT_SETTINGS.aiSettings.systemPrompt,
+            typingDelay: preferences.aiSettings?.typingDelay || DEFAULT_SETTINGS.aiSettings.typingDelay,
+            minInputLength: preferences.aiSettings?.minInputLength || DEFAULT_SETTINGS.aiSettings.minInputLength,
           },
-          noteSavePath: preferences.noteSavePath || "",
-          startupOnLogin: !!preferences.startupOnLogin,
-          autoUpdate: preferences.autoUpdate !== undefined ? !!preferences.autoUpdate : true,
+          loggingSettings: {
+            enabled: preferences.loggingSettings?.enabled !== undefined ? !!preferences.loggingSettings.enabled : DEFAULT_SETTINGS.loggingSettings.enabled,
+            level: preferences.loggingSettings?.level || DEFAULT_SETTINGS.loggingSettings.level,
+          },
+          noteSavePath: preferences.noteSavePath || DEFAULT_SETTINGS.noteSavePath,
+          startupOnLogin: preferences.startupOnLogin !== undefined ? !!preferences.startupOnLogin : DEFAULT_SETTINGS.startupOnLogin,
+          autoUpdate: preferences.autoUpdate !== undefined ? !!preferences.autoUpdate : DEFAULT_SETTINGS.autoUpdate,
         };
 
         const data = {
@@ -137,6 +144,7 @@ export function createPreferencesManager(deps) {
           JSON.stringify(data, null, 2),
           "utf8"
         );
+        logger?.info(`Preferences exported to: ${filePath}`);
         return { success: true, filePath };
       }
       return { success: false, error: t("export.preferences.error.cancelled") };
@@ -218,6 +226,7 @@ export function createPreferencesManager(deps) {
           JSON.stringify(mergedSettings, null, 2),
           "utf8"
         );
+        logger?.info(`Preferences imported successfully, backup created at: ${backupPath}`);
 
         return {
           success: true,
@@ -235,7 +244,7 @@ export function createPreferencesManager(deps) {
               "utf8"
             );
           } catch (restoreError) {
-            console.error("[Preferences] Failed to restore backup:", restoreError);
+            logger?.error("Failed to restore backup: " + restoreError.message);
           }
         }
         throw error;
@@ -251,33 +260,47 @@ export function createPreferencesManager(deps) {
   function registerIpcHandlers() {
     // 获取所有配置
     ipcMain.handle("preferences:getAll", () => {
+      logger?.debug('IPC received: preferences:getAll');
       return loadPreferences();
     });
 
     // 获取单个配置
     ipcMain.handle("preferences:get", (event, key, defaultValue) => {
+      logger?.debug(`IPC received: preferences:get (${key})`);
       return getPreference(key, defaultValue);
     });
 
     // 设置单个配置
     ipcMain.handle("preferences:set", (event, key, value) => {
+      logger?.debug(`IPC received: preferences:set (${key})`);
       return setPreference(key, value);
     });
 
     // 保存所有配置
     ipcMain.handle("preferences:saveAll", (event, prefs) => {
+      logger?.debug('IPC received: preferences:saveAll');
       return savePreferences(prefs);
     });
 
     // 导出首选项
     ipcMain.handle("export-preferences", async (event, preferences) => {
+      logger?.debug('IPC received: export-preferences');
       return await exportPreferences(preferences);
     });
 
     // 导入首选项
     ipcMain.handle("import-preferences", async () => {
+      logger?.debug('IPC received: import-preferences');
       return await importPreferences();
     });
+  }
+
+  /**
+   * 设置日志记录器
+   * @param {Object} newLogger - 日志记录器实例
+   */
+  function setLogger(newLogger) {
+    deps.logger = newLogger;
   }
 
   // 自动注册 IPC 处理器
@@ -292,6 +315,8 @@ export function createPreferencesManager(deps) {
     getPreference,
     setPreference,
     exportPreferences,
-    importPreferences
+    importPreferences,
+    setLogger
   };
 }
+

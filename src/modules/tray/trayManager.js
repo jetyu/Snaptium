@@ -18,8 +18,8 @@
  * @returns {Object} 托盘管理器实例
  */
 export function createTrayManager(deps) {
-  const { Tray, Menu, nativeImage, app, path, t, getWindow, closeAllWindows, __dirname } = deps;
-  
+  const { Tray, Menu, nativeImage, app, path, t, getWindow, closeAllWindows, __dirname, logger } = deps;
+
   let tray = null;
 
   /**
@@ -27,10 +27,10 @@ export function createTrayManager(deps) {
    * @returns {string} 图标文件路径
    */
   function getTrayIconPath() {
-    const iconFileName = process.platform === "win32" 
+    const iconFileName = process.platform === "win32"
       ? "app-logo.ico"
       : "app-logo-512.png";
-    
+
     return path.join(__dirname, "src", "assets", "logo", iconFileName);
   }
 
@@ -41,14 +41,14 @@ export function createTrayManager(deps) {
    */
   function createTrayIcon(iconPath) {
     let trayIcon = nativeImage.createFromPath(iconPath);
-    
+
     // 调整图标大小
     if (process.platform === "win32") {
       trayIcon = trayIcon.resize({ width: 32, height: 32 });
     } else {
       trayIcon = trayIcon.resize({ width: 32, height: 32 });
     }
-    
+
     return trayIcon;
   }
 
@@ -76,6 +76,7 @@ export function createTrayManager(deps) {
           // 关闭所有窗口
           if (closeAllWindows) {
             closeAllWindows();
+            logger.info("All windows closed");
           } else {
             const { BrowserWindow } = require('electron');
             const windows = BrowserWindow.getAllWindows();
@@ -84,7 +85,7 @@ export function createTrayManager(deps) {
               win.close();
             });
           }
-
+          logger.info("App quit");
           // 完全退出应用
           app.exit(0);
         },
@@ -120,13 +121,13 @@ export function createTrayManager(deps) {
   function createSystemTray() {
     const iconPath = getTrayIconPath();
     const trayIcon = createTrayIcon(iconPath);
-    
+
     tray = new Tray(trayIcon);
     tray.setToolTip("NoteWizard");
     tray.setContextMenu(buildTrayMenu());
-    
+
     setupTrayEvents();
-    
+
     return tray;
   }
 

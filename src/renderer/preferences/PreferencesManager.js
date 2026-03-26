@@ -11,6 +11,7 @@ import { AppearanceSettingsManager } from './managers/AppearanceSettingsManager.
 import { PathSettingsManager } from './managers/PathSettingsManager.js';
 import { EncryptionSettingsManager } from './managers/EncryptionSettingsManager.js';
 import { AISettingsManager } from './managers/AISettingsManager.js';
+import { LoggingSettingsManager } from './managers/LoggingSettingsManager.js';
 import { SELECTORS, DEFAULTS } from './constants.js';
 
 export class PreferencesManager {
@@ -45,6 +46,7 @@ export class PreferencesManager {
     this.path = new PathSettingsManager(managerDeps);
     this.encryption = new EncryptionSettingsManager(managerDeps);
     this.ai = new AISettingsManager(managerDeps);
+    this.logging = new LoggingSettingsManager(managerDeps);
 
     this.isInitialized = false;
   }
@@ -89,6 +91,8 @@ export class PreferencesManager {
       await this.path.init();
       await this.encryption.init();
       await this.ai.init();
+      await this.logging.loadSettings();
+      this.logging.bindEvents();
 
       // 绑定全局事件
       this.bindGlobalEvents();
@@ -191,6 +195,7 @@ export class PreferencesManager {
       this.appearance.loadToUI(),
       this.path.loadSettings(),
       this.ai.loadSettings(),
+      this.logging.loadSettings(),
     ]);
   }
 
@@ -238,7 +243,8 @@ export class PreferencesManager {
         language: allPrefs.language || DEFAULTS.LANGUAGE,
         aiSettings: completeAISettings,
         startupOnLogin: allPrefs.startupOnLogin || false,
-        autoUpdate: allPrefs.autoUpdate !== undefined ? allPrefs.autoUpdate : true
+        autoUpdate: allPrefs.autoUpdate !== undefined ? allPrefs.autoUpdate : true,
+        loggingSettings: allPrefs.loggingSettings || DEFAULTS.LOGGING_SETTINGS
       };
 
       // 调用主进程导出
@@ -387,6 +393,14 @@ export class PreferencesManager {
       await this.prefsService.toggleAutoUpdate(!!prefs.autoUpdate);
     }
 
+    // 应用日志设置
+    if (prefs.loggingSettings) {
+      await this.prefsService.set('loggingSettings', prefs.loggingSettings);
+      if (window.electronAPI?.ipcRenderer) {
+        await window.electronAPI.ipcRenderer.invoke('logger:update-config', prefs.loggingSettings);
+      }
+    }
+
     // 重新加载所有设置到 UI
     await this.loadAllSettingsToUI();
   }
@@ -423,6 +437,7 @@ export class PreferencesManager {
     await this.appearance.reset();
     await this.path.reset();
     await this.ai.reset();
+    await this.logging.reset();
   }
 
   /**

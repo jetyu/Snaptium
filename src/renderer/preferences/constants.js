@@ -60,6 +60,10 @@ export const SELECTORS = {
   
   // 状态显示
   STATUS: '#status',
+  
+  // 日志设置
+  LOGGING_ENABLED_INPUT: '#pref-logging-enabled',
+  LOGGING_LEVEL_SELECT: '#pref-logging-level',
 };
 
 // 默认值
@@ -82,6 +86,10 @@ export const DEFAULTS = {
   },
   
   STARTUP_ON_LOGIN: false,
+  LOGGING_SETTINGS: {
+    enabled: true,
+    level: 'info'
+  }
 };
 
 // 字体大小限制

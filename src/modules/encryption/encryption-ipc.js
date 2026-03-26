@@ -75,7 +75,7 @@ export function verifyRecoveryKeyHash(recoveryKey, storedHash) {
  */
 export function decryptContent(encryptedContent, recoveryKey) {
   if (!encryptedContent.startsWith('ENCRYPTED:')) {
-    // 不是加密内容，直接返回
+    // 非加密内容格式，返回
     return encryptedContent;
   }
 
@@ -119,16 +119,14 @@ export function decryptContent(encryptedContent, recoveryKey) {
  * @returns {Object} 加密管理器实例
  */
 export function createEncryptionManager(deps) {
-  const { ipcMain, preferencesManager, getWindow, app } = deps;
+  const { ipcMain, preferencesManager, getWindow, app, logger } = deps;
 
-  // 加密状态管理（无锁定功能）
+  // 加密状态管理
   let encryptionEnabled = false;
   let currentRecoveryKey = null;
   let currentSalt = null;
 
-  /**
-   * 获取当前数据库目录
-   */
+  //获取当前数据库目录
   const getDatabaseDir = () => {
     const noteSavePath = preferencesManager.getPreference('noteSavePath');
     if (noteSavePath) {
@@ -156,7 +154,7 @@ export function createEncryptionManager(deps) {
         }
       } catch (error) {
         if (error.code !== 'ENOENT') {
-          console.warn('[Encryption] Failed to parse meta.json while checking encryption state:', error);
+          logger?.error('Failed to parse meta.json while checking encryption state: ' + error.message);
         }
       }
 
@@ -189,7 +187,7 @@ export function createEncryptionManager(deps) {
         }
       }
     } catch (error) {
-      console.warn('[Encryption] Failed to detect encrypted files from database:', error);
+      logger?.error('Failed to detect encrypted files from database: ' + error.message);
     }
 
     return false;
@@ -225,7 +223,7 @@ export function createEncryptionManager(deps) {
       safeWriteFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
       return true;
     } catch (error) {
-      console.error(errorMessage, error);
+      logger?.error(errorMessage + ' ' + error.message);
       return false;
     }
   };
@@ -243,19 +241,19 @@ export function createEncryptionManager(deps) {
             currentRecoveryKey = safeStorage.decryptString(encryptedBuffer);
             currentSalt = config.salt;
             encryptionEnabled = true;
-            console.log('Encryption auto-unlocked successfully');
+            logger?.info('Decryption successfully');
           } catch (error) {
-            console.error('Failed to auto-unlock encryption:', error);
+            logger?.error('Failed to Decryption: ' + error.message);
           }
         } else {
-          console.warn('safeStorage is not available on this system');
+          logger?.warn('Electron SafeStorage is not available on this system');
         }
       } else {
         // 尝试从 meta.json 读取临时恢复密钥进行紧急恢复
         await tryRecoverFromMetaJson();
       }
     } catch (error) {
-      console.error('Failed to initialize encryption:', error);
+      logger?.error('Failed to initialize encryption: ' + error.message);
     }
   };
 
@@ -283,7 +281,7 @@ export function createEncryptionManager(deps) {
         return;
       }
 
-      console.log('[Encryption] Found temp recovery key in meta.json, attempting emergency recovery...');
+      logger?.info('Detected TempRecoveryKey from meta.json, emergency recovery.');
 
       // 如果 meta.json 中保存了数据库路径，恢复 noteSavePath 配置
       if (meta.databasePath) {
@@ -293,7 +291,7 @@ export function createEncryptionManager(deps) {
         // 如果当前配置的路径与 meta.json 中的路径不一致，恢复配置
         if (!currentNoteSavePath || currentNoteSavePath !== savedPath) {
           await preferencesManager.setPreference('noteSavePath', savedPath);
-          console.log(`[Encryption] Restored noteSavePath from meta.json: ${savedPath}`);
+          logger?.info(`Restored Note Storage Path from meta.json: ${savedPath}`);
         }
       }
 
@@ -301,7 +299,7 @@ export function createEncryptionManager(deps) {
 
       // 验证密钥格式
       if (typeof recoveryKey !== 'string' || recoveryKey.length < 10) {
-        console.error('[Encryption] Invalid recovery key format in meta.json');
+        logger?.info('Invalid recovery key format from meta.json');
         safeWriteFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
         return;
       }
@@ -313,13 +311,13 @@ export function createEncryptionManager(deps) {
         files = fs.readdirSync(objectsDir).filter(f => f.endsWith('.md'));
       } catch (error) {
         if (error.code !== 'ENOENT') {
+          logger?.error('Failed to read objects directory: ' + error.message);
           throw error;
         }
       }
 
       if (files !== null) {
         let verified = false;
-
         for (const file of files) {
           const filePath = path.join(objectsDir, file);
           let content;
@@ -327,6 +325,7 @@ export function createEncryptionManager(deps) {
             content = fs.readFileSync(filePath, 'utf-8');
           } catch (error) {
             if (error.code === 'ENOENT') continue;
+            logger?.error('Failed to Loop read file: ' + error.message);
             throw error;
           }
 
@@ -350,7 +349,7 @@ export function createEncryptionManager(deps) {
                 decipher.final('utf8');
 
                 verified = true;
-                console.log('[Encryption] Recovery key verified successfully');
+                logger?.info('Recovery key verified successfully');
                 break;
               }
             } catch (error) {
@@ -361,8 +360,8 @@ export function createEncryptionManager(deps) {
         }
 
         if (!verified && meta.encrypted) {
-          // 数据库标记为加密但没有找到加密文件，可能是空数据库
-          console.log('[Encryption] No encrypted files found to verify, proceeding with recovery');
+          // 数据库标记为加密但没有找到加密文件
+          logger?.info('No encrypted files found to verify, proceeding with recovery');
           verified = true;
         }
 
@@ -389,17 +388,17 @@ export function createEncryptionManager(deps) {
             currentRecoveryKey = recoveryKey;
             currentSalt = salt;
 
-            console.log('[Encryption] Emergency recovery successful, encryption enabled');
+            logger?.info('Emergency recovery successful, encryption enabled');
           }
 
           // 清除 meta.json 中的临时密钥
           delete meta.tempRecoveryKey;
           safeWriteFileSync(metaPath, JSON.stringify(meta, null, 2), 'utf-8');
-          console.log('[Encryption] Temporary recovery key and databasePath removed from meta.json');
+          logger?.info('Recovery successful, TempRecoveryKey was removed from meta.json');
         }
       }
     } catch (error) {
-      console.error('[Encryption] Emergency recovery failed:', error);
+      logger?.error('Emergency recovery failed: ' + error.message);
     }
   };
 
@@ -412,7 +411,7 @@ export function createEncryptionManager(deps) {
       currentRecoveryKey = null;
     }
     currentSalt = null;
-    console.log('Encryption memory cleared');
+    logger?.debug('Encryption memory cleared');
   });
 
   // ==================== 状态查询 ====================
@@ -427,19 +426,19 @@ export function createEncryptionManager(deps) {
 
       return { success: true, enabled: encryptionEnabled };
     } catch (error) {
-      console.error('Failed to check encryption status:', error);
+      logger?.error('Failed to check encryption status: ' + error.message);
       return { success: false, error: error.message };
     }
   });
 
   /**
-   * 检查是否已解锁（恢复密钥方案始终解锁）
+   * 检查是否已解锁
    */
   ipcMain.handle('encryption:is-unlocked', async () => {
     try {
       return { success: true, unlocked: encryptionEnabled };
     } catch (error) {
-      console.error('Failed to check unlock status:', error);
+      logger?.error('Failed to check unlock status: ' + error.message);
       return { success: false, error: error.message };
     }
   });
@@ -450,19 +449,20 @@ export function createEncryptionManager(deps) {
    * 生成新的恢复密钥
    */
   ipcMain.handle('encryption:generate-recovery-key', async () => {
+    logger?.debug('IPC received: encryption:generate-recovery-key');
     try {
       const recoveryKey = generateRecoveryKey();
-      console.log('Generated recovery key (length):', recoveryKey.length);
+      logger?.info('Generated new recovery key');
 
       return {
         success: true,
         recoveryKey
       };
     } catch (error) {
-      console.error('Failed to generate recovery key:', error);
+      logger?.error('Failed to generate recovery key: ' + error.message);
       return {
         success: false,
-        error: '生成恢复密钥失败: ' + error.message
+        error: error.message
       };
     }
   });
@@ -471,8 +471,9 @@ export function createEncryptionManager(deps) {
    * 设置加密（使用恢复密钥）
    */
   ipcMain.handle('encryption:setup', async (event, { recoveryKey }) => {
+    logger?.debug('IPC received: encryption:setup');
     try {
-      console.log('[Encryption] Setting up encryption with recovery key');
+      logger?.info('Setup encryption with recovery key');
 
       // 验证恢复密钥
       if (!recoveryKey || recoveryKey.length < 20) {
@@ -490,6 +491,7 @@ export function createEncryptionManager(deps) {
       if (safeStorage.isEncryptionAvailable()) {
         const encrypted = safeStorage.encryptString(recoveryKey);
         encryptedRecoveryKey = encrypted.toString('base64');
+        logger?.info('safeStorage encrypted recovery key');
       }
 
       // 保存加密配置
@@ -512,10 +514,10 @@ export function createEncryptionManager(deps) {
           meta.databasePath = path.dirname(databaseDir); // 保存工作区根路径
           meta.encrypted = true;
         },
-        { errorMessage: '[Encryption] Failed to save tempRecoveryKey to meta.json:' }
+        { errorMessage: 'Failed to save tempRecoveryKey to meta.json:' }
       );
       if (setupMetaUpdated) {
-        console.log('[Encryption] Updated meta.json: encrypted = true');
+        logger?.info('meta.json updated (encrypted = true)');
       }
 
       encryptionEnabled = true;
@@ -528,9 +530,10 @@ export function createEncryptionManager(deps) {
         win.webContents.send('encryption:status-changed', { enabled: true });
       }
 
+      logger?.info('Encryption setup successful');
       return { success: true };
     } catch (error) {
-      console.error('Failed to setup encryption:', error);
+      logger?.error('Failed to setup encryption: ' + error.message);
       return {
         success: false,
         error: '设置加密失败: ' + error.message
@@ -577,7 +580,7 @@ export function createEncryptionManager(deps) {
         };
       }
     } catch (error) {
-      console.error('Failed to verify key:', error);
+      logger?.error('Failed to verify key: ' + error.message);
       return { success: false, error: error.message };
     }
   });
@@ -586,6 +589,7 @@ export function createEncryptionManager(deps) {
    * 禁用加密
    */
   ipcMain.handle('encryption:disable', async () => {
+    logger?.debug('IPC received: encryption:disable');
     try {
       // 清除加密配置
       await preferencesManager.setPreference('encryption', {
@@ -601,7 +605,7 @@ export function createEncryptionManager(deps) {
         { errorMessage: 'Failed to update meta.json while disabling encryption:' }
       );
       if (disableMetaUpdated) {
-        console.log('[Encryption] Updated meta.json: encrypted = false');
+        logger?.info('meta.json updated (encrypted = false)');
       }
 
       encryptionEnabled = false;
@@ -614,9 +618,10 @@ export function createEncryptionManager(deps) {
         win.webContents.send('encryption:status-changed', { enabled: false });
       }
 
+      logger?.info('Encryption disabled');
       return { success: true };
     } catch (error) {
-      console.error('Failed to disable encryption:', error);
+      logger?.error('Failed to disable encryption: ' + error.message);
       return {
         success: false,
         error: '禁用加密失败: ' + error.message
@@ -638,6 +643,7 @@ export function createEncryptionManager(deps) {
         if (error.code === 'ENOENT') {
           return { success: true, hasEncrypted: false };
         }
+        logger?.error('Check encrypted files error: ' + error.message);
         throw error;
       }
 
@@ -650,13 +656,14 @@ export function createEncryptionManager(deps) {
           }
         } catch (error) {
           // 忽略单个文件读取错误
+          logger?.error('Ignore single file read error: ' + error.message);
           continue;
         }
       }
 
       return { success: true, hasEncrypted: false };
     } catch (error) {
-      console.error('Failed to check encrypted files:', error);
+      logger?.error('Failed to check encrypted files: ' + error.message);
       return { success: false, error: error.message };
     }
   });
@@ -676,6 +683,7 @@ export function createEncryptionManager(deps) {
         const storedHash = config.recoveryKeyHash;
 
         if (inputHash !== storedHash) {
+          logger?.info('Recovery key not mapping');
           return { success: false, error: '恢复密钥不正确' };
         }
       }
@@ -688,10 +696,12 @@ export function createEncryptionManager(deps) {
         files = fs.readdirSync(sourceDir).filter(f => f.endsWith('.md'));
       } catch (error) {
         if (error.code === 'ENOENT') {
+          logger?.info('Source directory not found');
           return { success: false, error: '源目录不存在' };
         }
         throw error;
       }
+
       let decrypted = 0;
       let copied = 0;
       let failed = 0;
@@ -708,7 +718,7 @@ export function createEncryptionManager(deps) {
             // 解密内容
             const parts = content.split(':');
             if (parts.length < 6) {
-              console.error(`Invalid encrypted format in file ${file}`);
+              logger?.error(`Invalid encrypted format (file=${file})`);
               failed++;
               continue;
             }
@@ -717,7 +727,7 @@ export function createEncryptionManager(deps) {
             const encryptedData = encryptedParts.join(':');
 
             if (prefix !== 'ENCRYPTED' || version !== 'v1') {
-              console.error(`Unsupported encryption version in file ${file}`);
+              logger?.error(`Unsupported encryption version (file=${file})`);
               failed++;
               continue;
             }
@@ -746,7 +756,7 @@ export function createEncryptionManager(deps) {
             copied++;
           }
         } catch (error) {
-          console.error(`Failed to process file ${file}:`, error);
+          logger?.error(`Failed to process file (file=${file})` + error.message);
           failed++;
         }
       }
@@ -758,7 +768,7 @@ export function createEncryptionManager(deps) {
         failed
       };
     } catch (error) {
-      console.error('Failed to decrypt for export:', error);
+      logger?.error('Failed to decrypt for export: ' + error.message);
       return { success: false, error: error.message };
     }
   });
@@ -774,7 +784,7 @@ export function createEncryptionManager(deps) {
         throw new Error('加密功能未启用');
       }
 
-      console.log('[Encryption] Starting batch encryption...');
+      logger?.info('Batch encryption all notes start');
 
       // 获取笔记目录和回收站目录
       const databaseDir = getDatabaseDir();
@@ -817,6 +827,7 @@ export function createEncryptionManager(deps) {
 
       for (let i = 0; i < filesToEncrypt.length; i++) {
         const { file, dir, dirName } = filesToEncrypt[i];
+        logger?.debug(`Encrypting file: ${file} in ${dirName}`);
         const filePath = path.join(dir, file);
 
         try {
@@ -852,7 +863,7 @@ export function createEncryptionManager(deps) {
           safeWriteFileSync(filePath, result, 'utf-8');
           encrypted++;
 
-          console.log(`[Encryption] Encrypted file in ${dirName}: ${file}`);
+          logger?.info(`Encrypted file in ${dirName}: ${file}`);
 
           // 发送进度
           if (win) {
@@ -864,12 +875,12 @@ export function createEncryptionManager(deps) {
             });
           }
         } catch (error) {
-          console.error(`Failed to encrypt file ${file} in ${dirName}:`, error);
+          logger?.error(`Failed to encrypt file ${file} in ${dirName}: ` + error.message);
           failed++;
         }
       }
 
-      console.log(`[Encryption] Batch encryption completed: ${encrypted} encrypted, ${skipped} skipped, ${failed} failed`);
+      logger?.info(`Batch encryption completed: ${encrypted} encrypted, ${skipped} skipped, ${failed} failed`);
 
       // 更新 meta.json 的加密状态
       const encryptAllMetaUpdated = updateMetaJson(
@@ -879,7 +890,7 @@ export function createEncryptionManager(deps) {
         }
       );
       if (encryptAllMetaUpdated) {
-        console.log('[Encryption] Updated meta.json: encrypted = true');
+        logger?.info('meta.json updated (encrypted = true)');
       }
 
       return {
@@ -889,7 +900,7 @@ export function createEncryptionManager(deps) {
         skipped
       };
     } catch (error) {
-      console.error('Failed to encrypt all notes:', error);
+      logger?.error('Failed to encrypt all notes: ' + error.message);
       return { success: false, error: error.message };
     }
   });
@@ -899,8 +910,7 @@ export function createEncryptionManager(deps) {
    */
   ipcMain.handle('encryption:decrypt-all', async () => {
     try {
-      console.log('[Encryption] Starting batch decryption...');
-
+      logger?.info('Batch decryption all notes start');
       // 获取笔记目录和回收站目录
       const databaseDir = getDatabaseDir();
       const notesDir = path.join(databaseDir, 'objects');
@@ -916,6 +926,7 @@ export function createEncryptionManager(deps) {
           .map(f => ({ file: f, dir: notesDir, dirName: 'objects' }));
         filesToDecrypt.push(...objectFiles);
       } catch (error) {
+        logger?.error('Failed to read objects directory: ' + error.message);
         if (error.code !== 'ENOENT') throw error;
       }
 
@@ -926,6 +937,7 @@ export function createEncryptionManager(deps) {
           .map(f => ({ file: f, dir: trashDir, dirName: 'trash' }));
         filesToDecrypt.push(...trashFiles);
       } catch (error) {
+        logger?.error('Failed to read trash directory: ' + error.message);
         if (error.code !== 'ENOENT') throw error;
       }
 
@@ -957,7 +969,7 @@ export function createEncryptionManager(deps) {
           // 解密内容
           const parts = content.split(':');
           if (parts.length < 6) {
-            console.error(`Invalid encrypted format in file ${file} in ${dirName}`);
+            logger?.error(`Invalid encrypted format in file ${file} in ${dirName}`);
             failed++;
             continue;
           }
@@ -966,7 +978,7 @@ export function createEncryptionManager(deps) {
           const encryptedData = encryptedParts.join(':');
 
           if (prefix !== 'ENCRYPTED' || version !== 'v1') {
-            console.error(`Unsupported encryption version in file ${file} in ${dirName}`);
+            logger?.error(`Unsupported encryption version in file ${file} in ${dirName}`);
             failed++;
             continue;
           }
@@ -990,7 +1002,7 @@ export function createEncryptionManager(deps) {
           safeWriteFileSync(filePath, decryptedContent, 'utf-8');
           decrypted++;
 
-          console.log(`[Encryption] Decrypted file in ${dirName}: ${file}`);
+          logger?.info(`Decrypted file in ${dirName}: ${file}`);
 
           // 发送进度
           if (win) {
@@ -1002,12 +1014,12 @@ export function createEncryptionManager(deps) {
             });
           }
         } catch (error) {
-          console.error(`Failed to decrypt file ${file} in ${dirName}:`, error);
+          logger?.error(`Failed to decrypt file ${file} in ${dirName}: ` + error.message);
           failed++;
         }
       }
 
-      console.log(`[Encryption] Batch decryption completed: ${decrypted} decrypted, ${skipped} skipped, ${failed} failed`);
+      logger?.info(`Batch decryption completed: ${decrypted} decrypted, ${skipped} skipped, ${failed} failed`);
 
       // 更新 meta.json 的加密状态
       const decryptAllMetaUpdated = updateMetaJson(
@@ -1017,7 +1029,7 @@ export function createEncryptionManager(deps) {
         }
       );
       if (decryptAllMetaUpdated) {
-        console.log('[Encryption] Updated meta.json: encrypted = false');
+        logger?.info('meta.json updated (encrypted = false)');
       }
 
       return {
@@ -1027,15 +1039,13 @@ export function createEncryptionManager(deps) {
         skipped
       };
     } catch (error) {
-      console.error('Failed to decrypt all notes:', error);
+      logger?.error('Failed to decrypt all notes: ' + error.message);
       return {
         success: false,
         error: error.message
       };
     }
   });
-
-  // ==================== 单个文件操作 ====================
 
   /**
    * 加密单个笔记内容
@@ -1072,7 +1082,7 @@ export function createEncryptionManager(deps) {
 
       return { success: true, encrypted: result };
     } catch (error) {
-      console.error('Failed to encrypt note:', error);
+      logger?.error('Failed to encrypt single note: ' + error.message);
       return { success: false, error: error.message };
     }
   });
@@ -1122,12 +1132,10 @@ export function createEncryptionManager(deps) {
 
       return { success: true, decrypted };
     } catch (error) {
-      console.error('Failed to decrypt note:', error);
+      logger?.error('Failed to decrypt single note: ' + error.message);
       return { success: false, error: error.message };
     }
   });
-
-  console.log('Encryption IPC handlers registered (recovery key version)');
 
   // 返回加密管理器实例
   return {

@@ -8,7 +8,7 @@
       </br>
       <span class="close" id="pref-close" data-i18n="btnClose"></span>
     </div>
-    
+
   </div>
   <div class="pref-layout">
     <nav class="pref-sidebar">
@@ -16,7 +16,8 @@
         <li data-pane="general" class="active" data-i18n="paneGeneral"></li>
         <li data-pane="appearance" data-i18n="paneAppearance"></li>
         <li data-pane="security" data-i18n="paneSecurity"></li>
-        <li data-pane="ai" data-i18n="paneAIConfiguration"></li>
+        <li data-pane="ai" data-i18n="paneAIAssistant"></li>
+        <li data-pane="logging" data-i18n="paneLogging"></li>
       </ul>
     </nav>
     <section class="pref-content">
@@ -57,7 +58,7 @@
             <span id="pref-auto-update-text" data-i18n="textAutoUpdate"></span>
           </label>
         </div>
-        
+
       </div>
       <div id="pane-appearance" class="pref-pane">
         <div class="pref-section">
@@ -100,7 +101,7 @@
           </div>
           <p class="hint-text" data-i18n="hintEncryptionTips"></p>
         </div>
-                <!-- 加密状态显示 -->
+        <!-- 加密状态显示 -->
         <div id="encryption-status-section" class="pref-section">
           <div class="status-info">
             <span class="encryption-status-label" data-i18n="labelEncryptionStatus"></span>
@@ -149,7 +150,7 @@
           </div>
         </div>
 
-        
+
       </div>
       <div id="pane-ai" class="pref-pane">
         <div class="pref-section">
@@ -160,14 +161,14 @@
           </label>
         </div>
         <div class="pref-section">
-            <span class="pref-ai-typing-delay" data-i18n="labelAITypingDelay"></span>
-            <input id="pref-ai-typing-delay" type="number" min="500" max="10000" step="500" placeholder="2000" />
-            <span class="unit" data-i18n="unitMilliseconds"></span>
-            &nbsp;&nbsp;&nbsp;&nbsp;      
-            <span class="pref-ai-typing-length" data-i18n="labelAIMinInputLength"></span>
-            <input id="pref-ai-typing-length" type="number" min="5" max="100" step="5" placeholder="10" />
-            <span class="unit" data-i18n="unitCharacters"></span>
-        </div> 
+          <span class="pref-ai-typing-delay" data-i18n="labelAITypingDelay"></span>
+          <input id="pref-ai-typing-delay" type="number" min="500" max="10000" step="500" placeholder="2000" />
+          <span class="unit" data-i18n="unitMilliseconds"></span>
+          &nbsp;&nbsp;&nbsp;&nbsp;
+          <span class="pref-ai-typing-length" data-i18n="labelAIMinInputLength"></span>
+          <input id="pref-ai-typing-length" type="number" min="5" max="100" step="5" placeholder="10" />
+          <span class="unit" data-i18n="unitCharacters"></span>
+        </div>
         <div class="pref-section">
           <label for="pref-ai-model">
             <span data-i18n="labelAIModel"></span>
@@ -180,7 +181,7 @@
             <span data-i18n="labelAIApiKey"></span>
             <span class="required-mark">*</span>
           </label>
-          <input type="password" id="pref-ai-api-key"  autocomplete="off" />
+          <input type="password" id="pref-ai-api-key" autocomplete="off" />
         </div>
         <div class="pref-section">
           <label for="pref-ai-endpoint">
@@ -201,6 +202,24 @@
             <button id="pref-ai-test" class="testSetting-btn" data-i18n="btnTestConnection"></button>
             <span id="pref-ai-test-status" class="test-status"></span>
           </div>
+        </div>
+      </div>
+      <div id="pane-logging" class="pref-pane">
+        <div class="pref-section">
+          <label for="pref-logging-enabled" data-i18n="labelLoggingEnabled"></label>
+          <label class="startup-switch">
+            <input type="checkbox" id="pref-logging-enabled" checked>
+            <span id="pref-logging-enabled-text" data-i18n="textLoggingEnabled"></span>
+          </label>
+        </div>
+        <div class="pref-section">
+          <label for="pref-logging-level" data-i18n="labelLoggingLevel"></label>
+          <select id="pref-logging-level">
+            <option value="debug" data-i18n="levelDebug"></option>
+            <option value="info" data-i18n="levelInfo"></option>
+            <option value="warn" data-i18n="levelWarn"></option>
+            <option value="error" data-i18n="levelError"></option>
+          </select>
         </div>
       </div>
     </section>

@@ -16,9 +16,10 @@
  * @param {Object} deps.os - 操作系统模块
  * @param {Object} deps.require - require 函数
  * @param {Function} deps.getWindow - 获取主窗口函数
+ * @param {Object} deps.logger - 日志模块
  */
 export function registerApiBridge(deps) {
-  const { ipcMain, app, dialog, shell, fs, path, os, require, getWindow } = deps;
+  const { ipcMain, app, dialog, shell, fs, path, os, require, getWindow, logger } = deps;
 
   // ==================== 对话框 API ====================
   ipcMain.handle("dialog:showOpenDialog", async (_event, options) => {
@@ -44,14 +45,22 @@ export function registerApiBridge(deps) {
   ipcMain.handle("app:showItemInFolder", (_event, targetPath) => shell.showItemInFolder(targetPath));
 
   // ==================== 通用工具 API ====================
-  
+
+  // 基础 API
+  ipcMain.handle('api:ping', () => {
+    logger?.debug('Ping received');
+    return 'pong';
+  });
+
   // 获取用户数据路径
   ipcMain.handle("get-user-data-path", () => {
+    logger?.debug('get-user-data-path received');
     return app.getPath("userData");
   });
 
   // 重启应用
   ipcMain.handle("relaunch-app", () => {
+    logger?.debug('relaunch-app received');
     app.relaunch();
     app.exit(0);
     return true;
@@ -59,6 +68,7 @@ export function registerApiBridge(deps) {
 
   // 获取版本信息
   ipcMain.on("request-versions", (event) => {
+    logger?.debug('request-versions received');
     const packageInfo = require("./package.json");
     event.sender.send("versions", {
       app: packageInfo.version,
@@ -73,12 +83,15 @@ export function registerApiBridge(deps) {
 
   // 确保目录存在
   ipcMain.handle("ensure-directory-exists", (_event, dirPath) => {
+    logger?.debug('ensure-directory-exists received');
     try {
       if (!fs.existsSync(dirPath)) {
         fs.mkdirSync(dirPath, { recursive: true });
       }
+      logger?.debug('Directory exists');
       return { success: true };
     } catch (error) {
+      logger?.error('Failed to ensure directory exists', error);
       return { success: false, error: error.message };
     }
   });
@@ -87,13 +100,16 @@ export function registerApiBridge(deps) {
   ipcMain.handle("get-default-save-path", () => {
     const appName = 'NoteWizard';
     const homeDir = os.homedir();
-    
+
     if (process.platform === 'win32') {
+      logger?.debug('Windows platform detected');
       return path.join(homeDir, 'Documents', appName);
     }
     if (process.platform === 'darwin') {
+      logger?.debug('macOS platform detected');
       return path.join(homeDir, 'Library', 'Application Support', appName);
     }
+    logger?.debug('other OS platform detected');
     return path.join(homeDir, `.${appName}`);
   });
 }

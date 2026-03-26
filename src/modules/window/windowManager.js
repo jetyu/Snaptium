@@ -15,7 +15,7 @@
  * @returns {Object} 窗口管理器实例
  */
 export function createWindowManager(deps) {
-  const { BrowserWindow, Menu, app, path, ipcMain, __dirname } = deps;
+  const { BrowserWindow, Menu, app, path, ipcMain, __dirname, logger } = deps;
   
   let mainWindow = null;
 
@@ -65,6 +65,7 @@ export function createWindowManager(deps) {
     ipcMain.removeAllListeners("preview-state-changed");
     
     ipcMain.on("preview-state-changed", (event, payload) => {
+      logger?.debug('IPC received: preview-state-changed');
       const { visible } = payload || {};
       const currentMenu = Menu.getApplicationMenu();
       

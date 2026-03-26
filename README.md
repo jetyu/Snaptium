@@ -8,16 +8,18 @@
   <img src="src/assets/logo/app-logo-128.png" alt="NoteWizard Logo" width="72">
   <h2> NoteWizard </h2>
   <p>A modern cross-platform note-taking desktop application built with Electron, featuring local data storage for complete security and control.</p>
-  
-[![Latest Release](https://img.shields.io/github/v/release/jetyu/NoteWizard?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases/latest)
-![GitHub Latest Pre-Release)](https://img.shields.io/github/v/release/jetyu/NoteWizard?include_prereleases&label=pre-release&logo=github)
-[![Platform](https://img.shields.io/badge/Platform-Windows%20|%20Linux%20|%20macOS-blue?style=flat)]()
-[![Repo Size](https://img.shields.io/github/repo-size/jetyu/NoteWizard?style=flat)]()
-[![Last Commit](https://img.shields.io/github/last-commit/jetyu/NoteWizard?style=flat)]()
-[![Open Issues](https://img.shields.io/github/issues/jetyu/NoteWizard?style=flat)]()
-[![License](https://img.shields.io/github/license/jetyu/NoteWizard?style=flat)]()
-[![Downloads](https://img.shields.io/github/downloads/jetyu/NoteWizard/total?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases)
 
+[![Latest Release](https://img.shields.io/github/v/release/jetyu/NoteWizard?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases/latest)
+![GitHub Pre-release](https://img.shields.io/github/v/release/jetyu/NoteWizard?include_prereleases&label=pre-release&logo=github)
+[![Downloads](https://img.shields.io/github/downloads/jetyu/NoteWizard/total?style=flat&logo=github)](https://github.com/jetyu/NoteWizard/releases)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20|%20Linux%20|%20macOS-blue?style=flat)]()
+[![Last Commit](https://img.shields.io/github/last-commit/jetyu/NoteWizard?style=flat)]()
+
+[![Open Issues](https://img.shields.io/github/issues/jetyu/NoteWizard?style=flat&color=orange)]()
+[![Closed Issues](https://img.shields.io/github/issues-closed/jetyu/NoteWizard?style=flat&color=brightgreen)]()
+
+[![Repo Size](https://img.shields.io/github/repo-size/jetyu/NoteWizard?style=flat)]()
+[![License](https://img.shields.io/github/license/jetyu/NoteWizard?style=flat)]()
 
 </div>
 

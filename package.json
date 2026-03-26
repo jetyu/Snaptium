@@ -1,6 +1,6 @@
 {
   "name": "notewizard",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "type": "module",
   "description": "NoteWizard Installer",
   "license": "MIT License",
@@ -21,7 +21,8 @@
   "dependencies": {
     "@material-design-icons/svg": "^0.14.15",
     "adm-zip": "^0.5.10",
-    "codemirror": "^5.65.20",
+    "codemirror": "^5.65.21",
+    "electron-log": "^5.2.4",
     "electron-updater": "^6.3.6",
     "icon-gen": "^5.0.0",
     "markdown-it": "^14.1.1",
@@ -30,11 +31,11 @@
     "sharp": "^0.34.3"
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
-    "electron": "^40.6.1",
+    "concurrently": "^9.2.1",
+    "electron": "^41.0.2",
     "electron-builder": "^26.7.0",
     "electron-reload": "^1.5.0",
-    "nodemon": "^3.0.2",
+    "nodemon": "^3.1.14",
     "rimraf": "^6.0.1"
   },
   "optionalDependencies": {
