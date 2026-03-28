@@ -22,6 +22,13 @@ const electronAPI = Object.freeze({
   workspace: Object.freeze({
     showContextMenu: (payload) => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, payload),
   }),
+  menu: Object.freeze({
+    onOpenPreferences: (callback) => {
+      const subscription = (_event) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_PREFERENCES, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_PREFERENCES, subscription);
+    }
+  }),
 });
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

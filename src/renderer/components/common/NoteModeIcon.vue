@@ -11,7 +11,7 @@ import noteIconRaw from "@assets/icons/note.svg?raw";
 import notebookIconRaw from "@assets/icons/notebook.svg?raw";
 
 const props = defineProps<{
-  name: "locked" | "note" | "notebook";
+  name: "lockedIcon" | "noteIcon" | "notebookIcon";
 }>();
 
 const icons = {

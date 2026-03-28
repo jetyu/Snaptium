@@ -50,6 +50,9 @@ declare global {
       workspace?: {
         showContextMenu: (payload: WorkspaceContextMenuPayload) => Promise<string | null>;
       };
+      menu?: {
+        onOpenPreferences: (callback: () => void) => () => void;
+      };
     };
   }
 }

@@ -15,6 +15,8 @@
   "paneAppearance": "外观",
   "paneSecurity": "安全",
   "paneAIConfiguration": "AI 配置",
+  "paneRAG": "RAG",
+  "paneLog": "日志",
   "labelLanguage": "语言",
   "labelThemeMode": "主题模式",
   "labelEditorFontSize": "编辑器字体大小 (px)",

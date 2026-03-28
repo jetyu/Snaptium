@@ -14,6 +14,8 @@
   "paneAppearance": "Appearance",
   "paneSecurity": "Security",
   "paneAIConfiguration": "AI Configuration",
+  "paneRAG": "RAG",
+  "paneLog": "Logs",
   "labelLanguage": "Language",
   "labelThemeMode": "Theme Mode",
   "labelEditorFontSize": "Editor Font Size (px)",
