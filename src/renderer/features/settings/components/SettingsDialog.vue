@@ -172,23 +172,25 @@ onUnmounted(() => {
   text-align: left;
   padding: 10px 16px;
   border-radius: 8px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--text-secondary, #4b5563);
   font-size: 0.95rem;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .settings-tab-btn:hover {
-  background-color: var(--bg-hover, #e5e7eb);
-  color: var(--text-primary, #1a1a1a);
+  background-color: #eef2f5;
+  border-color: #e3e8ee;
+  color: #253041;
 }
 
 .settings-tab-btn.active {
-  background-color: var(--primary-color, #2563eb);
-  color: #ffffff;
-  font-weight: 500;
+  background-color: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--panel-border, #dde1e9));
+  color: var(--accent-hover, #2563eb);
+  font-weight: 600;
 }
 
 .settings-content {

@@ -13,18 +13,24 @@ class I18n {
     this.loadTranslations();
   }
 
-  loadTranslations(lang = this.locale) {
-    this.locale = lang;
+  resolveLocale(lang = this.locale) {
     const localesDir = path.resolve(__dirname, '../../../src/renderer/features/i18n/locales');
-    
-    let targetLang = lang;
-    if (targetLang.startsWith('zh')) {
-      targetLang = 'zh-CN';
-    } else if (targetLang.startsWith('en')) {
-      targetLang = 'en-US';
-    } else {
-      targetLang = 'en-US';
+    const requestedPath = path.join(localesDir, `${lang}.json`);
+    if (fs.existsSync(requestedPath)) {
+      return lang;
     }
+
+    const languageCode = lang.toLowerCase().split('-')[0];
+    const languageMatch = fs.readdirSync(localesDir)
+      .find((fileName) => fileName.toLowerCase().startsWith(`${languageCode}-`));
+
+    return languageMatch ? languageMatch.replace('.json', '') : 'en-US';
+  }
+
+  loadTranslations(lang = this.locale) {
+    const targetLang = this.resolveLocale(lang);
+    this.locale = targetLang;
+    const localesDir = path.resolve(__dirname, '../../../src/renderer/features/i18n/locales');
 
     const filePath = path.join(localesDir, `${targetLang}.json`);
 

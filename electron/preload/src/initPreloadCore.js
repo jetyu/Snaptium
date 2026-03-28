@@ -30,9 +30,10 @@ const electronAPI = Object.freeze({
     }
   }),
   settings: Object.freeze({
-    load: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_LOAD),
-    save: (config) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SAVE, config),
+    getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_LOAD),
+    saveConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SAVE, config),
     setStartup: (enabled) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
+    switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.APP_SWITHC_LANGUAGE, locale),
   }),
 });
 

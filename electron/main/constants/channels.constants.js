@@ -1,4 +1,5 @@
 export const IPC_CHANNELS = {
+  APP_SWITHC_LANGUAGE: 'app:switch-language',
   OPEN_FILE: 'editor:open-file',
   SAVE_FILE: 'editor:save-file',
   VFS_INIT: 'vfs:init',

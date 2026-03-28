@@ -29,8 +29,6 @@ function resolveContextParentId(entry: Note | Notebook, type: 'file' | 'folder')
 }
 
 export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions) {
-  const labels = createWorkspaceContextMenuLabels(options.t);
-
   async function showContextMenu(items: WorkspaceMenuItem[]) {
     if (!window.electronAPI?.workspace) {
       logger.warn('electronAPI.workspace not available, cannot show native workspace context menu.');
@@ -38,7 +36,7 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
     }
 
     return window.electronAPI.workspace.showContextMenu({
-      labels,
+      labels: createWorkspaceContextMenuLabels(options.t),
       items: items.map((item) => ({
         action: item.action ?? 'noop',
         labelKey: item.labelKey,
