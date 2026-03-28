@@ -29,6 +29,11 @@ const electronAPI = Object.freeze({
       return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_PREFERENCES, subscription);
     }
   }),
+  settings: Object.freeze({
+    load: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_LOAD),
+    save: (config) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SAVE, config),
+    setStartup: (enabled) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
+  }),
 });
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

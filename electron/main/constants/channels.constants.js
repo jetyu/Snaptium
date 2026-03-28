@@ -12,4 +12,7 @@ export const IPC_CHANNELS = {
   VFS_TOGGLE_NODE_LOCK: 'vfs:toggle-node-lock',
   WORKSPACE_SHOW_CONTEXT_MENU: 'workspace:show-context-menu',
   MENU_OPEN_PREFERENCES: 'menu:open-preferences',
+  SETTINGS_LOAD: 'settings:load',
+  SETTINGS_SAVE: 'settings:save',
+  SETTINGS_SET_STARTUP: 'settings:set-startup',
 };
