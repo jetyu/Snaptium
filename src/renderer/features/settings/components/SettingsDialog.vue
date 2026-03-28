@@ -3,21 +3,18 @@
     <Transition name="fade">
       <div v-if="isOpen" class="settings-overlay" @keydown.esc="handleEsc" tabindex="0" ref="overlayRef">
         <div class="settings-modal" @click.stop>
-          
+
           <!-- Left Sidebar Navigation -->
           <div class="settings-sidebar">
             <div class="settings-sidebar-header">
               <h2>{{ t('preferencesTitle') }}</h2>
             </div>
-            
+
             <div class="settings-sidebar-menu">
               <ul>
                 <li v-for="tab in tabs" :key="tab.id">
-                  <button 
-                    @click="setActiveTab(tab.id)"
-                    class="settings-tab-btn"
-                    :class="{ active: activeTab === tab.id }"
-                  >
+                  <button @click="setActiveTab(tab.id)" class="settings-tab-btn"
+                    :class="{ active: activeTab === tab.id }">
                     <span>{{ t(tab.labelKey) }}</span>
                   </button>
                 </li>
@@ -29,12 +26,13 @@
           <div class="settings-content">
             <div class="settings-close-btn-wrapper">
               <button @click="closeSettings" class="settings-close-btn" aria-label="Close">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
-            
+
             <div class="settings-content-inner">
               <Transition name="slide-up" mode="out-in">
                 <component :is="currentComponent" :key="activeTab" />
@@ -61,6 +59,7 @@ import AIAssistantSettings from './tabs/AIAssistantSettings.vue';
 import RAGSettings from './tabs/RAGSettings.vue';
 import UpdateSettings from './tabs/UpdateSettings.vue';
 import LogSettings from './tabs/LogSettings.vue';
+import ShortcutSettings from './tabs/ShortcutSettings.vue';
 
 const { t } = useI18n();
 const { isOpen, activeTab, closeSettings, setActiveTab, initMainProcessListeners } = useSettings();
@@ -74,6 +73,7 @@ const tabs = [
   { id: 'security', labelKey: 'paneSecurity', component: SecuritySettings },
   { id: 'ai', labelKey: 'paneAIConfiguration', component: AIAssistantSettings },
   { id: 'rag', labelKey: 'paneRAG', component: RAGSettings },
+  { id: 'shortcuts', labelKey: 'paneShortcuts', component: ShortcutSettings },
   { id: 'update', labelKey: 'labelAutoUpdate', component: UpdateSettings },
   { id: 'log', labelKey: 'paneLog', component: LogSettings },
 ];
