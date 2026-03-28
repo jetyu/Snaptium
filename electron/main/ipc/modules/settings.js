@@ -1,19 +1,24 @@
 import { ipcMain } from 'electron';
 import { settingsService } from '../../services/settings.service.js';
+import { loggerService } from '../../services/logger.service.js';
 
 export function registerSettingsIpcHandlers() {
   /**
    * Handle loading the configuration
    */
   ipcMain.handle('settings:load', async () => {
-    return await settingsService.loadConfig();
+    const config = await settingsService.loadConfig();
+    loggerService.updateConfig(config);
+    return config;
   });
 
   /**
    * Handle saving the configuration
    */
   ipcMain.handle('settings:save', async (_event, config) => {
-    return await settingsService.saveConfig(config);
+    const nextConfig = await settingsService.saveConfig(config);
+    loggerService.updateConfig(nextConfig);
+    return nextConfig;
   });
 
   /**

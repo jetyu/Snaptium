@@ -16,4 +16,6 @@ export const IPC_CHANNELS = {
   SETTINGS_LOAD: 'settings:load',
   SETTINGS_SAVE: 'settings:save',
   SETTINGS_SET_STARTUP: 'settings:set-startup',
+  LOGGER_OPEN_DIR: 'logger:open-dir',
+  LOGGER_LOG: 'logger:log',
 };

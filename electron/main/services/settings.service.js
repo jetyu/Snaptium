@@ -15,6 +15,8 @@ export const settingsService = {
     return {
       language: app.getLocale().toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN',
       autoStartup: false,
+      loggingEnabled: true,
+      logLevel: 'info',
     };
   },
 

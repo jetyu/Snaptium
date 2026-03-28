@@ -5,36 +5,12 @@
     <div class="settings-grid">
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelLanguage') }}</p>
-          <p class="setting-description">{{ t('textUIDisplayLanguage') }}</p>
-        </div>
-
-        <label class="select-shell">
-          <select
-            class="language-select"
-            :value="settingsStore.config.language"
-            @change="handleLanguageChange"
-          >
-            <option v-for="option in languageOptions" :key="option.value" :value="option.value">
-              {{ option.label }}
-            </option>
-          </select>
-        </label>
-      </section>
-
-      <section class="setting-card">
-        <div class="setting-copy">
           <p class="setting-label">{{ t('labelStartup') }}</p>
           <p class="setting-description">{{ t('textStartup') }}</p>
         </div>
 
-        <button
-          type="button"
-          class="startup-switch"
-          :class="{ enabled: settingsStore.config.autoStartup }"
-          :aria-pressed="settingsStore.config.autoStartup"
-          @click="handleStartupToggle"
-        >
+        <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.autoStartup }"
+          :aria-pressed="settingsStore.config.autoStartup" @click="handleStartupToggle">
           <span class="startup-switch-track">
             <span class="startup-switch-thumb" />
           </span>
@@ -43,6 +19,22 @@
           </span>
         </button>
       </section>
+      <section class="setting-card">
+        <div class="setting-copy">
+          <p class="setting-label">{{ t('labelLanguage') }}</p>
+          <p class="setting-description">{{ t('textUIDisplayLanguage') }}</p>
+        </div>
+
+        <label class="select-shell">
+          <select class="language-select" :value="settingsStore.config.language" @change="handleLanguageChange">
+            <option v-for="option in languageOptions" :key="option.value" :value="option.value">
+              {{ option.label }}
+            </option>
+          </select>
+        </label>
+      </section>
+
+
     </div>
   </div>
 </template>

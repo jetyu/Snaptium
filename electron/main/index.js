@@ -6,6 +6,7 @@ import { registerIpcHandlers } from './ipc/index.js';
 import { setupAppMenu } from './menu.js';
 import { ipcMain } from 'electron';
 import { settingsService } from './services/settings.service.js';
+import { loggerService } from './services/logger.service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,6 +19,7 @@ if (!app.requestSingleInstanceLock()) {
 
 app.whenReady().then(async () => {
   const preferences = await settingsService.loadConfig();
+  loggerService.updateConfig(preferences);
   const mainWindow = createMainWindow({ isDev, appPath: path.resolve(__dirname, '../..') });
   registerIpcHandlers(mainWindow);
   setupAppMenu(mainWindow, preferences.language);

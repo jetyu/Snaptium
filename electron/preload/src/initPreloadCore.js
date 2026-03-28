@@ -7,7 +7,10 @@ import { IPC_CHANNELS } from '../../main/constants/channels.constants.js';
 const electronAPI = Object.freeze({
   openFile: () => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE),
   saveFile: (payload) => ipcRenderer.invoke(IPC_CHANNELS.SAVE_FILE, payload),
-  log: (payload) => ipcRenderer.send('logger:log', payload),
+  logger: Object.freeze({
+    log: (payload) => ipcRenderer.send(IPC_CHANNELS.LOGGER_LOG, payload),
+    openDir: () => ipcRenderer.invoke(IPC_CHANNELS.LOGGER_OPEN_DIR),
+  }),
   vfs: Object.freeze({
     initWorkspace: (rootPath) => ipcRenderer.invoke(IPC_CHANNELS.VFS_INIT, rootPath),
     createFile: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_CREATE_FILE, payload),

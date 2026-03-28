@@ -386,5 +386,16 @@
   "shortcutGroupGeneral": "常规",
   "shortcutGroupEditor": "编辑器",
   "shortcutsCustomizationHint": "自定义快捷键功能正在开发中，敬请期待。",
-  "shortcutTooltip": "提示"
+  "shortcutTooltip": "提示",
+  "labelLoggingEnabled": "启用日志",
+  "textLoggingEnabled": "启用或禁用应用程序日志",
+  "labelLogLevel": "日志级别",
+  "optionLogLevelDebug": "调试",
+  "optionLogLevelInfo": "信息",
+  "optionLogLevelWarn": "警告",
+  "optionLogLevelError": "错误",
+  "btnLogFolder": "日志文件夹",
+  "logEnabledStatus": "已启用日志",
+  "logDisabledStatus": "已禁用日志",
+  "logLevelDesc": "只有选定级别或更高级别的日志才会被记录。"
 }

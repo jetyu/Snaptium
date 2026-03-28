@@ -330,5 +330,14 @@
   "shortcutGroupGeneral": "General",
   "shortcutGroupEditor": "Editor",
   "shortcutsCustomizationHint": "Custom shortcut support is coming soon.",
-  "shortcutTooltip": "Tip"
+  "shortcutTooltip": "Tip",
+  "labelLoggingEnabled": "Enable Logging",
+  "textLoggingEnabled": "Enable or disable application logs",
+  "labelLogLevel": "Log Level",
+  "optionLogLevelDebug": "Debug",
+  "optionLogLevelInfo": "Info",
+  "optionLogLevelWarn": "Warning",
+  "optionLogLevelError": "Error",
+  "btnLogFolder": "Open Log Folder",
+  "logLevelDesc": "Only logs at or above the selected level will be recorded."
 }

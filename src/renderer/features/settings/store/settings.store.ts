@@ -11,6 +11,8 @@ export interface AppSettings {
   aiProvider: string;
   aiModel: string;
   aiApiKey: string;
+  loggingEnabled: boolean;
+  logLevel: 'debug' | 'info' | 'warn' | 'error';
   // ... future properties
 }
 
@@ -23,6 +25,8 @@ export const useSettingsStore = defineStore('settings', () => {
     aiProvider: 'openai',
     aiModel: 'gpt-3.5-turbo',
     aiApiKey: '',
+    loggingEnabled: true,
+    logLevel: 'info',
   });
 
   const isLoading = ref(false);
@@ -99,5 +103,6 @@ export const useSettingsStore = defineStore('settings', () => {
     setLanguage,
     setAutoStartup,
     updateSetting,
+    openLogDir: () => (window as any).electronAPI.logger.openDir(),
   };
 });
