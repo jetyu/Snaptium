@@ -7,6 +7,7 @@ export const settingsService = {
       electronAPI?: {
         settings?: {
           getConfig?: () => Promise<Record<string, any>>;
+          pickDirectory?: () => Promise<string | null>;
         };
       };
     }).electronAPI;
@@ -51,5 +52,17 @@ export const settingsService = {
     }).electronAPI;
 
     api?.settings?.switchLanguage?.(locale);
+  },
+
+  pickDirectory: async (): Promise<string | null> => {
+    const api = (window as Window & {
+      electronAPI?: {
+        settings?: {
+          pickDirectory?: () => Promise<string | null>;
+        };
+      };
+    }).electronAPI;
+
+    return (await api?.settings?.pickDirectory?.()) || null;
   },
 };

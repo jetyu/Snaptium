@@ -1,6 +1,7 @@
-import { app } from 'electron';
+import { app, dialog, BrowserWindow } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
+import { $t } from '../utils/i18n.js';
 
 const SETTINGS_FILE = 'preferences.json';
 export const settingsService = {
@@ -15,6 +16,16 @@ export const settingsService = {
     return {
       language: app.getLocale().toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN',
       autoStartup: false,
+      themeMode: 'system',
+      editorFontSize: 14,
+      editorFont: '',
+      showLineNumbers: true,
+      wordWrap: false,
+      codeFolding: true,
+      highlightActiveLine: true,
+      bracketMatching: true,
+      autoCloseBrackets: true,
+      autoIndent: true,
       aiSources: [],
       aiAssistant: {
         enabled: false,
@@ -26,6 +37,7 @@ export const settingsService = {
       },
       loggingEnabled: false,
       logLevel: 'info',
+      noteSavePath: path.join(app.getPath('documents'), 'NoteWizard'),
     };
   },
 
@@ -84,5 +96,23 @@ export const settingsService = {
         supported: false,
       };
     }
+  },
+
+  /**
+   * Open a directory picker dialog and return the selected path
+   */
+  async pickDirectory() {
+    const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+    const result = await dialog.showOpenDialog(focusedWindow, {
+      properties: ['openDirectory', 'createDirectory'],
+      title: $t('dialog.changeNoteStoragePath'),
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return null;
+    }
+
+    return result.filePaths[0];
   }
 };

@@ -6,8 +6,8 @@
       <!-- Enable AI Assistant -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelAIAssistantEnabled') }}</p>
-          <p class="setting-description">{{ t('textAIAssistantEnabled') }}</p>
+          <p class="setting-label">{{ t('labelAIAssistant') }}</p>
+          <p class="setting-description">{{ t('textAIAssistantDescription') }}</p>
         </div>
 
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.aiAssistant.enabled }"
@@ -21,15 +21,15 @@
         </button>
       </section>
 
-      <!-- Input Delay -->
-      <section class="setting-card">
+      <div class="settings-row-grid">
+        <!-- Input Delay -->
+        <section class="setting-card">
         <div class="setting-copy">
           <p class="setting-label">{{ t('labelAITypingDelay') }}</p>
           <p class="setting-description">{{ t('unitMilliseconds') }}</p>
         </div>
         <div class="number-input-container">
-          <input type="number" class="settings-input number-input"
-            :value="settingsStore.config.aiAssistant.typingDelay"
+          <input type="number" class="settings-input number-input" :value="settingsStore.config.aiAssistant.typingDelay"
             @input="handleAssistantNumberUpdate('typingDelay', $event)" step="100" min="500"
             :disabled="!settingsStore.config.aiAssistant.enabled" />
         </div>
@@ -48,6 +48,7 @@
             :disabled="!settingsStore.config.aiAssistant.enabled" />
         </div>
       </section>
+      </div>
       <!-- Source Selection -->
       <section class="setting-card">
         <div class="setting-copy">
@@ -116,5 +117,15 @@ const handleAssistantNumberUpdate = async (key: keyof AIAssistantSettings, event
   display: flex;
   flex-direction: column;
   gap: 1.1rem;
+}
+
+.settings-row-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.settings-row-grid :deep(.number-input-container) {
+  width: 100px;
 }
 </style>

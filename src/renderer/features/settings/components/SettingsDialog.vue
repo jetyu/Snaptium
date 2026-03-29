@@ -51,9 +51,8 @@ import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettings } from '../composables/useSettings';
 
-// Import Tabs
 import GeneralSettings from './tabs/GeneralSettings.vue';
-import AppearanceSettings from './tabs/AppearanceSettings.vue';
+import EditorSettings from './tabs/EditorSettings.vue';
 import SecuritySettings from './tabs/SecuritySettings.vue';
 import AISourceSettings from './tabs/AISourceSettings.vue';
 import AIAssistantSettings from './tabs/AIAssistantSettings.vue';
@@ -70,7 +69,7 @@ let removeListener: (() => void) | null = null;
 
 const tabs = [
   { id: 'general', labelKey: 'paneGeneral', component: GeneralSettings },
-  { id: 'appearance', labelKey: 'paneAppearance', component: AppearanceSettings },
+  { id: 'editor', labelKey: 'paneEditorSettings', component: EditorSettings },
   { id: 'security', labelKey: 'paneSecurity', component: SecuritySettings },
   { id: 'ai-sources', labelKey: 'paneAISources', component: AISourceSettings },
   { id: 'ai-assistant', labelKey: 'paneAIAssistant', component: AIAssistantSettings },

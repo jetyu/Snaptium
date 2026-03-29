@@ -26,10 +26,19 @@ export interface AppSettings {
   autoStartup: boolean;
   themeMode: 'system' | 'light' | 'dark';
   editorFontSize: number;
+  editorFont: string;
+  showLineNumbers: boolean;
+  wordWrap: boolean;
+  codeFolding: boolean;
+  highlightActiveLine: boolean;
+  bracketMatching: boolean;
+  autoCloseBrackets: boolean;
+  autoIndent: boolean;
   aiSources: AISource[];
   aiAssistant: AIAssistantSettings;
   loggingEnabled: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
+  noteSavePath: string;
   // ... future properties
 }
 
@@ -40,6 +49,14 @@ export const useSettingsStore = defineStore('settings', () => {
     autoStartup: false,
     themeMode: 'system',
     editorFontSize: 16,
+    editorFont: '',
+    showLineNumbers: true,
+    wordWrap: false,
+    codeFolding: true,
+    highlightActiveLine: true,
+    bracketMatching: true,
+    autoCloseBrackets: true,
+    autoIndent: true,
     aiSources: [],
     aiAssistant: {
       enabled: false,
@@ -51,6 +68,7 @@ export const useSettingsStore = defineStore('settings', () => {
     },
     loggingEnabled: false,
     logLevel: 'info',
+    noteSavePath: '',
   });
 
   const isLoading = ref(false);
@@ -101,6 +119,10 @@ export const useSettingsStore = defineStore('settings', () => {
     } catch (e) {
       settingsLogger.error(`Failed to set auto startup: ${e}`);
     }
+  };
+
+  const setNoteSavePath = async (path: string) => {
+    await saveSettings({ noteSavePath: path });
   };
 
   /**
@@ -220,5 +242,6 @@ export const useSettingsStore = defineStore('settings', () => {
     updateAiSource,
     testConnection,
     openLogDir,
+    setNoteSavePath,
   };
 });

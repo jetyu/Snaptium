@@ -36,6 +36,7 @@ const electronAPI = Object.freeze({
     getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_LOAD),
     saveConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SAVE, config),
     setStartup: (enabled) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
+    pickDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_PICK_DIRECTORY),
     switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.APP_SWITHC_LANGUAGE, locale),
   }),
   aiSource: Object.freeze({

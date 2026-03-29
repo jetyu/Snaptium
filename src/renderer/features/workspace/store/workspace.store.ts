@@ -115,8 +115,8 @@ export const useWorkspaceStore = defineStore('workspace', {
   },
 
   actions: {
-    async initializeWorkspace() {
-      if (this.initialized) {
+    async initializeWorkspace(force = false) {
+      if (this.initialized && !force) {
         return;
       }
 

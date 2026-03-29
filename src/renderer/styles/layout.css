@@ -168,6 +168,25 @@
   color: var(--text-muted);
 }
 
+.header-separator {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  margin: 0 0.4em;
+  opacity: 0.6;
+}
+
+.header-note-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
 .col-empty {
   flex: 1;
   display: flex;
