@@ -18,4 +18,6 @@ export const IPC_CHANNELS = {
   SETTINGS_SET_STARTUP: 'settings:set-startup',
   LOGGER_OPEN_DIR: 'logger:open-dir',
   LOGGER_LOG: 'logger:log',
+  AI_SOURCE_TEST_CONNECTION: 'ai-source:test-connection',
+  AI_ASSISTANT_COMPLETE: 'ai-assistant:complete',
 };

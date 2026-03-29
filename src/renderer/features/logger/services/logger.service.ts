@@ -12,8 +12,9 @@ class Logger {
   }
 
   private send(level: LogLevel, message: string) {
-    if (window.electronAPI?.log) {
-      window.electronAPI.log({ level, source: this.source, message });
+    const api = (window as any).electronAPI?.logger;
+    if (api?.log) {
+      api.log({ level, source: this.source, message });
     } else {
       // Fallback for dev environments without Electron bridge
       const formatted = `[${level.toUpperCase()}] [${this.source}] ${message}`;

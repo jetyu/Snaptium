@@ -1,9 +1,12 @@
 <template>
   <div class="update-settings">
-    <h3 class="text-2xl font-bold mb-6 text-[var(--text-primary)]">{{ t('labelAutoUpdate') }}</h3>
-    <div class="space-y-6">
-      <div class="setting-item">
-        <p class="text-gray-500">Settings placeholders will go here.</p>
+    <h3 class="panel-title">{{ t('labelAutoUpdate') }}</h3>
+    <div class="settings-grid">
+      <div class="setting-card">
+        <div class="setting-copy">
+          <p class="setting-label">{{ t('labelUpdatePlaceholder', 'Update Settings') }}</p>
+          <p class="setting-description">Settings placeholders will go here.</p>
+        </div>
       </div>
     </div>
   </div>

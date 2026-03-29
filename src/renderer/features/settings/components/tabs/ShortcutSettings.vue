@@ -1,51 +1,43 @@
 <template>
   <div class="shortcut-settings">
     <div class="section-header">
-      <h3 class="text-xl font-semibold mb-2 text-[var(--text-primary)]">{{ t('paneShortcuts') }}</h3>
-      <p class="text-sm text-[var(--text-muted)] mb-6">{{ t('shortcutsDescription') }}</p>
+      <h3 class="panel-title">{{ t('paneShortcuts') }}</h3>
+      <p class="setting-description mb-6">{{ t('shortcutsDescription') }}</p>
     </div>
-
-    <div class="shortcuts-list space-y-4">
+    <div class="shortcuts-list">
       <!-- General Shortcuts -->
-      <div class="shortcut-group p-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-        <h4 class="text-sm font-medium uppercase tracking-wider text-[var(--text-muted)] mb-4">{{
-          t('shortcutGroupGeneral') }}</h4>
+      <div class="shortcut-group">
+        <h4 class="group-title">{{ t('shortcutGroupGeneral') }}</h4>
 
-        <div class="space-y-3">
-          <div v-for="sc in generalShortcuts" :key="sc.id" class="shortcut-item flex items-center justify-between">
-            <span class="text-sm text-[var(--text-primary)]">{{ t(sc.labelKey) }}</span>
-            <div class="shortcut-keys flex gap-1">
-              <kbd v-for="key in sc.keys" :key="key"
-                class="px-2 py-1 text-xs font-sans font-semibold rounded bg-[var(--bg-primary)] border border-[var(--border-color)] shadow-sm">
-                {{ key }}
-              </kbd>
+        <div class="items-list">
+          <div v-for="sc in generalShortcuts" :key="sc.id" class="shortcut-item">
+            <span class="shortcut-label">{{ t(sc.labelKey) }}</span>
+            <div class="shortcut-keys">
+              <kbd v-for="key in sc.keys" :key="key">{{ key }}</kbd>
             </div>
           </div>
         </div>
       </div>
 
       <!-- Editor Shortcuts -->
-      <div class="shortcut-group p-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-        <h4 class="text-sm font-medium uppercase tracking-wider text-[var(--text-muted)] mb-4">{{
-          t('shortcutGroupEditor') }}</h4>
+      <div class="shortcut-group">
+        <h4 class="group-title">{{ t('shortcutGroupEditor') }}</h4>
 
-        <div class="space-y-3">
-          <div v-for="sc in editorShortcuts" :key="sc.id" class="shortcut-item flex items-center justify-between">
-            <span class="text-sm text-[var(--text-primary)]">{{ t(sc.labelKey) }}</span>
-            <div class="shortcut-keys flex gap-1">
-              <kbd v-for="key in sc.keys" :key="key"
-                class="px-2 py-1 text-xs font-sans font-semibold rounded bg-[var(--bg-primary)] border border-[var(--border-color)] shadow-sm">
-                {{ key }}
-              </kbd>
+        <div class="items-list">
+          <div v-for="sc in editorShortcuts" :key="sc.id" class="shortcut-item">
+            <span class="shortcut-label">{{ t(sc.labelKey) }}</span>
+            <div class="shortcut-keys">
+              <kbd v-for="key in sc.keys" :key="key">{{ key }}</kbd>
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="mt-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-      <p class="text-sm text-blue-700 dark:text-blue-300">
-        <span class="font-bold">{{ t('shortcutTooltip') }}:</span> {{ t('shortcutsCustomizationHint') }}
+    <div class="shortcut-hint">
+      <p>
+        <strong class="hint-label">{{ t('shortcutTooltip') }}:</strong>
+        {{ t('shortcutsCustomizationHint') }}
       </p>
     </div>
   </div>
@@ -57,27 +49,104 @@ const { t } = useI18n();
 
 const generalShortcuts = [
   { id: 'new-note', labelKey: 'newNote', keys: ['Ctrl', 'N'] },
-  { id: 'search', labelKey: 'searchPlaceholder', keys: ['Ctrl', 'F'] },
   { id: 'preferences', labelKey: 'menu.file.preferences', keys: ['Ctrl', ','] },
 ];
 
 const editorShortcuts = [
   { id: 'save', labelKey: 'menu.file.save', keys: ['Ctrl', 'S'] },
-  { id: 'bold', labelKey: 'toolbar.bold', keys: ['Ctrl', 'B'] },
-  { id: 'italic', labelKey: 'toolbar.italic', keys: ['Ctrl', 'I'] },
 ];
 </script>
 
 <style scoped>
-kbd {
-  min-width: 2.5em;
-  text-align: center;
-  display: inline-block;
+.shortcut-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.mb-6 {
+  margin-bottom: 1rem;
+}
+
+.shortcuts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.shortcut-group {
+  padding: 1rem;
+  border-radius: 12px;
+  background: var(--bg-secondary, #f8f9fa);
+  border: 1px solid var(--border-color, #e0e0e0);
+}
+
+.group-title {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #666);
+}
+
+.items-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.shortcut-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.shortcut-label {
+  font-size: 0.9rem;
   color: var(--text-primary);
 }
 
-.shortcut-item:hover .shortcut-keys kbd {
+.shortcut-keys {
+  display: flex;
+  gap: 0.25rem;
+}
+
+kbd {
+  min-width: 2.2em;
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+  display: inline-block;
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--text-primary);
+  background: var(--bg-primary, white);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.shortcut-item:hover kbd {
   border-color: var(--primary-color);
   color: var(--primary-color);
+  transform: translateY(-1px);
+}
+
+.shortcut-hint {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: rgba(var(--primary-rgb, 74, 144, 226), 0.05);
+  border: 1px solid rgba(var(--primary-rgb, 74, 144, 226), 0.1);
+  border-radius: 10px;
+  color: var(--text-primary);
+  font-size: 0.85rem;
+}
+
+.hint-label {
+  font-weight: 700;
+  color: var(--primary-color, #4a90e2);
 }
 </style>

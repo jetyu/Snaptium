@@ -25,8 +25,8 @@
           <!-- Right Content Area -->
           <div class="settings-content">
             <div class="settings-close-btn-wrapper">
-              <button @click="closeSettings" class="settings-close-btn" aria-label="Close">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24"
+              <button @click="closeSettings" class="settings-close-btn" :aria-label="t('dialog.close')">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
                   stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -55,6 +55,7 @@ import { useSettings } from '../composables/useSettings';
 import GeneralSettings from './tabs/GeneralSettings.vue';
 import AppearanceSettings from './tabs/AppearanceSettings.vue';
 import SecuritySettings from './tabs/SecuritySettings.vue';
+import AISourceSettings from './tabs/AISourceSettings.vue';
 import AIAssistantSettings from './tabs/AIAssistantSettings.vue';
 import RAGSettings from './tabs/RAGSettings.vue';
 import UpdateSettings from './tabs/UpdateSettings.vue';
@@ -71,7 +72,8 @@ const tabs = [
   { id: 'general', labelKey: 'paneGeneral', component: GeneralSettings },
   { id: 'appearance', labelKey: 'paneAppearance', component: AppearanceSettings },
   { id: 'security', labelKey: 'paneSecurity', component: SecuritySettings },
-  { id: 'ai', labelKey: 'paneAIConfiguration', component: AIAssistantSettings },
+  { id: 'ai-sources', labelKey: 'paneAISources', component: AISourceSettings },
+  { id: 'ai-assistant', labelKey: 'paneAIAssistant', component: AIAssistantSettings },
   { id: 'rag', labelKey: 'paneRAG', component: RAGSettings },
   { id: 'shortcuts', labelKey: 'paneShortcuts', component: ShortcutSettings },
   { id: 'update', labelKey: 'labelAutoUpdate', component: UpdateSettings },
@@ -124,8 +126,8 @@ onUnmounted(() => {
 
 .settings-modal {
   display: flex;
-  width: 900px;
-  height: 650px;
+  width: 75%;
+  height: 80%;
   background-color: var(--bg-primary, #ffffff);
   border-radius: 12px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
@@ -142,7 +144,7 @@ onUnmounted(() => {
 }
 
 .settings-sidebar-header {
-  padding: 24px;
+  padding: 16px 20px;
   border-bottom: 1px solid var(--border-color, #e5e7eb);
 }
 
@@ -170,12 +172,12 @@ onUnmounted(() => {
 .settings-tab-btn {
   width: 100%;
   text-align: left;
-  padding: 10px 16px;
+  padding: 8px 14px;
   border-radius: 8px;
   border: 1px solid transparent;
   background: transparent;
   color: var(--text-secondary, #4b5563);
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   cursor: pointer;
   transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
@@ -203,9 +205,9 @@ onUnmounted(() => {
 
 .settings-close-btn-wrapper {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  z-index: 10;
+  top: 15px;
+  right: 15px;
+  z-index: 2000;
 }
 
 .settings-close-btn {
@@ -229,7 +231,7 @@ onUnmounted(() => {
 .settings-content-inner {
   flex: 1;
   overflow-y: auto;
-  padding: 48px;
+  padding: 30px;
 }
 
 .fade-enter-active,

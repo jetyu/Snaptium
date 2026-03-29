@@ -1,31 +1,55 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { ref, toRaw } from 'vue';
 import { settingsService } from '../services/settings.service';
 import { switchLanguage } from '@renderer/features/i18n';
+import { createLogger } from '@renderer/features/logger';
+
+export interface AISource {
+  id: string;
+  name: string;
+  endpoint: string;
+  apiKey: string;
+  defaultModel: string;
+}
+
+export interface AIAssistantSettings {
+  enabled: boolean;
+  sourceId: string;
+  model: string;
+  typingDelay: number;
+  minInputLength: number;
+  systemPrompt: string;
+}
 
 export interface AppSettings {
   language: string;
   autoStartup: boolean;
   themeMode: 'system' | 'light' | 'dark';
   editorFontSize: number;
-  aiProvider: string;
-  aiModel: string;
-  aiApiKey: string;
+  aiSources: AISource[];
+  aiAssistant: AIAssistantSettings;
   loggingEnabled: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
   // ... future properties
 }
 
 export const useSettingsStore = defineStore('settings', () => {
+  const settingsLogger = createLogger('SettingsStore');
   const config = ref<AppSettings>({
     language: 'zh-CN',
     autoStartup: false,
     themeMode: 'system',
     editorFontSize: 16,
-    aiProvider: 'openai',
-    aiModel: 'gpt-3.5-turbo',
-    aiApiKey: '',
-    loggingEnabled: true,
+    aiSources: [],
+    aiAssistant: {
+      enabled: false,
+      sourceId: '',
+      model: '',
+      typingDelay: 2000,
+      minInputLength: 10,
+      systemPrompt: '',
+    },
+    loggingEnabled: false,
     logLevel: 'info',
   });
 
@@ -43,7 +67,7 @@ export const useSettingsStore = defineStore('settings', () => {
       }
       config.value.language = await switchLanguage(config.value.language);
     } catch (e) {
-      console.error('Failed to load settings:', e);
+      settingsLogger.error(`Failed to load settings: ${e}`);
     } finally {
       isLoading.value = false;
     }
@@ -55,10 +79,12 @@ export const useSettingsStore = defineStore('settings', () => {
   const saveSettings = async (newConfig: Partial<AppSettings>) => {
     config.value = { ...config.value, ...newConfig };
     try {
-      const savedConfig = await settingsService.saveConfig(config.value);
+      // Use toRaw to strip Vue markers and deep clone to avoid IPC issues
+      const rawConfig = JSON.parse(JSON.stringify(toRaw(config.value)));
+      const savedConfig = await settingsService.saveConfig(rawConfig);
       config.value = { ...config.value, ...savedConfig };
     } catch (e) {
-      console.error('Failed to save settings:', e);
+      settingsLogger.error(`Failed to save settings: ${e}`);
     }
   };
 
@@ -73,7 +99,7 @@ export const useSettingsStore = defineStore('settings', () => {
       const result = await settingsService.setStartup(enabled);
       await saveSettings({ autoStartup: result.enabled });
     } catch (e) {
-      console.error('Failed to set auto startup:', e);
+      settingsLogger.error(`Failed to set auto startup: ${e}`);
     }
   };
 
@@ -95,6 +121,91 @@ export const useSettingsStore = defineStore('settings', () => {
     await saveSettings({});
   };
 
+  /**
+   * Update assistant specific setting
+   */
+  const updateAssistantSetting = async <K extends keyof AIAssistantSettings>(
+    key: K,
+    value: AIAssistantSettings[K]
+  ) => {
+    config.value.aiAssistant[key] = value;
+
+    // Auto-update model if sourceId changes
+    if (key === 'sourceId') {
+      const source = config.value.aiSources.find(s => s.id === String(value));
+      if (source && source.defaultModel) {
+        config.value.aiAssistant.model = source.defaultModel;
+      }
+    }
+
+    await saveSettings({});
+  };
+
+  /**
+   * Add a new AI source
+   */
+  const addAiSource = async (source: Omit<AISource, 'id'>) => {
+    const newSource = { ...source, id: Date.now().toString() };
+    config.value.aiSources.push(newSource);
+    await saveSettings({});
+    return newSource;
+  };
+
+  /**
+   * Remove an AI source by ID
+   */
+  const removeAiSource = async (id: string) => {
+    config.value.aiSources = config.value.aiSources.filter((s) => s.id !== id);
+    if (config.value.aiAssistant.sourceId === id) {
+      config.value.aiAssistant.sourceId = '';
+    }
+    await saveSettings({});
+  };
+
+  /**
+   * Update an existing AI source
+   */
+  const updateAiSource = async (id: string, updates: Partial<AISource>) => {
+    const source = config.value.aiSources.find((s) => s.id === id);
+    if (source) {
+      Object.assign(source, updates);
+      await saveSettings({});
+    }
+  };
+
+  /**
+   * Test AI connection with provided or saved config
+   */
+  const testConnection = async (testConfig?: {
+    aiEndpoint: string;
+    aiApiKey: string;
+    aiModel: string;
+  }) => {
+    try {
+      const payload = testConfig || {
+        aiEndpoint: '',
+        aiApiKey: '',
+        aiModel: config.value.aiAssistant.model,
+      };
+
+      // If no config provided, try to find the linked source
+      if (!testConfig && config.value.aiAssistant.sourceId) {
+        const source = config.value.aiSources.find((s) => s.id === config.value.aiAssistant.sourceId);
+        if (source) {
+          payload.aiEndpoint = source.endpoint;
+          payload.aiApiKey = source.apiKey;
+        }
+      }
+
+      return await (window as any).electronAPI.aiSource.testConnection(payload);
+    } catch (e) {
+      settingsLogger.error(`Failed to test AI connection: ${e}`);
+      return { success: false, message: String(e) };
+    }
+  };
+
+  const openLogDir = () => (window as any).electronAPI.logger.openDir();
+
   return {
     config,
     isLoading,
@@ -103,6 +214,11 @@ export const useSettingsStore = defineStore('settings', () => {
     setLanguage,
     setAutoStartup,
     updateSetting,
-    openLogDir: () => (window as any).electronAPI.logger.openDir(),
+    updateAssistantSetting,
+    addAiSource,
+    removeAiSource,
+    updateAiSource,
+    testConnection,
+    openLogDir,
   };
 });

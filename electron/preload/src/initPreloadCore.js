@@ -38,6 +38,12 @@ const electronAPI = Object.freeze({
     setStartup: (enabled) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
     switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.APP_SWITHC_LANGUAGE, locale),
   }),
+  aiSource: Object.freeze({
+    testConnection: (config) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),
+  }),
+  aiAssistant: Object.freeze({
+    complete: (payload) => ipcRenderer.invoke(IPC_CHANNELS.AI_ASSISTANT_COMPLETE, payload),
+  }),
 });
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);

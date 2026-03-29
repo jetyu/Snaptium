@@ -15,7 +15,16 @@ export const settingsService = {
     return {
       language: app.getLocale().toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN',
       autoStartup: false,
-      loggingEnabled: true,
+      aiSources: [],
+      aiAssistant: {
+        enabled: false,
+        sourceId: '',
+        model: '',
+        typingDelay: 2000,
+        minInputLength: 10,
+        systemPrompt: '',
+      },
+      loggingEnabled: false,
       logLevel: 'info',
     };
   },
