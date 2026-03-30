@@ -15,7 +15,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.autoStartup ? t('startupEnabledStatus') : t('startupDisabledStatus') }}
+            {{ settingsStore.config.autoStartup ? t('statusEnabled') : t('statusDisabled') }}
           </span>
         </button>
       </section>

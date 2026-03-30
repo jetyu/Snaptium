@@ -16,7 +16,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.aiAssistant.enabled ? t('textAIAssistantEnabled') : t('textAIAssistantDisabled') }}
+            {{ settingsStore.config.aiAssistant.enabled ? t('statusEnabled') : t('statusDisabled') }}
           </span>
         </button>
       </section>

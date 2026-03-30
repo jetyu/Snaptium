@@ -43,7 +43,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.showLineNumbers ? t('lineNumbersEnabledStatus') : t('lineNumbersDisabledStatus') }}
+            {{ settingsStore.config.showLineNumbers ? t('statusEnabled') : t('statusDisabled') }}
           </span>
         </button>
       </section>

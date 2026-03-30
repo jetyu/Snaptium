@@ -17,7 +17,9 @@
       </div>
 
       <div v-if="activeNote" class="editor-wrapper">
+        <EditorToolbar :editor-view="editorView" />
         <EditorPane
+          ref="editorPaneRef"
           :model-value="activeNote.content"
           @update:model-value="updateActiveContent"
         />
@@ -50,12 +52,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from "vue";
+import { onMounted, ref, computed } from "vue";
 import WorkspaceSidebar from "@renderer/features/workspace/components/WorkspaceSidebar.vue";
 import NotebookDashboard from "@renderer/features/workspace/components/NotebookDashboard.vue";
 import { EditorPane } from "@renderer/features/editor";
+import EditorToolbar from "@renderer/features/editor/components/EditorToolbar.vue";
 import { PreviewPane } from "@renderer/features/preview";
 import { useWorkspace } from "@renderer/features/workspace";
+import type { EditorView } from '@codemirror/view';
 
 const {
   activeNote,
@@ -63,6 +67,12 @@ const {
   updateActiveContent,
   initializeWorkspace,
 } = useWorkspace();
+
+const editorPaneRef = ref<InstanceType<typeof EditorPane>>();
+
+const editorView = computed<EditorView | undefined>(() => {
+  return editorPaneRef.value?.getEditorApi()?.view;
+});
 
 onMounted(() => {
   void initializeWorkspace();

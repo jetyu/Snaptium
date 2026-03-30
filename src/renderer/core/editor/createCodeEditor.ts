@@ -84,6 +84,7 @@ export function createCodeEditor({
   const view = new EditorView({ state, parent: target });
 
   return {
+    view,
     setValue(nextValue: string) {
       const currentValue = view.state.doc.toString();
       if (nextValue === currentValue) return;

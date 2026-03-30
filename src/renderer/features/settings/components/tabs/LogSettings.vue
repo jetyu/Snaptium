@@ -16,7 +16,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.loggingEnabled ? t('logEnabledStatus') : t('logDisabledStatus') }}
+            {{ settingsStore.config.loggingEnabled ? t('statusEnabled') : t('statusDisabled') }}
           </span>
         </button>
       </section>

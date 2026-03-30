@@ -147,12 +147,14 @@
   cursor: not-allowed;
 }
 
-/* Switches */
+.startup-switch-text {
+  margin-left: 0.6rem;
+  font-weight: 400;
+}
+
 .startup-switch {
   display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  min-height: 32px;
   padding: 0.2rem 0.45rem 0.2rem 0.25rem;
   border: 1px solid #d7dce3;
   border-radius: 999px;
@@ -196,18 +198,10 @@
   transform: translateX(1.25rem);
 }
 
-.startup-switch-text {
-  min-width: 7rem;
-  text-align: left;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: #4b5563;
-}
-
 /* Select Shell Arrow */
 .select-shell {
   position: relative;
-  min-width: 232px;
+  min-width: 140px;
   display: flex;
 }
 

@@ -29,6 +29,10 @@ const editorHost = ref<HTMLElement | null>(null);
 let editorApi: ReturnType<typeof createCodeEditor> | undefined;
 let syncingFromEditor = false;
 
+defineExpose({
+  getEditorApi: () => editorApi,
+});
+
 onMounted(() => {
   if (!editorHost.value) return;
 
