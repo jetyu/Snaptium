@@ -1,7 +1,7 @@
 import { ipcMain } from 'electron';
 import { settingsService } from '../../services/settings.service.js';
 import { loggerService } from '../../services/logger.service.js';
-import { IPC_CHANNELS } from '../../constants/channels.constants.js';
+import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 
 export function registerSettingsIpcHandlers() {
   /**

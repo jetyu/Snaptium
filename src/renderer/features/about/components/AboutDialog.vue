@@ -5,16 +5,13 @@
         <div class="about-modal" @click.stop>
           <div class="about-close-btn-wrapper">
             <button @click="closeAbout" class="about-close-btn" :aria-label="t('close')">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <span v-html="closeIconRaw" class="icon-wrapper" />
             </button>
           </div>
 
           <div class="about-content">
             <div class="about-header">
-              <img src="@assets/logo/app-logo-128.png" alt="Pilotra Logo" class="about-logo" />
+              <img src="@assets/logo/app-logo-512.png" alt="Pilotra Logo" class="about-logo" />
               <h1 class="about-title">{{ appName }}</h1>
               <p class="about-version">{{ t('about.version') }}: {{ appVersion }}</p>
             </div>
@@ -67,6 +64,7 @@
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAbout } from '../composables/useAbout';
+import closeIconRaw from '@assets/icons/button/closeBtn.svg?raw';
 
 const { t } = useI18n();
 const { isOpen, appVersion, appName, envVersion, closeAbout, loadVersionInfo, initMainProcessListeners } = useAbout();
@@ -134,6 +132,12 @@ onUnmounted(() => {
   cursor: pointer;
   transition: background-color 0.2s;
   display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-wrapper {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
 }

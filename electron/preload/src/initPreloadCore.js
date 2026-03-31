@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer } from 'electron';
-import { IPC_CHANNELS } from '../../main/constants/channels.constants.js';
+import { IPC_CHANNELS } from '../../main/constants/ipc.constants.js';
 
 // The shared IPC constants are imported here once and inlined into the built
 // sandbox-compatible preload artifact during the preload build.
@@ -47,7 +47,7 @@ const electronAPI = Object.freeze({
     saveConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SAVE, config),
     setStartup: (enabled) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
     pickDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_PICK_DIRECTORY),
-    switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.SETTINGS_SWITHC_LANGUAGE, locale),
+    switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.SETTINGS_SWITCH_LANGUAGE, locale),
   }),
   aiSource: Object.freeze({
     testConnection: (config) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),

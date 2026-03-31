@@ -39,7 +39,9 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.54.2",
+    "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.13.0",
+    "@types/sanitize-html": "^2.16.1",
     "@typescript-eslint/eslint-plugin": "^8.16.0",
     "@typescript-eslint/parser": "^8.16.0",
     "@vitejs/plugin-vue": "^6.0.1",

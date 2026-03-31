@@ -3,18 +3,13 @@
     <div class="dashboard-content">
       <header class="dashboard-header">
         <div class="title-section">
-          <span class="icon">📓</span>
+          <span class="icon"><NoteModeIcon name="notebookIcon" /></span>
           <h1>{{ notebookName }}</h1>
         </div>
         <div class="actions">
           <button class="btn btn-primary" @click="createNote(activeNotebookId)">
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path
-                d="M8 2v12M2 8h12"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-              />
+              <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
             </svg>
             {{ $t("notebookDashboardActionsNewNote") }}
           </button>
@@ -39,16 +34,11 @@
       <section v-if="subNotebooks.length > 0" class="notebooks-section">
         <h2>{{ $t("notebookDashboardSubNotebooks") }}</h2>
         <div class="notebooks-grid">
-          <div
-            v-for="nb in subNotebooks"
-            :key="nb.id"
-            class="notebook-card"
-            @click="selectNotebook(nb.id)"
-          >
-            <span class="notebook-icon">📓</span>
+          <div v-for="nb in subNotebooks" :key="nb.id" class="notebook-card" @click="selectNotebook(nb.id)">
+            <span class="notebook-icon"><NoteModeIcon name="notebookIcon" /></span>
             <div class="notebook-info">
               <span class="notebook-name">{{ nb.name }}</span>
-              <span class="notebook-meta">{{ formatDate(nb.updatedAt) }}</span>
+              <span class="notebook-meta">{{ formatDate(nb.updatedAt, locale) }}</span>
             </div>
           </div>
         </div>
@@ -57,16 +47,13 @@
       <section class="notes-section">
         <h2>{{ $t("notebookDashboardNotesList") }}</h2>
         <div v-if="notebookNotes.length > 0" class="notes-list">
-          <div
-            v-for="note in notebookNotes"
-            :key="note.id"
-            class="note-card"
-            @click="selectNote(note.id)"
-          >
-            <span class="note-icon">📝</span>
+          <div v-for="note in notebookNotes" :key="note.id" class="note-card" @click="selectNote(note.id)">
+            <span class="note-icon">
+              <NoteModeIcon name="noteIcon" />
+            </span>
             <div class="note-info">
               <span class="note-title">{{ note.title }}</span>
-              <span class="note-date">{{ formatDate(note.updatedAt) }}</span>
+              <span class="note-date">{{ formatDate(note.updatedAt, locale) }}</span>
             </div>
           </div>
         </div>
@@ -82,6 +69,8 @@
 import { computed } from "vue";
 import { useWorkspace } from "@renderer/features/workspace";
 import { useI18n } from "vue-i18n";
+import { formatDate } from "@renderer/core/utils/date.utils";
+import NoteModeIcon from "../components/NoteModeIcon.vue";
 
 const { activeNotebookId, notebooks, notes, selectNote, createNote, selectNotebook } =
   useWorkspace();
@@ -105,17 +94,6 @@ const notebookNotes = computed(() =>
     .filter((n) => n.parentId === activeNotebookId.value)
     .sort((a, b) => b.updatedAt - a.updatedAt)
 );
-
-function formatDate(timestamp: number) {
-  const date = new Date(timestamp);
-  return date.toLocaleDateString(locale.value, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
 </script>
 
 <style scoped>

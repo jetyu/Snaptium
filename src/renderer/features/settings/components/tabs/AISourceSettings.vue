@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useSettingsStore, type AISource } from '../../store/settings.store';
+import { useSettingsStore } from '../../store/settings.store';
 import { createLogger } from '../../../logger';
 
 const { t } = useI18n();
@@ -10,9 +10,11 @@ const aisLogger = createLogger('AISettings');
 
 const showAddForm = ref(false);
 const isAdding = ref(false);
+const addError = ref<string | null>(null);
 const isTesting = ref(false);
 const testSuccess = ref(false);
 const testError = ref<string | null>(null);
+const deleteConfirmId = ref<string | null>(null);
 
 const newSource = reactive({
   name: '',
@@ -45,6 +47,7 @@ const handleAddSource = async () => {
 
   aisLogger.info(`Adding AI source after successful test: ${newSource.name}`);
   isAdding.value = true;
+  addError.value = null;
 
   try {
     const result = await settingsStore.addAiSource({
@@ -64,7 +67,7 @@ const handleAddSource = async () => {
     showAddForm.value = false;
   } catch (error) {
     aisLogger.error(`Failed to add AI source: ${error}`);
-    alert('Failed to add source: ' + (error as Error).message);
+    addError.value = (error as Error).message;
   } finally {
     isAdding.value = false;
   }
@@ -86,11 +89,11 @@ const handleTestNewSource = async () => {
       aiModel: newSource.defaultModel,
     });
 
-    if (result.success) {
+    if (result?.success) {
       testSuccess.value = true;
       aisLogger.info('Connection test successful');
     } else {
-      testError.value = result.message || t('testConnectionFailed');
+      testError.value = result?.message || t('testConnectionFailed');
       aisLogger.warn(`Connection test failed: ${testError.value}`);
     }
   } catch (err) {
@@ -102,9 +105,16 @@ const handleTestNewSource = async () => {
 };
 
 const removeSource = async (id: string) => {
-  if (confirm(t('confirmDeleteSource'))) {
+  if (deleteConfirmId.value === id) {
     await settingsStore.removeAiSource(id);
+    deleteConfirmId.value = null;
+  } else {
+    deleteConfirmId.value = id;
   }
+};
+
+const cancelDelete = () => {
+  deleteConfirmId.value = null;
 };
 </script>
 
@@ -122,9 +132,16 @@ const removeSource = async (id: string) => {
           <div class="source-info">
             <div class="source-header">
               <h4 class="source-title">{{ source.name }}</h4>
-              <button class="delete-btn" @click="removeSource(source.id)" :title="t('trash.delete')">
-                ×
-              </button>
+              <div class="delete-actions">
+                <template v-if="deleteConfirmId === source.id">
+                  <span class="delete-confirm-text">{{ t('confirmDeleteSource') }}</span>
+                  <button class="delete-btn-confirm" @click="removeSource(source.id)">Y</button>
+                  <button class="delete-btn-cancel" @click="cancelDelete">N</button>
+                </template>
+                <button v-else class="delete-btn" @click="removeSource(source.id)" :title="t('trash.delete')">
+                  ×
+                </button>
+              </div>
             </div>
             <div class="source-details">
               <div class="detail-item">
@@ -173,6 +190,7 @@ const removeSource = async (id: string) => {
           <input v-model="newSource.apiKey" type="password" class="settings-input"
             :placeholder="t('placeholderApiKey')" />
         </div>
+        <p v-if="addError" class="add-error-text">{{ addError }}</p>
         <div class="form-actions-row">
           <div class="test-status">
             <transition name="fade">
@@ -226,7 +244,8 @@ const removeSource = async (id: string) => {
         <span>{{ t('btnAddSource') }}</span>
       </div>
 
-      <div v-if="settingsStore.config.aiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card" @click="showAddForm = true">
+      <div v-if="settingsStore.config.aiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card"
+        @click="showAddForm = true">
         <div class="empty-icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24"
             stroke="currentColor">
@@ -480,6 +499,27 @@ const removeSource = async (id: string) => {
   text-underline-offset: 3px;
 }
 
+.delete-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.delete-confirm-text {
+  font-size: 0.82rem;
+  color: #e74c3c;
+}
+
+.delete-btn-cancel,
+.delete-btn-confirm {
+ font-size: 0.82rem;
+}
+
+.add-error-text {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #e74c3c;
+}
 
 .fade-enter-active,
 .fade-leave-active {

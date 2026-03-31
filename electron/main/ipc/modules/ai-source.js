@@ -1,6 +1,6 @@
 import { ipcMain } from 'electron';
 import { aiService } from '../../services/ai.service.js';
-import { IPC_CHANNELS } from '../../constants/channels.constants.js';
+import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 
 /**
  * Register AI Source IPC handlers

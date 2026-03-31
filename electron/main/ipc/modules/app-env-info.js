@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron';
-import { IPC_CHANNELS } from '../../constants/channels.constants.js';
+import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { appEnvInfoService } from '../../services/appEnvInfo.service.js';
 
 export function registerAppEnvInfoIpcHandlers() {

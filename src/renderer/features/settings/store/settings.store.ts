@@ -202,7 +202,7 @@ export const useSettingsStore = defineStore('settings', () => {
     aiEndpoint: string;
     aiApiKey: string;
     aiModel: string;
-  }) => {
+  }): Promise<{ success: boolean; message?: string }> => {
     try {
       const payload = testConfig || {
         aiEndpoint: '',
@@ -219,14 +219,14 @@ export const useSettingsStore = defineStore('settings', () => {
         }
       }
 
-      return await (window as any).electronAPI.aiSource.testConnection(payload);
+      return await window.electronAPI.aiSource?.testConnection(payload) ?? { success: false, message: 'AI source bridge unavailable' };
     } catch (e) {
       settingsLogger.error(`Failed to test AI connection: ${e}`);
       return { success: false, message: String(e) };
     }
   };
 
-  const openLogDir = () => (window as any).electronAPI.logger.openDir();
+  const openLogDir = (): Promise<boolean | undefined> => window.electronAPI.logger?.openDir();
 
   return {
     config,

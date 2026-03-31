@@ -1,5 +1,5 @@
 import { Menu, ipcMain } from 'electron';
-import { IPC_CHANNELS } from '../constants/channels.constants.js';
+import { IPC_CHANNELS } from '../constants/ipc.constants.js';
 
 function buildTemplate(payload = {}, resolve) {
   const labels = payload.labels ?? {};

@@ -1,68 +1,21 @@
+/**
+ * Renderer-side settings service.
+ * Delegates all calls to the main process via the preload bridge.
+ * Type safety is provided by the global Window augmentation in electron.d.ts.
+ */
 export const settingsService = {
-  /**
-   * Load the application configuration preferences
-   */
-  loadConfig: async (): Promise<Record<string, any>> => {
-    const api = (window as Window & {
-      electronAPI?: {
-        settings?: {
-          getConfig?: () => Promise<Record<string, any>>;
-          pickDirectory?: () => Promise<string | null>;
-        };
-      };
-    }).electronAPI;
+  loadConfig: (): Promise<Record<string, unknown>> =>
+    window.electronAPI.settings?.getConfig() ?? Promise.resolve({}),
 
-    return await api?.settings?.getConfig?.() || {};
-  },
+  saveConfig: (config: Record<string, unknown>): Promise<Record<string, unknown>> =>
+    window.electronAPI.settings?.saveConfig(config) ?? Promise.resolve(config),
 
-  /**
-   * Save the application configuration preferences natively
-   */
-  saveConfig: async (config: Record<string, any>): Promise<Record<string, any>> => {
-    const api = (window as Window & {
-      electronAPI?: {
-        settings?: {
-          saveConfig?: (nextConfig: Record<string, any>) => Promise<Record<string, any>>;
-        };
-      };
-    }).electronAPI;
+  setStartup: (enabled: boolean): Promise<{ enabled: boolean; supported: boolean }> =>
+    window.electronAPI.settings?.setStartup(enabled) ?? Promise.resolve({ enabled, supported: false }),
 
-    return await api?.settings?.saveConfig?.(config) || config;
-  },
+  notifyLanguageChanged: (locale: string): void =>
+    window.electronAPI.settings?.switchLanguage(locale),
 
-  setStartup: async (enabled: boolean): Promise<{ enabled: boolean; supported: boolean }> => {
-    const api = (window as Window & {
-      electronAPI?: {
-        settings?: {
-          setStartup?: (nextEnabled: boolean) => Promise<{ enabled: boolean; supported: boolean }>;
-        };
-      };
-    }).electronAPI;
-
-    return await api?.settings?.setStartup?.(enabled) || { enabled, supported: false };
-  },
-
-  notifyLanguageChanged: (locale: string): void => {
-    const api = (window as Window & {
-      electronAPI?: {
-        settings?: {
-          switchLanguage?: (nextLocale: string) => void;
-        };
-      };
-    }).electronAPI;
-
-    api?.settings?.switchLanguage?.(locale);
-  },
-
-  pickDirectory: async (): Promise<string | null> => {
-    const api = (window as Window & {
-      electronAPI?: {
-        settings?: {
-          pickDirectory?: () => Promise<string | null>;
-        };
-      };
-    }).electronAPI;
-
-    return (await api?.settings?.pickDirectory?.()) || null;
-  },
+  pickDirectory: (): Promise<string | null> =>
+    window.electronAPI.settings?.pickDirectory() ?? Promise.resolve(null),
 };

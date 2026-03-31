@@ -95,7 +95,7 @@ import { useI18n } from "vue-i18n";
 import { useWorkspace } from "@renderer/features/workspace";
 import type { Note, Notebook } from "../store/workspace.store";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
-import NoteModeIcon from "@renderer/components/common/NoteModeIcon.vue";
+import NoteModeIcon from "../components/NoteModeIcon.vue";
 
 type WorkspaceTreeEntry =
   | { id: string; depth: number; kind: "notebook"; item: Notebook }

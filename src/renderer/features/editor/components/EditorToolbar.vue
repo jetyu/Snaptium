@@ -27,19 +27,19 @@ import { toRef } from 'vue';
 import type { EditorView } from '@codemirror/view';
 import { useEditorToolbar } from '../composables/useEditorToolbar';
 
-import heading1Icon from '@assets/icons/heading-1.svg?raw';
-import heading2Icon from '@assets/icons/heading-2.svg?raw';
-import boldIcon from '@assets/icons/bold.svg?raw';
-import italicIcon from '@assets/icons/italic.svg?raw';
-import strikethroughIcon from '@assets/icons/strikethrough.svg?raw';
-import bulletListIcon from '@assets/icons/list-bullet.svg?raw';
-import numberedListIcon from '@assets/icons/list-numbered.svg?raw';
-import taskListIcon from '@assets/icons/list-check.svg?raw';
-import quoteIcon from '@assets/icons/quote.svg?raw';
-import codeIcon from '@assets/icons/code.svg?raw';
-import linkIcon from '@assets/icons/link.svg?raw';
-import imageIcon from '@assets/icons/image.svg?raw';
-import tableIcon from '@assets/icons/table.svg?raw';
+import heading1Icon from '@assets/icons/editor/heading-1.svg?raw';
+import heading2Icon from '@assets/icons/editor/heading-2.svg?raw';
+import boldIcon from '@assets/icons/editor/bold.svg?raw';
+import italicIcon from '@assets/icons/editor/italic.svg?raw';
+import strikethroughIcon from '@assets/icons/editor/strikethrough.svg?raw';
+import bulletListIcon from '@assets/icons/editor/list-bullet.svg?raw';
+import numberedListIcon from '@assets/icons/editor/list-numbered.svg?raw';
+import taskListIcon from '@assets/icons/editor/list-check.svg?raw';
+import quoteIcon from '@assets/icons/editor/quote.svg?raw';
+import codeIcon from '@assets/icons/editor/code.svg?raw';
+import linkIcon from '@assets/icons/editor/link.svg?raw';
+import imageIcon from '@assets/icons/editor/image.svg?raw';
+import tableIcon from '@assets/icons/editor/table.svg?raw';
 
 const { t } = useI18n();
 

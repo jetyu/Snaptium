@@ -1,13 +1,7 @@
 import type { Note, Notebook } from '../store/workspace.store';
+import { WORKSPACE_CONSTANTS } from '../constants/workspace.constants';
 
-export type WorkspaceContextAction =
-  | 'create-note'
-  | 'create-notebook'
-  | 'rename'
-  | 'delete'
-  | 'toggle-lock'
-  | 'show-in-folder'
-  | 'properties';
+export type WorkspaceContextAction = typeof WORKSPACE_CONSTANTS.ACTIONS[keyof typeof WORKSPACE_CONSTANTS.ACTIONS];
 
 export interface WorkspaceMenuItem {
   action?: WorkspaceContextAction;
@@ -19,21 +13,21 @@ type Translate = (key: string, named?: Record<string, unknown>) => string;
 
 export function createWorkspaceContextMenuLabels(t: Translate) {
   return {
-    'contextMenu.newNote': t('contextMenu.newNote'),
-    'contextMenu.newNotebook': t('contextMenu.newNotebook'),
-    'contextMenu.rename': t('contextMenu.rename'),
-    'contextMenu.delete': t('contextMenu.delete'),
-    'contextMenu.lock': t('contextMenu.lock'),
-    'contextMenu.unlock': t('contextMenu.unlock'),
-    'contextMenu.showInFolder': t('contextMenu.showInFolder'),
-    'contextMenu.properties': t('contextMenu.properties'),
+    [WORKSPACE_CONSTANTS.MENU.NEW_NOTE]: t(WORKSPACE_CONSTANTS.MENU.NEW_NOTE),
+    [WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK]: t(WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK),
+    [WORKSPACE_CONSTANTS.MENU.RENAME]: t(WORKSPACE_CONSTANTS.MENU.RENAME),
+    [WORKSPACE_CONSTANTS.MENU.DELETE]: t(WORKSPACE_CONSTANTS.MENU.DELETE),
+    [WORKSPACE_CONSTANTS.MENU.LOCK]: t(WORKSPACE_CONSTANTS.MENU.LOCK),
+    [WORKSPACE_CONSTANTS.MENU.UNLOCK]: t(WORKSPACE_CONSTANTS.MENU.UNLOCK),
+    [WORKSPACE_CONSTANTS.MENU.SHOW_IN_FOLDER]: t(WORKSPACE_CONSTANTS.MENU.SHOW_IN_FOLDER),
+    [WORKSPACE_CONSTANTS.MENU.PROPERTIES]: t(WORKSPACE_CONSTANTS.MENU.PROPERTIES),
   };
 }
 
 export function getCreateButtonMenu(): WorkspaceMenuItem[] {
   return [
-    { action: 'create-note', labelKey: 'contextMenu.newNote' },
-    { action: 'create-notebook', labelKey: 'contextMenu.newNotebook' },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTE },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTEBOOK, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK },
   ];
 }
 
@@ -43,23 +37,23 @@ export function getRootWorkspaceMenu(): WorkspaceMenuItem[] {
   ];
 }
 
-export function getNoteContextMenu(_note: Note): WorkspaceMenuItem[] {
+export function getNoteContextMenu(note: Note): WorkspaceMenuItem[] {
   return [
-    { action: 'rename', labelKey: 'contextMenu.rename' },
-    { action: 'delete', labelKey: 'contextMenu.delete' },
-    { action: 'toggle-lock', labelKey: _note.locked ? 'contextMenu.unlock' : 'contextMenu.lock' },
-    { action: 'show-in-folder', labelKey: 'contextMenu.showInFolder' },
-    { action: 'properties', labelKey: 'contextMenu.properties' },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.RENAME, labelKey: WORKSPACE_CONSTANTS.MENU.RENAME },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.DELETE, labelKey: WORKSPACE_CONSTANTS.MENU.DELETE },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_LOCK, labelKey: note.locked ? WORKSPACE_CONSTANTS.MENU.UNLOCK : WORKSPACE_CONSTANTS.MENU.LOCK },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.SHOW_IN_FOLDER, labelKey: WORKSPACE_CONSTANTS.MENU.SHOW_IN_FOLDER },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.PROPERTIES, labelKey: WORKSPACE_CONSTANTS.MENU.PROPERTIES },
   ];
 }
 
 export function getNotebookContextMenu(_notebook: Notebook): WorkspaceMenuItem[] {
   return [
-    { action: 'create-note', labelKey: 'contextMenu.newNote' },
-    { action: 'create-notebook', labelKey: 'contextMenu.newNotebook' },
-    { type: 'separator' },
-    { action: 'rename', labelKey: 'contextMenu.rename' },
-    { action: 'delete', labelKey: 'contextMenu.delete' },
-    { action: 'properties', labelKey: 'contextMenu.properties' },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTE },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTEBOOK, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK },
+    { type:   WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SEPARATOR },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.RENAME, labelKey: WORKSPACE_CONSTANTS.MENU.RENAME },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.DELETE, labelKey: WORKSPACE_CONSTANTS.MENU.DELETE },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.PROPERTIES, labelKey: WORKSPACE_CONSTANTS.MENU.PROPERTIES },
   ];
 }

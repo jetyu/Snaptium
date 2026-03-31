@@ -7,7 +7,7 @@ import { setupAppMenu } from './menu.js';
 import { ipcMain } from 'electron';
 import { settingsService } from './services/settings.service.js';
 import { loggerService } from './services/logger.service.js';
-import { IPC_CHANNELS } from './constants/channels.constants.js';
+import { IPC_CHANNELS } from './constants/ipc.constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -24,7 +24,7 @@ app.whenReady().then(async () => {
   registerIpcHandlers(mainWindow);
   setupAppMenu(mainWindow, preferences.language);
 
-  app.on('activate', () => {
+  app.on(IPC_CHANNELS.ELECTRON_MAC_CLICK_EVENT, () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       void settingsService.loadConfig().then((nextPreferences) => {
         const window = createMainWindow({ isDev, appPath: path.resolve(__dirname, '../..') });
@@ -34,7 +34,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  ipcMain.on(IPC_CHANNELS.SETTINGS_SWITHC_LANGUAGE, (_event, locale) => {
+  ipcMain.on(IPC_CHANNELS.SETTINGS_SWITCH_LANGUAGE, (_event, locale) => {
     const windows = BrowserWindow.getAllWindows();
     if (windows.length > 0) {
       setupAppMenu(windows[0], locale);
@@ -42,8 +42,8 @@ app.whenReady().then(async () => {
   });
 });
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+app.on(IPC_CHANNELS.ELECTRON_WIN_CLICK_EVENT, () => {
+  if (process.platform !== IPC_CHANNELS.DARWIN_KERNEL) {
     app.quit();
   }
 });

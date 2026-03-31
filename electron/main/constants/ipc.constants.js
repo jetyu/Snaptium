@@ -1,4 +1,7 @@
 export const IPC_CHANNELS = {
+  ELECTRON_MAC_CLICK_EVENT:'activate',
+  ELECTRON_WIN_CLICK_EVENT:'window-all-closed',
+  DARWIN_KERNEL:'darwin',
   APP_GET_VERSION: 'app:get-version',
   APP_GET_ENV_VERSION: 'app:get-env-version',
   APP_GET_NAME: 'app:get-name',
@@ -20,7 +23,7 @@ export const IPC_CHANNELS = {
   SETTINGS_SAVE: 'settings:save',
   SETTINGS_SET_STARTUP: 'settings:set-startup',
   SETTINGS_PICK_DIRECTORY: 'settings:pick-directory',
-  SETTINGS_SWITHC_LANGUAGE: 'settings:switch-language',
+  SETTINGS_SWITCH_LANGUAGE: 'settings:switch-language',
   LOGGER_OPEN_DIR: 'logger:open-dir',
   LOGGER_LOG: 'logger:log',
   AI_SOURCE_TEST_CONNECTION: 'ai-source:test-connection',

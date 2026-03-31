@@ -2,14 +2,11 @@ import { app, dialog, BrowserWindow } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { $t } from '../utils/i18n.js';
+import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 
-const SETTINGS_FILE = 'preferences.json';
 export const settingsService = {
-  /**
-   * Get the path to the preferences file
-   */
   getSettingsPath() {
-    return path.join(app.getPath('userData'), SETTINGS_FILE);
+    return path.join(app.getPath(VFS_CONSTANTS.USER_DATA), VFS_CONSTANTS.PREFERENCES_FILE);
   },
 
   getDefaultConfig() {
@@ -37,7 +34,7 @@ export const settingsService = {
       },
       loggingEnabled: false,
       logLevel: 'info',
-      noteSavePath: path.join(app.getPath('documents'), 'NoteWizard'),
+      noteSavePath: path.join(app.getPath(VFS_CONSTANTS.DOCUMENTS_FOLDER), VFS_CONSTANTS.CURRENT_WORKSPACE_NAME),
     };
   },
 
@@ -81,7 +78,7 @@ export const settingsService = {
     try {
       app.setLoginItemSettings({
         openAtLogin: enabled,
-        path: app.getPath('exe'),
+        path: app.getPath(VFS_CONSTANTS.NOTE_TYPE_EXE),
       });
 
       const loginItemSettings = app.getLoginItemSettings();

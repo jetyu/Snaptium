@@ -2,7 +2,7 @@ import { app } from 'electron';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-
+import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -15,7 +15,7 @@ class I18n {
 
   resolveLocale(lang = this.locale) {
     const localesDir = path.resolve(__dirname, '../../../src/renderer/features/i18n/locales');
-    const requestedPath = path.join(localesDir, `${lang}.json`);
+     const requestedPath = path.join(localesDir, `${lang}${VFS_CONSTANTS.JSON_FILE_EXT}`);
     if (fs.existsSync(requestedPath)) {
       return lang;
     }
@@ -24,7 +24,7 @@ class I18n {
     const languageMatch = fs.readdirSync(localesDir)
       .find((fileName) => fileName.toLowerCase().startsWith(`${languageCode}-`));
 
-    return languageMatch ? languageMatch.replace('.json', '') : 'en-US';
+    return languageMatch ? languageMatch.replace(VFS_CONSTANTS.JSON_FILE_EXT, '') : 'en-US';
   }
 
   loadTranslations(lang = this.locale) {
@@ -32,7 +32,7 @@ class I18n {
     this.locale = targetLang;
     const localesDir = path.resolve(__dirname, '../../../src/renderer/features/i18n/locales');
 
-    const filePath = path.join(localesDir, `${targetLang}.json`);
+    const filePath = path.join(localesDir, `${targetLang}${VFS_CONSTANTS.JSON_FILE_EXT}`);
 
     try {
       if (fs.existsSync(filePath)) {

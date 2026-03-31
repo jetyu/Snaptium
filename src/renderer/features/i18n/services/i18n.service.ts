@@ -1,5 +1,6 @@
 import { createI18n } from 'vue-i18n';
 import localeProviders from '@renderer/features/settings/config/locale-providers.json';
+import { I18N_CONSTANTS } from '../constants/i18n.constants';
 
 type LocaleMessages = Record<string, string>;
 
@@ -9,7 +10,7 @@ const localeModules = import.meta.glob('../locales/*.json', {
 }) as Record<string, LocaleMessages>;
 
 function extractLocale(modulePath: string): string {
-  return modulePath.split('/').pop()?.replace('.json', '') || 'en-US';
+  return modulePath.split('/').pop()?.replace(I18N_CONSTANTS.JSON_EXT, '') || I18N_CONSTANTS.DEFAULT_LOCALE_EN_US;
 }
 
 const registeredMessages = Object.fromEntries(
@@ -25,7 +26,7 @@ const knownLocales = new Set(languageOptions.map((option) => option.value));
 
 function findBestLocaleMatch(locale?: string | null): string {
   if (!locale) {
-    return 'en-US';
+    return I18N_CONSTANTS.DEFAULT_LOCALE_EN_US;
   }
 
   if (knownLocales.has(locale)) {
@@ -34,12 +35,12 @@ function findBestLocaleMatch(locale?: string | null): string {
 
   const normalized = locale.toLowerCase();
   const languageMatch = languageOptions.find((option) => option.value.toLowerCase().startsWith(`${normalized.split('-')[0]}-`));
-  return languageMatch?.value || 'en-US';
+  return languageMatch?.value || I18N_CONSTANTS.DEFAULT_LOCALE_EN_US;
 }
 
 export function resolveLocale(locale?: string | null): string {
-  if (!locale || locale === 'system') {
-    const systemLocale = typeof navigator !== 'undefined' ? navigator.language : 'en-US';
+  if (!locale || locale === I18N_CONSTANTS.SYSTEM_LOCALE) {
+    const systemLocale = typeof navigator !== 'undefined' ? navigator.language : I18N_CONSTANTS.DEFAULT_LOCALE_EN_US;
     return findBestLocaleMatch(systemLocale);
   }
 
@@ -54,7 +55,7 @@ const messages = languageOptions.reduce<Record<string, LocaleMessages>>((acc, op
 const i18n = createI18n({
   legacy: false,
   locale: resolveLocale(),
-  fallbackLocale: 'en-US',
+  fallbackLocale: I18N_CONSTANTS.DEFAULT_LOCALE_EN_US,
   messages,
 });
 

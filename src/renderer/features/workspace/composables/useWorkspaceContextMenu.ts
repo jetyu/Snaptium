@@ -1,5 +1,6 @@
 import { logger } from '@renderer/features/logger';
 import type { Note, Notebook } from '../store/workspace.store';
+import { WORKSPACE_CONSTANTS } from '../constants/workspace.constants';
 import {
   createWorkspaceContextMenuLabels,
   getCreateButtonMenu,
@@ -9,6 +10,7 @@ import {
   type WorkspaceContextAction,
   type WorkspaceMenuItem,
 } from '../services/workspaceContextMenu';
+
 
 interface UseWorkspaceContextMenuOptions {
   t: (key: string, named?: Record<string, unknown>) => string;
@@ -25,7 +27,7 @@ interface UseWorkspaceContextMenuOptions {
 }
 
 function resolveContextParentId(entry: Note | Notebook, type: 'file' | 'folder') {
-  return type === 'folder' ? entry.id : entry.parentId ?? null;
+  return type === WORKSPACE_CONSTANTS.NODE_TYPE_FOLDER ? entry.id : entry.parentId ?? null;
 }
 
 export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions) {
@@ -38,7 +40,7 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
     return window.electronAPI.workspace.showContextMenu({
       labels: createWorkspaceContextMenuLabels(options.t),
       items: items.map((item) => ({
-        action: item.action ?? 'noop',
+        action: item.action ?? WORKSPACE_CONSTANTS.ACTIONS.NOOP,
         labelKey: item.labelKey,
         type: item.type ?? 'normal',
       })),
@@ -50,35 +52,35 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
     context: { parentId?: string | null; note?: Note; notebook?: Notebook } = {},
   ) {
     switch (action) {
-      case 'create-note':
+      case WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE:
         await options.createNote(context.parentId ?? null);
         break;
-      case 'create-notebook':
+      case WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTEBOOK:
         await options.createNotebook(context.parentId ?? null);
         break;
-      case 'rename':
+      case WORKSPACE_CONSTANTS.ACTIONS.RENAME:
         if (context.note) {
           options.beginRenamingNote(context.note);
         } else if (context.notebook) {
           options.beginRenamingNotebook(context.notebook);
         }
         break;
-      case 'delete':
+      case WORKSPACE_CONSTANTS.ACTIONS.DELETE:
         if (context.note) {
           await options.deleteNote(context.note.id);
         } else if (context.notebook) {
           await options.deleteNotebook(context.notebook.id);
         }
         break;
-      case 'toggle-lock':
+      case WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_LOCK:
         if (context.note) {
           await options.toggleNodeLock(context.note.id, !context.note.locked);
         } else if (context.notebook) {
           await options.toggleNodeLock(context.notebook.id, !context.notebook.locked);
         }
         break;
-      case 'properties':
-      case 'show-in-folder':
+      case WORKSPACE_CONSTANTS.ACTIONS.PROPERTIES:
+      case WORKSPACE_CONSTANTS.ACTIONS.SHOW_IN_FOLDER:
         if (context.note) {
           await options.showNoteInFolder(context.note.id);
         }
@@ -101,13 +103,13 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
   async function openNoteMenu(note: Note) {
     options.selectNote(note.id);
     const action = await showContextMenu(getNoteContextMenu(note));
-    await runAction(action, { note, parentId: resolveContextParentId(note, 'file') });
+    await runAction(action, { note, parentId: resolveContextParentId(note, WORKSPACE_CONSTANTS.NODE_TYPE_FILE) });
   }
 
   async function openNotebookMenu(notebook: Notebook) {
     options.selectNotebook(notebook.id);
     const action = await showContextMenu(getNotebookContextMenu(notebook));
-    await runAction(action, { notebook, parentId: resolveContextParentId(notebook, 'folder') });
+    await runAction(action, { notebook, parentId: resolveContextParentId(notebook, WORKSPACE_CONSTANTS.NODE_TYPE_FOLDER) });
   }
 
   return {

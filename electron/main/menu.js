@@ -1,13 +1,13 @@
 import { Menu, shell, app } from 'electron';
 import { $t, i18n } from './utils/i18n.js';
-
+import { IPC_CHANNELS } from './constants/ipc.constants.js';
 /**
  * Builds the application menu template.
  * @param {Electron.BrowserWindow} mainWindow
  * @returns {Electron.MenuItemConstructorOptions[]}
  */
 function getMenuTemplate(mainWindow) {
-  const isMac = process.platform === 'darwin';
+  const isMac = process.platform === IPC_CHANNELS.DARWIN_KERNEL;
 
   return [
     ...(isMac ? [getAppMenu()] : []),
@@ -43,16 +43,16 @@ function getAppMenu() {
  * File menu
  */
 function getFileMenu(mainWindow) {
-  const isMac = process.platform === 'darwin';
+  const isMac = process.platform === IPC_CHANNELS.DARWIN_KERNEL;
   return {
-    label: $t('menu.file', 'File'),
+    label: $t('menu.file'),
     submenu: [
       {
-        label: $t('menu.file.importNotes', 'Import Notes'),
+        label: $t('menu.file.importNotes'),
         click: () => mainWindow.webContents.send('menu:import-notes')
       },
       {
-        label: $t('menu.file.exportNotes', 'Export Notes'),
+        label: $t('menu.file.exportNotes'),
         click: () => mainWindow.webContents.send('menu:export-notes')
       },
       { type: 'separator' },
@@ -71,9 +71,9 @@ function getFileMenu(mainWindow) {
  * Edit menu
  */
 function getEditMenu(mainWindow) {
-  const isMac = process.platform === 'darwin';
+  const isMac = process.platform === IPC_CHANNELS.DARWIN_KERNEL;
   return {
-    label: $t('menu.edit', 'Edit'),
+    label: $t('menu.edit'),
     submenu: [
       { role: 'undo', label: $t('menu.edit.undo') },
       { role: 'redo', label: $t('menu.edit.redo') },
@@ -143,7 +143,7 @@ function getViewMenu(mainWindow) {
  * Window menu
  */
 function getWindowMenu() {
-  const isMac = process.platform === 'darwin';
+  const isMac = process.platform ===  IPC_CHANNELS.DARWIN_KERNEL;
   return {
     label: $t('menu.window'),
     submenu: [
@@ -203,7 +203,7 @@ export function setupAppMenu(mainWindow, locale) {
   if (locale) {
     i18n.loadTranslations(locale);
   }
-  
+
   const template = getMenuTemplate(mainWindow);
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);

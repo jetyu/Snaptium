@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { renderMarkdown } from '@renderer/core/markdown/markdownService';
+import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 
 const props = defineProps<{
   markdown: string;

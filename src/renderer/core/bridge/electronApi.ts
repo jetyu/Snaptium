@@ -35,5 +35,5 @@ export async function saveMarkdownFile(payload: SaveFilePayload): Promise<SaveFi
 }
 
 export function logToMain(payload: LogPayload): void {
-  ensureElectronApi().log(payload);
+  ensureElectronApi().logger.log(payload);
 }

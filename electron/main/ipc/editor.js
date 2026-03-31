@@ -1,7 +1,7 @@
 import { dialog, ipcMain } from 'electron';
 import { z } from 'zod';
 import { readUtf8, writeUtf8 } from '../services/file.service.js';
-import { IPC_CHANNELS } from '../constants/channels.constants.js';
+import { IPC_CHANNELS } from '../constants/ipc.constants.js';
 
 const saveFilePayloadSchema = z.object({
   filePath: z.string().min(1).nullable(),

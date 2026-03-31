@@ -1,7 +1,3 @@
-/**
- * Renderer-side logger service that sends logs to the main process via IPC.
- */
-
 export type LogLevel = 'info' | 'warn' | 'error' | 'debug';
 
 class Logger {
@@ -12,14 +8,20 @@ class Logger {
   }
 
   private send(level: LogLevel, message: string) {
-    const api = (window as any).electronAPI?.logger;
+    const api = window.electronAPI?.logger;
     if (api?.log) {
       api.log({ level, source: this.source, message });
-    } else {
-      // Fallback for dev environments without Electron bridge
-      const formatted = `[${level.toUpperCase()}] [${this.source}] ${message}`;
-      (console as any)[level]?.(formatted) || console.log(formatted);
+      return;
     }
+    // Fallback for dev environments without Electron bridge
+    const formatted = `[${this.source}] ${message}`;
+    const consoleMethods: Record<LogLevel, (...args: unknown[]) => void> = {
+      info: console.info.bind(console),
+      warn: console.warn.bind(console),
+      error: console.error.bind(console),
+      debug: console.debug.bind(console),
+    };
+    consoleMethods[level](formatted);
   }
 
   info(message: string) { this.send('info', message); }

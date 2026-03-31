@@ -12,12 +12,15 @@
 
             <div class="settings-sidebar-menu">
               <ul>
-                <li v-for="tab in tabs" :key="tab.id">
-                  <button @click="setActiveTab(tab.id)" class="settings-tab-btn"
-                    :class="{ active: activeTab === tab.id }">
-                    <span>{{ t(tab.labelKey) }}</span>
-                  </button>
-                </li>
+                <template v-for="tab in tabs" :key="tab.id">
+                  <li v-if="tab.type === 'separator'" class="settings-tab-separator" role="separator" />
+                  <li v-else>
+                    <button @click="setActiveTab(tab.id)" class="settings-tab-btn"
+                      :class="{ active: activeTab === tab.id }">
+                      <span>{{ t(tab.labelKey) }}</span>
+                    </button>
+                  </li>
+                </template>
               </ul>
             </div>
           </div>
@@ -26,10 +29,7 @@
           <div class="settings-content">
             <div class="settings-close-btn-wrapper">
               <button @click="closeSettings" class="settings-close-btn" :aria-label="t('dialog.close')">
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <span v-html="closeIconRaw" class="icon-wrapper" />
               </button>
             </div>
 
@@ -50,6 +50,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettings } from '../composables/useSettings';
+import closeIconRaw from '@assets/icons/button/closeBtn.svg?raw';
 
 import GeneralSettings from './tabs/GeneralSettings.vue';
 import EditorSettings from './tabs/EditorSettings.vue';
@@ -67,21 +68,27 @@ const { isOpen, activeTab, closeSettings, setActiveTab, initMainProcessListeners
 const overlayRef = ref<HTMLElement | null>(null);
 let removeListener: (() => void) | null = null;
 
-const tabs = [
-  { id: 'general', labelKey: 'paneGeneral', component: GeneralSettings },
-  { id: 'editor', labelKey: 'paneEditorSettings', component: EditorSettings },
-  { id: 'security', labelKey: 'paneSecurity', component: SecuritySettings },
-  { id: 'ai-sources', labelKey: 'paneAISources', component: AISourceSettings },
-  { id: 'ai-assistant', labelKey: 'paneAIAssistant', component: AIAssistantSettings },
-  { id: 'rag', labelKey: 'paneRAG', component: RAGSettings },
-  { id: 'shortcuts', labelKey: 'paneShortcuts', component: ShortcutSettings },
-  { id: 'update', labelKey: 'labelAutoUpdate', component: UpdateSettings },
-  { id: 'log', labelKey: 'paneLog', component: LogSettings },
+type TabItem =
+  | { id: string; type: 'separator' }
+  | { id: string; type?: never; labelKey: string; component: unknown };
+
+const tabs: TabItem[] = [
+  { id: 'general',      labelKey: 'paneGeneral',        component: GeneralSettings },
+  { id: 'editor',       labelKey: 'paneEditorSettings', component: EditorSettings },
+  { id: 'security',     labelKey: 'paneSecurity',       component: SecuritySettings },
+  { id: 'sep-1',        type: 'separator' },
+  { id: 'ai-sources',   labelKey: 'paneAISources',      component: AISourceSettings },
+  { id: 'ai-assistant', labelKey: 'paneAIAssistant',    component: AIAssistantSettings },
+  { id: 'rag',          labelKey: 'paneRAG',            component: RAGSettings },
+  { id: 'sep-2',        type: 'separator' },
+  { id: 'shortcuts',    labelKey: 'paneShortcuts',      component: ShortcutSettings },
+  { id: 'update',       labelKey: 'labelAutoUpdate',    component: UpdateSettings },
+  { id: 'log',          labelKey: 'paneLog',            component: LogSettings },
 ];
 
 const currentComponent = computed(() => {
   const tab = tabs.find(t => t.id === activeTab.value);
-  return tab ? tab.component : null;
+  return tab && tab.type !== 'separator' ? tab.component : null;
 });
 
 const handleEsc = () => {
@@ -166,6 +173,13 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.settings-tab-separator {
+  height: 1px;
+  background-color: var(--border-color, #e5e7eb);
+  margin: 6px 4px;
+  list-style: none;
 }
 
 .settings-tab-btn {
