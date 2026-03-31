@@ -10,4 +10,4 @@ Each feature should be self-contained:
 
 Suggested flow:
 
-`view -> feature component -> feature composable -> shared/feature service -> bridge/api`
+`view -> feature component -> feature composable -> feature service -> bridge/api`

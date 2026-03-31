@@ -188,7 +188,7 @@ function getHelpMenu(mainWindow) {
       { type: 'separator' },
       {
         label: $t('menu.help.about'),
-        click: () => mainWindow.webContents.send('menu:about')
+        click: () => mainWindow.webContents.send('menu:open-about')
       }
     ]
   };

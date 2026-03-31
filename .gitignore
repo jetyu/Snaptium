@@ -1,5 +1,9 @@
 /node_modules/*
 /dist/*
 /electron-cache/*
+
 electron/preload/index.js
-.kiro/dev-guide.md
+
+/.*/
+!.github/
+!.github/** 

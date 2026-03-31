@@ -11,6 +11,11 @@ const electronAPI = Object.freeze({
     log: (payload) => ipcRenderer.send(IPC_CHANNELS.LOGGER_LOG, payload),
     openDir: () => ipcRenderer.invoke(IPC_CHANNELS.LOGGER_OPEN_DIR),
   }),
+  app: Object.freeze({
+    getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_VERSION),
+    getEnvVersion: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_ENV_VERSION),
+    getName: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_NAME),
+  }),
   vfs: Object.freeze({
     initWorkspace: (rootPath) => ipcRenderer.invoke(IPC_CHANNELS.VFS_INIT, rootPath),
     createFile: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_CREATE_FILE, payload),
@@ -30,6 +35,11 @@ const electronAPI = Object.freeze({
       const subscription = (_event) => callback();
       ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_PREFERENCES, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_PREFERENCES, subscription);
+    },
+    onOpenAbout: (callback) => {
+      const subscription = (_event) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_ABOUT, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_ABOUT, subscription);
     }
   }),
   settings: Object.freeze({
@@ -37,7 +47,7 @@ const electronAPI = Object.freeze({
     saveConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SAVE, config),
     setStartup: (enabled) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
     pickDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_PICK_DIRECTORY),
-    switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.APP_SWITHC_LANGUAGE, locale),
+    switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.SETTINGS_SWITHC_LANGUAGE, locale),
   }),
   aiSource: Object.freeze({
     testConnection: (config) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),

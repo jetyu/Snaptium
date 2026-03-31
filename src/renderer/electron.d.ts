@@ -33,8 +33,8 @@ interface WorkspaceContextMenuPayload {
 declare global {
   interface Window {
     electronAPI: {
-      openFile: () => Promise<import('./services/electronApi').OpenFileResult | null>;
-      saveFile: (payload: import('./services/electronApi').SaveFilePayload) => Promise<import('./services/electronApi').SaveFileResult | null>;
+      openFile: () => Promise<import('./core/bridge/electronApi').OpenFileResult | null>;
+      saveFile: (payload: import('./core/bridge/electronApi').SaveFilePayload) => Promise<import('./core/bridge/electronApi').SaveFileResult | null>;
       log: (payload: { level: string; source: string; message: string }) => void;
       vfs?: {
         initWorkspace: (rootPath?: string) => Promise<WorkspaceRootPayload>;
@@ -52,6 +52,17 @@ declare global {
       };
       menu?: {
         onOpenPreferences: (callback: () => void) => () => void;
+        onOpenAbout: (callback: () => void) => () => void;
+      };
+      app: {
+        getVersion: () => Promise<string>;
+        getEnvVersion: () => Promise<{
+          electron: string;
+          node: string;
+          chrome: string;
+          v8: string;
+        }>;
+        getName: () => Promise<string>;
       };
     };
   }

@@ -255,9 +255,6 @@ renderer
 ├─ app
 ├─ features
 ├─ core
-├─ shared
-├─ router
-├─ stores
 └─ config
 ```
 
@@ -318,32 +315,16 @@ feature-name
 
 ---
 
-## 10. shared（共享模块）
-
-目录：`src/renderer/shared`
-
-```text
-shared
-├─ components
-├─ composables
-├─ utils
-├─ constants
-└─ types
-```
-
----
-
 ## 11. Import 规则
 
 features 可以 import：
 
 - core
-- shared
 - 自身 feature
 
 features **不建议**直接 import 其他 feature（避免耦合扩散）。
 
-core 与 shared 不依赖 features。
+core 不依赖 features。
 
 ---
 
@@ -440,9 +421,7 @@ renderer
 ├─ app
 ├─ features
 ├─ core
-├─ shared
 ├─ plugins
-├─ ai
 └─ platform
 ```
 ## 18. 多国语言

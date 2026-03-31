@@ -7,7 +7,7 @@ import { setupAppMenu } from './menu.js';
 import { ipcMain } from 'electron';
 import { settingsService } from './services/settings.service.js';
 import { loggerService } from './services/logger.service.js';
-
+import { IPC_CHANNELS } from './constants/channels.constants.js';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -34,7 +34,7 @@ app.whenReady().then(async () => {
     }
   });
 
-  ipcMain.on('app:switch-language', (_event, locale) => {
+  ipcMain.on(IPC_CHANNELS.SETTINGS_SWITHC_LANGUAGE, (_event, locale) => {
     const windows = BrowserWindow.getAllWindows();
     if (windows.length > 0) {
       setupAppMenu(windows[0], locale);
