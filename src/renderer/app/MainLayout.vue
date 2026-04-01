@@ -1,7 +1,7 @@
 <template>
   <div class="app-layout">
     <!-- 左侧笔记栏 -->
-    <WorkspaceSidebar />
+    <WorkspaceSidebar @open-search="openSearch" />
 
     <!-- 中间编辑器/笔记本概览 -->
     <section v-if="!activeNote?.locked" class="editor-col panel">
@@ -49,6 +49,13 @@
       </div>
     </section>
   </div>
+
+  <!-- 搜索对话框 -->
+  <SearchDialog
+    :is-open="isSearchOpen"
+    @close="closeSearch"
+    @select="handleSearchSelect"
+  />
 </template>
 
 <script setup lang="ts">
@@ -58,6 +65,7 @@ import NotebookDashboard from "@renderer/features/workspace/components/NotebookD
 import { EditorPane } from "@renderer/features/editor";
 import EditorToolbar from "@renderer/features/editor/components/EditorToolbar.vue";
 import { PreviewPane } from "@renderer/features/preview";
+import { SearchDialog } from "@renderer/features/search";
 import { useWorkspace } from "@renderer/features/workspace";
 import type { EditorView } from '@codemirror/view';
 
@@ -66,15 +74,42 @@ const {
   activeNotebookId,
   updateActiveContent,
   initializeWorkspace,
+  selectNote,
 } = useWorkspace();
 
 const editorPaneRef = ref<InstanceType<typeof EditorPane>>();
+const isSearchOpen = ref(false);
 
 const editorView = computed<EditorView | undefined>(() => {
   return editorPaneRef.value?.getEditorApi()?.view;
 });
 
+function openSearch() {
+  isSearchOpen.value = true;
+}
+
+function closeSearch() {
+  isSearchOpen.value = false;
+}
+
+async function handleSearchSelect(result: any, match?: any) {
+  // Load the note
+  await selectNote(result.id);
+  
+  // Wait for editor to be ready
+  setTimeout(() => {
+    const editorApi = editorPaneRef.value?.getEditorApi();
+    if (editorApi && match) {
+      editorApi.jumpToLine(match.line, result.title);
+    }
+  }, 100);
+}
+
 onMounted(() => {
   void initializeWorkspace();
 });
 </script>
+
+
+<style scoped>
+</style>

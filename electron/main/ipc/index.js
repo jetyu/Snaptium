@@ -6,6 +6,7 @@ import { registerAiAssistantIpcHandlers } from './modules/ai-assistant.js';
 import { registerAppEnvInfoIpcHandlers } from './modules/app-env-info.js';
 import { registerVfsIpcHandlers } from './vfs.js';
 import { registerWorkspaceMenuIpcHandlers } from './workspace-menu.js';
+import { registerSearchIpcHandlers } from './search.js';
 
 export function registerIpcHandlers(mainWindow) {
   registerEditorIpcHandlers(mainWindow);
@@ -16,4 +17,5 @@ export function registerIpcHandlers(mainWindow) {
   registerAppEnvInfoIpcHandlers();
   registerVfsIpcHandlers();
   registerWorkspaceMenuIpcHandlers(mainWindow);
+  registerSearchIpcHandlers();
 }

@@ -2,20 +2,22 @@
   <aside class="sidebar" @contextmenu.prevent="openRootMenu">
     <div class="sidebar-header">
       <span class="sidebar-title">{{ $t("labelNoteList") }}</span>
-      <button
-        class="btn-new-note"
-        :title="$t('newNote')"
-        @click="openCreateButtonMenu"
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <path
-            d="M8 2v12M2 8h12"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-          />
-        </svg>
-      </button>
+      <div class="header-actions">
+        <button
+          class="btn-search"
+          :title="$t('search.openSearch')"
+          @click="$emit('open-search')"
+        >
+          <span v-html="searchIconRaw"></span>
+        </button>
+        <button
+          class="btn-new-note"
+          :title="$t('newNote')"
+          @click="openCreateButtonMenu"
+        >
+          <span v-html="plusIconRaw"></span>
+        </button>
+      </div>
     </div>
 
     <ul v-if="treeEntries.length > 0" class="note-list workspace-tree">
@@ -31,6 +33,7 @@
           'workspace-row--notebook': entry.kind === 'notebook',
           'workspace-row--note': entry.kind === 'note',
           'workspace-row--editing': isEditing(entry),
+          'workspace-row--indented': entry.depth > 0,
         }"
         :style="{ '--tree-depth': entry.depth }"
         @click="
@@ -44,6 +47,17 @@
             : openNotebookMenu(entry.item)
         "
       >
+        <button
+          v-if="entry.kind === 'notebook'"
+          class="workspace-row__chevron"
+          :class="{ 'is-expanded': !collapsedIds.has(entry.id) }"
+          @click.stop="toggleCollapse(entry.id)"
+          :aria-label="collapsedIds.has(entry.id) ? $t('expand') : $t('collapse')"
+        >
+          <span v-if="entry.hasChildren" v-html="chevronRightRaw" class="icon-wrapper" />
+        </button>
+        <span v-else class="workspace-row__chevron workspace-row__chevron--placeholder" />
+
         <div class="workspace-row__icon">
           <NoteModeIcon
             v-if="entry.kind === 'note' && entry.item.locked"
@@ -96,9 +110,16 @@ import { useWorkspace } from "@renderer/features/workspace";
 import type { Note, Notebook } from "../store/workspace.store";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
 import NoteModeIcon from "../components/NoteModeIcon.vue";
+import searchIconRaw from '@assets/icons/common/search.svg?raw';
+import plusIconRaw from '@assets/icons/common/plus.svg?raw';
+import chevronRightRaw from '@assets/icons/workspace/chevron-right.svg?raw';
+
+defineEmits<{
+  'open-search': [];
+}>();
 
 type WorkspaceTreeEntry =
-  | { id: string; depth: number; kind: "notebook"; item: Notebook }
+  | { id: string; depth: number; kind: "notebook"; item: Notebook; hasChildren: boolean }
   | { id: string; depth: number; kind: "note"; item: Note };
 
 type RenameTarget =
@@ -128,6 +149,15 @@ const renameTarget = ref<RenameTarget>(null);
 const renameDraft = ref("");
 const renameInput = ref<HTMLInputElement | null>(null);
 const isSubmittingRename = ref(false);
+const collapsedIds = ref<Set<string>>(new Set());
+
+function toggleCollapse(id: string) {
+  if (collapsedIds.value.has(id)) {
+    collapsedIds.value.delete(id);
+  } else {
+    collapsedIds.value.add(id);
+  }
+}
 
 function focusRenameInput() {
   nextTick(() => {
@@ -256,15 +286,25 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
     for (const notebook of sortNotebooks(
       notebookChildren.get(parentId) ?? []
     )) {
+      const hasChildren = 
+        (notebookChildren.get(notebook.id)?.length ?? 0) > 0 ||
+        (noteChildren.get(notebook.id)?.length ?? 0) > 0;
+      
       entries.push({
         id: notebook.id,
         depth,
         kind: "notebook",
         item: notebook,
+        hasChildren,
       });
-      visit(notebook.id, depth + 1);
+      
+      // Only visit children if not collapsed
+      if (!collapsedIds.value.has(notebook.id)) {
+        visit(notebook.id, depth + 1);
+      }
     }
 
+    // Only show notes if parent is not collapsed
     for (const note of sortNotes(noteChildren.get(parentId) ?? [])) {
       entries.push({ id: note.id, depth, kind: "note", item: note });
     }
@@ -283,12 +323,23 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
 .workspace-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  padding-left: calc(14px + (var(--tree-depth, 0) * 18px));
+  gap: 4px;
+  padding: 6px 14px;
+  padding-left: calc( 1px + (var(--tree-depth, 0) * 20px));
   cursor: pointer;
   border-left: 3px solid transparent;
   transition: background 0.12s, border-color 0.12s;
+  position: relative;
+}
+
+.workspace-row--indented::before {
+  position: absolute;
+  left: calc( 1px + (var(--tree-depth, 0) * 20px) - 10px);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: color-mix(in srgb, var(--text-muted, #888) 25%, transparent);
+  pointer-events: none;
 }
 
 .workspace-row:hover {
@@ -298,6 +349,40 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
 .workspace-row.active {
   background: color-mix(in srgb, var(--accent) 12%, transparent);
   border-left-color: var(--accent);
+}
+
+.workspace-row__chevron {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  color: var(--text-muted);
+  border-radius: 3px;
+  transition: color 0.15s, background 0.15s, transform 0.15s;
+}
+
+.workspace-row__chevron:hover {
+  color: var(--text);
+}
+
+.workspace-row__chevron.is-expanded {
+  transform: rotate(90deg);
+}
+
+.workspace-row__chevron--placeholder {
+  pointer-events: none;
+}
+
+.workspace-row__chevron .icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .workspace-row__icon {
@@ -359,4 +444,31 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
   background: transparent;
   border: 1px solid var(--color-border, #d1d5db);
 }
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-search {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.btn-search:hover {
+  background: var(--panel-hover);
+  color: var(--accent);
+}
 </style>
+

@@ -27,6 +27,9 @@ const electronAPI = Object.freeze({
     deleteNode: (nodeId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_DELETE_NODE, nodeId),
     toggleNodeLock: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK, payload),
   }),
+  search: Object.freeze({
+    searchNotes: (query) => ipcRenderer.invoke(IPC_CHANNELS.SEARCH_NOTES, query),
+  }),
   workspace: Object.freeze({
     showContextMenu: (payload) => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, payload),
   }),

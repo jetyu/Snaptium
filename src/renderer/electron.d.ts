@@ -56,6 +56,22 @@ interface AiCompleteResult {
   message?: string;
 }
 
+interface SearchMatch {
+  line: number;
+  column: number;
+  text: string;
+  matchStart: number;
+  matchEnd: number;
+}
+
+interface SearchResult {
+  id: string;
+  contentId: string;
+  title: string;
+  matches: SearchMatch[];
+  titleMatch: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Global window augmentation
 // ---------------------------------------------------------------------------
@@ -88,6 +104,10 @@ declare global {
         showNoteInFolder: (nodeId: string) => Promise<boolean>;
         deleteNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
         toggleNodeLock: (payload: { nodeId: string; locked: boolean }) => Promise<WorkspaceNodePayload>;
+      };
+
+      search?: {
+        searchNotes: (query: string) => Promise<SearchResult[]>;
       };
 
       workspace?: {

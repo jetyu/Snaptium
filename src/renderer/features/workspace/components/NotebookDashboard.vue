@@ -8,9 +8,7 @@
         </div>
         <div class="actions">
           <button class="btn btn-primary" @click="createNote(activeNotebookId)">
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            </svg>
+            <span v-html="plusIconRaw"></span>
             {{ $t("notebookDashboardActionsNewNote") }}
           </button>
         </div>
@@ -71,6 +69,7 @@ import { useWorkspace } from "@renderer/features/workspace";
 import { useI18n } from "vue-i18n";
 import { formatDate } from "@renderer/core/utils/date.utils";
 import NoteModeIcon from "../components/NoteModeIcon.vue";
+import plusIconRaw from '@assets/icons/common/plus.svg?raw';
 
 const { activeNotebookId, notebooks, notes, selectNote, createNote, selectNotebook } =
   useWorkspace();

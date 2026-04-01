@@ -7,8 +7,8 @@ import { computed } from "vue";
 
 // Use Vite's ?raw to import SVG content as a string
 import lockedIconRaw from "@assets/icons/workspace/lock.svg?raw";
-import noteIconRaw from "@assets/icons/workspace/note.svg?raw";
-import notebookIconRaw from "@assets/icons/workspace/notebook.svg?raw";
+import noteIconRaw from "@assets/icons/common/note.svg?raw";
+import notebookIconRaw from "@assets/icons/common/notebook.svg?raw";
 
 const props = defineProps<{
   name: "lockedIcon" | "noteIcon" | "notebookIcon";

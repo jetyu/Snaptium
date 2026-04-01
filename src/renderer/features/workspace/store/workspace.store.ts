@@ -2,6 +2,8 @@ import { defineStore } from 'pinia';
 import { logger } from '@renderer/features/logger';
 import { i18n } from '@renderer/features/i18n';
 
+const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
 export interface Note {
   id: string;
   contentId: string;
@@ -311,16 +313,19 @@ export const useWorkspaceStore = defineStore('workspace', {
         note.title = match[1].trim();
       }
 
-      if (window.electronAPI?.vfs) {
-        const saved = await window.electronAPI.vfs.writeContent({
-          contentId: note.contentId,
-          content,
-        });
-
-        if (!saved) {
-          logger.warn(`Failed to persist content for note: ${this.activeNoteId}`);
-        }
-        logger.debug(`Updated content for note: ${this.activeNoteId}`);
+      if (workspaceService.isAvailable()) {
+        const noteId = note.id;
+        const contentId = note.contentId;
+        clearTimeout(saveTimers.get(noteId));
+        saveTimers.set(noteId, setTimeout(async () => {
+          saveTimers.delete(noteId);
+          // Use the latest content from store at flush time
+          const latest = this.notes.find((n) => n.id === noteId);
+          if (!latest) return;
+          const saved = await workspaceService.writeContent(contentId, latest.content);
+          if (!saved) logger.warn(`Failed to persist content for note: ${noteId}`);
+          else logger.debug(`Updated content for note: ${noteId}`);
+        }, 600));
       }
     },
 
@@ -442,3 +447,4 @@ export const useWorkspaceStore = defineStore('workspace', {
     },
   },
 });
+

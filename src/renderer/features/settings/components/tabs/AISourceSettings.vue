@@ -3,6 +3,9 @@ import { ref, computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../store/settings.store';
 import { createLogger } from '../../../logger';
+import infoIconRaw from '@assets/icons/common/info.svg?raw';
+import plusIconRaw from '@assets/icons/common/plus.svg?raw';
+import aiSourceIconRaw from '@assets/icons/common/ai-source.svg?raw';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
@@ -195,11 +198,7 @@ const cancelDelete = () => {
           <div class="test-status">
             <transition name="fade">
               <span v-if="!isFormValid" class="status-badge hint">
-                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <span v-html="infoIconRaw"></span>
                 {{ t('InputAllFields') }}
               </span>
               <span v-else-if="testSuccess" class="status-badge success">
@@ -236,10 +235,7 @@ const cancelDelete = () => {
       <!-- Add Source Card (Placeholder) -->
       <div v-else-if="settingsStore.config.aiSources.length > 0" class="add-source-card" @click="showAddForm = true">
         <div class="add-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
+          <span v-html="plusIconRaw"></span>
         </div>
         <span>{{ t('btnAddSource') }}</span>
       </div>
@@ -247,11 +243,7 @@ const cancelDelete = () => {
       <div v-if="settingsStore.config.aiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card"
         @click="showAddForm = true">
         <div class="empty-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-          </svg>
+          <span v-html="aiSourceIconRaw"></span>
         </div>
         <p class="empty-text">{{ t('NoAiSourcesFound') }}</p>
         <span class="empty-action-text">{{ t('btnAddSource') }}</span>

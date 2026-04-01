@@ -379,5 +379,11 @@
   "optionLogLevelWarn": "Warning",
   "optionLogLevelError": "Error",
   "btnLogFolder": "Open Log Folder",
-  "logLevelDesc": "Only logs at or above the selected level will be recorded."
+  "logLevelDesc": "Only logs at or above the selected level will be recorded.",
+  "search.openSearch": "Open Search",
+  "search.search": "Search Notes",
+  "search.placeholder": "Type to search note content...",
+  "search.typeToSearch": "Type to start searching",
+  "search.titleMatch": "Title Match",
+  "search.moreMatches": "more matches"
 }

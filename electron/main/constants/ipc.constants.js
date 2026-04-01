@@ -1,4 +1,5 @@
 export const IPC_CHANNELS = {
+  SEARCH_NOTES: 'search:notes',
   ELECTRON_MAC_CLICK_EVENT:'activate',
   ELECTRON_WIN_CLICK_EVENT:'window-all-closed',
   DARWIN_KERNEL:'darwin',

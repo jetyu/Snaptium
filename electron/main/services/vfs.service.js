@@ -8,18 +8,12 @@ import { loggerService } from './logger.service.js';
 
 const LOG_SOURCE = 'VFS';
 
-// ---------------------------------------------------------------------------
-// In-memory workspace state
-// ---------------------------------------------------------------------------
 
 const workspaceState = {
   root: null,
   nodes: new Map(),
 };
 
-// ---------------------------------------------------------------------------
-// Path helpers
-// ---------------------------------------------------------------------------
 
 function databaseDir(root) {
   return path.join(root, VFS_CONSTANTS.DATABASE_FOLDER);
@@ -46,13 +40,10 @@ function preferencesFile() {
 }
 
 function getObjectFilePath(root, contentId) {
-  const safeContentId = assertNonEmptyString(contentId, VFS_CONSTANTS.FIELD_CONTENT_ID);
+  const safeContentId = assertValidUUID(contentId, VFS_CONSTANTS.FIELD_CONTENT_ID);
   return path.join(objectsDir(root), `${safeContentId}${VFS_CONSTANTS.MARKDOWN_FILE_EXT}`);
 }
 
-// ---------------------------------------------------------------------------
-// Validation helpers
-// ---------------------------------------------------------------------------
 
 export function assertNonEmptyString(value, fieldName) {
   if (typeof value !== 'string' || value.trim().length === 0) {
@@ -61,14 +52,34 @@ export function assertNonEmptyString(value, fieldName) {
   return value.trim();
 }
 
+function assertValidUUID(value, fieldName) {
+  const trimmed = assertNonEmptyString(value, fieldName);
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuidRegex.test(trimmed)) {
+    throw new TypeError(`${fieldName} must be a valid UUID v4 format`);
+  }
+  return trimmed;
+}
+
 function normalizeNoteName(name) {
   const trimmedName = assertNonEmptyString(name, 'name');
   return trimmedName.endsWith(VFS_CONSTANTS.MARKDOWN_FILE_EXT) ? trimmedName.slice(0, -VFS_CONSTANTS.MARKDOWN_FILE_EXT.length) : trimmedName;
 }
 
-// ---------------------------------------------------------------------------
-// File system utilities
-// ---------------------------------------------------------------------------
+const writeQueues = new Map();
+
+function enqueueWrite(key, fn) {
+  const prev = writeQueues.get(key) ?? Promise.resolve();
+  const next = prev.then(fn, () => fn());
+  writeQueues.set(key, next.then(() => {}, () => {}));
+  next.finally(() => {
+    const current = writeQueues.get(key);
+    if (!current || current === next) writeQueues.delete(key);
+  });
+  return next; 
+}
+
+const NODES_QUEUE_KEY = '__nodes__';
 
 function isEnoentError(error) {
   return Boolean(error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT');
@@ -86,12 +97,18 @@ async function pathExists(targetPath) {
 async function atomicWriteFile(targetPath, content) {
   const tempPath = `${targetPath}${VFS_CONSTANTS.TEMP_FILE_EXT}`;
   await writeUtf8(tempPath, content);
-  await fs.rename(tempPath, targetPath);
+  try {
+    await fs.rename(tempPath, targetPath);
+  } catch (err) {
+    // EXDEV: cross-device rename (shouldn't happen here but guard anyway)
+    if (err && err.code === 'EXDEV') {
+      await fs.copyFile(tempPath, targetPath);
+      await fs.unlink(tempPath);
+    } else {
+      throw err;
+    }
+  }
 }
-
-// ---------------------------------------------------------------------------
-// Workspace root resolution
-// ---------------------------------------------------------------------------
 
 function getWorkspaceRootByName(workspaceName) {
   return path.join(app.getPath(VFS_CONSTANTS.DOCUMENTS_FOLDER), workspaceName);
@@ -142,9 +159,6 @@ async function resolveWorkspaceRoot(rootPath) {
   return normalizeWorkspaceRoot(rootPath);
 }
 
-// ---------------------------------------------------------------------------
-// Node helpers
-// ---------------------------------------------------------------------------
 
 function getNodeByContentId(contentId) {
   for (const node of workspaceState.nodes.values()) {
@@ -153,9 +167,6 @@ function getNodeByContentId(contentId) {
   return null;
 }
 
-// ---------------------------------------------------------------------------
-// Workspace initialization
-// ---------------------------------------------------------------------------
 
 async function ensureWorkspaceStructure(root) {
   await Promise.all([
@@ -203,14 +214,15 @@ async function loadAllNodes(root) {
 async function persistAllNodes(root) {
   const serialized = Array.from(workspaceState.nodes.values()).map((n) => JSON.stringify(n));
   const content = serialized.length > 0 ? `${serialized.join('\n')}\n` : '';
-  await atomicWriteFile(nodesFile(root), content);
+  return enqueueWrite(NODES_QUEUE_KEY, () => atomicWriteFile(nodesFile(root), content));
 }
 
-// ---------------------------------------------------------------------------
-// Public service API
-// ---------------------------------------------------------------------------
 
 export const vfsService = {
+  getAllNodes() {
+    return Array.from(workspaceState.nodes.values());
+  },
+
   async initializeWorkspace(rootPath) {
     const resolvedRoot = await resolveWorkspaceRoot(rootPath);
     await ensureWorkspaceStructure(resolvedRoot);
@@ -328,42 +340,18 @@ export const vfsService = {
   async writeContent(contentId, text) {
     const root = await this.ensureInitialized();
     if (typeof text !== 'string') throw new TypeError('content must be a string');
+    const safeContentId = assertValidUUID(contentId, VFS_CONSTANTS.FIELD_CONTENT_ID);
 
-    const safeContentId = assertNonEmptyString(contentId, VFS_CONSTANTS.FIELD_CONTENT_ID);
-    const filePath = getObjectFilePath(root, safeContentId);
-    const backupPath = `${filePath}${VFS_CONSTANTS.BACKUP_FILE_EXT}`;
-
-    try {
-      const original = await fs.readFile(filePath, 'utf-8');
-      if (original.length > 0) await writeUtf8(backupPath, original);
-    } catch (error) {
-      if (!isEnoentError(error)) {
-        loggerService.error(LOG_SOURCE, `Failed to create backup for ${safeContentId}: ${error}`);
-        throw error;
-      }
-    }
-
-    try {
+    return enqueueWrite(safeContentId, async () => {
+      const filePath = getObjectFilePath(root, safeContentId);
       await atomicWriteFile(filePath, text);
       const node = getNodeByContentId(safeContentId);
       if (node) {
         node.updatedAt = Date.now();
         await persistAllNodes(root);
       }
-      if (await pathExists(backupPath)) await fs.unlink(backupPath);
       return true;
-    } catch (error) {
-      loggerService.error(LOG_SOURCE, `Failed to write content ${safeContentId}: ${error}`);
-      if (await pathExists(backupPath)) {
-        try {
-          await fs.copyFile(backupPath, filePath);
-          await fs.unlink(backupPath);
-        } catch (rollbackError) {
-          loggerService.error(LOG_SOURCE, `Failed to rollback content ${safeContentId}: ${rollbackError}`);
-        }
-      }
-      throw error;
-    }
+    });
   },
 
   async showNoteInFolder(nodeId) {
@@ -407,9 +395,6 @@ export const vfsService = {
   },
 };
 
-// ---------------------------------------------------------------------------
-// Internal recursive delete (not exported)
-// ---------------------------------------------------------------------------
 
 async function deleteNodeRecursive(root, nodeId) {
   const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);

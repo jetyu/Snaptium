@@ -1,4 +1,4 @@
-import { EditorState, Compartment } from '@codemirror/state';
+import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
 import {
   EditorView,
   keymap,
@@ -7,6 +7,10 @@ import {
   drawSelection,
   highlightActiveLine,
   placeholder,
+  Decoration,
+  DecorationSet,
+  ViewPlugin,
+  ViewUpdate,
 } from '@codemirror/view';
 import { history, defaultKeymap, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
@@ -92,6 +96,58 @@ export function createCodeEditor({
       view.dispatch({
         changes: { from: 0, to: view.state.doc.length, insert: nextValue },
       });
+    },
+    jumpToLine(lineNumber: number, searchText?: string) {
+      const line = view.state.doc.line(Math.min(lineNumber, view.state.doc.lines));
+      const pos = line.from;
+      
+      view.dispatch({
+        selection: { anchor: pos, head: pos },
+        effects: EditorView.scrollIntoView(pos, { y: 'center' }),
+      });
+      
+      view.focus();
+      
+      // Highlight search text if provided
+      if (searchText) {
+        this.highlightText(searchText);
+      }
+    },
+    highlightText(searchText: string) {
+      if (!searchText) return;
+      
+      const content = view.state.doc.toString();
+      const searchLower = searchText.toLowerCase();
+      const decorations: any[] = [];
+      
+      let pos = 0;
+      while (pos < content.length) {
+        const index = content.toLowerCase().indexOf(searchLower, pos);
+        if (index === -1) break;
+        
+        decorations.push(
+          Decoration.mark({
+            class: 'cm-search-highlight',
+          }).range(index, index + searchText.length)
+        );
+        
+        pos = index + 1;
+      }
+      
+      if (decorations.length > 0) {
+        view.dispatch({
+          effects: StateEffect.appendConfig.of([
+            EditorView.baseTheme({
+              '.cm-search-highlight': {
+                backgroundColor: '#ffd700',
+                color: '#000',
+                fontWeight: '600',
+                borderRadius: '2px',
+              },
+            }),
+          ]),
+        });
+      }
     },
     setReadOnly(nextReadOnly: boolean) {
       view.dispatch({

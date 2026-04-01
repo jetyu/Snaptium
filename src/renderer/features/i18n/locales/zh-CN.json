@@ -422,5 +422,11 @@
   "optionLogLevelWarn": "警告",
   "optionLogLevelError": "错误",
   "btnLogFolder": "日志文件夹",
-  "logLevelDesc": "只有选定级别或更高级别的日志才会被记录"
+  "logLevelDesc": "只有选定级别或更高级别的日志才会被记录",
+  "search.openSearch": "打开搜索",
+  "search.search": "搜索笔记",
+  "search.placeholder": "输入关键词搜索笔记内容...",
+  "search.typeToSearch": "输入关键词开始搜索",
+  "search.titleMatch": "标题匹配",
+  "search.moreMatches": "个更多匹配"
 }
