@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "Đã bật kiểm tra cập nhật tự động",
   "autoUpdateDisabledStatus": "Đã tắt kiểm tra cập nhật tự động",
   "setAutoUpdateFailed": "Thiết lập cập nhật tự động thất bại",
-  "labelLoggingEnabled": "Nhật ký cục bộ",
+  "labelLocalLogging": "Nhật ký cục bộ",
   "textLoggingEnabled": "Bật nhật ký cục bộ",
   "labelLoggingLevel": "Mức độ nhật ký",
   "levelDebug": "Gỡ lỗi",

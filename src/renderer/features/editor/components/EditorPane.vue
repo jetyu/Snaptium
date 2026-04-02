@@ -9,6 +9,8 @@ import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { createCodeEditor } from '@renderer/core/editor/createCodeEditor';
 import { useWorkspaceStore } from '@renderer/features/workspace';
 import { useSettingsStore } from '@renderer/features/settings';
+import { useEditor } from '@renderer/features/editor';
+import { useAiAssistant } from '@renderer/features/ai/composables/useAiAssistant';
 import { storeToRefs } from 'pinia';
 
 const props = defineProps<{
@@ -17,10 +19,13 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:modelValue': [value: string];
+  'selection-change': [selection: { line: number; column: number; selectedText: string }];
 }>();
 
 const workspaceStore = useWorkspaceStore();
 const settingsStore = useSettingsStore();
+const { setEditorView } = useEditor();
+const aiAssistant = useAiAssistant();
 
 const { activeNote } = storeToRefs(workspaceStore);
 const { config } = storeToRefs(settingsStore);
@@ -47,14 +52,42 @@ onMounted(() => {
     bracketMatching: config.value.bracketMatching,
     autoCloseBrackets: config.value.autoCloseBrackets,
     autoIndent: config.value.autoIndent,
-    onChange: (value) => {
+    onChange: (value, isAiCompletion) => {
       syncingFromEditor = true;
       emit('update:modelValue', value);
       queueMicrotask(() => {
         syncingFromEditor = false;
       });
+
+      // 触发AI助手
+      if (editorApi?.view && config.value.aiAssistant?.enabled) {
+        // 如果是AI补全导致的变化，立即请求下一次补全（连续补全）
+        if (isAiCompletion) {
+          // 短延迟后请求下一次补全，让用户有机会看到插入的内容
+          setTimeout(() => {
+            if (editorApi?.view) {
+              aiAssistant.requestCompletion(editorApi.view, config.value);
+            }
+          }, 300); // 300ms 短延迟
+        } else {
+          // 用户输入，使用正常的延迟
+          aiAssistant.handleTyping(editorApi.view, config.value);
+        }
+      }
+    },
+    onSelectionChange: (selection) => {
+      emit('selection-change', selection);
     },
   });
+
+  // 注册编辑器视图到全局
+  if (editorApi?.view) {
+    setEditorView(editorApi.view);
+    aiAssistant.setEditorView(editorApi.view);
+  }
+
+  // 设置AI助手状态
+  aiAssistant.setEnabled(config.value.aiAssistant?.enabled ?? false);
 });
 
 watch(
@@ -129,7 +162,18 @@ watch(
   }
 );
 
+watch(
+  () => config.value.aiAssistant?.enabled,
+  (enabled) => {
+    aiAssistant.setEnabled(enabled ?? false);
+  }
+);
+
 onBeforeUnmount(() => {
+  // 清除全局编辑器引用
+  setEditorView(null);
+  // 清理AI助手
+  aiAssistant.cleanup();
   editorApi?.destroy();
 });
 </script>

@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "Pemeriksaan pembaruan otomatis diaktifkan",
   "autoUpdateDisabledStatus": "Pemeriksaan pembaruan otomatis dinonaktifkan",
   "setAutoUpdateFailed": "Gagal mengatur pembaruan otomatis",
-  "labelLoggingEnabled": "Log Lokal",
+  "labelLocalLogging": "Log Lokal",
   "textLoggingEnabled": "Aktifkan Log Lokal",
   "labelLoggingLevel": "Level Log",
   "levelDebug": "Debug",

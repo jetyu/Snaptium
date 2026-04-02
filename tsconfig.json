@@ -8,6 +8,7 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "esModuleInterop": true,
+    "skipLibCheck": true,
     "lib": ["ES2022", "DOM"],
     "types": ["vite/client", "node"],
     "baseUrl": ".",
@@ -16,6 +17,6 @@
       "@assets/*": ["src/assets/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue", "electron/**/*.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "electron/**/*.ts", "vitest.config.ts"]
 }
 

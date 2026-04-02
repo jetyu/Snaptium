@@ -6,7 +6,7 @@
       <!-- Enable Logging Toggle -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelLoggingEnabled') }}</p>
+          <p class="setting-label">{{ t('labelLocalLogging') }}</p>
           <p class="setting-description">{{ t('textLoggingEnabled') }}</p>
         </div>
 

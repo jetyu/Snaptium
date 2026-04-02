@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "Vérification automatique des mises à jour activée",
   "autoUpdateDisabledStatus": "Vérification automatique des mises à jour désactivée",
   "setAutoUpdateFailed": "Échec de la configuration de la mise à jour automatique",
-  "labelLoggingEnabled": "Journaux locaux",
+  "labelLocalLogging": "Journaux locaux",
   "textLoggingEnabled": "Activer les journaux locaux",
   "labelLoggingLevel": "Niveau de journalisation",
   "levelDebug": "Débogage",

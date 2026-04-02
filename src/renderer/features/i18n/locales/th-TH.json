@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "เปิดใช้งานการตรวจสอบการอัปเดตอัตโนมัติแล้ว",
   "autoUpdateDisabledStatus": "ปิดใช้งานการตรวจสอบการอัปเดตอัตโนมัติแล้ว",
   "setAutoUpdateFailed": "การตั้งค่าการอัปเดตอัตโนมัติล้มเหลว",
-  "labelLoggingEnabled": "บันทึกในเครื่อง",
+  "labelLocalLogging": "บันทึกในเครื่อง",
   "textLoggingEnabled": "เปิดใช้งานบันทึกในเครื่อง",
   "labelLoggingLevel": "ระดับการบันทึก",
   "levelDebug": "แก้ไขจุดบกพร่อง",

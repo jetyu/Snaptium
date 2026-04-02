@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "Verificação automática de atualizações ativada",
   "autoUpdateDisabledStatus": "Verificação automática de atualizações desativada",
   "setAutoUpdateFailed": "Falha ao definir atualização automática",
-  "labelLoggingEnabled": "Logs Locais",
+  "labelLocalLogging": "Logs Locais",
   "textLoggingEnabled": "Ativar Logs Locais",
   "labelLoggingLevel": "Nível de Log",
   "levelDebug": "Depurar",

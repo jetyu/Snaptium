@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "Controllo automatico aggiornamenti attivato",
   "autoUpdateDisabledStatus": "Controllo automatico aggiornamenti disattivato",
   "setAutoUpdateFailed": "Impossibile impostare l'aggiornamento automatico",
-  "labelLoggingEnabled": "Log locali",
+  "labelLocalLogging": "Log locali",
   "textLoggingEnabled": "Abilita log locali",
   "labelLoggingLevel": "Livello log",
   "levelDebug": "Debug",

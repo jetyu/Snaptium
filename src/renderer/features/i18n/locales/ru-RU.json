@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "Автоматическая проверка обновлений включена",
   "autoUpdateDisabledStatus": "Автоматическая проверка обновлений отключена",
   "setAutoUpdateFailed": "Не удалось настроить автообновление",
-  "labelLoggingEnabled": "Локальные журналы",
+  "labelLocalLogging": "Локальные журналы",
   "textLoggingEnabled": "Включить локальные журналы",
   "labelLoggingLevel": "Уровень журнала",
   "levelDebug": "Отладка",

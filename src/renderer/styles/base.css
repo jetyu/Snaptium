@@ -42,3 +42,42 @@ body {
   background: var(--bg);
   overflow: hidden;
 }
+
+/* ===== Icon Alignment Utilities ===== */
+/* 图标容器 - 用于包裹 IconPark 组件 */
+.icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.icon-wrapper svg {
+  display: block;
+}
+
+/* 图标+文字容器 - 用于图标和文字并排显示 */
+.icon-text {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-text svg {
+  display: block;
+  flex-shrink: 0;
+}
+
+/* 按钮内的图标对齐 */
+button.icon-text,
+.btn.icon-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+button.icon-text svg,
+.btn.icon-text svg {
+  display: block;
+  flex-shrink: 0;
+}

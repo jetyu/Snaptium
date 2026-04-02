@@ -7,6 +7,7 @@ import { registerAppEnvInfoIpcHandlers } from './modules/app-env-info.js';
 import { registerVfsIpcHandlers } from './vfs.js';
 import { registerWorkspaceMenuIpcHandlers } from './workspace-menu.js';
 import { registerSearchIpcHandlers } from './search.js';
+import { registerShortcutsHandlers } from './modules/shortcuts.js';
 
 export function registerIpcHandlers(mainWindow) {
   registerEditorIpcHandlers(mainWindow);
@@ -18,4 +19,5 @@ export function registerIpcHandlers(mainWindow) {
   registerVfsIpcHandlers();
   registerWorkspaceMenuIpcHandlers(mainWindow);
   registerSearchIpcHandlers();
+  registerShortcutsHandlers();
 }

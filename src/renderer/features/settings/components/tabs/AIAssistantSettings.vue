@@ -75,7 +75,7 @@
         </div>
         <textarea class="settings-textarea" :value="settingsStore.config.aiAssistant.systemPrompt"
           @input="handleAssistantUpdate('systemPrompt', ($event.target as HTMLTextAreaElement).value)"
-          :placeholder="t('placeholderAISystemPrompt')"
+          :placeholder="t('defaultAISystemPrompt')"
           :disabled="!settingsStore.config.aiAssistant.enabled"></textarea>
       </section>
     </div>

@@ -1,91 +1,9 @@
 import { defineStore } from 'pinia';
 import { logger } from '@renderer/features/logger';
-import { i18n } from '@renderer/features/i18n';
+import { workspaceService, type Note, type Notebook } from '../services/workspace.service';
+import { WORKSPACE_CONSTANTS, type SaveStatus } from '../constants/workspace.constants';
 
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
-
-export interface Note {
-  id: string;
-  contentId: string;
-  title: string;
-  content: string;
-  parentId: string | null;
-  createdAt: number;
-  updatedAt: number;
-  locked?: boolean;
-}
-
-export interface Notebook {
-  id: string;
-  name: string;
-  parentId: string | null;
-  createdAt: number;
-  updatedAt: number;
-  locked?: boolean;
-}
-
-interface WorkspaceNode {
-  id: string;
-  type: string;
-  name: string;
-  parentId?: string | null;
-  contentId?: string;
-  createdAt: number;
-  updatedAt: number;
-  trashed?: boolean;
-  locked?: boolean;
-}
-
-function generateUUID(): string {
-  return crypto.randomUUID();
-}
-
-
-function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
-  if (node.type !== 'file' || !node.contentId || node.trashed) {
-    return null;
-  }
-
-  return {
-    id: node.id,
-    contentId: node.contentId,
-    title: node.name?.trim() || i18n.global.t('newNote'),
-    content,
-    parentId: node.parentId ?? null,
-    createdAt: node.createdAt,
-    updatedAt: node.updatedAt,
-    locked: node.locked ?? false,
-  };
-}
-
-function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
-  if (node.type !== 'folder' || node.trashed) {
-    return null;
-  }
-
-  return {
-    id: node.id,
-    name: node.name?.trim() || i18n.global.t('default.newNotebook'),
-    parentId: node.parentId ?? null,
-    createdAt: node.createdAt,
-    updatedAt: node.updatedAt,
-    locked: node.locked ?? false,
-  };
-}
-
-function renameNoteContent(content: string, nextTitle: string) {
-  const normalizedTitle = nextTitle.trim();
-
-  if (!normalizedTitle) {
-    return content;
-  }
-
-  if (/^#\s+.+$/m.test(content)) {
-    return content.replace(/^#\s+.+$/m, `# ${normalizedTitle}`);
-  }
-
-  return `# ${normalizedTitle}\n\n${content}`;
-}
 
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => {
@@ -95,6 +13,9 @@ export const useWorkspaceStore = defineStore('workspace', {
       activeNoteId: null as string | null,
       activeNotebookId: null as string | null,
       initialized: false,
+      savingStatus: WORKSPACE_CONSTANTS.SAVE_STATUS.IDLE as SaveStatus,
+      lastSaveTime: null as number | null,
+      saveError: null as string | null,
     };
   },
 
@@ -122,8 +43,8 @@ export const useWorkspaceStore = defineStore('workspace', {
         return;
       }
 
-      if (!window.electronAPI?.vfs) {
-        logger.warn('electronAPI.vfs not available, starting with empty workspace.');
+      if (!workspaceService.isAvailable()) {
+        logger.warn('Workspace service not available, starting with empty workspace.');
         this.notes = [];
         this.notebooks = [];
         this.activeNoteId = null;
@@ -133,22 +54,12 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
 
       try {
-        const { nodes } = await window.electronAPI.vfs.initWorkspace();
-        const workspaceNodes = nodes as WorkspaceNode[];
-        const fileNodes = workspaceNodes.filter((node) => node.type === 'file' && node.contentId && !node.trashed);
-        const folderNodes = workspaceNodes.filter((node) => node.type === 'folder' && !node.trashed);
-
-        const loadedNotes = (await Promise.all(
-          fileNodes.map(async (node) => mapNodeToNote(node, await window.electronAPI.vfs!.readContent(node.contentId as string))),
-        )).filter((note): note is Note => note !== null);
-
-        this.notes = loadedNotes;
-        this.notebooks = folderNodes
-          .map((node) => mapNodeToNotebook(node))
-          .filter((notebook): notebook is Notebook => notebook !== null);
-        this.activeNoteId = this.notes[0]?.id ?? null;
+        const { notes, notebooks } = await workspaceService.initWorkspace();
+        this.notes = notes;
+        this.notebooks = notebooks;
+        this.activeNoteId = notes[0]?.id ?? null;
         this.activeNotebookId = null;
-        logger.info(`Workspace initialized with ${this.notes.length} note(s) and ${this.notebooks.length} notebook(s).`);
+        logger.info(`Workspace initialized with ${notes.length} note(s) and ${notebooks.length} notebook(s).`);
       } catch (err: unknown) {
         logger.error(`Failed to initialize workspace: ${err instanceof Error ? err.message : String(err)}`);
         this.notes = [];
@@ -162,6 +73,7 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     selectNote(id: string) {
       if (this.notes.some((note) => note.id === id)) {
+        this.forceFlushAutoSave();
         this.activeNoteId = id;
         this.activeNotebookId = null;
         logger.info(`Selected note: ${id}`);
@@ -170,6 +82,7 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     selectNotebook(id: string) {
       if (this.notebooks.some((notebook) => notebook.id === id)) {
+        this.forceFlushAutoSave();
         this.activeNotebookId = id;
         this.activeNoteId = null;
         logger.info(`Selected notebook: ${id}`);
@@ -178,127 +91,62 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     async createNote(parentId: string | null = null) {
       try {
-        if (!window.electronAPI?.vfs) {
-          logger.warn('electronAPI.vfs not available, cannot physically save note.');
-          return;
-        }
-
-        const title = i18n.global.t('newNote');
-        const content = `# ${title}\n\n`;
-        const node = await window.electronAPI.vfs.createFile({
-          parentId,
-          name: title,
-          content,
-        });
-
-        const newNote: Note = {
-          id: node.id,
-          contentId: node.contentId!,
-          title: node.name,
-          content,
-          parentId: node.parentId ?? null,
-          createdAt: node.createdAt,
-          updatedAt: node.updatedAt,
-          locked: node.locked ?? false,
-        };
-
+        const newNote = await workspaceService.createNote(parentId);
         this.notes.push(newNote);
         this.activeNoteId = newNote.id;
         this.activeNotebookId = null;
-        logger.info(`Created new note: ${node.id} with contentId ${node.contentId}`);
+        logger.info(`Created new note: ${newNote.id} with contentId ${newNote.contentId}`);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
-        logger.error(`Failed to invoke VFS createFile: ${message}`);
-        alert(`Failed to save! Error: ${message}`);
+        logger.error(`Failed to create note: ${message}`);
       }
     },
 
     async createNotebook(parentId: string | null = null) {
       try {
-        if (!window.electronAPI?.vfs) {
-          logger.warn('electronAPI.vfs not available, cannot physically save notebook.');
-          return;
-        }
-
-        const name = i18n.global.t('default.newNotebook');
-        const node = await window.electronAPI.vfs.createFolder({
-          parentId,
-          name,
-        });
-
-        this.notebooks.push({
-          id: node.id,
-          name: node.name,
-          parentId: node.parentId ?? null,
-          createdAt: node.createdAt,
-          updatedAt: node.updatedAt,
-          locked: node.locked ?? false,
-        });
-        this.activeNotebookId = node.id;
+        const newNotebook = await workspaceService.createNotebook(parentId);
+        this.notebooks.push(newNotebook);
+        this.activeNotebookId = newNotebook.id;
         this.activeNoteId = null;
-        logger.info(`Created new notebook: ${node.id}`);
+        logger.info(`Created new notebook: ${newNotebook.id}`);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
-        logger.error(`Failed to invoke VFS createFolder: ${message}`);
-        alert(`Failed to save! Error: ${message}`);
+        logger.error(`Failed to create notebook: ${message}`);
       }
     },
 
     async renameNote(id: string, title: string) {
       const note = this.notes.find((candidate) => candidate.id === id);
-      const nextTitle = title.trim();
-
-      if (!note || !nextTitle) {
+      if (!note || !title.trim()) {
         return;
       }
 
       try {
-        if (!window.electronAPI?.vfs) {
-          logger.warn('electronAPI.vfs not available, cannot rename note.');
-          return;
-        }
-
-        const renamedNode = await window.electronAPI.vfs.renameNode({ nodeId: id, name: nextTitle });
-        const nextContent = renameNoteContent(note.content, renamedNode.name);
-
-        await window.electronAPI.vfs.writeContent({
-          contentId: note.contentId,
-          content: nextContent,
-        });
-
-        note.title = renamedNode.name;
-        note.content = nextContent;
-        note.updatedAt = Math.max(renamedNode.updatedAt, Date.now());
-        logger.info(`Renamed note: ${id} -> ${renamedNode.name}`);
+        const { title: newTitle, content: newContent, updatedAt } = await workspaceService.renameNote(note, title);
+        note.title = newTitle;
+        note.content = newContent;
+        note.updatedAt = updatedAt;
+        logger.info(`Renamed note: ${id} -> ${newTitle}`);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         logger.error(`Failed to rename note ${id}: ${message}`);
-        alert(`Failed to rename! Error: ${message}`);
       }
     },
 
     async renameNotebook(id: string, name: string) {
       const notebook = this.notebooks.find((candidate) => candidate.id === id);
-      const nextName = name.trim();
-
-      if (!notebook || !nextName) {
+      if (!notebook || !name.trim()) {
         return;
       }
 
       try {
-        if (!window.electronAPI?.vfs) {
-          logger.warn('electronAPI.vfs not available, cannot rename notebook.');
-          return;
-        }
-
-        const renamedNode = await window.electronAPI.vfs.renameNode({ nodeId: id, name: nextName });
-        notebook.name = renamedNode.name;
-        notebook.updatedAt = renamedNode.updatedAt;
-        logger.info(`Renamed notebook: ${id} -> ${renamedNode.name}`);
+        const { name: newName, updatedAt } = await workspaceService.renameNotebook(id, name);
+        notebook.name = newName;
+        notebook.updatedAt = updatedAt;
+        logger.info(`Renamed notebook: ${id} -> ${newName}`);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         logger.error(`Failed to rename notebook ${id}: ${message}`);
-        alert(`Failed to rename! Error: ${message}`);
       }
     },
 
@@ -306,49 +154,96 @@ export const useWorkspaceStore = defineStore('workspace', {
       const note = this.notes.find((candidate) => candidate.id === this.activeNoteId);
       if (!note) return;
 
+      if (note.content.replace(/\r\n/g, '\n') === content.replace(/\r\n/g, '\n')) {
+        return;
+      }
+
       note.content = content;
       note.updatedAt = Date.now();
-      const match = content.match(/^#\s+(.+)$/m);
-      if (match) {
-        note.title = match[1].trim();
-      }
+
 
       if (workspaceService.isAvailable()) {
         const noteId = note.id;
         const contentId = note.contentId;
+
+        this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVING;
+        this.saveError = null;
+
         clearTimeout(saveTimers.get(noteId));
-        saveTimers.set(noteId, setTimeout(async () => {
-          saveTimers.delete(noteId);
-          // Use the latest content from store at flush time
-          const latest = this.notes.find((n) => n.id === noteId);
-          if (!latest) return;
-          const saved = await workspaceService.writeContent(contentId, latest.content);
-          if (!saved) logger.warn(`Failed to persist content for note: ${noteId}`);
-          else logger.debug(`Updated content for note: ${noteId}`);
-        }, 600));
+        saveTimers.set(
+          noteId,
+          setTimeout(async () => {
+            saveTimers.delete(noteId);
+            const latest = this.notes.find((n) => n.id === noteId);
+            if (!latest) return;
+
+            try {
+              const saved = await workspaceService.writeContent(contentId, latest.content);
+              if (saved) {
+                this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
+                this.lastSaveTime = Date.now();
+                logger.debug(`Updated content for note: ${noteId}`);
+
+                setTimeout(() => {
+                  if (this.savingStatus === WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED) {
+                    this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.IDLE;
+                  }
+                }, WORKSPACE_CONSTANTS.AUTO_SAVE.STATUS_HIDE_DELAY);
+              } else {
+                this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR;
+                this.saveError = WORKSPACE_CONSTANTS.ERROR_MESSAGES.SAVE_FAILED;
+                logger.warn(`Failed to persist content for note: ${noteId}`);
+              }
+            } catch (err: unknown) {
+              this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR;
+              this.saveError = err instanceof Error ? err.message : WORKSPACE_CONSTANTS.ERROR_MESSAGES.UNKNOWN_ERROR;
+              logger.error(`Error saving note ${noteId}: ${err instanceof Error ? err.message : String(err)}`);
+            }
+          }, WORKSPACE_CONSTANTS.AUTO_SAVE.DEBOUNCE_DELAY)
+        );
       }
+    },
+
+    async forceFlushAutoSave() {
+      const promises: Promise<boolean>[] = [];
+
+      for (const [noteId, timer] of saveTimers.entries()) {
+        clearTimeout(timer);
+        saveTimers.delete(noteId);
+
+        const note = this.notes.find((n) => n.id === noteId);
+        if (note) {
+          this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVING;
+          promises.push(
+            workspaceService.writeContent(note.contentId, note.content).then((saved) => {
+              if (saved) {
+                this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
+                this.lastSaveTime = Date.now();
+              } else {
+                this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR;
+              }
+              return saved;
+            })
+          );
+        }
+      }
+
+      await Promise.all(promises);
     },
 
     async showNoteInFolder(id: string) {
       const note = this.notes.find((candidate) => candidate.id === id);
-
       if (!note) {
         logger.warn(`Cannot show note in folder, note not found: ${id}`);
         return;
       }
 
       try {
-        if (!window.electronAPI?.vfs) {
-          logger.warn('electronAPI.vfs not available, cannot show note in folder.');
-          return;
-        }
-
-        await window.electronAPI.vfs.showNoteInFolder(id);
+        await workspaceService.showNoteInFolder(id);
         logger.info(`Revealed note in folder: ${id}`);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         logger.error(`Failed to show note ${id} in folder: ${message}`);
-        alert(`Failed to open note location! Error: ${message}`);
       }
     },
 
@@ -357,15 +252,10 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (index === -1) return;
 
       try {
-        if (window.electronAPI?.vfs) {
-          await window.electronAPI.vfs.deleteNode(id);
-        } else {
-          logger.warn('electronAPI.vfs not available, cannot persist note deletion.');
-        }
+        await workspaceService.deleteNode(id);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         logger.error(`Failed to delete note ${id}: ${message}`);
-        alert(`Failed to delete note! Error: ${message}`);
         return;
       }
 
@@ -381,15 +271,10 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (!notebook) return;
 
       try {
-        if (window.electronAPI?.vfs) {
-          await window.electronAPI.vfs.deleteNode(id);
-        } else {
-          logger.warn('electronAPI.vfs not available, cannot persist notebook deletion.');
-        }
+        await workspaceService.deleteNode(id);
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         logger.error(`Failed to delete notebook ${id}: ${message}`);
-        alert(`Failed to delete notebook! Error: ${message}`);
         return;
       }
 
@@ -422,18 +307,13 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     async toggleNodeLock(id: string, locked: boolean) {
       try {
-        if (!window.electronAPI?.vfs) {
-          logger.warn('electronAPI.vfs not available, cannot toggle lock.');
-          return;
-        }
-
         const note = this.notes.find((n) => n.id === id);
         if (!note) {
           logger.warn(`Cannot lock node ${id}: not a note or not found.`);
           return;
         }
 
-        await window.electronAPI.vfs.toggleNodeLock({ nodeId: id, locked });
+        await workspaceService.toggleNodeLock(id, locked);
 
         note.locked = locked;
         note.updatedAt = Date.now();
@@ -442,7 +322,6 @@ export const useWorkspaceStore = defineStore('workspace', {
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : String(err);
         logger.error(`Failed to toggle lock for note ${id}: ${message}`);
-        alert(`Failed to toggle lock! Error: ${message}`);
       }
     },
   },

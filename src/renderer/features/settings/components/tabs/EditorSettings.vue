@@ -155,6 +155,24 @@
           </span>
         </button>
       </section>
+
+      <!-- Show Status Bar -->
+      <section class="setting-card">
+        <div class="setting-copy">
+          <p class="setting-label">{{ t('labelShowStatusBar') }}</p>
+          <p class="setting-description">{{ t('textShowStatusBar') }}</p>
+        </div>
+        <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.showStatusBar }"
+          :aria-pressed="settingsStore.config.showStatusBar"
+          @click="() => settingsStore.updateSetting('showStatusBar', !settingsStore.config.showStatusBar)">
+          <span class="startup-switch-track">
+            <span class="startup-switch-thumb" />
+          </span>
+          <span class="startup-switch-text">
+            {{ settingsStore.config.showStatusBar ? t('statusEnabled') : t('statusDisabled') }}
+          </span>
+        </button>
+      </section>
     </div>
   </div>
 </template>

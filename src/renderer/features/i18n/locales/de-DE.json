@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "Automatische Update-Prüfung aktiviert",
   "autoUpdateDisabledStatus": "Automatische Update-Prüfung deaktiviert",
   "setAutoUpdateFailed": "Fehler beim Einstellen der automatischen Updates",
-  "labelLoggingEnabled": "Lokale Protokolle",
+  "labelLocalLogging": "Lokale Protokolle",
   "textLoggingEnabled": "Lokale Protokolle aktivieren",
   "labelLoggingLevel": "Protokollebene",
   "levelDebug": "Debug",

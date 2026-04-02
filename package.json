@@ -30,6 +30,7 @@
     "@codemirror/search": "^6.6.0",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.6",
+    "@icon-park/vue-next": "^1.4.2",
     "markdown-it": "^14.1.0",
     "pinia": "^2.2.4",
     "sanitize-html": "^2.17.0",

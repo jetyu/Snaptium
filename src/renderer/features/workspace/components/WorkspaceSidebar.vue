@@ -3,83 +3,50 @@
     <div class="sidebar-header">
       <span class="sidebar-title">{{ $t("labelNoteList") }}</span>
       <div class="header-actions">
-        <button
-          class="btn-search"
-          :title="$t('search.openSearch')"
-          @click="$emit('open-search')"
-        >
-          <span v-html="searchIconRaw"></span>
+        <button class="btn-search icon-wrapper" :title="$t('search.openSearch')" @click="$emit('open-search')">
+          <Search theme="outline" :size="16" />
         </button>
-        <button
-          class="btn-new-note"
-          :title="$t('newNote')"
-          @click="openCreateButtonMenu"
-        >
-          <span v-html="plusIconRaw"></span>
+        <button class="btn-new-note icon-wrapper" :title="$t('newNote')" @click="openCreateButtonMenu">
+          <Plus theme="outline" :size="16" />
         </button>
       </div>
     </div>
 
     <ul v-if="treeEntries.length > 0" class="note-list workspace-tree">
-      <li
-        v-for="entry in treeEntries"
-        :key="entry.id"
-        class="workspace-row"
-        :class="{
-          active:
+      <li v-for="entry in treeEntries" :key="entry.id" class="workspace-row" :class="{
+        active:
+          entry.kind === 'note'
+            ? entry.id === activeNoteId
+            : entry.id === activeNotebookId,
+        'workspace-row--notebook': entry.kind === 'notebook',
+        'workspace-row--note': entry.kind === 'note',
+        'workspace-row--editing': isEditing(entry),
+        'workspace-row--indented': entry.depth > 0,
+      }" :style="{ '--tree-depth': entry.depth }" @click="
+        entry.kind === 'note'
+          ? selectNote(entry.id)
+          : selectNotebook(entry.id)
+        " @contextmenu.prevent.stop="
             entry.kind === 'note'
-              ? entry.id === activeNoteId
-              : entry.id === activeNotebookId,
-          'workspace-row--notebook': entry.kind === 'notebook',
-          'workspace-row--note': entry.kind === 'note',
-          'workspace-row--editing': isEditing(entry),
-          'workspace-row--indented': entry.depth > 0,
-        }"
-        :style="{ '--tree-depth': entry.depth }"
-        @click="
-          entry.kind === 'note'
-            ? selectNote(entry.id)
-            : selectNotebook(entry.id)
-        "
-        @contextmenu.prevent.stop="
-          entry.kind === 'note'
-            ? openNoteMenu(entry.item)
-            : openNotebookMenu(entry.item)
-        "
-      >
-        <button
-          v-if="entry.kind === 'notebook'"
-          class="workspace-row__chevron"
-          :class="{ 'is-expanded': !collapsedIds.has(entry.id) }"
-          @click.stop="toggleCollapse(entry.id)"
-          :aria-label="collapsedIds.has(entry.id) ? $t('expand') : $t('collapse')"
-        >
-          <span v-if="entry.hasChildren" v-html="chevronRightRaw" class="icon-wrapper" />
+              ? openNoteMenu(entry.item)
+              : openNotebookMenu(entry.item)
+            ">
+        <button v-if="entry.kind === 'notebook'" class="workspace-row__chevron icon-wrapper"
+          :class="{ 'is-expanded': !collapsedIds.has(entry.id) }" @click.stop="toggleCollapse(entry.id)"
+          :aria-label="collapsedIds.has(entry.id) ? $t('expand') : $t('collapse')">
+          <Right v-if="entry.hasChildren" theme="outline" :size="14" />
         </button>
         <span v-else class="workspace-row__chevron workspace-row__chevron--placeholder" />
 
-        <div class="workspace-row__icon">
-          <NoteModeIcon
-            v-if="entry.kind === 'note' && entry.item.locked"
-            name="lockedIcon"
-          />
-          <NoteModeIcon
-            v-else-if="entry.kind === 'notebook'"
-            name="notebookIcon"
-          />
-          <NoteModeIcon v-else name="noteIcon" />
+        <div class="workspace-row__icon icon-wrapper">
+          <FileLockOne v-if="entry.kind === 'note' && entry.item.locked" theme="outline" :size="14" />
+          <NotebookOne v-else-if="entry.kind === 'notebook'" theme="outline" :size="14" />
+          <Notes v-else theme="outline" :size="14" />
         </div>
         <div class="workspace-row__content">
-          <input
-            v-if="isEditing(entry)"
-            ref="renameInput"
-            v-model="renameDraft"
-            class="workspace-row__rename-input"
-            @click.stop
-            @keydown.enter.prevent="commitRename"
-            @keydown.esc.prevent="cancelRename"
-            @blur="commitRename"
-          />
+          <input v-if="isEditing(entry)" ref="renameInput" v-model="renameDraft" class="workspace-row__rename-input"
+            @click.stop @keydown.enter.prevent="commitRename" @keydown.esc.prevent="cancelRename"
+            @blur="commitRename" />
           <template v-else>
             <span class="workspace-row__title">{{
               entry.kind === "notebook" ? entry.item.name : entry.item.title
@@ -107,12 +74,9 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useWorkspace } from "@renderer/features/workspace";
-import type { Note, Notebook } from "../store/workspace.store";
+import type { Note, Notebook } from "../services/workspace.service";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
-import NoteModeIcon from "../components/NoteModeIcon.vue";
-import searchIconRaw from '@assets/icons/common/search.svg?raw';
-import plusIconRaw from '@assets/icons/common/plus.svg?raw';
-import chevronRightRaw from '@assets/icons/workspace/chevron-right.svg?raw';
+import { Search, Plus, Right, FileLockOne, Notes, NotebookOne } from '@icon-park/vue-next';
 
 defineEmits<{
   'open-search': [];
@@ -144,7 +108,7 @@ const {
   toggleNodeLock,
 } = useWorkspace();
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const renameTarget = ref<RenameTarget>(null);
 const renameDraft = ref("");
 const renameInput = ref<HTMLInputElement | null>(null);
@@ -286,10 +250,10 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
     for (const notebook of sortNotebooks(
       notebookChildren.get(parentId) ?? []
     )) {
-      const hasChildren = 
+      const hasChildren =
         (notebookChildren.get(notebook.id)?.length ?? 0) > 0 ||
         (noteChildren.get(notebook.id)?.length ?? 0) > 0;
-      
+
       entries.push({
         id: notebook.id,
         depth,
@@ -297,7 +261,7 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
         item: notebook,
         hasChildren,
       });
-      
+
       // Only visit children if not collapsed
       if (!collapsedIds.value.has(notebook.id)) {
         visit(notebook.id, depth + 1);
@@ -325,7 +289,7 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
   align-items: center;
   gap: 4px;
   padding: 6px 14px;
-  padding-left: calc( 1px + (var(--tree-depth, 0) * 20px));
+  padding-left: calc(1px + (var(--tree-depth, 0) * 20px));
   cursor: pointer;
   border-left: 3px solid transparent;
   transition: background 0.12s, border-color 0.12s;
@@ -334,7 +298,7 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
 
 .workspace-row--indented::before {
   position: absolute;
-  left: calc( 1px + (var(--tree-depth, 0) * 20px) - 10px);
+  left: calc(1px + (var(--tree-depth, 0) * 20px) - 10px);
   top: 0;
   bottom: 0;
   width: 1px;
@@ -355,9 +319,6 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
   flex: 0 0 16px;
   width: 16px;
   height: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: transparent;
   border: none;
   padding: 0;
@@ -377,18 +338,6 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
 
 .workspace-row__chevron--placeholder {
   pointer-events: none;
-}
-
-.workspace-row__chevron .icon-wrapper {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.workspace-row__icon {
-  flex: 0 0 auto;
-  font-size: 14px;
-  line-height: 1;
 }
 
 .workspace-row__content {
@@ -411,16 +360,6 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
 
 .workspace-row.active .workspace-row__title {
   color: var(--accent-hover);
-}
-
-.workspace-row__meta {
-  font-size: 0.75rem;
-  color: var(--text-muted);
-}
-
-.workspace-row--notebook .workspace-row__content {
-  flex-direction: row;
-  align-items: center;
 }
 
 .workspace-row__rename-input {
@@ -451,24 +390,23 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
   gap: 4px;
 }
 
-.btn-search {
+.btn-search,
+.btn-new-note {
   flex: 0 0 auto;
   width: 28px;
   height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
   background: transparent;
   border: none;
   border-radius: 6px;
   color: var(--text-muted);
   cursor: pointer;
   transition: background 0.15s, color 0.15s;
+  padding: 0;
 }
 
-.btn-search:hover {
+.btn-search:hover,
+.btn-new-note:hover {
   background: var(--panel-hover);
   color: var(--accent);
 }
 </style>
-

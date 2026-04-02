@@ -30,5 +30,6 @@ export function useWorkspace() {
     renameNotebook: store.renameNotebook,
     updateActiveContent: store.updateActiveContent,
     toggleNodeLock: store.toggleNodeLock,
+    forceFlushAutoSave: store.forceFlushAutoSave,
   };
 }

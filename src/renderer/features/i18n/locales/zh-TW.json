@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "已啟用自動更新檢查",
   "autoUpdateDisabledStatus": "已停用自動更新檢查",
   "setAutoUpdateFailed": "設定自動更新失敗",
-  "labelLoggingEnabled": "本地日誌",
+  "labelLocalLogging": "本地日誌",
   "textLoggingEnabled": "啟用本地日誌",
   "labelLoggingLevel": "日誌級別",
   "levelDebug": "偵錯",

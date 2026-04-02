@@ -13,8 +13,9 @@
           class="toolbar-button"
           :disabled="!isEditorReady"
           @click="executeCommand(action.name)"
-          v-html="getIcon(action.icon)"
-        />
+        >
+          <component :is="getIconComponent(action.icon)" theme="outline" :size="16" />
+        </button>
       </div>
       <div v-if="groupName !== 'insert'" class="toolbar-separator"></div>
     </div>
@@ -26,20 +27,11 @@ import { useI18n } from 'vue-i18n';
 import { toRef } from 'vue';
 import type { EditorView } from '@codemirror/view';
 import { useEditorToolbar } from '../composables/useEditorToolbar';
-
-import heading1Icon from '@assets/icons/editor/heading-1.svg?raw';
-import heading2Icon from '@assets/icons/editor/heading-2.svg?raw';
-import boldIcon from '@assets/icons/editor/bold.svg?raw';
-import italicIcon from '@assets/icons/editor/italic.svg?raw';
-import strikethroughIcon from '@assets/icons/editor/strikethrough.svg?raw';
-import bulletListIcon from '@assets/icons/editor/list-bullet.svg?raw';
-import numberedListIcon from '@assets/icons/editor/list-numbered.svg?raw';
-import taskListIcon from '@assets/icons/editor/list-check.svg?raw';
-import quoteIcon from '@assets/icons/editor/quote.svg?raw';
-import codeIcon from '@assets/icons/editor/code.svg?raw';
-import linkIcon from '@assets/icons/editor/link.svg?raw';
-import imageIcon from '@assets/icons/editor/image.svg?raw';
-import tableIcon from '@assets/icons/editor/table.svg?raw';
+import { 
+  H1, H2, TextBold, TextItalic, Strikethrough, 
+  ListBottom, OrderedList, CheckCorrect, Quote, Code, 
+  LinkOne, Pic, InsertTable 
+} from '@icon-park/vue-next';
 
 const { t } = useI18n();
 
@@ -50,23 +42,23 @@ const props = defineProps<{
 const editorViewRef = toRef(props, 'editorView');
 const { executeCommand, toolbarGroups, isEditorReady } = useEditorToolbar(editorViewRef);
 
-const iconMap: Record<string, string> = {
-  'heading-1': heading1Icon,
-  'heading-2': heading2Icon,
-  'bold': boldIcon,
-  'italic': italicIcon,
-  'strikethrough': strikethroughIcon,
-  'list-bullet': bulletListIcon,
-  'list-numbered': numberedListIcon,
-  'list-check': taskListIcon,
-  'quote': quoteIcon,
-  'code': codeIcon,
-  'link': linkIcon,
-  'image': imageIcon,
-  'table': tableIcon,
+const iconMap: Record<string, any> = {
+  'heading-1': H1,
+  'heading-2': H2,
+  'bold': TextBold,
+  'italic': TextItalic,
+  'strikethrough': Strikethrough,
+  'list-bullet': ListBottom,
+  'list-numbered': OrderedList,
+  'list-check': CheckCorrect,
+  'quote': Quote,
+  'code': Code,
+  'link': LinkOne,
+  'image': Pic,
+  'table': InsertTable,
 };
 
-const getIcon = (iconName: string) => iconMap[iconName] || '';
+const getIconComponent = (iconName: string) => iconMap[iconName] || H1;
 </script>
 
 <style scoped>

@@ -3,9 +3,7 @@ import { ref, computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../store/settings.store';
 import { createLogger } from '../../../logger';
-import infoIconRaw from '@assets/icons/common/info.svg?raw';
-import plusIconRaw from '@assets/icons/common/plus.svg?raw';
-import aiSourceIconRaw from '@assets/icons/common/ai-source.svg?raw';
+import { Info, Plus, Light, Delete } from '@icon-park/vue-next';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
@@ -142,7 +140,7 @@ const cancelDelete = () => {
                   <button class="delete-btn-cancel" @click="cancelDelete">N</button>
                 </template>
                 <button v-else class="delete-btn" @click="removeSource(source.id)" :title="t('trash.delete')">
-                  ×
+                  <Delete theme="outline" size="14" />
                 </button>
               </div>
             </div>
@@ -169,9 +167,9 @@ const cancelDelete = () => {
         <div class="form-group">
           <label class="setting-label">
             {{ t('labelSourceName') }} <span class="required-mark">{{ t('labelStar') }}</span>
-            <span class="char-counter">{{ newSource.name.length }}/30</span>
+            <span class="char-counter">{{ newSource.name.length }}/10</span>
           </label>
-          <input v-model="newSource.name" type="text" class="settings-input" maxlength="30"
+          <input v-model="newSource.name" type="text" class="settings-input" maxlength="10"
             :placeholder="t('placeholderSourceName')" />
         </div>
 
@@ -198,7 +196,7 @@ const cancelDelete = () => {
           <div class="test-status">
             <transition name="fade">
               <span v-if="!isFormValid" class="status-badge hint">
-                <span v-html="infoIconRaw"></span>
+                <span class="icon-wrapper"><Info theme="outline" :size="16" /></span>
                 {{ t('InputAllFields') }}
               </span>
               <span v-else-if="testSuccess" class="status-badge success">
@@ -235,7 +233,7 @@ const cancelDelete = () => {
       <!-- Add Source Card (Placeholder) -->
       <div v-else-if="settingsStore.config.aiSources.length > 0" class="add-source-card" @click="showAddForm = true">
         <div class="add-icon">
-          <span v-html="plusIconRaw"></span>
+          <Plus theme="outline" :size="24" />
         </div>
         <span>{{ t('btnAddSource') }}</span>
       </div>
@@ -243,7 +241,7 @@ const cancelDelete = () => {
       <div v-if="settingsStore.config.aiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card"
         @click="showAddForm = true">
         <div class="empty-icon">
-          <span v-html="aiSourceIconRaw"></span>
+          <Light theme="outline" :size="48" />
         </div>
         <p class="empty-text">{{ t('NoAiSourcesFound') }}</p>
         <span class="empty-action-text">{{ t('btnAddSource') }}</span>
@@ -369,6 +367,16 @@ const cancelDelete = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+}
+
+.status-badge .icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.status-badge :deep(svg) {
+  vertical-align: middle;
 }
 
 .status-badge.success {
@@ -504,7 +512,7 @@ const cancelDelete = () => {
 
 .delete-btn-cancel,
 .delete-btn-confirm {
- font-size: 0.82rem;
+  font-size: 0.82rem;
 }
 
 .add-error-text {

@@ -38,24 +38,26 @@
   color: var(--text-muted);
 }
 
-.btn-new-note {
+.btn-new-note,
+.btn-search {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 26px;
-  height: 26px;
-  border: 1px solid var(--panel-border);
-  border-radius: 0.4rem;
   background: transparent;
+  border: none;
+  border-radius: 6px;
   color: var(--text-muted);
   cursor: pointer;
-  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  transition: background 0.15s, color 0.15s;
 }
 
-.btn-new-note:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
+.btn-new-note:hover,
+.btn-search:hover {
+  background: var(--panel-hover);
+  color: var(--accent);
 }
 
 /* Note List */
@@ -118,7 +120,9 @@
   text-align: center;
 }
 
-.sidebar-empty p { margin: 0; }
+.sidebar-empty p {
+  margin: 0;
+}
 
 .btn-create-first {
   padding: 0.4rem 0.9rem;
@@ -196,7 +200,9 @@
   font-size: 0.9rem;
 }
 
-.col-empty p { margin: 0; }
+.col-empty p {
+  margin: 0;
+}
 
 .panel {
   border: none;

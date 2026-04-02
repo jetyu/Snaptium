@@ -1,4 +1,4 @@
-import { EditorState, Compartment, StateEffect, StateField } from '@codemirror/state';
+import { EditorState, Compartment, StateEffect } from '@codemirror/state';
 import {
   EditorView,
   keymap,
@@ -17,6 +17,7 @@ import { markdown } from '@codemirror/lang-markdown';
 import { foldGutter, bracketMatching, indentOnInput } from '@codemirror/language';
 import { closeBrackets } from '@codemirror/autocomplete';
 import { search, searchKeymap } from '@codemirror/search';
+import { aiCompletionPlugin, acceptedSuggestionAnnotation } from '../ai/wordsAutoCompletion';
 
 export interface CreateCodeEditorOptions {
   target: HTMLElement;
@@ -29,7 +30,8 @@ export interface CreateCodeEditorOptions {
   bracketMatching?: boolean;
   autoCloseBrackets?: boolean;
   autoIndent?: boolean;
-  onChange: (value: string) => void;
+  onChange: (value: string, isAiCompletion?: boolean) => void;
+  onSelectionChange?: (selection: { line: number; column: number; selectedText: string }) => void;
 }
 
 export function createCodeEditor({
@@ -44,6 +46,7 @@ export function createCodeEditor({
   autoCloseBrackets = true,
   autoIndent = true,
   onChange,
+  onSelectionChange,
 }: CreateCodeEditorOptions) {
   const readOnlyCompartment = new Compartment();
   const lineNumbersCompartment = new Compartment();
@@ -56,7 +59,25 @@ export function createCodeEditor({
 
   const updateListener = EditorView.updateListener.of((update) => {
     if (update.docChanged) {
-      onChange(update.state.doc.toString());
+      const isAiCompletion = update.transactions.some(tr => 
+        tr.annotation(acceptedSuggestionAnnotation)
+      );
+      onChange(update.state.doc.toString(), isAiCompletion);
+    }
+
+    if (onSelectionChange && (update.selectionSet || update.docChanged)) {
+      const selection = update.state.selection.main;
+      const pos = selection.head;
+      const line = update.state.doc.lineAt(pos);
+      const selectedText = selection.from === selection.to
+        ? ''
+        : update.state.doc.sliceString(selection.from, selection.to);
+
+      onSelectionChange({
+        line: line.number,
+        column: pos - line.from + 1,
+        selectedText,
+      });
     }
   });
 
@@ -76,12 +97,12 @@ export function createCodeEditor({
       markdown(),
       search({ top: true }),
       keymap.of([...defaultKeymap, ...historyKeymap, ...searchKeymap]),
-      placeholder('Start typing your note here...'),
       updateListener,
       readOnlyCompartment.of([
         EditorView.editable.of(!readOnly),
         EditorState.readOnly.of(readOnly),
       ]),
+      aiCompletionPlugin,
     ],
   });
 
@@ -100,14 +121,14 @@ export function createCodeEditor({
     jumpToLine(lineNumber: number, searchText?: string) {
       const line = view.state.doc.line(Math.min(lineNumber, view.state.doc.lines));
       const pos = line.from;
-      
+
       view.dispatch({
         selection: { anchor: pos, head: pos },
         effects: EditorView.scrollIntoView(pos, { y: 'center' }),
       });
-      
+
       view.focus();
-      
+
       // Highlight search text if provided
       if (searchText) {
         this.highlightText(searchText);
@@ -115,25 +136,25 @@ export function createCodeEditor({
     },
     highlightText(searchText: string) {
       if (!searchText) return;
-      
+
       const content = view.state.doc.toString();
       const searchLower = searchText.toLowerCase();
       const decorations: any[] = [];
-      
+
       let pos = 0;
       while (pos < content.length) {
         const index = content.toLowerCase().indexOf(searchLower, pos);
         if (index === -1) break;
-        
+
         decorations.push(
           Decoration.mark({
             class: 'cm-search-highlight',
           }).range(index, index + searchText.length)
         );
-        
+
         pos = index + 1;
       }
-      
+
       if (decorations.length > 0) {
         view.dispatch({
           effects: StateEffect.appendConfig.of([

@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "自動更新チェックを有効にしました",
   "autoUpdateDisabledStatus": "自動更新チェックを無効にしました",
   "setAutoUpdateFailed": "自動更新の設定に失敗しました",
-  "labelLoggingEnabled": "ローカルログ",
+  "labelLocalLogging": "ローカルログ",
   "textLoggingEnabled": "ローカルログを有効にする",
   "labelLoggingLevel": "ログレベル",
   "levelDebug": "デバッグ",

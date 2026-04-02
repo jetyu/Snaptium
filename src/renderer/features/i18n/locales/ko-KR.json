@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "자동 업데이트 확인이 활성화되었습니다",
   "autoUpdateDisabledStatus": "자동 업데이트 확인이 비활성화되었습니다",
   "setAutoUpdateFailed": "자동 업데이트 설정 실패",
-  "labelLoggingEnabled": "로컬 로그",
+  "labelLocalLogging": "로컬 로그",
   "textLoggingEnabled": "로컬 로그 활성화",
   "labelLoggingLevel": "로그 레벨",
   "levelDebug": "디버그",

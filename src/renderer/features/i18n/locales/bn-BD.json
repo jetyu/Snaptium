@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "স্বয়ংক্রিয় আপডেট চেক চালু করা হয়েছে",
   "autoUpdateDisabledStatus": "স্বয়ংক্রিয় আপডেট চেক বন্ধ করা হয়েছে",
   "setAutoUpdateFailed": "স্বয়ংক্রিয় আপডেট সেট করতে ব্যর্থ",
-  "labelLoggingEnabled": "স্থানীয় লগ",
+  "labelLocalLogging": "স্থানীয় লগ",
   "textLoggingEnabled": "স্থানীয় লগ সক্ষম করুন",
   "labelLoggingLevel": "লগ স্তর",
   "levelDebug": "ডিবাগ",

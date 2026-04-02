@@ -1,5 +1,5 @@
 import { logger } from '@renderer/features/logger';
-import type { Note, Notebook } from '../store/workspace.store';
+import type { Note, Notebook } from '../services/workspace.service';
 import { WORKSPACE_CONSTANTS } from '../constants/workspace.constants';
 import {
   createWorkspaceContextMenuLabels,
@@ -9,7 +9,7 @@ import {
   getRootWorkspaceMenu,
   type WorkspaceContextAction,
   type WorkspaceMenuItem,
-} from '../services/workspaceContextMenu';
+} from '../services/workspaceContextMenu.service';
 
 
 interface UseWorkspaceContextMenuOptions {

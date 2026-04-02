@@ -13,7 +13,7 @@
             @keydown.esc="close"
           />
           <button class="btn-close" @click="close" :title="$t('close')">
-            <span v-html="closeIconRaw"></span>
+            <Close theme="outline" :size="16" />
           </button>
         </div>
 
@@ -62,7 +62,7 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue';
-import closeIconRaw from '@assets/icons/button/closeBtn.svg?raw';
+import { Close } from '@icon-park/vue-next';
 
 interface SearchMatch {
   line: number;

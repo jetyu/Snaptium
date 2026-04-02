@@ -44,15 +44,12 @@ interface AiSourceConfig {
 }
 
 interface AiCompletePayload {
-  sourceId: string;
-  model: string;
-  prompt: string;
-  systemPrompt?: string;
+  context: string;
 }
 
 interface AiCompleteResult {
   success: boolean;
-  content?: string;
+  completion?: string;
   message?: string;
 }
 
@@ -133,6 +130,22 @@ declare global {
 
       aiAssistant?: {
         complete: (payload: AiCompletePayload) => Promise<AiCompleteResult>;
+      };
+
+      shortcuts?: {
+        getCommands: () => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        getCommandsByCategory: (category: string) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        loadKeybindings: () => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        saveKeybindings: (keybindings: unknown[]) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        addKeybinding: (payload: { commandId: string; key: string; when?: string | null }) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        removeKeybinding: (payload: { commandId: string; key: string }) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        resetToDefaults: () => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        detectConflicts: (payload: { key: string; excludeCommandId?: string }) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        validateKeybinding: (key: string) => Promise<{ success: boolean; data?: boolean; error?: string }>;
+        normalizeKeybinding: (key: string) => Promise<{ success: boolean; data?: string; error?: string }>;
+        getKeybindingsForCommand: (commandId: string) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        exportKeybindings: () => Promise<{ success: boolean; data?: unknown; error?: string }>;
+        importKeybindings: (config: unknown) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
       };
     };
   }

@@ -1,3 +1,4 @@
 export { useWorkspaceStore } from './store/workspace.store';
 export { useWorkspace } from './composables/useWorkspace';
-export type { Note } from './store/workspace.store';
+export { useWorkspaceActions } from './composables/useWorkspaceActions';
+export { workspaceService, type Note, type Notebook } from './services/workspace.service';

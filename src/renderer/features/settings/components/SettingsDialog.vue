@@ -29,7 +29,7 @@
           <div class="settings-content">
             <div class="settings-close-btn-wrapper">
               <button @click="closeSettings" class="settings-close-btn" :aria-label="t('dialog.close')">
-                <span v-html="closeIconRaw" class="icon-wrapper" />
+                <close theme="outline" size="16" />
               </button>
             </div>
 
@@ -50,15 +50,13 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettings } from '../composables/useSettings';
-import closeIconRaw from '@assets/icons/button/closeBtn.svg?raw';
-
+import { Close } from '@icon-park/vue-next';
 import GeneralSettings from './tabs/GeneralSettings.vue';
 import EditorSettings from './tabs/EditorSettings.vue';
 import SecuritySettings from './tabs/SecuritySettings.vue';
 import AISourceSettings from './tabs/AISourceSettings.vue';
 import AIAssistantSettings from './tabs/AIAssistantSettings.vue';
 import RAGSettings from './tabs/RAGSettings.vue';
-import UpdateSettings from './tabs/UpdateSettings.vue';
 import LogSettings from './tabs/LogSettings.vue';
 import ShortcutSettings from './tabs/ShortcutSettings.vue';
 
@@ -73,17 +71,16 @@ type TabItem =
   | { id: string; type?: never; labelKey: string; component: unknown };
 
 const tabs: TabItem[] = [
-  { id: 'general',      labelKey: 'paneGeneral',        component: GeneralSettings },
-  { id: 'editor',       labelKey: 'paneEditorSettings', component: EditorSettings },
-  { id: 'security',     labelKey: 'paneSecurity',       component: SecuritySettings },
-  { id: 'sep-1',        type: 'separator' },
-  { id: 'ai-sources',   labelKey: 'paneAISources',      component: AISourceSettings },
-  { id: 'ai-assistant', labelKey: 'paneAIAssistant',    component: AIAssistantSettings },
-  { id: 'rag',          labelKey: 'paneRAG',            component: RAGSettings },
-  { id: 'sep-2',        type: 'separator' },
-  { id: 'shortcuts',    labelKey: 'paneShortcuts',      component: ShortcutSettings },
-  { id: 'update',       labelKey: 'labelAutoUpdate',    component: UpdateSettings },
-  { id: 'log',          labelKey: 'paneLog',            component: LogSettings },
+  { id: 'general', labelKey: 'paneGeneral', component: GeneralSettings },
+  { id: 'editor', labelKey: 'paneEditorSettings', component: EditorSettings },
+  { id: 'security', labelKey: 'paneSecurity', component: SecuritySettings },
+  { id: 'sep-1', type: 'separator' },
+  { id: 'ai-sources', labelKey: 'paneAISources', component: AISourceSettings },
+  { id: 'ai-assistant', labelKey: 'paneAIAssistant', component: AIAssistantSettings },
+  { id: 'rag', labelKey: 'paneRAG', component: RAGSettings },
+  { id: 'sep-2', type: 'separator' },
+  { id: 'shortcuts', labelKey: 'paneShortcuts', component: ShortcutSettings },
+  { id: 'log', labelKey: 'paneLog', component: LogSettings },
 ];
 
 const currentComponent = computed(() => {
@@ -226,8 +223,8 @@ onUnmounted(() => {
 .settings-close-btn {
   background: transparent;
   border: none;
-  border-radius: 50%;
-  padding: 8px;
+  border-radius: 4px;
+  padding: 4px;
   color: var(--text-secondary, #4b5563);
   cursor: pointer;
   transition: background-color 0.2s;

@@ -5,7 +5,7 @@
         <div class="about-modal" @click.stop>
           <div class="about-close-btn-wrapper">
             <button @click="closeAbout" class="about-close-btn" :aria-label="t('close')">
-              <span v-html="closeIconRaw" class="icon-wrapper" />
+              <close theme="outline" size="16" />
             </button>
           </div>
 
@@ -64,7 +64,7 @@
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAbout } from '../composables/useAbout';
-import closeIconRaw from '@assets/icons/button/closeBtn.svg?raw';
+import { Close } from '@icon-park/vue-next';
 
 const { t } = useI18n();
 const { isOpen, appVersion, appName, envVersion, closeAbout, loadVersionInfo, initMainProcessListeners } = useAbout();
@@ -126,8 +126,8 @@ onUnmounted(() => {
 .about-close-btn {
   background: transparent;
   border: none;
-  border-radius: 50%;
-  padding: 8px;
+  border-radius: 4px;
+  padding: 4px;
   color: var(--text-secondary, #4b5563);
   cursor: pointer;
   transition: background-color 0.2s;

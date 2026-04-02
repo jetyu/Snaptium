@@ -367,7 +367,7 @@
   "autoUpdateEnabledStatus": "Auto-update check enabled",
   "autoUpdateDisabledStatus": "Auto-update check disabled",
   "setAutoUpdateFailed": "Failed to set auto-update",
-  "labelLoggingEnabled": "Local Logs",
+  "labelLocalLogging": "Local Logs",
   "textLoggingEnabled": "Enable Local Logs",
   "labelLoggingLevel": "Log Level",
   "levelDebug": "Debug",

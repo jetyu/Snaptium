@@ -136,3 +136,28 @@
   background: color-mix(in srgb, #ef4444 10%, transparent);
   color: #ef4444;
 }
+
+/* ===== AI Completion Suggestion ===== */
+.editor-host .cm-ai-suggestion {
+  color: #888;
+  opacity: 0.6;
+  font-style: italic;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Dark mode adjustment */
+@media (prefers-color-scheme: dark) {
+  .editor-host .cm-ai-suggestion {
+    color: #999;
+    opacity: 0.5;
+  }
+}
+
+/* Light mode adjustment */
+@media (prefers-color-scheme: light) {
+  .editor-host .cm-ai-suggestion {
+    color: #666;
+    opacity: 0.6;
+  }
+}

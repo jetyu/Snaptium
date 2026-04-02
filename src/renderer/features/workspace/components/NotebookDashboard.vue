@@ -2,13 +2,13 @@
   <div class="notebook-dashboard">
     <div class="dashboard-content">
       <header class="dashboard-header">
-        <div class="title-section">
-          <span class="icon"><NoteModeIcon name="notebookIcon" /></span>
+        <div class="title-section icon-text">
+          <NotebookOne theme="outline" :size="28" />
           <h1>{{ notebookName }}</h1>
         </div>
         <div class="actions">
-          <button class="btn btn-primary" @click="createNote(activeNotebookId)">
-            <span v-html="plusIconRaw"></span>
+          <button class="btn btn-primary icon-text" @click="createNote(activeNotebookId)">
+            <Plus theme="outline" :size="15" />
             {{ $t("notebookDashboardActionsNewNote") }}
           </button>
         </div>
@@ -32,8 +32,8 @@
       <section v-if="subNotebooks.length > 0" class="notebooks-section">
         <h2>{{ $t("notebookDashboardSubNotebooks") }}</h2>
         <div class="notebooks-grid">
-          <div v-for="nb in subNotebooks" :key="nb.id" class="notebook-card" @click="selectNotebook(nb.id)">
-            <span class="notebook-icon"><NoteModeIcon name="notebookIcon" /></span>
+          <div v-for="nb in subNotebooks" :key="nb.id" class="notebook-card icon-text" @click="selectNotebook(nb.id)">
+            <NotebookOne theme="outline" :size="16" />
             <div class="notebook-info">
               <span class="notebook-name">{{ nb.name }}</span>
               <span class="notebook-meta">{{ formatDate(nb.updatedAt, locale) }}</span>
@@ -45,10 +45,8 @@
       <section class="notes-section">
         <h2>{{ $t("notebookDashboardNotesList") }}</h2>
         <div v-if="notebookNotes.length > 0" class="notes-list">
-          <div v-for="note in notebookNotes" :key="note.id" class="note-card" @click="selectNote(note.id)">
-            <span class="note-icon">
-              <NoteModeIcon name="noteIcon" />
-            </span>
+          <div v-for="note in notebookNotes" :key="note.id" class="note-card icon-text" @click="selectNote(note.id)">
+            <Notes theme="outline" :size="16" />
             <div class="note-info">
               <span class="note-title">{{ note.title }}</span>
               <span class="note-date">{{ formatDate(note.updatedAt, locale) }}</span>
@@ -68,8 +66,7 @@ import { computed } from "vue";
 import { useWorkspace } from "@renderer/features/workspace";
 import { useI18n } from "vue-i18n";
 import { formatDate } from "@renderer/core/utils/date.utils";
-import NoteModeIcon from "../components/NoteModeIcon.vue";
-import plusIconRaw from '@assets/icons/common/plus.svg?raw';
+import { Plus, Notes, NotebookOne } from '@icon-park/vue-next';
 
 const { activeNotebookId, notebooks, notes, selectNote, createNote, selectNotebook } =
   useWorkspace();
@@ -117,27 +114,15 @@ const notebookNotes = computed(() =>
   margin-bottom: 24px;
 }
 
-.title-section {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.title-section .icon {
-  font-size: 2rem;
-}
-
 .title-section h1 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--text);
+  line-height: 1.2;
 }
 
 .btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   padding: 8px 16px;
   border-radius: var(--radius);
   font-size: 0.7rem;
@@ -188,7 +173,8 @@ const notebookNotes = computed(() =>
   color: var(--text);
 }
 
-.notes-section h2 {
+.notes-section h2,
+.notebooks-section h2 {
   font-size: 1.1rem;
   font-weight: 600;
   margin-bottom: 16px;
@@ -206,9 +192,6 @@ const notebookNotes = computed(() =>
   padding: 16px;
   border-radius: var(--radius);
   border: 1px solid var(--panel-border);
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -218,11 +201,6 @@ const notebookNotes = computed(() =>
   background: var(--panel-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.note-icon {
-  font-size: 1.2rem;
-  margin-top: 2px;
 }
 
 .note-info {
@@ -249,13 +227,6 @@ const notebookNotes = computed(() =>
   margin-bottom: 32px;
 }
 
-.notebooks-section h2 {
-  font-size: 1.1rem;
-  font-weight: 600;
-  margin-bottom: 16px;
-  color: var(--text);
-}
-
 .notebooks-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -267,9 +238,6 @@ const notebookNotes = computed(() =>
   padding: 12px 16px;
   border-radius: var(--radius);
   border: 1px solid var(--panel-border);
-  display: flex;
-  align-items: center;
-  gap: 12px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -279,10 +247,6 @@ const notebookNotes = computed(() =>
   background: var(--panel-hover);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.notebook-icon {
-  font-size: 1.2rem;
 }
 
 .notebook-info {

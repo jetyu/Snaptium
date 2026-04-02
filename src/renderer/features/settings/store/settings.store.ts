@@ -34,6 +34,7 @@ export interface AppSettings {
   bracketMatching: boolean;
   autoCloseBrackets: boolean;
   autoIndent: boolean;
+  showStatusBar: boolean;
   aiSources: AISource[];
   aiAssistant: AIAssistantSettings;
   loggingEnabled: boolean;
@@ -57,6 +58,7 @@ export const useSettingsStore = defineStore('settings', () => {
     bracketMatching: true,
     autoCloseBrackets: true,
     autoIndent: true,
+    showStatusBar: true,
     aiSources: [],
     aiAssistant: {
       enabled: false,

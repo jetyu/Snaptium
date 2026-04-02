@@ -58,6 +58,21 @@ const electronAPI = Object.freeze({
   aiAssistant: Object.freeze({
     complete: (payload) => ipcRenderer.invoke(IPC_CHANNELS.AI_ASSISTANT_COMPLETE, payload),
   }),
+  shortcuts: Object.freeze({
+    getCommands: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS),
+    getCommandsByCategory: (category) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS_BY_CATEGORY, category),
+    loadKeybindings: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_LOAD_KEYBINDINGS),
+    saveKeybindings: (keybindings) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_SAVE_KEYBINDINGS, keybindings),
+    addKeybinding: (payload) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_ADD_KEYBINDING, payload),
+    removeKeybinding: (payload) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_REMOVE_KEYBINDING, payload),
+    resetToDefaults: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_RESET_TO_DEFAULTS),
+    detectConflicts: (payload) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_DETECT_CONFLICTS, payload),
+    validateKeybinding: (key) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_VALIDATE_KEYBINDING, key),
+    normalizeKeybinding: (key) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_NORMALIZE_KEYBINDING, key),
+    getKeybindingsForCommand: (commandId) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_KEYBINDINGS_FOR_COMMAND, commandId),
+    exportKeybindings: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_EXPORT_KEYBINDINGS),
+    importKeybindings: (config) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_IMPORT_KEYBINDINGS, config),
+  }),
 });
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI);
