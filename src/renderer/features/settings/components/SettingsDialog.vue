@@ -7,7 +7,7 @@
           <!-- Left Sidebar Navigation -->
           <div class="settings-sidebar">
             <div class="settings-sidebar-header">
-              <h2>{{ t('preferencesTitle') }}</h2>
+              <h2>{{ t('pref.pane.title') }}</h2>
             </div>
 
             <div class="settings-sidebar-menu">
@@ -53,12 +53,12 @@ import { useSettings } from '../composables/useSettings';
 import { Close } from '@icon-park/vue-next';
 import GeneralSettings from './tabs/GeneralSettings.vue';
 import EditorSettings from './tabs/EditorSettings.vue';
-import SecuritySettings from './tabs/SecuritySettings.vue';
 import AISourceSettings from './tabs/AISourceSettings.vue';
 import AIAssistantSettings from './tabs/AIAssistantSettings.vue';
 import RAGSettings from './tabs/RAGSettings.vue';
 import LogSettings from './tabs/LogSettings.vue';
 import ShortcutSettings from './tabs/ShortcutSettings.vue';
+import NoteSettings from './tabs/NoteSettings.vue';
 
 const { t } = useI18n();
 const { isOpen, activeTab, closeSettings, setActiveTab, initMainProcessListeners } = useSettings();
@@ -71,16 +71,16 @@ type TabItem =
   | { id: string; type?: never; labelKey: string; component: unknown };
 
 const tabs: TabItem[] = [
-  { id: 'general', labelKey: 'paneGeneral', component: GeneralSettings },
-  { id: 'editor', labelKey: 'paneEditorSettings', component: EditorSettings },
-  { id: 'security', labelKey: 'paneSecurity', component: SecuritySettings },
+  { id: 'general', labelKey: 'pref.pane.general', component: GeneralSettings },
+  { id: 'note', labelKey: 'pref.pane.note', component: NoteSettings },
+  { id: 'editor', labelKey: 'pref.pane.editor', component: EditorSettings },
   { id: 'sep-1', type: 'separator' },
-  { id: 'ai-sources', labelKey: 'paneAISources', component: AISourceSettings },
-  { id: 'ai-assistant', labelKey: 'paneAIAssistant', component: AIAssistantSettings },
-  { id: 'rag', labelKey: 'paneRAG', component: RAGSettings },
+  { id: 'ai-sources', labelKey: 'pref.pane.aiSources', component: AISourceSettings },
+  { id: 'ai-assistant', labelKey: 'pref.pane.aiAssistant', component: AIAssistantSettings },
+  { id: 'rag', labelKey: 'pref.pane.aiRAG', component: RAGSettings },
   { id: 'sep-2', type: 'separator' },
-  { id: 'shortcuts', labelKey: 'paneShortcuts', component: ShortcutSettings },
-  { id: 'log', labelKey: 'paneLog', component: LogSettings },
+  { id: 'shortcuts', labelKey: 'pref.pane.shortcuts', component: ShortcutSettings },
+  { id: 'log', labelKey: 'pref.pane.log', component: LogSettings },
 ];
 
 const currentComponent = computed(() => {
@@ -129,8 +129,8 @@ onUnmounted(() => {
 
 .settings-modal {
   display: flex;
-  width: 75%;
-  height: 80%;
+  width: 1000px;
+  height: 700px;
   background-color: var(--bg-primary, #ffffff);
   border-radius: 12px;
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);

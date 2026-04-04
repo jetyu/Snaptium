@@ -10,6 +10,7 @@ export const VFS_CONSTANTS = Object.freeze({
   TRASH_FOLDER: 'trash',
   NODES_FILE: 'nodes.jsonl',
   META_FILE: 'meta.json',
+  HISTORY_FOLDER: 'history',
   NODE_TYPE_FILE: 'file',
   NODE_TYPE_FOLDER: 'folder',
   MARKDOWN_FILE_EXT: '.md',

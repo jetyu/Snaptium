@@ -2,10 +2,13 @@ import { ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { settingsService } from '../../services/settings.service.js';
 import { $t } from '../../utils/i18n.js';
+import { remoteAiService } from '../../services/remote-ai.service.js';
+import { loggerService } from '../../services/logger.service.js';
 
 let cachedConfig = null;
 let configLoadTime = 0;
 const CONFIG_CACHE_TTL = 5000; // 5秒缓存
+const logger = loggerService.createLogger('Electron:AI Assistant IPC');
 
 /**
  * 获取配置（带缓存）
@@ -15,7 +18,7 @@ async function getConfig() {
   if (cachedConfig && (now - configLoadTime) < CONFIG_CACHE_TTL) {
     return cachedConfig;
   }
-  
+
   cachedConfig = await settingsService.loadConfig();
   configLoadTime = now;
   return cachedConfig;
@@ -69,79 +72,48 @@ export function registerAiAssistantIpcHandlers() {
       }
 
       // 验证模型
-      const model = aiAssistant.model || source.model;
+      const model = aiAssistant.model || source.defaultModel;
       if (!model) {
         return { success: false, message: 'No model configured' };
       }
 
-      // 准备消息
       const messages = [];
-      
-      // 系统提示词：优先使用自定义，否则使用国际化的默认值
-      const systemPrompt = aiAssistant.systemPrompt?.trim() || $t('defaultAISystemPrompt');
-      messages.push({ role: 'system', content: systemPrompt });
 
-      // 用户消息：直接使用上下文
+      const systemPrompt = aiAssistant.systemPrompt?.trim() || $t('ai.prompt.autoComplete');
+      messages.push({ role: 'system', content: systemPrompt });
       messages.push({ role: 'user', content: context });
 
-      // 调用AI API
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
-
       try {
-        const response = await fetch(source.endpoint, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${source.apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://github.com/jetyu/NoteWizard',
-            'X-Title': 'NoteWizard',
-          },
-          body: JSON.stringify({
-            model,
-            messages,
-            max_tokens: 100,
-            temperature: 0.7,
-            stream: false,
-          }),
-          signal: controller.signal,
+        const data = await remoteAiService.chat({
+          endpoint: source.endpoint,
+          apiKey: source.apiKey,
+          model,
+          messages,
+          max_tokens: 512,
+          temperature: 0.7,
         });
 
-        clearTimeout(timeoutId);
-
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => null);
-          const errorMsg = errorData?.error?.message || `HTTP ${response.status}`;
-          console.error('[AI Assistant] API error:', errorMsg);
-          return { success: false, message: errorMsg };
-        }
-
-        const data = await response.json();
         const completion = data.choices?.[0]?.message?.content?.trim();
 
         if (!completion) {
           return { success: false, message: 'Empty completion response' };
         }
 
-        console.log('[AI Assistant] Completion successful');
+        logger.debug('Completion successful');
         return { success: true, completion };
 
-      } catch (fetchError) {
-        clearTimeout(timeoutId);
-        
-        if (fetchError.name === 'AbortError') {
-          return { success: false, message: 'Request timeout' };
-        }
-        
-        throw fetchError;
+      } catch (error) {
+        logger.error(`API error: ${error instanceof Error ? error.message : String(error)}`);
+        return { success: false, message: error.message };
       }
 
     } catch (error) {
-      console.error('[AI Assistant IPC] Error:', error);
-      return { 
-        success: false, 
-        message: error.message || 'Unknown error occurred' 
+      logger.error(`Unhandled error: ${error instanceof Error ? error.message : String(error)}`);
+      return {
+        success: false,
+        message: error.message || 'Unknown error occurred'
       };
     }
   });
 }
+

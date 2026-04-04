@@ -3,36 +3,20 @@
     <div class="panel-header">
       <h2>{{ t('shortcuts.title') }}</h2>
       <div class="header-actions">
-        <button
-          class="action-button"
-          @click="handleReset"
-        >
+        <button class="action-button" @click="handleReset">
           {{ t('shortcuts.resetToDefaults') }}
         </button>
       </div>
     </div>
 
-    <CommandList
-      @add-shortcut="handleAddShortcut"
-      @remove-shortcut="handleRemoveShortcut"
-    />
+    <CommandList @add-shortcut="handleAddShortcut" @remove-shortcut="handleRemoveShortcut" />
 
     <!-- 添加快捷键对话框 -->
-    <div
-      v-if="showAddDialog"
-      class="dialog-overlay"
-      @click="closeAddDialog"
-    >
-      <div
-        class="dialog"
-        @click.stop
-      >
+    <div v-if="showAddDialog" class="dialog-overlay" @click="closeAddDialog">
+      <div class="dialog" @click.stop>
         <div class="dialog-header">
           <h3>{{ t('shortcuts.addShortcut') }}</h3>
-          <button
-            class="close-button"
-            @click="closeAddDialog"
-          >
+          <button class="close-button" @click="closeAddDialog">
             ×
           </button>
         </div>
@@ -43,39 +27,23 @@
           </div>
           <div class="form-group">
             <label>{{ t('shortcuts.keybinding') }}</label>
-            <ShortcutInput
-              v-model="newShortcutKey"
-              :has-conflict="conflicts.length > 0"
-              @conflict="checkConflicts"
-            />
+            <ShortcutInput v-model="newShortcutKey" :has-conflict="conflicts.length > 0" @conflict="checkConflicts" />
           </div>
-          <div
-            v-if="conflicts.length > 0"
-            class="conflict-warning"
-          >
+          <div v-if="conflicts.length > 0" class="conflict-warning">
             <p>{{ t('shortcuts.conflictWarning') }}</p>
             <ul>
-              <li
-                v-for="conflict in conflicts"
-                :key="conflict.commandId"
-              >
+              <li v-for="conflict in conflicts" :key="conflict.commandId">
                 {{ conflict.commandId }} ({{ conflict.key }})
               </li>
             </ul>
           </div>
         </div>
         <div class="dialog-footer">
-          <button
-            class="button button-secondary"
-            @click="closeAddDialog"
-          >
+          <button class="button button-secondary" @click="closeAddDialog">
             {{ t('common.cancel') }}
           </button>
-          <button
-            class="button button-primary"
-            :disabled="!newShortcutKey || conflicts.length > 0"
-            @click="confirmAddShortcut"
-          >
+          <button class="button button-primary" :disabled="!newShortcutKey || conflicts.length > 0"
+            @click="confirmAddShortcut">
             {{ t('common.confirm') }}
           </button>
         </div>
@@ -89,11 +57,13 @@ import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useShortcutsStore } from '../store/shortcuts.store';
 import type { KeybindingConflict } from '../store/shortcuts.store';
+import { createLogger } from '@renderer/features/logger';
 import CommandList from './CommandList.vue';
 import ShortcutInput from './ShortcutInput.vue';
 
 const { t } = useI18n();
 const shortcutsStore = useShortcutsStore();
+const shortcutsPanelLogger = createLogger('ShortcutsPanel');
 
 const showAddDialog = ref(false);
 const selectedCommandId = ref('');
@@ -111,7 +81,7 @@ async function handleRemoveShortcut(commandId: string, key: string) {
   try {
     await shortcutsStore.removeKeybinding(commandId, key);
   } catch (error) {
-    console.error('Failed to remove shortcut:', error);
+    shortcutsPanelLogger.error(`Failed to remove shortcut: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -120,7 +90,7 @@ async function checkConflicts(key: string) {
     conflicts.value = [];
     return;
   }
-  
+
   conflicts.value = await shortcutsStore.detectConflicts(key, selectedCommandId.value);
 }
 
@@ -133,7 +103,7 @@ async function confirmAddShortcut() {
     await shortcutsStore.addKeybinding(selectedCommandId.value, newShortcutKey.value);
     closeAddDialog();
   } catch (error) {
-    console.error('Failed to add shortcut:', error);
+    shortcutsPanelLogger.error(`Failed to add shortcut: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -152,7 +122,7 @@ async function handleReset() {
   try {
     await shortcutsStore.resetToDefaults();
   } catch (error) {
-    console.error('Failed to reset shortcuts:', error);
+    shortcutsPanelLogger.error(`Failed to reset shortcuts: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 </script>
@@ -160,13 +130,13 @@ async function handleReset() {
 <style scoped>
 .shortcuts-panel {
   display: block;
-  background-color: var(--panel-bg, #fff);
+  background-color: var(--panel);
 }
 
 .panel-header {
   padding: 0 0 16px 0;
   margin-bottom: 16px;
-  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  border-bottom: 1px solid var(--panel-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -174,28 +144,14 @@ async function handleReset() {
 
 .panel-header h2 {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text-color, #333);
+  color: var(--text);
 }
 
 .header-actions {
   display: flex;
   gap: 12px;
-}
-
-.action-button {
-  padding: 8px 16px;
-  border: 1px solid var(--border-color, #ddd);
-  background-color: var(--button-bg, #fff);
-  border-radius: 4px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.action-button:hover {
-  background-color: var(--button-hover-bg, #f5f5f5);
 }
 
 /* 对话框样式 */
@@ -205,7 +161,8 @@ async function handleReset() {
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -213,25 +170,29 @@ async function handleReset() {
 }
 
 .dialog {
-  background-color: var(--dialog-bg, #fff);
-  border-radius: 8px;
+  background-color: var(--panel);
+  border-radius: 12px;
   width: 90%;
   max-width: 500px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--panel-border);
+  overflow: hidden;
 }
 
 .dialog-header {
-  padding: 20px;
-  border-bottom: 1px solid var(--border-color, #e0e0e0);
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--panel-border);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--panel-hover);
 }
 
 .dialog-header h3 {
   margin: 0;
-  font-size: 18px;
+  font-size: 1.1rem;
   font-weight: 600;
+  color: var(--text);
 }
 
 .close-button {
@@ -241,17 +202,22 @@ async function handleReset() {
   border: none;
   background: transparent;
   font-size: 24px;
-  color: var(--text-secondary, #999);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: color 0.2s;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
 }
 
 .close-button:hover {
-  color: var(--text-color, #333);
+  background: var(--panel-hover);
+  color: var(--text);
 }
 
 .dialog-body {
-  padding: 20px;
+  padding: 24px;
 }
 
 .form-group {
@@ -261,54 +227,57 @@ async function handleReset() {
 .form-group label {
   display: block;
   margin-bottom: 8px;
-  font-size: 14px;
+  font-size: 0.9rem;
   font-weight: 500;
-  color: var(--text-color, #333);
+  color: var(--text-muted);
 }
 
 .command-display {
-  padding: 8px 12px;
-  background-color: var(--input-disabled-bg, #f5f5f5);
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 4px;
-  font-family: monospace;
-  font-size: 13px;
-  color: var(--text-secondary, #666);
+  padding: 10px 14px;
+  background-color: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 0.85rem;
+  color: var(--text);
 }
 
 .conflict-warning {
-  padding: 12px;
-  background-color: var(--warning-bg, #fff3cd);
-  border: 1px solid var(--warning-border, #ffc107);
-  border-radius: 4px;
-  font-size: 13px;
+  padding: 12px 16px;
+  background-color: color-mix(in srgb, var(--danger) 10%, transparent);
+  border: 1px solid var(--danger);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  margin-top: 16px;
 }
 
 .conflict-warning p {
   margin: 0 0 8px 0;
-  font-weight: 500;
-  color: var(--warning-text, #856404);
+  font-weight: 600;
+  color: var(--danger);
 }
 
 .conflict-warning ul {
   margin: 0;
   padding-left: 20px;
-  color: var(--warning-text, #856404);
+  color: var(--danger);
 }
 
 .dialog-footer {
   padding: 16px 20px;
-  border-top: 1px solid var(--border-color, #e0e0e0);
+  border-top: 1px solid var(--panel-border);
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  background: var(--panel-hover);
 }
 
 .button {
   padding: 8px 20px;
   border: none;
-  border-radius: 4px;
-  font-size: 14px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -319,20 +288,22 @@ async function handleReset() {
 }
 
 .button-secondary {
-  background-color: var(--button-secondary-bg, #f5f5f5);
-  color: var(--text-color, #333);
+  background-color: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text);
 }
 
 .button-secondary:hover:not(:disabled) {
-  background-color: var(--button-secondary-hover-bg, #e0e0e0);
+  background-color: var(--panel-hover);
 }
 
 .button-primary {
-  background-color: var(--primary-color, #007bff);
+  background-color: var(--accent);
   color: #fff;
 }
 
 .button-primary:hover:not(:disabled) {
-  background-color: var(--primary-hover-color, #0056b3);
+  background-color: var(--accent-hover);
+  transform: translateY(-1px);
 }
 </style>

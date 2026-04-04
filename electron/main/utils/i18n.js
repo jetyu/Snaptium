@@ -3,8 +3,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
+import { loggerService } from '../services/logger.service.js';
+
+const logger = loggerService.createLogger('Electron:I18n Utils');
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const localesDir = path.resolve(__dirname, '../../assets/locales');
 
 class I18n {
   constructor() {
@@ -14,8 +19,7 @@ class I18n {
   }
 
   resolveLocale(lang = this.locale) {
-    const localesDir = path.resolve(__dirname, '../../../src/renderer/features/i18n/locales');
-     const requestedPath = path.join(localesDir, `${lang}${VFS_CONSTANTS.JSON_FILE_EXT}`);
+    const requestedPath = path.join(localesDir, `${lang}${VFS_CONSTANTS.JSON_FILE_EXT}`);
     if (fs.existsSync(requestedPath)) {
       return lang;
     }
@@ -30,8 +34,6 @@ class I18n {
   loadTranslations(lang = this.locale) {
     const targetLang = this.resolveLocale(lang);
     this.locale = targetLang;
-    const localesDir = path.resolve(__dirname, '../../../src/renderer/features/i18n/locales');
-
     const filePath = path.join(localesDir, `${targetLang}${VFS_CONSTANTS.JSON_FILE_EXT}`);
 
     try {
@@ -39,7 +41,6 @@ class I18n {
         const content = fs.readFileSync(filePath, 'utf8');
         this.translations = JSON.parse(content);
       } else {
-        // Fallback to en-US
         const fallbackPath = path.join(localesDir, 'en-US.json');
         if (fs.existsSync(fallbackPath)) {
           const content = fs.readFileSync(fallbackPath, 'utf8');
@@ -47,21 +48,13 @@ class I18n {
         }
       }
     } catch (error) {
-      console.error('Failed to load translations in main process:', error);
+      logger.error('Failed to load translations in main process', error);
     }
   }
 
-  /**
-   * Translate key, supports dot notation for nested objects or flat keys.
-   * @param {string} key 
-   * @param {string} defaultValue 
-   * @returns {string}
-   */
   t(key, defaultValue = '') {
-    // 1. Try exact match (flat key like "menu.file")
     if (this.translations[key]) return this.translations[key];
 
-    // 2. Try nested resolution
     const parts = key.split('.');
     let current = this.translations;
     for (const part of parts) {

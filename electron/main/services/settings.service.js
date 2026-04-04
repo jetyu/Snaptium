@@ -3,6 +3,10 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { $t } from '../utils/i18n.js';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
+import { UPDATER_CONSTANTS } from '../constants/updater.constants.js';
+import { loggerService } from './logger.service.js';
+
+const logger = loggerService.createLogger('Electron:Settings Service');
 
 export const settingsService = {
   getSettingsPath() {
@@ -33,8 +37,12 @@ export const settingsService = {
         systemPrompt: '',
       },
       loggingEnabled: false,
-      logLevel: 'info',
+      logLevel: 'error',
       noteSavePath: path.join(app.getPath(VFS_CONSTANTS.DOCUMENTS_FOLDER), VFS_CONSTANTS.CURRENT_WORKSPACE_NAME),
+      autoCheckUpdates: true,
+      updateCheckInterval: UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL,
+      maxHistoryVersions: 50,
+      trashAutoClearDays: 30,
     };
   },
 
@@ -49,7 +57,7 @@ export const settingsService = {
       return { ...this.getDefaultConfig(), ...parsed };
     } catch (error) {
       if (error.code !== 'ENOENT') {
-        console.error('Failed to load settings:', error);
+        logger.error('Failed to load settings', { error: error.message });
       }
       return this.getDefaultConfig();
     }
@@ -66,7 +74,7 @@ export const settingsService = {
       await fs.writeFile(filePath, JSON.stringify(nextConfig, null, 2), 'utf-8');
       return nextConfig;
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      logger.error('Failed to save settings', { error: error.message });
       throw error;
     }
   },
@@ -87,7 +95,7 @@ export const settingsService = {
         supported: true,
       };
     } catch (error) {
-      console.error('Failed to set auto launch:', error);
+      logger.error('Failed to set auto launch', { error: error.message });
       return {
         enabled,
         supported: false,
@@ -111,5 +119,64 @@ export const settingsService = {
     }
 
     return result.filePaths[0];
+  },
+
+  /**
+   * Export settings to a JSON file
+   */
+  async exportConfig() {
+    const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+    const result = await dialog.showSaveDialog(focusedWindow, {
+      title: $t('pref.setting.backupFileName'),
+      defaultPath: path.join(app.getPath('desktop'), $t('pref.setting.backupFileName') + '.json'),
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    });
+
+    if (result.canceled || !result.filePath) {
+      return false;
+    }
+
+    try {
+      const currentFilePath = this.getSettingsPath();
+      await fs.copyFile(currentFilePath, result.filePath);
+      return true;
+    } catch (error) {
+      logger.error('Failed to export settings', { error: error.message });
+      throw error;
+    }
+  },
+
+  /**
+   * Import settings from a JSON file and restart the application
+   */
+  async importConfig() {
+    const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+    const result = await dialog.showOpenDialog(focusedWindow, {
+      title: $t('pref.setting.backupFileName'),
+      properties: ['openFile'],
+      filters: [{ name: 'JSON', extensions: ['json'] }]
+    });
+
+    if (result.canceled || result.filePaths.length === 0) {
+      return false;
+    }
+
+    try {
+      const importPath = result.filePaths[0];
+      const content = await fs.readFile(importPath, 'utf-8');
+
+      // Basic validation
+      JSON.parse(content);
+
+      const targetFilePath = this.getSettingsPath();
+      await fs.copyFile(importPath, targetFilePath);
+
+      return true;
+    } catch (error) {
+      logger.error('Failed to import settings', { error: error.message });
+      throw error;
+    }
   }
 };

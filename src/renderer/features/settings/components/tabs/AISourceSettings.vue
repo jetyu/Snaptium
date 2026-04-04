@@ -3,7 +3,7 @@ import { ref, computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../store/settings.store';
 import { createLogger } from '../../../logger';
-import { Info, Plus, Light, Delete } from '@icon-park/vue-next';
+import { Plus, Light, Delete, Attention } from '@icon-park/vue-next';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
@@ -94,7 +94,7 @@ const handleTestNewSource = async () => {
       testSuccess.value = true;
       aisLogger.info('Connection test successful');
     } else {
-      testError.value = result?.message || t('testConnectionFailed');
+      testError.value = result?.message || t('message.failed.testConnectionFailed');
       aisLogger.warn(`Connection test failed: ${testError.value}`);
     }
   } catch (err) {
@@ -122,7 +122,7 @@ const cancelDelete = () => {
 <template>
   <div class="ai-source-settings">
     <div class="header-actions">
-      <h3 class="panel-title">{{ t('paneAISources') }}</h3>
+      <h3 class="panel-title">{{ t('pref.pane.aiSources') }}</h3>
     </div>
 
 
@@ -135,7 +135,7 @@ const cancelDelete = () => {
               <h4 class="source-title">{{ source.name }}</h4>
               <div class="delete-actions">
                 <template v-if="deleteConfirmId === source.id">
-                  <span class="delete-confirm-text">{{ t('confirmDeleteSource') }}</span>
+                  <span class="delete-confirm-text">{{ t('dialogue.confirmDeleteSource') }}</span>
                   <button class="delete-btn-confirm" @click="removeSource(source.id)">Y</button>
                   <button class="delete-btn-cancel" @click="cancelDelete">N</button>
                 </template>
@@ -146,15 +146,15 @@ const cancelDelete = () => {
             </div>
             <div class="source-details">
               <div class="detail-item">
-                <span class="label">{{ t('labelAIEndpoint') }}</span>
+                <span class="label">{{ t('label.aiApiEndpoint') }}</span>
                 <span class="value">{{ source.endpoint }}</span>
               </div>
               <div class="detail-item">
-                <span class="label">{{ t('labelAIModel') }}</span>
+                <span class="label">{{ t('label.aiModel') }}</span>
                 <span class="value">{{ source.defaultModel }}</span>
               </div>
               <div class="detail-item">
-                <span class="label">{{ t('labelAIApiKey') }}</span>
+                <span class="label">{{ t('label.aiApiKey') }}</span>
                 <span class="value">••••••••••••••••</span>
               </div>
             </div>
@@ -166,38 +166,40 @@ const cancelDelete = () => {
       <div v-if="showAddForm" class="add-form-card">
         <div class="form-group">
           <label class="setting-label">
-            {{ t('labelSourceName') }} <span class="required-mark">{{ t('labelStar') }}</span>
+            {{ t('label.sourceName') }} <span class="required-mark">{{ t('label.starSign') }}</span>
             <span class="char-counter">{{ newSource.name.length }}/10</span>
           </label>
           <input v-model="newSource.name" type="text" class="settings-input" maxlength="10"
-            :placeholder="t('placeholderSourceName')" />
+            :placeholder="t('placeholder.sourceName')" />
         </div>
 
         <div class="form-group">
-          <label class="setting-label">{{ t('labelAIEndpoint') }} <span class="required-mark">{{ t('labelStar')
-          }}</span></label>
+          <label class="setting-label">{{ t('label.aiApiEndpoint') }} <span class="required-mark">{{ t('label.starSign')
+              }}</span></label>
           <input v-model="newSource.endpoint" type="text" class="settings-input"
-            :placeholder="t('placeholderAIEndpoint')" />
+            :placeholder="t('placeholder.aiAPIEndpoint')" />
         </div>
         <div class="form-group">
-          <label class="setting-label">{{ t('labelAiModel') }} <span class="required-mark">{{ t('labelStar')
-          }}</span></label>
+          <label class="setting-label">{{ t('label.aiModel') }} <span class="required-mark">{{ t('label.starSign')
+              }}</span></label>
           <input v-model="newSource.defaultModel" type="text" class="settings-input"
-            :placeholder="t('placeholderAiModel')" />
+            :placeholder="t('placeholder.aiModel')" />
         </div>
         <div class="form-group">
-          <label class="setting-label">{{ t('labelAIApiKey') }} <span class="required-mark">{{ t('labelStar')
-          }}</span></label>
+          <label class="setting-label">{{ t('label.aiApiKey') }} <span class="required-mark">{{ t('label.starSign')
+              }}</span></label>
           <input v-model="newSource.apiKey" type="password" class="settings-input"
-            :placeholder="t('placeholderApiKey')" />
+            :placeholder="t('placeholder.aiAPIKey')" />
         </div>
         <p v-if="addError" class="add-error-text">{{ addError }}</p>
         <div class="form-actions-row">
           <div class="test-status">
             <transition name="fade">
               <span v-if="!isFormValid" class="status-badge hint">
-                <span class="icon-wrapper"><Info theme="outline" :size="16" /></span>
-                {{ t('InputAllFields') }}
+                <span class="icon-wrapper">
+                  <Attention theme="outline" :size="16" />
+                </span>
+                {{ t('text.inputAllFields') }}
               </span>
               <span v-else-if="testSuccess" class="status-badge success">
                 {{ t('testConnectionSuccess') }}
@@ -206,14 +208,14 @@ const cancelDelete = () => {
                 {{ testError.length > 50 ? testError.substring(0, 50) + '...' : testError }}
               </span>
               <span v-else-if="isTesting" class="status-badge testing">
-                <span class="spinner small"></span> {{ t('btnTesting') }}...
+                <span class="spinner small"></span> {{ t('button.testing') }}...
               </span>
             </transition>
           </div>
 
           <div class="buttons">
             <button class="action-button secondary" @click="handleTestNewSource" :disabled="!canTest || isTesting">
-              {{ t('btnTestConnection') }}
+              {{ t('button.testConnection') }}
             </button>
             <button class="action-button secondary" @click="showAddForm = false">
               {{ t('dialog.cancel') }}
@@ -235,7 +237,7 @@ const cancelDelete = () => {
         <div class="add-icon">
           <Plus theme="outline" :size="24" />
         </div>
-        <span>{{ t('btnAddSource') }}</span>
+        <span>{{ t('button.addAISource') }}</span>
       </div>
 
       <div v-if="settingsStore.config.aiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card"
@@ -243,8 +245,8 @@ const cancelDelete = () => {
         <div class="empty-icon">
           <Light theme="outline" :size="48" />
         </div>
-        <p class="empty-text">{{ t('NoAiSourcesFound') }}</p>
-        <span class="empty-action-text">{{ t('btnAddSource') }}</span>
+        <p class="empty-text">{{ t('text.noAISourcesFound') }}</p>
+        <span class="empty-action-text">{{ t('button.addAISource') }}</span>
       </div>
     </div>
   </div>

@@ -3,6 +3,8 @@ import { ref, toRaw } from 'vue';
 import { settingsService } from '../services/settings.service';
 import { switchLanguage } from '@renderer/features/i18n';
 import { createLogger } from '@renderer/features/logger';
+import { DEFAULT_RAG_CONFIG } from '@renderer/features/rag/constants/rag.constants';
+import { UPDATER_CONSTANTS } from '@renderer/features/updater/constants/updater.constants';
 
 export interface AISource {
   id: string;
@@ -21,6 +23,20 @@ export interface AIAssistantSettings {
   systemPrompt: string;
 }
 
+export interface RAGSettings {
+  enabled: boolean;
+  embeddingSourceId: string;
+  embeddingModel: string;
+  ragChatSourceId: string;
+  ragChatModel: string;
+  chunkSize: number;
+  chunkOverlap: number;
+  topK: number;
+  similarityThreshold: number;
+  autoIndex: boolean;
+  indexOnSave: boolean;
+}
+
 export interface AppSettings {
   language: string;
   autoStartup: boolean;
@@ -37,9 +53,15 @@ export interface AppSettings {
   showStatusBar: boolean;
   aiSources: AISource[];
   aiAssistant: AIAssistantSettings;
+  rag: RAGSettings;
   loggingEnabled: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
   noteSavePath: string;
+  autoCheckUpdates: boolean;
+  updateCheckInterval: number;
+  maxHistoryVersions: number;
+  trashAutoClearDays: number;
+  snapshotInterval: number;
   // ... future properties
 }
 
@@ -68,9 +90,15 @@ export const useSettingsStore = defineStore('settings', () => {
       minInputLength: 10,
       systemPrompt: '',
     },
+    rag: { ...DEFAULT_RAG_CONFIG },
     loggingEnabled: false,
     logLevel: 'info',
     noteSavePath: '',
+    autoCheckUpdates: true,
+    updateCheckInterval: UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL,
+    maxHistoryVersions: 50,
+    trashAutoClearDays: 30,
+    snapshotInterval: 10,
   });
 
   const isLoading = ref(false);
@@ -166,6 +194,26 @@ export const useSettingsStore = defineStore('settings', () => {
   };
 
   /**
+   * Update RAG specific setting
+   */
+  const updateRAGSetting = async <K extends keyof RAGSettings>(
+    key: K,
+    value: RAGSettings[K]
+  ) => {
+    config.value.rag[key] = value;
+
+    // Auto-update model if embeddingSourceId changes
+    if (key === 'embeddingSourceId') {
+      const source = config.value.aiSources.find(s => s.id === String(value));
+      if (source && source.defaultModel) {
+        config.value.rag.embeddingModel = source.defaultModel;
+      }
+    }
+
+    await saveSettings({});
+  };
+
+  /**
    * Add a new AI source
    */
   const addAiSource = async (source: Omit<AISource, 'id'>) => {
@@ -221,14 +269,14 @@ export const useSettingsStore = defineStore('settings', () => {
         }
       }
 
-      return await window.electronAPI.aiSource?.testConnection(payload) ?? { success: false, message: 'AI source bridge unavailable' };
+      return await settingsService.testConnection(payload);
     } catch (e) {
       settingsLogger.error(`Failed to test AI connection: ${e}`);
       return { success: false, message: String(e) };
     }
   };
 
-  const openLogDir = (): Promise<boolean | undefined> => window.electronAPI.logger?.openDir();
+  const openLogDir = (): Promise<boolean | undefined> => settingsService.openLogDir();
 
   return {
     config,
@@ -239,6 +287,7 @@ export const useSettingsStore = defineStore('settings', () => {
     setAutoStartup,
     updateSetting,
     updateAssistantSetting,
+    updateRAGSetting,
     addAiSource,
     removeAiSource,
     updateAiSource,

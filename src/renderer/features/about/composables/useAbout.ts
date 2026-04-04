@@ -3,6 +3,9 @@ import { storeToRefs } from 'pinia';
 import { useAboutStore } from '../store/about.store';
 import { aboutService } from '../services/about.service';
 import type { EnvVersionInfo } from '../services/about.service';
+import { createLogger } from '@renderer/features/logger';
+
+const aboutLogger = createLogger('About');
 
 export function useAbout() {
   const aboutStore = useAboutStore();
@@ -22,18 +25,14 @@ export function useAbout() {
       appName.value = await aboutService.getAppName();
       envVersion.value = await aboutService.getEnvVersion();
     } catch (error) {
-      console.error('Failed to load version info:', error);
+      aboutLogger.error(`Failed to load version info: ${error instanceof Error ? error.message : String(error)}`);
     }
   };
 
   const initMainProcessListeners = () => {
-    if (!window.electronAPI.menu) {
-      return () => {};
-    }
-    const removeListener = window.electronAPI.menu.onOpenAbout(() => {
+    return aboutService.onOpenAbout(() => {
       aboutStore.openAbout();
     });
-    return removeListener;
   };
 
   return {

@@ -17,7 +17,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@renderer': path.resolve(__dirname, 'src/renderer'),
-      '@assets': path.resolve(__dirname, 'src/assets'),
+      '@assets': path.resolve(__dirname, 'electron/assets'),
     },
   },
   server: {

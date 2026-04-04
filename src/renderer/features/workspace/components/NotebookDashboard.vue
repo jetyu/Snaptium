@@ -96,7 +96,7 @@ const notebookNotes = computed(() =>
 .notebook-dashboard {
   flex: 1;
   overflow-y: auto;
-  background: var(--bg);
+  background: var(--panel);
   padding: 32px;
   display: flex;
   justify-content: center;

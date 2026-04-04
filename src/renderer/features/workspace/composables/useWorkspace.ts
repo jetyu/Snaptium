@@ -31,5 +31,6 @@ export function useWorkspace() {
     updateActiveContent: store.updateActiveContent,
     toggleNodeLock: store.toggleNodeLock,
     forceFlushAutoSave: store.forceFlushAutoSave,
+    openHistoryDialog: store.openHistoryDialog,
   };
 }

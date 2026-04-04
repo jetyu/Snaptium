@@ -21,7 +21,7 @@ interface Props {
   selectedText?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   cursorPosition: null,
   selectedText: '',
 });

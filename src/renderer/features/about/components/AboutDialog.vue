@@ -51,7 +51,7 @@
             </div>
 
             <div class="about-footer">
-              <p>{{ t('copyrights') }}</p>
+              <p>{{ t('about.copyrights') }}</p>
             </div>
           </div>
         </div>

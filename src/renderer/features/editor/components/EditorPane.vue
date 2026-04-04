@@ -1,6 +1,6 @@
 <template>
   <div class="editor-pane">
-    <div ref="editorHost" class="editor-host" />
+    <div ref="editorHost" class="editor-host" @contextmenu.prevent="handleContextMenu" />
   </div>
 </template>
 
@@ -11,6 +11,8 @@ import { useWorkspaceStore } from '@renderer/features/workspace';
 import { useSettingsStore } from '@renderer/features/settings';
 import { useEditor } from '@renderer/features/editor';
 import { useAiAssistant } from '@renderer/features/ai/composables/useAiAssistant';
+import { useEditorContextMenu } from '../composables/useEditorContextMenu';
+import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 
 const props = defineProps<{
@@ -22,6 +24,7 @@ const emit = defineEmits<{
   'selection-change': [selection: { line: number; column: number; selectedText: string }];
 }>();
 
+const { t } = useI18n();
 const workspaceStore = useWorkspaceStore();
 const settingsStore = useSettingsStore();
 const { setEditorView } = useEditor();
@@ -33,6 +36,30 @@ const { config } = storeToRefs(settingsStore);
 const editorHost = ref<HTMLElement | null>(null);
 let editorApi: ReturnType<typeof createCodeEditor> | undefined;
 let syncingFromEditor = false;
+
+const editorContextMenu = useEditorContextMenu({
+  t,
+  editorView: () => editorApi?.view ?? null,
+  aiAssistantEnabled: () => config.value.aiAssistant?.enabled ?? false,
+  getAiConfig: () => {
+    const sourceId = config.value.aiAssistant?.sourceId;
+    if (!sourceId) return null;
+
+    const sources = config.value.aiSources || [];
+    const source = sources.find((s: any) => s.id === sourceId);
+    if (!source) return null;
+
+    return {
+      endpoint: source.endpoint,
+      apiKey: source.apiKey,
+      model: config.value.aiAssistant?.model || source.defaultModel || '',
+    };
+  },
+});
+
+const handleContextMenu = () => {
+  editorContextMenu.openContextMenu();
+};
 
 defineExpose({
   getEditorApi: () => editorApi,
@@ -61,16 +88,7 @@ onMounted(() => {
 
       // 触发AI助手
       if (editorApi?.view && config.value.aiAssistant?.enabled) {
-        // 如果是AI补全导致的变化，立即请求下一次补全（连续补全）
-        if (isAiCompletion) {
-          // 短延迟后请求下一次补全，让用户有机会看到插入的内容
-          setTimeout(() => {
-            if (editorApi?.view) {
-              aiAssistant.requestCompletion(editorApi.view, config.value);
-            }
-          }, 300); // 300ms 短延迟
-        } else {
-          // 用户输入，使用正常的延迟
+        if (!isAiCompletion) {
           aiAssistant.handleTyping(editorApi.view, config.value);
         }
       }

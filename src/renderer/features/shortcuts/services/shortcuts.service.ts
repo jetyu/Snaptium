@@ -1,4 +1,5 @@
 import type { Command, Keybinding, KeybindingsConfig, KeybindingConflict } from '../store/shortcuts.store';
+import { electronApi } from '@renderer/core/bridge/electronApi';
 
 /**
  * 快捷键服务 - 渲染进程
@@ -9,7 +10,7 @@ export const shortcutsService = {
    * 获取所有命令
    */
   async getCommands(): Promise<Command[]> {
-    const result = await window.electronAPI.shortcuts?.getCommands();
+    const result = await electronApi.shortcuts.getCommands();
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to get commands');
     }
@@ -20,7 +21,7 @@ export const shortcutsService = {
    * 根据分类获取命令
    */
   async getCommandsByCategory(category: string): Promise<Command[]> {
-    const result = await window.electronAPI.shortcuts?.getCommandsByCategory(category);
+    const result = await electronApi.shortcuts.getCommandsByCategory(category);
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to get commands by category');
     }
@@ -31,7 +32,7 @@ export const shortcutsService = {
    * 加载快捷键配置
    */
   async loadKeybindings(): Promise<Keybinding[]> {
-    const result = await window.electronAPI.shortcuts?.loadKeybindings();
+    const result = await electronApi.shortcuts.loadKeybindings();
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to load keybindings');
     }
@@ -42,7 +43,7 @@ export const shortcutsService = {
    * 保存快捷键配置
    */
   async saveKeybindings(keybindings: Keybinding[]): Promise<Keybinding[]> {
-    const result = await window.electronAPI.shortcuts?.saveKeybindings(keybindings);
+    const result = await electronApi.shortcuts.saveKeybindings(keybindings);
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to save keybindings');
     }
@@ -53,7 +54,7 @@ export const shortcutsService = {
    * 添加快捷键绑定
    */
   async addKeybinding(commandId: string, key: string, when?: string | null): Promise<Keybinding[]> {
-    const result = await window.electronAPI.shortcuts?.addKeybinding({
+    const result = await electronApi.shortcuts.addKeybinding({
       commandId,
       key,
       when,
@@ -68,7 +69,7 @@ export const shortcutsService = {
    * 删除快捷键绑定
    */
   async removeKeybinding(commandId: string, key: string): Promise<Keybinding[]> {
-    const result = await window.electronAPI.shortcuts?.removeKeybinding({
+    const result = await electronApi.shortcuts.removeKeybinding({
       commandId,
       key,
     });
@@ -82,7 +83,7 @@ export const shortcutsService = {
    * 重置为默认快捷键
    */
   async resetToDefaults(): Promise<Keybinding[]> {
-    const result = await window.electronAPI.shortcuts?.resetToDefaults();
+    const result = await electronApi.shortcuts.resetToDefaults();
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to reset keybindings');
     }
@@ -93,7 +94,7 @@ export const shortcutsService = {
    * 检测快捷键冲突
    */
   async detectConflicts(key: string, excludeCommandId?: string): Promise<KeybindingConflict[]> {
-    const result = await window.electronAPI.shortcuts?.detectConflicts({
+    const result = await electronApi.shortcuts.detectConflicts({
       key,
       excludeCommandId,
     });
@@ -107,7 +108,7 @@ export const shortcutsService = {
    * 验证快捷键格式
    */
   async validateKeybinding(key: string): Promise<boolean> {
-    const result = await window.electronAPI.shortcuts?.validateKeybinding(key);
+    const result = await electronApi.shortcuts.validateKeybinding(key);
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to validate keybinding');
     }
@@ -118,7 +119,7 @@ export const shortcutsService = {
    * 规范化快捷键格式
    */
   async normalizeKeybinding(key: string): Promise<string> {
-    const result = await window.electronAPI.shortcuts?.normalizeKeybinding(key);
+    const result = await electronApi.shortcuts.normalizeKeybinding(key);
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to normalize keybinding');
     }
@@ -129,7 +130,7 @@ export const shortcutsService = {
    * 获取命令的快捷键
    */
   async getKeybindingsForCommand(commandId: string): Promise<Keybinding[]> {
-    const result = await window.electronAPI.shortcuts?.getKeybindingsForCommand(commandId);
+    const result = await electronApi.shortcuts.getKeybindingsForCommand(commandId);
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to get keybindings for command');
     }
@@ -140,7 +141,7 @@ export const shortcutsService = {
    * 导出快捷键配置
    */
   async exportKeybindings(): Promise<KeybindingsConfig> {
-    const result = await window.electronAPI.shortcuts?.exportKeybindings();
+    const result = await electronApi.shortcuts.exportKeybindings();
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to export keybindings');
     }
@@ -151,7 +152,7 @@ export const shortcutsService = {
    * 导入快捷键配置
    */
   async importKeybindings(config: KeybindingsConfig): Promise<Keybinding[]> {
-    const result = await window.electronAPI.shortcuts?.importKeybindings(config);
+    const result = await electronApi.shortcuts.importKeybindings(config);
     if (!result || !result.success) {
       throw new Error(result?.error || 'Failed to import keybindings');
     }

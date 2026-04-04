@@ -1,0 +1,133 @@
+import type { EditorView } from '@codemirror/view';
+import { electronApi } from '@renderer/core/bridge/electronApi';
+import { createLogger } from '@renderer/features/logger';
+import {
+  showNativeEditorContextMenu,
+  getEditorContextMenu,
+  executeEditorAction,
+  getSelectedText,
+  hasSelection as checkHasSelection,
+  replaceSelectedText,
+  type EditorContextAction,
+} from '../services/editorContextMenu.service';
+import { EDITOR_CONSTANTS } from '../constants/editor.constants';
+ 
+const logger = createLogger('Editor Context Menu');
+
+interface UseEditorContextMenuOptions {
+  t: (key: string, named?: Record<string, unknown>) => string;
+  editorView: () => EditorView | null;
+  aiAssistantEnabled: () => boolean;
+  getAiConfig: () => { endpoint: string; apiKey: string; model: string } | null;
+}
+
+export function useEditorContextMenu(options: UseEditorContextMenuOptions) {
+  /**
+   * 处理AI文本操作
+   */
+  async function handleAiOperation(operation: string, selectedText: string) {
+    const view = options.editorView();
+    if (!view || !selectedText) return;
+
+    const aiConfig = options.getAiConfig();
+    if (!aiConfig) {
+      logger.error('AI configuration not available');
+      return;
+    }
+
+    try {
+      let promptKey = 'ai.prompt.default';
+      switch (operation) {
+        case EDITOR_CONSTANTS.ACTIONS.AI_REWRITE:
+          promptKey = 'ai.prompt.rewrite';
+          break;
+        case EDITOR_CONSTANTS.ACTIONS.AI_EXPAND:
+          promptKey = 'ai.prompt.expand';
+          break;
+        case EDITOR_CONSTANTS.ACTIONS.AI_SIMPLIFY:
+          promptKey = 'ai.prompt.simplify';
+          break;
+        case EDITOR_CONSTANTS.ACTIONS.AI_SUMMARIZE:
+          promptKey = 'ai.prompt.summarize';
+          break;
+      }
+
+      const systemPrompt = options.t(promptKey);
+
+      const result = await electronApi.aiChat.generate({
+        endpoint: aiConfig.endpoint,
+        apiKey: aiConfig.apiKey,
+        model: aiConfig.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: selectedText },
+        ],
+      });
+
+      if (result.success && result.answer) {
+        replaceSelectedText(view, result.answer);
+      } else {
+        logger.error('AI operation failed:', { error: result.error });
+      }
+    } catch (error) {
+      logger.error('AI operation error:', { error });
+    }
+  }
+
+  /**
+   * 执行右键菜单操作
+   */
+  async function runAction(action: EditorContextAction) {
+    const view = options.editorView();
+    if (!view || !action) return;
+
+    // 处理基础编辑操作
+    const basicActions = [
+      EDITOR_CONSTANTS.ACTIONS.CUT,
+      EDITOR_CONSTANTS.ACTIONS.COPY,
+      EDITOR_CONSTANTS.ACTIONS.PASTE,
+      EDITOR_CONSTANTS.ACTIONS.DELETE,
+      EDITOR_CONSTANTS.ACTIONS.SELECT_ALL,
+    ] as const;
+    
+    if (basicActions.includes(action as any)) {
+      executeEditorAction(action, view);
+      return;
+    }
+
+    // 处理AI操作
+    const aiActions = [
+      EDITOR_CONSTANTS.ACTIONS.AI_REWRITE,
+      EDITOR_CONSTANTS.ACTIONS.AI_EXPAND,
+      EDITOR_CONSTANTS.ACTIONS.AI_SIMPLIFY,
+      EDITOR_CONSTANTS.ACTIONS.AI_SUMMARIZE,
+    ] as const;
+    
+    if (aiActions.includes(action as any)) {
+      const selectedText = getSelectedText(view);
+      if (selectedText) {
+        await handleAiOperation(action, selectedText);
+      }
+    }
+  }
+
+  /**
+   * 打开右键菜单
+   */
+  async function openContextMenu() {
+    const view = options.editorView();
+    const action = await showNativeEditorContextMenu(
+      options.t,
+      getEditorContextMenu(options.aiAssistantEnabled(), checkHasSelection(view))
+    );
+    
+    if (action) {
+      await runAction(action);
+    }
+  }
+
+  return {
+    openContextMenu,
+  };
+}
+

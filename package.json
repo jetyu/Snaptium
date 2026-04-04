@@ -1,9 +1,10 @@
 {
-  "name": "Pilotra",
+  "name": "Pilotrix",
   "version": "2.0.0",
+  "author": "Notewizard Team",
   "private": true,
   "type": "module",
-  "description": "Electron + Vue 3 + CodeMirror 6 + Markdown-It scaffold",
+  "description": "Pilotrix Installer",
   "main": "main.js",
   "scripts": {
     "dev:renderer": "vite",
@@ -31,6 +32,9 @@
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.6",
     "@icon-park/vue-next": "^1.4.2",
+    "@lancedb/lancedb": "^0.27.2",
+    "apache-arrow": "^18.1.0",
+    "electron-updater": "^6.8.3",
     "markdown-it": "^14.1.0",
     "pinia": "^2.2.4",
     "sanitize-html": "^2.17.0",
@@ -49,7 +53,7 @@
     "@vitest/coverage-v8": "^4.1.0",
     "@vue/eslint-config-typescript": "^14.2.0",
     "concurrently": "^8.2.2",
-    "electron": "^41.0.3",
+    "electron": "^41.1.1",
     "electron-builder": "^26.8.1",
     "eslint": "^9.15.0",
     "eslint-plugin-vue": "^9.32.0",
@@ -63,18 +67,129 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.app.pilotra",
+    "appId": "com.app.Pilotra",
     "productName": "Pilotra",
+    "copyright": "Copyright © 2026 ${author}",
     "directories": {
-      "output": "dist"
+      "output": "dist",
+      "buildResources": "assets"
+    },
+    "compression": "maximum",
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "jetyu",
+        "repo": "Pilotra",
+        "vPrefixedTagName": true
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Pilotra-Windows-${arch}.${ext}",
+      "icon": "electron/assets/logo/app-logo.ico",
+      "verifyUpdateCodeSignature": false
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "artifactName": "Pilotra-macOS-${arch}.${ext}",
+      "icon": "electron/assets/logo/app-logo.icns",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": null,
+      "entitlementsInherit": null
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 400
+      }
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "rpm",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "artifactName": "Pilotra-Linux-${arch}.${ext}",
+      "icon": "electron/assets/logo/app-logo-512.png",
+      "category": "Office",
+      "maintainer": "Pilotra Team",
+      "vendor": "Pilotra",
+      "synopsis": "A powerful note-taking application",
+      "description": "Pilotra is a modern, feature-rich note-taking application for organizing your thoughts and ideas."
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Pilotra",
+      "uninstallDisplayName": "Pilotra",
+      "deleteAppDataOnUninstall": true
     },
     "files": [
+      "dist/renderer/**/*",
       "electron/**/*",
-      "src/**/*",
-      "index.html",
-      "vite.config.ts",
       "main.js",
       "package.json"
+    ],
+    "asar": true,
+    "asarUnpack": [
+      "**/node_modules/codemirror/**",
+      "**/node_modules/lancedb/**",
+      "**/node_modules/apache-arrow/**",
+      "**/node_modules/markdown-it/**"
     ]
   }
 }

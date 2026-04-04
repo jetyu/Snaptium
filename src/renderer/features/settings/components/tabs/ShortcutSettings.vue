@@ -3,41 +3,21 @@
     <h3 class="panel-title">{{ t('shortcuts.title') }}</h3>
 
     <div class="shortcuts-container">
-      <div
-        v-for="[category, cmds] in shortcutsStore.commandsByCategory"
-        :key="category"
-        class="category-section"
-      >
+      <div v-for="[category, cmds] in shortcutsStore.commandsByCategory" :key="category" class="category-section">
         <h4 class="category-title">{{ t(`shortcuts.category.${category}`) }}</h4>
         <div class="shortcuts-list">
-          <div
-            v-for="command in cmds"
-            :key="command.id"
-            class="shortcut-row"
-          >
+          <div v-for="command in cmds" :key="command.id" class="shortcut-row">
             <span class="command-name">{{ t(`commands.${command.id}`) }}</span>
             <div class="shortcut-keys">
               <template v-if="getKeybindingsForCommand(command.id).length > 0">
-                <div
-                  v-for="(kb, index) in getKeybindingsForCommand(command.id)"
-                  :key="index"
-                  class="key-group"
-                >
+                <div v-for="(kb, index) in getKeybindingsForCommand(command.id)" :key="index" class="key-group">
                   <kbd class="key-badge">{{ formatKeybinding(kb.key) }}</kbd>
-                  <button
-                    class="key-remove"
-                    type="button"
-                    @click="handleRemoveShortcut(command.id, kb.key)"
-                  >
+                  <button class="key-remove" type="button" @click="handleRemoveShortcut(command.id, kb.key)">
                     ×
                   </button>
                 </div>
               </template>
-              <button
-                class="key-add"
-                type="button"
-                @click="handleAddShortcut(command.id)"
-              >
+              <button class="key-add" type="button" @click="handleAddShortcut(command.id)">
                 +
               </button>
             </div>
@@ -47,7 +27,7 @@
     </div>
 
     <div class="shortcuts-footer">
-      <button class="reset-button" @click="handleReset">
+      <button class="action-button" @click="handleReset">
         {{ t('shortcuts.resetToDefaults') }}
       </button>
     </div>
@@ -66,11 +46,7 @@
           </div>
           <div class="form-group">
             <label>{{ t('shortcuts.keybinding') }}</label>
-            <ShortcutInput
-              v-model="newShortcutKey"
-              :has-conflict="conflicts.length > 0"
-              @conflict="checkConflicts"
-            />
+            <ShortcutInput v-model="newShortcutKey" :has-conflict="conflicts.length > 0" @conflict="checkConflicts" />
           </div>
           <div v-if="conflicts.length > 0" class="conflict-warning">
             <p>{{ t('shortcuts.conflictWarning') }}</p>
@@ -85,11 +61,8 @@
           <button class="button button-secondary" @click="closeAddDialog">
             {{ t('common.cancel') }}
           </button>
-          <button
-            class="button button-primary"
-            :disabled="!newShortcutKey || conflicts.length > 0"
-            @click="confirmAddShortcut"
-          >
+          <button class="button button-primary" :disabled="!newShortcutKey || conflicts.length > 0"
+            @click="confirmAddShortcut">
             {{ t('common.confirm') }}
           </button>
         </div>
@@ -103,11 +76,13 @@ import { ref, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useShortcutsStore } from '@renderer/features/shortcuts';
 import type { KeybindingConflict } from '@renderer/features/shortcuts/store/shortcuts.store';
+import { createLogger } from '@renderer/features/logger';
 import ShortcutInput from '@renderer/features/shortcuts/components/ShortcutInput.vue';
 import { formatKeybinding } from '@renderer/core/utils/formatKeybinding.utils';
 
 const { t } = useI18n();
 const shortcutsStore = useShortcutsStore();
+const shortcutSettingsLogger = createLogger('ShortcutSettings');
 
 const showAddDialog = ref(false);
 const selectedCommandId = ref('');
@@ -133,7 +108,7 @@ async function handleRemoveShortcut(commandId: string, key: string) {
   try {
     await shortcutsStore.removeKeybinding(commandId, key);
   } catch (error) {
-    console.error('Failed to remove shortcut:', error);
+    shortcutSettingsLogger.error(`Failed to remove shortcut: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -151,7 +126,7 @@ async function confirmAddShortcut() {
     await shortcutsStore.addKeybinding(selectedCommandId.value, newShortcutKey.value);
     closeAddDialog();
   } catch (error) {
-    console.error('Failed to add shortcut:', error);
+    shortcutSettingsLogger.error(`Failed to add shortcut: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 
@@ -167,7 +142,7 @@ async function handleReset() {
   try {
     await shortcutsStore.resetToDefaults();
   } catch (error) {
-    console.error('Failed to reset shortcuts:', error);
+    shortcutSettingsLogger.error(`Failed to reset shortcuts: ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 </script>
@@ -184,26 +159,6 @@ async function handleReset() {
   font-size: 1.25rem;
   font-weight: 600;
   color: #111827;
-}
-
-.reset-button {
-  min-width: 140px;
-  min-height: 32px;
-  padding: 0.4rem 1rem;
-  border: 1px solid #c9d1dc;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #111827;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.reset-button:hover {
-  background: #f3f4f6;
-  border-color: #7aa7ff;
-  color: #0f6cbd;
 }
 
 .shortcuts-container {

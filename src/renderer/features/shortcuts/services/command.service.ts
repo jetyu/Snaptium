@@ -1,4 +1,7 @@
 import type { Command } from '../store/shortcuts.store';
+import { createLogger } from '@renderer/features/logger';
+
+const commandServiceLogger = createLogger('CommandService');
 
 /**
  * 命令处理器类型
@@ -18,7 +21,7 @@ class CommandRegistry {
    */
   registerCommand(commandId: string, handler: CommandHandler): void {
     if (this.handlers.has(commandId)) {
-      console.warn(`Command ${commandId} is already registered. Overwriting.`);
+      commandServiceLogger.warn(`Command ${commandId} is already registered. Overwriting.`);
     }
     this.handlers.set(commandId, handler);
   }
@@ -36,14 +39,14 @@ class CommandRegistry {
   async executeCommand(commandId: string): Promise<void> {
     const handler = this.handlers.get(commandId);
     if (!handler) {
-      console.warn(`No handler registered for command: ${commandId}`);
+      commandServiceLogger.warn(`No handler registered for command: ${commandId}`);
       return;
     }
 
     try {
       await handler();
     } catch (error) {
-      console.error(`Error executing command ${commandId}:`, error);
+      commandServiceLogger.error(`Error executing command ${commandId}: ${error instanceof Error ? error.message : String(error)}`);
       throw error;
     }
   }

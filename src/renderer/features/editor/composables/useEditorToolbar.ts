@@ -1,7 +1,7 @@
 import { computed, type Ref } from 'vue';
 import type { EditorView } from '@codemirror/view';
 import { markdownCommands } from '@renderer/core/editor/markdownCommands';
-import { TOOLBAR_GROUPS } from '../constants/toolbar.constants';
+import { TOOLBAR_GROUPS } from '../constants/editor.constants';
 
 export function useEditorToolbar(editorView: Ref<EditorView | undefined>) {
   

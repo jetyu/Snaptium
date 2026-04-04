@@ -1,10 +1,10 @@
 import { defineStore } from 'pinia';
-import { logger } from '@renderer/features/logger';
+import { createLogger } from '@renderer/features/logger';
 import { workspaceService, type Note, type Notebook } from '../services/workspace.service';
 import { WORKSPACE_CONSTANTS, type SaveStatus } from '../constants/workspace.constants';
 
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
-
+const logger = createLogger('Workspace Store');
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => {
     return {
@@ -15,7 +15,11 @@ export const useWorkspaceStore = defineStore('workspace', {
       initialized: false,
       savingStatus: WORKSPACE_CONSTANTS.SAVE_STATUS.IDLE as SaveStatus,
       lastSaveTime: null as number | null,
+      lastSavedNoteMeta: null as { noteId: string; title: string; contentId: string; savedAt: number } | null,
       saveError: null as string | null,
+      isHistoryDialogOpen: false,
+      historyVersions: [] as any[],
+      historyLoading: false,
     };
   },
 
@@ -43,6 +47,14 @@ export const useWorkspaceStore = defineStore('workspace', {
         return;
       }
 
+      if (!(window as any).__vfsListenerAdded) {
+        window.addEventListener('vfs-changed', () => {
+          logger.info('VFS change detected, refreshing workspace...');
+          this.initializeWorkspace(true);
+        });
+        (window as any).__vfsListenerAdded = true;
+      }
+
       if (!workspaceService.isAvailable()) {
         logger.warn('Workspace service not available, starting with empty workspace.');
         this.notes = [];
@@ -57,7 +69,14 @@ export const useWorkspaceStore = defineStore('workspace', {
         const { notes, notebooks } = await workspaceService.initWorkspace();
         this.notes = notes;
         this.notebooks = notebooks;
-        this.activeNoteId = notes[0]?.id ?? null;
+
+        // Keep current active note if it still exists, otherwise pick first
+        if (this.activeNoteId && !this.notes.find((n) => n.id === this.activeNoteId)) {
+          this.activeNoteId = notes[0]?.id ?? null;
+        } else if (!this.activeNoteId) {
+          this.activeNoteId = notes[0]?.id ?? null;
+        }
+
         this.activeNotebookId = null;
         logger.info(`Workspace initialized with ${notes.length} note(s) and ${notebooks.length} notebook(s).`);
       } catch (err: unknown) {
@@ -161,7 +180,6 @@ export const useWorkspaceStore = defineStore('workspace', {
       note.content = content;
       note.updatedAt = Date.now();
 
-
       if (workspaceService.isAvailable()) {
         const noteId = note.id;
         const contentId = note.contentId;
@@ -178,10 +196,17 @@ export const useWorkspaceStore = defineStore('workspace', {
             if (!latest) return;
 
             try {
-              const saved = await workspaceService.writeContent(contentId, latest.content);
+              const saved = await workspaceService.writeContent(contentId, latest.content, noteId);
               if (saved) {
+                const savedAt = Date.now();
                 this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
-                this.lastSaveTime = Date.now();
+                this.lastSaveTime = savedAt;
+                this.lastSavedNoteMeta = {
+                  noteId,
+                  title: latest.title,
+                  contentId,
+                  savedAt,
+                };
                 logger.debug(`Updated content for note: ${noteId}`);
 
                 setTimeout(() => {
@@ -215,10 +240,17 @@ export const useWorkspaceStore = defineStore('workspace', {
         if (note) {
           this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVING;
           promises.push(
-            workspaceService.writeContent(note.contentId, note.content).then((saved) => {
+            workspaceService.writeContent(note.contentId, note.content, noteId).then((saved) => {
               if (saved) {
+                const savedAt = Date.now();
                 this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
-                this.lastSaveTime = Date.now();
+                this.lastSaveTime = savedAt;
+                this.lastSavedNoteMeta = {
+                  noteId,
+                  title: note.title,
+                  contentId: note.contentId,
+                  savedAt,
+                };
               } else {
                 this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR;
               }
@@ -324,6 +356,57 @@ export const useWorkspaceStore = defineStore('workspace', {
         logger.error(`Failed to toggle lock for note ${id}: ${message}`);
       }
     },
+
+    async openHistoryDialog(noteId: string) {
+      const note = this.notes.find(n => n.id === noteId);
+      if (!note) return;
+      
+      this.activeNoteId = noteId;
+      this.isHistoryDialogOpen = true;
+      await this.fetchHistory(note.contentId);
+    },
+
+    closeHistoryDialog() {
+      this.isHistoryDialogOpen = false;
+      this.historyVersions = [];
+    },
+
+    async fetchHistory(contentId: string) {
+      this.historyLoading = true;
+      try {
+        this.historyVersions = await workspaceService.getHistory(contentId);
+      } catch (err: unknown) {
+        logger.error(`Failed to fetch history for ${contentId}: ${err}`);
+      } finally {
+        this.historyLoading = false;
+      }
+    },
+
+    async getHistoryContent(filename: string) {
+      if (!this.activeNoteId) return '';
+      const note = this.notes.find(n => n.id === this.activeNoteId);
+      if (!note) return '';
+      try {
+        return await workspaceService.getHistoryContent(note.contentId, filename);
+      } catch (err: unknown) {
+        logger.error(`Failed to get history content: ${err}`);
+        return '';
+      }
+    },
+
+    async recoverVersion(filename: string) {
+      if (!this.activeNoteId) return;
+      
+      try {
+        const success = await workspaceService.recoverVersion(this.activeNoteId, filename);
+        if (success) {
+          await this.initializeWorkspace(true);
+          this.closeHistoryDialog();
+          logger.info(`Recovered note ${this.activeNoteId} to version ${filename}`);
+        }
+      } catch (err: unknown) {
+        logger.error(`Failed to recover version: ${err}`);
+      }
+    },
   },
 });
-

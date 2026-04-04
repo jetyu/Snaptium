@@ -1,3 +1,5 @@
+import { electronApi } from '@renderer/core/bridge/electronApi';
+
 export interface AppVersionInfo {
   appVersion: string;
   appName: string;
@@ -11,16 +13,20 @@ export interface EnvVersionInfo {
 }
 
 export class AboutService {
+  onOpenAbout(callback: () => void): () => void {
+    return electronApi.menu.onOpenAbout(callback);
+  }
+
   async getAppVersion(): Promise<string> {
-    return await window.electronAPI.app.getVersion();
+    return await electronApi.app.getVersion();
   }
 
   async getAppName(): Promise<string> {
-    return await window.electronAPI.app.getName();
+    return await electronApi.app.getName();
   }
 
   async getEnvVersion(): Promise<EnvVersionInfo> {
-    return await window.electronAPI.app.getEnvVersion();
+    return await electronApi.app.getEnvVersion();
   }
 }
 

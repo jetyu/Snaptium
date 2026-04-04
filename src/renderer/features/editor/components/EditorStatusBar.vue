@@ -21,7 +21,7 @@
 <script setup lang="ts">
 import { computed, ref, onUnmounted } from 'vue';
 import { useWorkspaceStore } from '@renderer/features/workspace';
-import { STATUSBAR_CONSTANTS } from '@renderer/features/editor/constants/statusbar.constants';
+import { EDITOR_CONSTANTS } from '@renderer/features/editor/constants/editor.constants';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
 
@@ -62,8 +62,8 @@ const wordCount = computed(() => {
   const text = activeNote.value.content.trim();
   if (!text) return 0;
 
-  const chineseChars = text.match(STATUSBAR_CONSTANTS.REGEX.CHINESE_CHARS)?.length || 0;
-  const englishWords = text.match(STATUSBAR_CONSTANTS.REGEX.ENGLISH_WORDS)?.length || 0;
+  const chineseChars = text.match(EDITOR_CONSTANTS.STATUSBAR.REGEX.CHINESE_CHARS)?.length || 0;
+  const englishWords = text.match(EDITOR_CONSTANTS.STATUSBAR.REGEX.ENGLISH_WORDS)?.length || 0;
 
   return chineseChars + englishWords;
 });
@@ -71,8 +71,8 @@ const wordCount = computed(() => {
 const selectedWordCount = computed(() => {
   if (!props.selectedText) return 0;
   
-  const chineseChars = props.selectedText.match(STATUSBAR_CONSTANTS.REGEX.CHINESE_CHARS)?.length || 0;
-  const englishWords = props.selectedText.match(STATUSBAR_CONSTANTS.REGEX.ENGLISH_WORDS)?.length || 0;
+  const chineseChars = props.selectedText.match(EDITOR_CONSTANTS.STATUSBAR.REGEX.CHINESE_CHARS)?.length || 0;
+  const englishWords = props.selectedText.match(EDITOR_CONSTANTS.STATUSBAR.REGEX.ENGLISH_WORDS)?.length || 0;
   
   return chineseChars + englishWords;
 });
@@ -85,8 +85,8 @@ const fileSize = computed(() => {
   
   if (bytes === 0) return '0 B';
   
-  const units = STATUSBAR_CONSTANTS.FILE_SIZE.UNITS;
-  const threshold = STATUSBAR_CONSTANTS.FILE_SIZE.THRESHOLD;
+  const units = EDITOR_CONSTANTS.STATUSBAR.FILE_SIZE.UNITS;
+  const threshold = EDITOR_CONSTANTS.STATUSBAR.FILE_SIZE.THRESHOLD;
   
   let size = bytes;
   let unitIndex = 0;

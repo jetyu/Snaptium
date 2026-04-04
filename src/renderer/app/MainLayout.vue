@@ -7,7 +7,7 @@
     <section v-if="!activeNote?.locked" class="editor-col panel">
       <div v-if="activeNote" class="col-header">
         <div class="header-left">
-          <span class="col-title">{{ $t("editorHeader") }}</span>
+          <span class="col-title">{{ $t("common.editor") }}</span>
           <span class="header-separator">/</span>
           <span class="header-note-title" :title="activeNote.title">{{
             activeNote.title
@@ -20,34 +20,30 @@
 
       <div v-if="activeNote" class="editor-wrapper">
         <EditorToolbar :editor-view="editorView" />
-        <EditorPane
-          ref="editorPaneRef"
-          :model-value="activeNote.content"
-          @update:model-value="updateActiveContent"
-          @selection-change="handleSelectionChange"
-        />
+        <EditorPane ref="editorPaneRef" :model-value="activeNote.content" @update:model-value="updateActiveContent"
+          @selection-change="handleSelectionChange" />
         <EditorStatus :cursor-position="cursorPosition" :selected-text="selectedText" />
       </div>
       <div v-else-if="activeNotebookId" class="editor-wrapper">
         <NotebookDashboard />
       </div>
       <div v-else class="col-empty">
-        <p>{{ $t("selectOrCreate") }}</p>
+        <p>{{ $t("common.selectOrCreateNote") }}</p>
       </div>
     </section>
 
     <!-- 右侧预览 -->
     <section v-if="activeNote || !activeNotebookId" class="preview-col panel">
       <div class="col-header">
-        <span class="col-title">{{ $t("previewHeader") }}</span>
+        <span class="col-title">{{ $t("common.preview") }}</span>
       </div>
       <PreviewPane v-if="activeNote" :markdown="activeNote.content" />
       <div v-else class="col-empty">
         <p>
           {{
             activeNotebookId
-              ? $t("preview.noPreviewContent")
-              : $t("selectOrCreate")
+              ? $t("common.noPreviewContent")
+              : $t("common.selectOrCreateNote")
           }}
         </p>
       </div>
@@ -55,11 +51,7 @@
   </div>
 
   <!-- 搜索对话框 -->
-  <SearchDialog
-    :is-open="isGlobalSearchOpen"
-    @close="closeGlobalSearch"
-    @select="handleSearchSelect"
-  />
+  <SearchDialog :is-open="isGlobalSearchOpen" @close="closeGlobalSearch" @select="handleSearchSelect" />
 </template>
 
 <script setup lang="ts">
@@ -72,7 +64,10 @@ import EditorStatus from "@renderer/features/editor/components/EditorStatus.vue"
 import { PreviewPane } from "@renderer/features/preview";
 import { SearchDialog, useSearch } from "@renderer/features/search";
 import { useWorkspace } from "@renderer/features/workspace";
+import { createLogger } from "@renderer/features/logger";
 import type { EditorView } from '@codemirror/view';
+
+const mainLayoutLogger = createLogger('MainLayout');
 
 const {
   activeNote,
@@ -99,9 +94,14 @@ function handleSelectionChange(selection: { line: number; column: number; select
 }
 
 async function handleSearchSelect(result: any, match?: any) {
+  const noteId = result?.chunk?.noteId ?? result?.id;
+  if (!noteId) {
+    return;
+  }
+
   // Load the note
-  selectNote(result.id);
-  
+  selectNote(noteId);
+
   // Wait for editor to be ready
   setTimeout(() => {
     const editorApi = editorPaneRef.value?.getEditorApi();
@@ -113,10 +113,10 @@ async function handleSearchSelect(result: any, match?: any) {
 
 onMounted(() => {
   void initializeWorkspace();
-  
+
   window.addEventListener('beforeunload', () => {
     forceFlushAutoSave().catch((err: unknown) => {
-      console.error('Failed to save before unload:', err);
+      mainLayoutLogger.error(`Failed to save before unload: ${err instanceof Error ? err.message : String(err)}`);
     });
   });
 });

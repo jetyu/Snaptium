@@ -3,6 +3,9 @@ import type { EditorView } from '@codemirror/view';
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import { showAiSuggestion, clearAiSuggestion } from '@renderer/core/ai/wordsAutoCompletion';
 import {AI_ASSISTANT_DEFAULTS } from '../constants/ai.constants';
+import { createLogger } from '@renderer/features/logger';
+
+const aiAssistantLogger = createLogger('AiAssistant');
 
 export interface AiAssistantState {
   isEnabled: boolean;
@@ -85,19 +88,19 @@ export function useAiAssistant() {
         showAiSuggestion(editorView, result.completion);
       } else {
         state.value.lastError = result.message || 'Completion failed';
-        console.warn('[AI Assistant] Completion failed:', result.message);
+        aiAssistantLogger.warn(`Completion failed: ${result.message || 'Unknown failure'}`);
       }
     } catch (error: any) {
       clearTimeout(timeoutId);
       
       // 忽略取消错误
       if (error.name === 'AbortError') {
-        console.log('[AI Assistant] Request cancelled');
+        aiAssistantLogger.debug('Request cancelled');
         return;
       }
 
       state.value.lastError = error.message;
-      console.error('[AI Assistant] Error:', error);
+      aiAssistantLogger.error(`Error: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       abortController = null;
       state.value.isProcessing = false;

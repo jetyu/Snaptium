@@ -1,16 +1,14 @@
-import { logger } from '@renderer/features/logger';
 import type { Note, Notebook } from '../services/workspace.service';
 import { WORKSPACE_CONSTANTS } from '../constants/workspace.constants';
 import {
-  createWorkspaceContextMenuLabels,
   getCreateButtonMenu,
   getNoteContextMenu,
   getNotebookContextMenu,
   getRootWorkspaceMenu,
+  showNativeWorkspaceContextMenu,
   type WorkspaceContextAction,
   type WorkspaceMenuItem,
 } from '../services/workspaceContextMenu.service';
-
 
 interface UseWorkspaceContextMenuOptions {
   t: (key: string, named?: Record<string, unknown>) => string;
@@ -24,6 +22,7 @@ interface UseWorkspaceContextMenuOptions {
   beginRenamingNote: (note: Note) => void;
   beginRenamingNotebook: (notebook: Notebook) => void;
   toggleNodeLock: (id: string, locked: boolean) => Promise<void>;
+  openHistory: (id: string) => void;
 }
 
 function resolveContextParentId(entry: Note | Notebook, type: 'file' | 'folder') {
@@ -32,19 +31,7 @@ function resolveContextParentId(entry: Note | Notebook, type: 'file' | 'folder')
 
 export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions) {
   async function showContextMenu(items: WorkspaceMenuItem[]) {
-    if (!window.electronAPI?.workspace) {
-      logger.warn('electronAPI.workspace not available, cannot show native workspace context menu.');
-      return null;
-    }
-
-    return window.electronAPI.workspace.showContextMenu({
-      labels: createWorkspaceContextMenuLabels(options.t),
-      items: items.map((item) => ({
-        action: item.action ?? WORKSPACE_CONSTANTS.ACTIONS.NOOP,
-        labelKey: item.labelKey,
-        type: item.type ?? 'normal',
-      })),
-    }) as Promise<WorkspaceContextAction | null>;
+    return showNativeWorkspaceContextMenu(options.t, items);
   }
 
   async function runAction(
@@ -83,6 +70,11 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
       case WORKSPACE_CONSTANTS.ACTIONS.SHOW_IN_FOLDER:
         if (context.note) {
           await options.showNoteInFolder(context.note.id);
+        }
+        break;
+      case WORKSPACE_CONSTANTS.ACTIONS.HISTORY:
+        if (context.note) {
+          options.openHistory(context.note.id);
         }
         break;
       default:

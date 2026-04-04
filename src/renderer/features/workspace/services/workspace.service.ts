@@ -1,4 +1,5 @@
 import { i18n } from '@renderer/features/i18n';
+import { electronApi } from '@renderer/core/bridge/electronApi';
 
 export interface Note {
     id: string;
@@ -38,7 +39,21 @@ interface WorkspaceData {
 }
 
 function isAvailable(): boolean {
-    return !!window.electronAPI?.vfs;
+    return electronApi.vfs.isAvailable();
+}
+
+/**
+ * Dispatch a global event to notify that the VFS structure (files/folders) has changed.
+ */
+function notifyVfsChanged() {
+    window.dispatchEvent(new CustomEvent('vfs-changed'));
+}
+
+/**
+ * Dispatch a granular event to notify that a specific note's content has been updated.
+ */
+function notifyNoteUpdated(noteId: string) {
+    window.dispatchEvent(new CustomEvent('note-updated', { detail: { noteId } }));
 }
 
 
@@ -50,7 +65,7 @@ function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
     return {
         id: node.id,
         contentId: node.contentId,
-        title: node.name?.trim() || i18n.global.t('newNote'),
+        title: node.name?.trim(),
         content,
         parentId: node.parentId ?? null,
         createdAt: node.createdAt,
@@ -67,7 +82,7 @@ function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
 
     return {
         id: node.id,
-        name: node.name?.trim() || i18n.global.t('default.newNotebook'),
+        name: node.name?.trim() || i18n.global.t('common.untitledNotebook'),
         parentId: node.parentId ?? null,
         createdAt: node.createdAt,
         updatedAt: node.updatedAt,
@@ -76,16 +91,16 @@ function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
 }
 
 export const workspaceService = {
-   
+
     isAvailable,
 
-   
+
     async initWorkspace(): Promise<WorkspaceData> {
         if (!isAvailable()) {
             return { notes: [], notebooks: [] };
         }
 
-        const { nodes } = await window.electronAPI.vfs!.initWorkspace();
+        const { nodes } = await electronApi.vfs.initWorkspace();
         const workspaceNodes = nodes as WorkspaceNode[];
 
         const fileNodes = workspaceNodes.filter(
@@ -98,7 +113,7 @@ export const workspaceService = {
         const notes = (
             await Promise.all(
                 fileNodes.map(async (node) => {
-                    const content = await window.electronAPI.vfs!.readContent(node.contentId as string);
+                    const content = await electronApi.vfs.readContent(node.contentId as string);
                     return mapNodeToNote(node, content);
                 })
             )
@@ -111,20 +126,22 @@ export const workspaceService = {
         return { notes, notebooks };
     },
 
-   
+
     async createNote(parentId: string | null, title?: string): Promise<Note> {
         if (!isAvailable()) {
             throw new Error('VFS not available');
         }
 
-        const noteTitle = title?.trim() || i18n.global.t('newNote');
+        const noteTitle = title?.trim() || i18n.global.t('common.untitledNote');
         const content = `# ${noteTitle}\n\n`;
 
-        const node = await window.electronAPI.vfs!.createFile({
+        const node = await electronApi.vfs.createFile({
             parentId,
             name: noteTitle,
             content,
         });
+
+        notifyVfsChanged();
 
         return {
             id: node.id,
@@ -138,18 +155,20 @@ export const workspaceService = {
         };
     },
 
-  
+
     async createNotebook(parentId: string | null, name?: string): Promise<Notebook> {
         if (!isAvailable()) {
             throw new Error('VFS not available');
         }
 
-        const notebookName = name?.trim() || i18n.global.t('default.newNotebook');
+        const notebookName = name?.trim() || i18n.global.t('common.untitledNotebook');
 
-        const node = await window.electronAPI.vfs!.createFolder({
+        const node = await electronApi.vfs.createFolder({
             parentId,
             name: notebookName,
         });
+
+        notifyVfsChanged();
 
         return {
             id: node.id,
@@ -161,7 +180,7 @@ export const workspaceService = {
         };
     },
 
-    
+
     async renameNote(note: Note, newTitle: string): Promise<{ title: string; content: string; updatedAt: number }> {
         if (!isAvailable()) {
             throw new Error('VFS not available');
@@ -172,10 +191,12 @@ export const workspaceService = {
             throw new Error('Title cannot be empty');
         }
 
-        const renamedNode = await window.electronAPI.vfs!.renameNode({
+        const renamedNode = await electronApi.vfs.renameNode({
             nodeId: note.id,
             name: trimmedTitle,
         });
+
+        notifyVfsChanged();
 
         return {
             title: renamedNode.name,
@@ -194,10 +215,12 @@ export const workspaceService = {
             throw new Error('Name cannot be empty');
         }
 
-        const renamedNode = await window.electronAPI.vfs!.renameNode({
+        const renamedNode = await electronApi.vfs.renameNode({
             nodeId: notebookId,
             name: trimmedName,
         });
+
+        notifyVfsChanged();
 
         return {
             name: renamedNode.name,
@@ -205,48 +228,80 @@ export const workspaceService = {
         };
     },
 
-    
-    async writeContent(contentId: string, content: string): Promise<boolean> {
+
+    async writeContent(contentId: string, content: string, noteId?: string | null): Promise<boolean> {
         if (!isAvailable()) {
             return false;
         }
 
-        return await window.electronAPI.vfs!.writeContent({ contentId, content });
+        const success = await electronApi.vfs.writeContent({ contentId, content });
+        if (success && noteId) {
+            notifyNoteUpdated(noteId);
+        }
+        return success;
     },
 
-    
+
     async readContent(contentId: string): Promise<string> {
         if (!isAvailable()) {
             throw new Error('VFS not available');
         }
 
-        return await window.electronAPI.vfs!.readContent(contentId);
+        return await electronApi.vfs.readContent(contentId);
     },
 
-    
+
     async deleteNode(nodeId: string): Promise<void> {
         if (!isAvailable()) {
             throw new Error('VFS not available');
         }
 
-        await window.electronAPI.vfs!.deleteNode(nodeId);
+        await electronApi.vfs.deleteNode(nodeId);
+        notifyVfsChanged();
     },
 
-    
+
     async showNoteInFolder(nodeId: string): Promise<void> {
         if (!isAvailable()) {
             throw new Error('VFS not available');
         }
 
-        await window.electronAPI.vfs!.showNoteInFolder(nodeId);
+        await electronApi.vfs.showNoteInFolder(nodeId);
     },
 
-   
+
     async toggleNodeLock(nodeId: string, locked: boolean): Promise<void> {
         if (!isAvailable()) {
             throw new Error('VFS not available');
         }
 
-        await window.electronAPI.vfs!.toggleNodeLock({ nodeId, locked });
+        await electronApi.vfs.toggleNodeLock({ nodeId, locked });
+        notifyVfsChanged(); // Lock status is structural enough for refreshes
+    },
+
+    async getHistory(contentId: string): Promise<any[]> {
+        if (!isAvailable()) {
+            return [];
+        }
+        return await electronApi.vfs.getHistory(contentId);
+    },
+
+    async getHistoryContent(contentId: string, filename: string): Promise<string> {
+        if (!isAvailable()) {
+            throw new Error('VFS not available');
+        }
+        return await electronApi.vfs.getHistoryContent({ contentId, filename });
+    },
+
+    async recoverVersion(nodeId: string, filename: string): Promise<boolean> {
+        if (!isAvailable()) {
+            return false;
+        }
+        const success = await electronApi.vfs.recoverVersion({ nodeId, filename });
+        if (success) {
+            notifyVfsChanged();
+            notifyNoteUpdated(nodeId);
+        }
+        return success;
     },
 };

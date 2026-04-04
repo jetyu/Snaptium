@@ -1,20 +1,21 @@
 import { ipcMain } from 'electron';
 import { shortcutsService } from '../../services/shortcuts.service.js';
 import { getAllCommands, getCommandsByCategory } from '../../constants/commands.constants.js';
+import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
+import { loggerService } from '../../services/logger.service.js';
 
-/**
- * 注册快捷键相关的 IPC 处理器
- */
+const logger = loggerService.createLogger('Electron:Shortcuts IPC');
+
 export function registerShortcutsHandlers() {
-  // 获取所有命令
-  ipcMain.handle('shortcuts:get-commands', async () => {
+
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS, async () => {
     try {
       return {
         success: true,
         data: getAllCommands(),
       };
     } catch (error) {
-      console.error('Failed to get commands:', error);
+      logger.error('Failed to get commands', { error: error.message });
       return {
         success: false,
         error: error.message,
@@ -22,15 +23,17 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 根据分类获取命令
-  ipcMain.handle('shortcuts:get-commands-by-category', async (_event, category) => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS_BY_CATEGORY, async (_event, category) => {
     try {
       return {
         success: true,
         data: getCommandsByCategory(category),
       };
     } catch (error) {
-      console.error('Failed to get commands by category:', error);
+      logger.error('Failed to get commands by category', {
+        category,
+        error: error.message,
+      });
       return {
         success: false,
         error: error.message,
@@ -38,8 +41,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 加载快捷键配置
-  ipcMain.handle('shortcuts:load-keybindings', async () => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_LOAD_KEYBINDINGS, async () => {
     try {
       const keybindings = await shortcutsService.loadKeybindings();
       return {
@@ -47,7 +49,7 @@ export function registerShortcutsHandlers() {
         data: keybindings,
       };
     } catch (error) {
-      console.error('Failed to load keybindings:', error);
+      logger.error('Failed to load keybindings', { error: error.message });
       return {
         success: false,
         error: error.message,
@@ -55,8 +57,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 保存快捷键配置
-  ipcMain.handle('shortcuts:save-keybindings', async (_event, keybindings) => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_SAVE_KEYBINDINGS, async (_event, keybindings) => {
     try {
       const saved = await shortcutsService.saveKeybindings(keybindings);
       return {
@@ -64,7 +65,7 @@ export function registerShortcutsHandlers() {
         data: saved,
       };
     } catch (error) {
-      console.error('Failed to save keybindings:', error);
+      logger.error('Failed to save keybindings', { error: error.message });
       return {
         success: false,
         error: error.message,
@@ -72,8 +73,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 添加快捷键绑定
-  ipcMain.handle('shortcuts:add-keybinding', async (_event, { commandId, key, when }) => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_ADD_KEYBINDING, async (_event, { commandId, key, when }) => {
     try {
       const keybindings = await shortcutsService.addKeybinding(commandId, key, when);
       return {
@@ -81,7 +81,11 @@ export function registerShortcutsHandlers() {
         data: keybindings,
       };
     } catch (error) {
-      console.error('Failed to add keybinding:', error);
+      logger.error('Failed to add keybinding', {
+        commandId,
+        key,
+        error: error.message,
+      });
       return {
         success: false,
         error: error.message,
@@ -89,8 +93,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 删除快捷键绑定
-  ipcMain.handle('shortcuts:remove-keybinding', async (_event, { commandId, key }) => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_REMOVE_KEYBINDING, async (_event, { commandId, key }) => {
     try {
       const keybindings = await shortcutsService.removeKeybinding(commandId, key);
       return {
@@ -98,7 +101,11 @@ export function registerShortcutsHandlers() {
         data: keybindings,
       };
     } catch (error) {
-      console.error('Failed to remove keybinding:', error);
+      logger.error('Failed to remove keybinding', {
+        commandId,
+        key,
+        error: error.message,
+      });
       return {
         success: false,
         error: error.message,
@@ -106,8 +113,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 重置为默认快捷键
-  ipcMain.handle('shortcuts:reset-to-defaults', async () => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_RESET_TO_DEFAULTS, async () => {
     try {
       const keybindings = await shortcutsService.resetToDefaults();
       return {
@@ -115,7 +121,7 @@ export function registerShortcutsHandlers() {
         data: keybindings,
       };
     } catch (error) {
-      console.error('Failed to reset keybindings:', error);
+      logger.error('Failed to reset keybindings', { error: error.message });
       return {
         success: false,
         error: error.message,
@@ -123,8 +129,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 检测快捷键冲突
-  ipcMain.handle('shortcuts:detect-conflicts', async (_event, { key, excludeCommandId }) => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_DETECT_CONFLICTS, async (_event, { key, excludeCommandId }) => {
     try {
       const conflicts = await shortcutsService.detectConflicts(key, excludeCommandId);
       return {
@@ -132,7 +137,11 @@ export function registerShortcutsHandlers() {
         data: conflicts,
       };
     } catch (error) {
-      console.error('Failed to detect conflicts:', error);
+      logger.error('Failed to detect conflicts', {
+        key,
+        excludeCommandId,
+        error: error.message,
+      });
       return {
         success: false,
         error: error.message,
@@ -140,8 +149,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 验证快捷键格式
-  ipcMain.handle('shortcuts:validate-keybinding', async (_event, key) => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_VALIDATE_KEYBINDING, async (_event, key) => {
     try {
       const isValid = shortcutsService.validateKeybinding(key);
       return {
@@ -149,7 +157,10 @@ export function registerShortcutsHandlers() {
         data: isValid,
       };
     } catch (error) {
-      console.error('Failed to validate keybinding:', error);
+      logger.error('Failed to validate keybinding', {
+        key,
+        error: error.message,
+      });
       return {
         success: false,
         error: error.message,
@@ -157,8 +168,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 规范化快捷键格式
-  ipcMain.handle('shortcuts:normalize-keybinding', async (_event, key) => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_NORMALIZE_KEYBINDING, async (_event, key) => {
     try {
       const normalized = shortcutsService.normalizeKeybinding(key);
       return {
@@ -166,7 +176,10 @@ export function registerShortcutsHandlers() {
         data: normalized,
       };
     } catch (error) {
-      console.error('Failed to normalize keybinding:', error);
+      logger.error('Failed to normalize keybinding', {
+        key,
+        error: error.message,
+      });
       return {
         success: false,
         error: error.message,
@@ -174,8 +187,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 获取命令的快捷键
-  ipcMain.handle('shortcuts:get-keybindings-for-command', async (_event, commandId) => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_GET_KEYBINDINGS_FOR_COMMAND, async (_event, commandId) => {
     try {
       const keybindings = await shortcutsService.getKeybindingsForCommand(commandId);
       return {
@@ -183,7 +195,10 @@ export function registerShortcutsHandlers() {
         data: keybindings,
       };
     } catch (error) {
-      console.error('Failed to get keybindings for command:', error);
+      logger.error('Failed to get keybindings for command', {
+        commandId,
+        error: error.message,
+      });
       return {
         success: false,
         error: error.message,
@@ -191,8 +206,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 导出快捷键配置
-  ipcMain.handle('shortcuts:export-keybindings', async () => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_EXPORT_KEYBINDINGS, async () => {
     try {
       const config = await shortcutsService.exportKeybindings();
       return {
@@ -200,7 +214,7 @@ export function registerShortcutsHandlers() {
         data: config,
       };
     } catch (error) {
-      console.error('Failed to export keybindings:', error);
+      logger.error('Failed to export keybindings', { error: error.message });
       return {
         success: false,
         error: error.message,
@@ -208,8 +222,7 @@ export function registerShortcutsHandlers() {
     }
   });
 
-  // 导入快捷键配置
-  ipcMain.handle('shortcuts:import-keybindings', async (_event, config) => {
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_IMPORT_KEYBINDINGS, async (_event, config) => {
     try {
       const keybindings = await shortcutsService.importKeybindings(config);
       return {
@@ -217,7 +230,7 @@ export function registerShortcutsHandlers() {
         data: keybindings,
       };
     } catch (error) {
-      console.error('Failed to import keybindings:', error);
+      logger.error('Failed to import keybindings', { error: error.message });
       return {
         success: false,
         error: error.message,

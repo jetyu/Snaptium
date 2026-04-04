@@ -81,8 +81,13 @@
   transition: all 0.15s ease;
 }
 
+
 .number-input {
   text-align: center;
+}
+
+.text-input {
+  width: 50%;
 }
 
 .settings-select {
@@ -115,7 +120,7 @@
 
 /* Buttons */
 .action-button {
-  min-width: 140px;
+  min-width: 80px;
   min-height: 32px;
   padding: 0.4rem 1rem;
   border: 1px solid #c9d1dc;

@@ -1,4 +1,5 @@
 import { ref, readonly } from 'vue';
+import { settingsService } from '../services/settings.service';
 
 const isOpen = ref(false);
 const activeTab = ref('general');
@@ -20,12 +21,17 @@ export function useSettings() {
   };
 
   const initMainProcessListeners = () => {
-    if (window.electronAPI?.menu?.onOpenPreferences) {
-      return window.electronAPI.menu.onOpenPreferences(() => {
-        openSettings();
-      });
-    }
-    return () => {}; // fallback if not available
+    return settingsService.onOpenPreferences(() => {
+      openSettings();
+    });
+  };
+
+  const exportSettings = async () => {
+    return await settingsService.exportConfig();
+  };
+
+  const importSettings = async () => {
+    return await settingsService.importConfig();
   };
 
   return {
@@ -35,5 +41,7 @@ export function useSettings() {
     closeSettings,
     setActiveTab,
     initMainProcessListeners,
+    exportSettings,
+    importSettings,
   };
 }

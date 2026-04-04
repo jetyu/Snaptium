@@ -5,15 +5,17 @@ import crypto from 'node:crypto';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { writeUtf8 } from './file.service.js';
 import { loggerService } from './logger.service.js';
+import { historyService } from './history.service.js';
+import { settingsService } from './settings.service.js';
 
-const LOG_SOURCE = 'VFS';
-
+const logger = loggerService.createLogger('Electron:VFS Service');
 
 const workspaceState = {
   root: null,
   nodes: new Map(),
 };
 
+const lastSnapshotTimes = new Map();
 
 function databaseDir(root) {
   return path.join(root, VFS_CONSTANTS.DATABASE_FOLDER);
@@ -44,7 +46,6 @@ function getObjectFilePath(root, contentId) {
   return path.join(objectsDir(root), `${safeContentId}${VFS_CONSTANTS.MARKDOWN_FILE_EXT}`);
 }
 
-
 export function assertNonEmptyString(value, fieldName) {
   if (typeof value !== 'string' || value.trim().length === 0) {
     throw new TypeError(`${fieldName} must be a non-empty string`);
@@ -71,12 +72,12 @@ const writeQueues = new Map();
 function enqueueWrite(key, fn) {
   const prev = writeQueues.get(key) ?? Promise.resolve();
   const next = prev.then(fn, () => fn());
-  writeQueues.set(key, next.then(() => {}, () => {}));
+  writeQueues.set(key, next.then(() => { }, () => { }));
   next.finally(() => {
     const current = writeQueues.get(key);
     if (!current || current === next) writeQueues.delete(key);
   });
-  return next; 
+  return next;
 }
 
 const NODES_QUEUE_KEY = '__nodes__';
@@ -100,7 +101,6 @@ async function atomicWriteFile(targetPath, content) {
   try {
     await fs.rename(tempPath, targetPath);
   } catch (err) {
-    // EXDEV: cross-device rename (shouldn't happen here but guard anyway)
     if (err && err.code === 'EXDEV') {
       await fs.copyFile(tempPath, targetPath);
       await fs.unlink(tempPath);
@@ -136,12 +136,12 @@ async function getConfiguredWorkspaceRoot() {
     const noteSavePath = preferences?.[VFS_CONSTANTS.NOTE_SAVE_PATH_KEY];
     if (typeof noteSavePath === 'string' && noteSavePath.trim().length > 0) {
       const configuredRoot = normalizeWorkspaceRoot(noteSavePath);
-      loggerService.info(LOG_SOURCE, `Using configured workspace root: ${configuredRoot}`);
+      logger.debug(`Using configured workspace root: ${configuredRoot}`);
       return configuredRoot;
     }
   } catch (error) {
     if (!isEnoentError(error)) {
-      loggerService.warn(LOG_SOURCE, `Failed to read preferences workspace root: ${error}`);
+      logger.warn(`Failed to read preferences workspace root: ${error}`);
     }
   }
   return null;
@@ -159,14 +159,12 @@ async function resolveWorkspaceRoot(rootPath) {
   return normalizeWorkspaceRoot(rootPath);
 }
 
-
 function getNodeByContentId(contentId) {
   for (const node of workspaceState.nodes.values()) {
     if (node.contentId === contentId) return node;
   }
   return null;
 }
-
 
 async function ensureWorkspaceStructure(root) {
   await Promise.all([
@@ -205,7 +203,7 @@ async function loadAllNodes(root) {
   }
 
   if (malformedLineCount > 0) {
-    loggerService.warn(LOG_SOURCE, `Ignored ${malformedLineCount} malformed node record(s) in ${filePath}`);
+    logger.warn(`Ignored ${malformedLineCount} malformed node record(s) in ${filePath}`);
   }
 
   return nodes;
@@ -216,7 +214,6 @@ async function persistAllNodes(root) {
   const content = serialized.length > 0 ? `${serialized.join('\n')}\n` : '';
   return enqueueWrite(NODES_QUEUE_KEY, () => atomicWriteFile(nodesFile(root), content));
 }
-
 
 export const vfsService = {
   getAllNodes() {
@@ -236,10 +233,15 @@ export const vfsService = {
       meta.lastOpenedAt = Date.now();
       await atomicWriteFile(metaPath, JSON.stringify(meta, null, 2));
     } catch (error) {
-      loggerService.warn(LOG_SOURCE, `Failed to refresh workspace meta: ${error}`);
+      logger.error(`Failed to refresh workspace meta: ${error}`);
     }
 
-    loggerService.info(LOG_SOURCE, `Workspace initialized at ${resolvedRoot} with ${workspaceState.nodes.size} node(s)`);
+    logger.debug(`Workspace initialized at ${resolvedRoot} with ${workspaceState.nodes.size} node(s)`);
+    
+    vfsService.autoClearTrash(resolvedRoot).catch(error => {
+      logger.error(`Failed to auto clear trash: ${error.message}`);
+    });
+
     return { root: resolvedRoot, nodes: Array.from(workspaceState.nodes.values()) };
   },
 
@@ -251,7 +253,7 @@ export const vfsService = {
     if (typeof rootPath === 'string' && rootPath.trim().length > 0) {
       const resolvedRoot = await resolveWorkspaceRoot(rootPath);
       if (!isSameWorkspaceRoot(workspaceState.root, resolvedRoot)) {
-        loggerService.info(LOG_SOURCE, `Switching workspace root to ${resolvedRoot}`);
+        logger.debug(`Switching workspace root to ${resolvedRoot}`);
         const { root } = await this.initializeWorkspace(resolvedRoot);
         return root;
       }
@@ -276,7 +278,7 @@ export const vfsService = {
     };
     workspaceState.nodes.set(node.id, node);
     await persistAllNodes(root);
-    loggerService.info(LOG_SOURCE, `Created notebook ${node.id}`);
+    logger.debug(`Created Notebook ${node.id}`);
     return node;
   },
 
@@ -304,7 +306,7 @@ export const vfsService = {
     };
     workspaceState.nodes.set(node.id, node);
     await persistAllNodes(root);
-    loggerService.info(LOG_SOURCE, `Created note ${node.id}`);
+    logger.debug(`Created Note ${node.id}`);
     return node;
   },
 
@@ -319,7 +321,7 @@ export const vfsService = {
     node.updatedAt = Date.now();
     workspaceState.nodes.set(node.id, node);
     await persistAllNodes(root);
-    loggerService.info(LOG_SOURCE, `Renamed ${node.type} ${node.id} to ${nextName}`);
+    logger.debug(`Renamed ${node.type} ${node.id} to ${nextName}`);
     return node;
   },
 
@@ -329,10 +331,10 @@ export const vfsService = {
       return await fs.readFile(getObjectFilePath(root, contentId), 'utf-8');
     } catch (error) {
       if (isEnoentError(error)) {
-        loggerService.warn(LOG_SOURCE, `Content file missing for ${contentId}`);
+        logger.error(`Content file missing for ${contentId}`);
         return '';
       }
-      loggerService.error(LOG_SOURCE, `Failed to read content ${contentId}: ${error}`);
+      logger.error(`Failed to read content ${contentId}: ${error}`);
       throw error;
     }
   },
@@ -343,6 +345,29 @@ export const vfsService = {
     const safeContentId = assertValidUUID(contentId, VFS_CONSTANTS.FIELD_CONTENT_ID);
 
     return enqueueWrite(safeContentId, async () => {
+      const config = await settingsService.loadConfig();
+      const interval = (config.snapshotInterval || 10) * 60 * 1000;
+      const lastTime = lastSnapshotTimes.get(safeContentId) || 0;
+
+      if (config.maxHistoryVersions > 0) {
+        try {
+          const oldContent = await this.readContent(safeContentId);
+          
+          // 简化策略：时间间隔到达 且 笔记有一定内容（> 100 字符）
+          const isTimeElapsed = (Date.now() - lastTime) >= interval;
+          const isMeaningful = text.length > 100;
+
+          if (isTimeElapsed && isMeaningful) {
+            if (oldContent !== text) {
+              await historyService.saveVersion(root, safeContentId, oldContent, config.maxHistoryVersions);
+              lastSnapshotTimes.set(safeContentId, Date.now());
+            }
+          }
+        } catch (error) {
+          logger.warn(`Failed to save history version: ${error.message}`);
+        }
+      }
+
       const filePath = getObjectFilePath(root, safeContentId);
       await atomicWriteFile(filePath, text);
       const node = getNodeByContentId(safeContentId);
@@ -352,6 +377,28 @@ export const vfsService = {
       }
       return true;
     });
+  },
+
+  async getHistory(contentId) {
+    const root = await this.ensureInitialized();
+    return await historyService.getVersions(root, contentId);
+  },
+
+  async getHistoryContent(contentId, timestamp) {
+    const root = await this.ensureInitialized();
+    return await historyService.getVersionContent(root, contentId, timestamp);
+  },
+
+  async recoverVersion(nodeId, timestamp) {
+    const root = await this.ensureInitialized();
+    const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);
+    const node = workspaceState.nodes.get(safeNodeId);
+    if (!node || !node.contentId) throw new Error(`Node not found or has no content: ${safeNodeId}`);
+
+    const contentId = node.contentId;
+    const historyContent = await historyService.getVersionContent(root, contentId, timestamp);
+    
+    return await this.writeContent(contentId, historyContent);
   },
 
   async showNoteInFolder(nodeId) {
@@ -365,7 +412,7 @@ export const vfsService = {
     if (!(await pathExists(filePath))) throw new Error(`Note file not found: ${filePath}`);
 
     shell.showItemInFolder(filePath);
-    loggerService.info(LOG_SOURCE, `Revealed note ${safeNodeId} in folder.`);
+    logger.debug(`Revealed note ${safeNodeId} in folder.`);
     return true;
   },
 
@@ -390,23 +437,97 @@ export const vfsService = {
     node.updatedAt = Date.now();
     workspaceState.nodes.set(node.id, node);
     await persistAllNodes(root);
-    loggerService.info(LOG_SOURCE, `${node.locked ? 'Locked' : 'Unlocked'} ${node.type} ${node.id}`);
+    logger.debug(`${node.locked ? 'Locked' : 'Unlocked'} ${node.type} ${node.id}`);
     return node;
+  },
+
+  getTrashedNodes() {
+    return Array.from(workspaceState.nodes.values())
+      .filter((node) => node.trashed)
+      .map((node) => {
+        if (node.type === VFS_CONSTANTS.NODE_TYPE_FOLDER) {
+          return {
+            ...node,
+            childCount: countDescendants(node.id),
+          };
+        }
+        return node;
+      });
+  },
+
+  async restoreNode(nodeId) {
+    const root = await this.ensureInitialized();
+    const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);
+    const node = workspaceState.nodes.get(safeNodeId);
+    if (!node || !node.trashed) throw new Error(`Node not found in trash: ${safeNodeId}`);
+
+    await restoreNodeRecursive(root, nodeId);
+    await persistAllNodes(root);
+    logger.debug(`Restored node tree starting at ${safeNodeId} from trash.`);
+    return node;
+  },
+
+  async permanentlyDeleteNode(nodeId) {
+    const root = await this.ensureInitialized();
+    const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);
+    const node = workspaceState.nodes.get(safeNodeId);
+    if (!node || !node.trashed) throw new Error(`Node not found in trash: ${safeNodeId}`);
+
+    await permanentlyDeleteNodeRecursive(root, nodeId);
+    await persistAllNodes(root);
+    logger.debug(`Permanently deleted node tree starting at ${safeNodeId}.`);
+    return true;
+  },
+
+  async emptyTrash() {
+    const root = await this.ensureInitialized();
+    const trashedNodes = Array.from(workspaceState.nodes.values()).filter((node) => node.trashed);
+
+    for (const node of trashedNodes) {
+      await permanentlyDeleteNodeRecursive(root, node.id);
+    }
+
+    await persistAllNodes(root);
+    logger.debug(`Emptied trash, removed ${trashedNodes.length} top-level node tree(s).`);
+    return true;
+  },
+
+  async autoClearTrash(root) {
+    try {
+      const config = await settingsService.loadConfig();
+      const days = config.trashAutoClearDays;
+      if (!days || days <= 0) return;
+
+      const threshold = Date.now() - (days * 24 * 60 * 60 * 1000);
+      const trashedNodes = Array.from(workspaceState.nodes.values()).filter(
+        (node) => node.trashed && (node.updatedAt || node.createdAt) < threshold
+      );
+
+      if (trashedNodes.length === 0) return;
+
+      for (const node of trashedNodes) {
+        await permanentlyDeleteNodeRecursive(root, node.id);
+      }
+
+      await persistAllNodes(root);
+      logger.info(`Auto-cleared ${trashedNodes.length} expired trashed nodes (older than ${days} days).`);
+    } catch (error) {
+      logger.error(`Error during auto clear trash: ${error.message}`);
+    }
   },
 };
 
-
-async function deleteNodeRecursive(root, nodeId) {
+async function deleteNodeRecursive(root, nodeId, isRoot = true) {
   const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);
   const node = workspaceState.nodes.get(safeNodeId);
-  if (!node || node.trashed) return;
+  if (!node) return;
 
   if (node.type === VFS_CONSTANTS.NODE_TYPE_FOLDER) {
     const children = Array.from(workspaceState.nodes.values()).filter(
       (n) => n.parentId === node.id && !n.trashed,
     );
     for (const child of children) {
-      await deleteNodeRecursive(root, child.id);
+      await deleteNodeRecursive(root, child.id, false);
     }
   }
 
@@ -416,8 +537,70 @@ async function deleteNodeRecursive(root, nodeId) {
     if (await pathExists(source)) await fs.rename(source, destination);
   }
 
-  node.trashed = true;
+  if (isRoot) {
+    node.trashed = true;
+    node.updatedAt = Date.now();
+    workspaceState.nodes.set(node.id, node);
+    logger.debug(`Marked root node ${safeNodeId} as trashed.`);
+  }
+
+  logger.debug(`Processed node ${safeNodeId} for trash.`);
+}
+
+async function restoreNodeRecursive(root, nodeId) {
+  const node = workspaceState.nodes.get(nodeId);
+  if (!node) return;
+
+  if (node.type === VFS_CONSTANTS.NODE_TYPE_FILE && node.contentId) {
+    const source = path.join(trashDir(root), `${node.contentId}${VFS_CONSTANTS.MARKDOWN_FILE_EXT}`);
+    const destination = getObjectFilePath(root, node.contentId);
+    if (await pathExists(source)) await fs.rename(source, destination);
+  }
+
+  node.trashed = false;
   node.updatedAt = Date.now();
   workspaceState.nodes.set(node.id, node);
-  loggerService.info(LOG_SOURCE, `Moved node ${safeNodeId} to trash.`);
+
+  if (node.type === VFS_CONSTANTS.NODE_TYPE_FOLDER) {
+    const children = Array.from(workspaceState.nodes.values()).filter(
+      (n) => n.parentId === node.id && !n.trashed,
+    );
+    for (const child of children) {
+      await restoreNodeRecursive(root, child.id);
+    }
+  }
+}
+
+async function permanentlyDeleteNodeRecursive(root, nodeId) {
+  const node = workspaceState.nodes.get(nodeId);
+  if (!node) return;
+
+  if (node.type === VFS_CONSTANTS.NODE_TYPE_FOLDER) {
+    const children = Array.from(workspaceState.nodes.values()).filter(
+      (n) => n.parentId === node.id,
+    );
+    for (const child of children) {
+      await permanentlyDeleteNodeRecursive(root, child.id);
+    }
+  }
+
+  if (node.type === VFS_CONSTANTS.NODE_TYPE_FILE && node.contentId) {
+    const filePath = path.join(trashDir(root), `${node.contentId}${VFS_CONSTANTS.MARKDOWN_FILE_EXT}`);
+    if (await pathExists(filePath)) await fs.unlink(filePath);
+  }
+
+  workspaceState.nodes.delete(nodeId);
+}
+
+function countDescendants(parentId) {
+  const children = Array.from(workspaceState.nodes.values()).filter(
+    (n) => n.parentId === parentId,
+  );
+  let total = children.length;
+  for (const child of children) {
+    if (child.type === VFS_CONSTANTS.NODE_TYPE_FOLDER) {
+      total += countDescendants(child.id);
+    }
+  }
+  return total;
 }

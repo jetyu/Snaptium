@@ -1,6 +1,6 @@
 <template>
   <div class="log-settings">
-    <h3 class="panel-title">{{ t('paneLog') }}</h3>
+    <h3 class="panel-title">{{ t('pref.pane.log') }}</h3>
 
     <div class="settings-grid">
       <!-- Enable Logging Toggle -->
@@ -16,7 +16,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.loggingEnabled ? t('statusEnabled') : t('statusDisabled') }}
+            {{ settingsStore.config.loggingEnabled ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
           </span>
         </button>
       </section>
@@ -24,7 +24,7 @@
       <!-- Log Level Select -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelLogLevel') }}</p>
+          <p class="setting-label">{{ t('label.logLevel') }}</p>
           <p class="setting-description">{{ t('logLevelDesc') }}</p>
         </div>
 
@@ -41,12 +41,12 @@
       <!-- Open Log Directory -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('btnLogFolder') }}</p>
+          <p class="setting-label">{{ t('button.openLogFolder') }}</p>
           <p class="setting-description">{{ t('contextMenu.showInFolder') }}</p>
         </div>
 
         <button class="action-button" @click="handleOpenLogDir">
-          {{ t('btnLogFolder') }}
+          {{ t('button.openLogFolder') }}
         </button>
       </section>
     </div>
@@ -62,10 +62,10 @@ const { t } = useI18n();
 const settingsStore = useSettingsStore();
 
 const logLevelOptions = computed(() => [
-  { value: 'debug', label: t('optionLogLevelDebug') },
-  { value: 'info', label: t('optionLogLevelInfo') },
-  { value: 'warn', label: t('optionLogLevelWarn') },
-  { value: 'error', label: t('optionLogLevelError') },
+  { value: 'debug', label: t('option.logLevel.Debug') },
+  { value: 'info', label: t('option.logLevel.Info') },
+  { value: 'warn', label: t('option.logLevel.Warn') },
+  { value: 'error', label: t('option.logLevel.Error') },
 ]);
 
 const handleLoggingToggle = async () => {

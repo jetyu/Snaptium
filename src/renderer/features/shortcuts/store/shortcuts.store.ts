@@ -2,6 +2,9 @@ import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
 import { shortcutsService } from '../services/shortcuts.service';
 import { keyboardService } from '../services/keyboard.service';
+import { createLogger } from '@renderer/features/logger';
+
+const shortcutsLogger = createLogger('ShortcutsStore');
 
 /**
  * 命令分类
@@ -113,7 +116,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       commands.value = await shortcutsService.getCommands();
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load commands';
-      console.error('Failed to load commands:', e);
+      shortcutsLogger.error(`Failed to load commands: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       loading.value = false;
     }
@@ -129,7 +132,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keyboardService.setKeybindings(keybindings.value);
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load keybindings';
-      console.error('Failed to load keybindings:', e);
+      shortcutsLogger.error(`Failed to load keybindings: ${e instanceof Error ? e.message : String(e)}`);
     } finally {
       loading.value = false;
     }
@@ -145,7 +148,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keyboardService.setKeybindings(keybindings.value);
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to save keybindings';
-      console.error('Failed to save keybindings:', e);
+      shortcutsLogger.error(`Failed to save keybindings: ${e instanceof Error ? e.message : String(e)}`);
       throw e;
     } finally {
       loading.value = false;
@@ -162,7 +165,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keyboardService.setKeybindings(keybindings.value);
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to add keybinding';
-      console.error('Failed to add keybinding:', e);
+      shortcutsLogger.error(`Failed to add keybinding: ${e instanceof Error ? e.message : String(e)}`);
       throw e;
     } finally {
       loading.value = false;
@@ -179,7 +182,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keyboardService.setKeybindings(keybindings.value);
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to remove keybinding';
-      console.error('Failed to remove keybinding:', e);
+      shortcutsLogger.error(`Failed to remove keybinding: ${e instanceof Error ? e.message : String(e)}`);
       throw e;
     } finally {
       loading.value = false;
@@ -196,7 +199,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keyboardService.setKeybindings(keybindings.value);
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to reset keybindings';
-      console.error('Failed to reset keybindings:', e);
+      shortcutsLogger.error(`Failed to reset keybindings: ${e instanceof Error ? e.message : String(e)}`);
       throw e;
     } finally {
       loading.value = false;
@@ -207,7 +210,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
     try {
       return await shortcutsService.detectConflicts(key, excludeCommandId);
     } catch (e) {
-      console.error('Failed to detect conflicts:', e);
+      shortcutsLogger.error(`Failed to detect conflicts: ${e instanceof Error ? e.message : String(e)}`);
       return [];
     }
   }

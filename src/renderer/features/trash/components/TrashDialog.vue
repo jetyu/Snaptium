@@ -1,0 +1,335 @@
+<template>
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="isOpen" class="trash-overlay" @keydown.esc="closeTrash" tabindex="0" ref="overlayRef">
+        <div class="trash-modal" @click.stop>
+          <div class="trash-header">
+            <div class="header-left">
+              <Delete theme="outline" :size="20" class="trash-icon" />
+              <h2>{{ $t('trash.title') }}</h2>
+            </div>
+            <div class="header-right">
+              <button 
+                v-if="trashedNodes.length > 0" 
+                class="btn-empty" 
+                @click="onEmptyTrash"
+                :title="$t('trash.empty')"
+              >
+                <Clear theme="outline" :size="16" />
+                <span>{{ $t('trash.empty') }}</span>
+              </button>
+              <button @click="closeTrash" class="btn-close">
+                <Close theme="outline" :size="18" />
+              </button>
+            </div>
+          </div>
+
+          <div class="trash-content">
+            <div v-if="isLoading" class="loading-state">
+              <div class="spinner"></div>
+            </div>
+            <div v-else-if="trashedNodes.length === 0" class="empty-state">
+              <Delete theme="outline" :size="48" class="empty-icon" />
+              <p>{{ $t('trash.emptyState') || 'No items in trash' }}</p>
+            </div>
+            <div v-else class="trash-list-wrapper">
+              <table class="trash-table">
+                <thead>
+                  <tr>
+                    <th>{{ $t('trash.name') || 'Name' }}</th>
+                    <th>{{ $t('trash.deletedAt') || 'Deleted At' }}</th>
+                    <th class="actions-col">{{ $t('trash.actions') || 'Actions' }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="node in trashedNodes" :key="node.id">
+                    <td>
+                      <div class="node-name">
+                        <Notes v-if="node.type === 'file'" theme="outline" :size="14" />
+                        <NotebookOne v-else theme="outline" :size="14" />
+                        <span class="name-text">{{ node.name }}</span>
+                        <span v-if="node.childCount > 0" class="child-count">
+                          ({{ $t('trash.containsItems', { count: node.childCount }) || `Contains ${node.childCount} items` }})
+                        </span>
+                      </div>
+                    </td>
+                    <td>{{ formatTime(node.updatedAt) }}</td>
+                    <td class="actions-col">
+                      <div class="action-buttons">
+                        <button 
+                          class="btn-inline-action restore" 
+                          @click="restoreNode(node.id)"
+                          :title="$t('trash.restore') || 'Restore'"
+                        >
+                          <Refresh theme="outline" :size="14" />
+                        </button>
+                        <button 
+                          class="btn-inline-action delete" 
+                          @click="permanentlyDeleteNode(node.id)"
+                          :title="$t('trash.deletePermanently') || 'Delete Permanently'"
+                        >
+                          <Delete theme="outline" :size="14" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
+</template>
+
+<script setup lang="ts">
+import { ref, watch, nextTick } from 'vue';
+import { useTrash } from '../composables/useTrash';
+import { Delete, Close, Clear, Refresh, Notes, NotebookOne } from '@icon-park/vue-next';
+
+const { isOpen, trashedNodes, isLoading, closeTrash, restoreNode, permanentlyDeleteNode, emptyTrash } = useTrash();
+const overlayRef = ref<HTMLElement | null>(null);
+
+const formatTime = (timestamp: number) => {
+  return new Date(timestamp).toLocaleString();
+};
+
+const onEmptyTrash = async () => {
+  if (confirm('Are you sure you want to empty the trash? This action cannot be undone.')) {
+    await emptyTrash();
+  }
+};
+
+watch(isOpen, async (newVal) => {
+  if (newVal) {
+    await nextTick();
+    overlayRef.value?.focus();
+  }
+});
+</script>
+
+<style scoped>
+.trash-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  background-color: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.trash-modal {
+  width: 600px;
+  max-width: 90vw;
+  height: 500px;
+  max-height: 80vh;
+  background: var(--panel, #ffffff);
+  border-radius: 12px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--panel-border, #e5e7eb);
+}
+
+.trash-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--panel-border, #e5e7eb);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--panel-header, #f9fafb);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-left h2 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text, #111827);
+}
+
+.trash-icon {
+  color: var(--accent, #dc2626);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-empty {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  background: transparent;
+  border: 1px solid var(--panel-border, #e5e7eb);
+  border-radius: 6px;
+  color: var(--text-muted, #ef4444);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-empty:hover {
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: var(--text-muted, #6b7280);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+}
+
+.btn-close:hover {
+  background: var(--panel-hover, #f3f4f6);
+  color: var(--text, #111827);
+}
+
+.trash-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.empty-state {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted, #9ca3af);
+  gap: 16px;
+}
+
+.empty-icon {
+  opacity: 0.3;
+}
+
+.loading-state {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid var(--panel-border, #e5e7eb);
+  border-top-color: var(--accent, #3b82f6);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.trash-list-wrapper {
+  padding: 0;
+}
+
+.trash-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.trash-table th {
+  text-align: left;
+  padding: 12px 20px;
+  background: var(--panel-header, #f9fafb);
+  color: var(--text-muted, #4b5563);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid var(--panel-border, #e5e7eb);
+}
+
+.trash-table td {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--panel-border, #f3f4f6);
+  color: var(--text, #374151);
+}
+
+.node-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+}
+
+.name-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+}
+
+.child-count {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--text-muted, #9ca3af);
+  flex-shrink: 0;
+}
+
+.actions-col {
+  width: 100px;
+  text-align: center;
+}
+
+.action-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.btn-inline-action {
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-muted, #9ca3af);
+  transition: all 0.2s;
+  display: flex;
+}
+
+.btn-inline-action.restore:hover {
+  background: color-mix(in srgb, #10b981 12%, transparent);
+  color: #059669;
+}
+
+.btn-inline-action.delete:hover {
+  background: color-mix(in srgb, #ef4444 12%, transparent);
+  color: #dc2626;
+}
+
+/* Transitions */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+</style>

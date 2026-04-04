@@ -7,7 +7,7 @@ import { IPC_CHANNELS } from './constants/ipc.constants.js';
  * @returns {Electron.MenuItemConstructorOptions[]}
  */
 function getMenuTemplate(mainWindow) {
-  const isMac = process.platform === IPC_CHANNELS.DARWIN_KERNEL;
+  const isMac = process.platform === IPC_CHANNELS.PLATFORM_DARWIN_KERNEL;
 
   return [
     ...(isMac ? [getAppMenu()] : []),
@@ -43,7 +43,7 @@ function getAppMenu() {
  * File menu
  */
 function getFileMenu(mainWindow) {
-  const isMac = process.platform === IPC_CHANNELS.DARWIN_KERNEL;
+  const isMac = process.platform === IPC_CHANNELS.PLATFORM_DARWIN_KERNEL;
   return {
     label: $t('menu.file'),
     submenu: [
@@ -71,7 +71,7 @@ function getFileMenu(mainWindow) {
  * Edit menu
  */
 function getEditMenu(mainWindow) {
-  const isMac = process.platform === IPC_CHANNELS.DARWIN_KERNEL;
+  const isMac = process.platform === IPC_CHANNELS.PLATFORM_DARWIN_KERNEL;
   return {
     label: $t('menu.edit'),
     submenu: [
@@ -143,7 +143,7 @@ function getViewMenu(mainWindow) {
  * Window menu
  */
 function getWindowMenu() {
-  const isMac = process.platform ===  IPC_CHANNELS.DARWIN_KERNEL;
+  const isMac = process.platform === IPC_CHANNELS.PLATFORM_DARWIN_KERNEL;
   return {
     label: $t('menu.window'),
     submenu: [

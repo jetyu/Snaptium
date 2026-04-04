@@ -4,7 +4,7 @@ import { I18N_CONSTANTS } from '../constants/i18n.constants';
 
 type LocaleMessages = Record<string, string>;
 
-const localeModules = import.meta.glob('../locales/*.json', {
+const localeModules = import.meta.glob('../../../../../electron/assets/locales/*.json', {
   eager: true,
   import: 'default',
 }) as Record<string, LocaleMessages>;

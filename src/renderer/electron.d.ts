@@ -1,4 +1,4 @@
-export {};
+export { };
 
 interface WorkspaceNodePayload {
   id: string;
@@ -27,6 +27,20 @@ interface WorkspaceContextMenuItemPayload {
 
 interface WorkspaceContextMenuPayload {
   items: WorkspaceContextMenuItemPayload[];
+  labels?: Record<string, string>;
+}
+
+interface EditorContextMenuItemPayload {
+  action?: string | null;
+  labelKey?: string;
+  label?: string;
+  type?: 'normal' | 'separator' | 'submenu';
+  enabled?: boolean;
+  submenu?: EditorContextMenuItemPayload[];
+}
+
+interface EditorContextMenuPayload {
+  items: EditorContextMenuItemPayload[];
   labels?: Record<string, string>;
 }
 
@@ -81,7 +95,7 @@ declare global {
       saveFile: (payload: import('./core/bridge/electronApi').SaveFilePayload) => Promise<import('./core/bridge/electronApi').SaveFileResult | null>;
 
       logger: {
-        log: (payload: { level: string; source: string; message: string }) => void;
+        log: (payload: { level: string; source: string; message: string; context?: unknown }) => void;
         openDir: () => Promise<boolean>;
       };
 
@@ -101,6 +115,13 @@ declare global {
         showNoteInFolder: (nodeId: string) => Promise<boolean>;
         deleteNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
         toggleNodeLock: (payload: { nodeId: string; locked: boolean }) => Promise<WorkspaceNodePayload>;
+        getTrashedNodes: () => Promise<WorkspaceNodePayload[]>;
+        restoreNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
+        permanentlyDeleteNode: (nodeId: string) => Promise<boolean>;
+        emptyTrash: () => Promise<boolean>;
+        getHistory: (contentId: string) => Promise<any[]>;
+        getHistoryContent: (payload: { contentId: string; timestamp: number }) => Promise<string>;
+        recoverVersion: (payload: { nodeId: string; timestamp: number }) => Promise<boolean>;
       };
 
       search?: {
@@ -111,9 +132,16 @@ declare global {
         showContextMenu: (payload: WorkspaceContextMenuPayload) => Promise<string | null>;
       };
 
+      editor?: {
+        showContextMenu: (payload: EditorContextMenuPayload) => Promise<string | null>;
+        readClipboard: () => Promise<string>;
+        writeClipboard: (text: string) => Promise<void>;
+      };
+
       menu?: {
         onOpenPreferences: (callback: () => void) => () => void;
         onOpenAbout: (callback: () => void) => () => void;
+        onCheckForUpdates: (callback: () => void) => () => void;
       };
 
       settings?: {
@@ -122,6 +150,8 @@ declare global {
         setStartup: (enabled: boolean) => Promise<{ enabled: boolean; supported: boolean }>;
         pickDirectory: () => Promise<string | null>;
         switchLanguage: (locale: string) => void;
+        exportConfig: () => Promise<boolean>;
+        importConfig: () => Promise<boolean>;
       };
 
       aiSource?: {
@@ -146,6 +176,97 @@ declare global {
         getKeybindingsForCommand: (commandId: string) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
         exportKeybindings: () => Promise<{ success: boolean; data?: unknown; error?: string }>;
         importKeybindings: (config: unknown) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+      };
+
+      rag?: {
+        initialize: (payload: {
+          workspaceRoot: string;
+          embeddingConfig: {
+            endpoint: string;
+            apiKey: string;
+            model: string;
+          };
+        }) => Promise<{ success: boolean; error?: string }>;
+        indexNote: (request: {
+          noteId: string;
+          noteTitle: string;
+          notePath: string;
+          chunkSize: number;
+          chunkOverlap: number;
+        }) => Promise<{ success: boolean; chunksIndexed?: number; error?: string }>;
+        rebuildIndex: (request: {
+          notes: Array<{
+            id: string;
+            title: string;
+            path: string;
+          }>;
+          chunkSize: number;
+          chunkOverlap: number;
+        }) => Promise<{
+          success: boolean;
+          notesIndexed?: number;
+          notesFailed?: number;
+          totalChunks?: number;
+          error?: string;
+        }>;
+        search: (request: {
+          query: string;
+          topK: number;
+          similarityThreshold: number;
+        }) => Promise<{
+          success: boolean;
+          results: Array<{
+            chunk: {
+              id: string;
+              noteId: string;
+              content: string;
+              startPos: number;
+              endPos: number;
+            };
+            score: number;
+            noteTitle?: string;
+          }>;
+          error?: string;
+        }>;
+        deleteNoteIndex: (noteId: string) => Promise<{ success: boolean; error?: string }>;
+        getStatus: () => Promise<{
+          success: boolean;
+          isInitialized: boolean;
+          totalChunks: number;
+          tableName?: string;
+          error?: string;
+        }>;
+        updateConfig: (embeddingConfig: {
+          endpoint: string;
+          apiKey: string;
+          model: string;
+        }) => Promise<{ success: boolean; error?: string }>;
+      };
+
+      aiChat?: {
+        generate: (config: {
+          endpoint: string;
+          apiKey: string;
+          model: string;
+          messages: Array<{
+            role: 'system' | 'user' | 'assistant';
+            content: string;
+          }>;
+        }) => Promise<{ success: boolean; answer?: string; error?: string }>;
+      };
+
+      updater?: {
+        check: (silent?: boolean) => Promise<{ success: boolean }>;
+        download: () => Promise<{ success: boolean }>;
+        install: () => Promise<{ success: boolean }>;
+        getVersion: () => Promise<string>;
+        updateConfig: (config: { autoCheckUpdates: boolean; updateCheckInterval: number }) => Promise<{ success: boolean }>;
+        onChecking: (callback: () => void) => () => void;
+        onAvailable: (callback: (data: any) => void) => () => void;
+        onNotAvailable: (callback: (data: any) => void) => () => void;
+        onDownloadProgress: (callback: (data: any) => void) => () => void;
+        onDownloaded: (callback: (data: any) => void) => () => void;
+        onError: (callback: (data: any) => void) => () => void;
       };
     };
   }

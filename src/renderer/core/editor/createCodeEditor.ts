@@ -6,11 +6,7 @@ import {
   highlightActiveLineGutter,
   drawSelection,
   highlightActiveLine,
-  placeholder,
   Decoration,
-  DecorationSet,
-  ViewPlugin,
-  ViewUpdate,
 } from '@codemirror/view';
 import { history, defaultKeymap, historyKeymap } from '@codemirror/commands';
 import { markdown } from '@codemirror/lang-markdown';
@@ -59,7 +55,7 @@ export function createCodeEditor({
 
   const updateListener = EditorView.updateListener.of((update) => {
     if (update.docChanged) {
-      const isAiCompletion = update.transactions.some(tr => 
+      const isAiCompletion = update.transactions.some(tr =>
         tr.annotation(acceptedSuggestionAnnotation)
       );
       onChange(update.state.doc.toString(), isAiCompletion);

@@ -1,12 +1,13 @@
 <template>
   <aside class="sidebar" @contextmenu.prevent="openRootMenu">
     <div class="sidebar-header">
-      <span class="sidebar-title">{{ $t("labelNoteList") }}</span>
+      <span class="sidebar-title">{{ $t("label.noteList") }}</span>
       <div class="header-actions">
         <button class="btn-search icon-wrapper" :title="$t('search.openSearch')" @click="$emit('open-search')">
           <Search theme="outline" :size="16" />
         </button>
-        <button class="btn-new-note icon-wrapper" :title="$t('newNote')" @click="openCreateButtonMenu">
+        <button class="btn-new-note icon-wrapper" :title="$t('tooltip.newNoteOrNotebook')"
+          @click="openCreateButtonMenu">
           <Plus theme="outline" :size="16" />
         </button>
       </div>
@@ -27,10 +28,10 @@
           ? selectNote(entry.id)
           : selectNotebook(entry.id)
         " @contextmenu.prevent.stop="
-            entry.kind === 'note'
-              ? openNoteMenu(entry.item)
-              : openNotebookMenu(entry.item)
-            ">
+          entry.kind === 'note'
+            ? openNoteMenu(entry.item)
+            : openNotebookMenu(entry.item)
+          ">
         <button v-if="entry.kind === 'notebook'" class="workspace-row__chevron icon-wrapper"
           :class="{ 'is-expanded': !collapsedIds.has(entry.id) }" @click.stop="toggleCollapse(entry.id)"
           :aria-label="collapsedIds.has(entry.id) ? $t('expand') : $t('collapse')">
@@ -60,15 +61,23 @@
       <p>{{ $t("createFirstNoteOrNotebook") }}</p>
       <div class="empty-actions">
         <button class="btn-create-first" @click="createNote()">
-          {{ $t("newNote") }}
+          {{ $t("contextMenu.newNote") }}
         </button>
         <button class="btn-create-first secondary" @click="createNotebook()">
           {{ $t("contextMenu.newNotebook") }}
         </button>
       </div>
     </div>
+
+    <div class="sidebar-footer">
+      <button class="btn-trash" @click="openTrash">
+        <Delete theme="outline" :size="16" />
+        <span>{{ $t('trash.title') }}</span>
+      </button>
+    </div>
   </aside>
 </template>
+
 
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";
@@ -76,7 +85,9 @@ import { useI18n } from "vue-i18n";
 import { useWorkspace } from "@renderer/features/workspace";
 import type { Note, Notebook } from "../services/workspace.service";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
-import { Search, Plus, Right, FileLockOne, Notes, NotebookOne } from '@icon-park/vue-next';
+import { Search, Plus, Right, FileLockOne, Notes, NotebookOne, Delete } from '@icon-park/vue-next';
+import { useTrash } from "@renderer/features/trash";
+
 
 defineEmits<{
   'open-search': [];
@@ -106,10 +117,13 @@ const {
   renameNote,
   renameNotebook,
   toggleNodeLock,
+  openHistoryDialog,
 } = useWorkspace();
 
 const { t } = useI18n();
+const { openTrash } = useTrash();
 const renameTarget = ref<RenameTarget>(null);
+
 const renameDraft = ref("");
 const renameInput = ref<HTMLInputElement | null>(null);
 const isSubmittingRename = ref(false);
@@ -216,6 +230,7 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     beginRenamingNote,
     beginRenamingNotebook,
     toggleNodeLock,
+    openHistory: openHistoryDialog,
   });
 
 const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
@@ -280,9 +295,44 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
 </script>
 
 <style scoped>
-.workspace-tree {
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+}
+
+.note-list {
+  flex: 1;
+  overflow-y: auto;
   padding: 6px 0;
 }
+
+.sidebar-footer {
+  padding: 3px;
+  border-top: 1px solid var(--panel-border, #e5e7eb);
+  background: var(--panel);
+}
+
+.btn-trash {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 0.9rem;
+}
+
+.btn-trash:hover {
+  background: var(--panel-hover);
+  color: var(--accent);
+}
+
 
 .workspace-row {
   display: flex;

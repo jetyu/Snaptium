@@ -1,0 +1,134 @@
+import { ipcMain } from 'electron';
+import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
+import { vfsService } from '../../services/vfs.service.js';
+import { loggerService } from '../../services/logger.service.js';
+import { z } from 'zod';
+
+const logger = loggerService.createLogger('Electron:VFS IPC');
+
+// Schemas
+const uuidSchema = z.string().uuid();
+const parentIdSchema = uuidSchema.nullable();
+const nameSchema = z.string().min(1).max(255);
+
+export function registerVfsIpcHandlers() {
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_INIT);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_CREATE_FILE);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_CREATE_FOLDER);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_RENAME_NODE);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_READ_CONTENT);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_WRITE_CONTENT);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_DELETE_NODE);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_GET_TRASHED_NODES);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_RESTORE_NODE);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_PERMANENTLY_DELETE_NODE);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_EMPTY_TRASH);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_GET_HISTORY);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_GET_HISTORY_CONTENT);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_RECOVER_VERSION);
+
+  ipcMain.handle(IPC_CHANNELS.VFS_INIT, (_event, rootPath) => {
+    const schema = z.string().optional();
+    return vfsService.initializeWorkspace(schema.parse(rootPath));
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_CREATE_FILE, (_event, payload = {}) => {
+    const schema = z.object({
+      parentId: parentIdSchema,
+      name: nameSchema,
+      content: z.string().optional().default(''),
+    });
+    const data = schema.parse(payload);
+    return vfsService.createFile(data.parentId, data.name, data.content);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_CREATE_FOLDER, (_event, payload = {}) => {
+    const schema = z.object({
+      parentId: parentIdSchema,
+      name: nameSchema,
+    });
+    const data = schema.parse(payload);
+    return vfsService.createFolder(data.parentId, data.name);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_RENAME_NODE, (_event, payload = {}) => {
+    const schema = z.object({
+      nodeId: uuidSchema,
+      name: nameSchema,
+    });
+    const data = schema.parse(payload);
+    return vfsService.renameNode(data.nodeId, data.name);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_READ_CONTENT, (_event, contentId) => {
+    return vfsService.readContent(uuidSchema.parse(contentId));
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_WRITE_CONTENT, (_event, payload = {}) => {
+    const schema = z.object({
+      contentId: uuidSchema,
+      content: z.string(),
+    });
+    const data = schema.parse(payload);
+    return vfsService.writeContent(data.contentId, data.content);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER, (_event, nodeId) => {
+    return vfsService.showNoteInFolder(uuidSchema.parse(nodeId));
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_DELETE_NODE, (_event, nodeId) => {
+    return vfsService.deleteNode(uuidSchema.parse(nodeId));
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK, (_event, payload = {}) => {
+    const schema = z.object({
+      nodeId: uuidSchema,
+      locked: z.boolean(),
+    });
+    const data = schema.parse(payload);
+    return vfsService.toggleNodeLock(data.nodeId, data.locked);
+  });
+  
+  ipcMain.handle(IPC_CHANNELS.VFS_GET_TRASHED_NODES, () =>
+    vfsService.getTrashedNodes(),
+  );
+
+  ipcMain.handle(IPC_CHANNELS.VFS_RESTORE_NODE, (_event, nodeId) => {
+    return vfsService.restoreNode(uuidSchema.parse(nodeId));
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_PERMANENTLY_DELETE_NODE, (_event, nodeId) => {
+    return vfsService.permanentlyDeleteNode(uuidSchema.parse(nodeId));
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_EMPTY_TRASH, () =>
+    vfsService.emptyTrash(),
+  );
+
+  ipcMain.handle(IPC_CHANNELS.VFS_GET_HISTORY, (_event, contentId) => {
+    return vfsService.getHistory(uuidSchema.parse(contentId));
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_GET_HISTORY_CONTENT, (_event, payload = {}) => {
+    const schema = z.object({
+      contentId: uuidSchema,
+      filename: z.string(),
+    });
+    const data = schema.parse(payload);
+    return vfsService.getHistoryContent(data.contentId, data.filename);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_RECOVER_VERSION, (_event, payload = {}) => {
+    const schema = z.object({
+      nodeId: uuidSchema,
+      filename: z.string(),
+    });
+    const data = schema.parse(payload);
+    return vfsService.recoverVersion(data.nodeId, data.filename);
+  });
+
+  logger.debug('VFS IPC handlers registered');
+}

@@ -1,6 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { app, shell } from 'electron';
+import { formatTimestamp } from '../utils/formatTools.js';
 
 class LoggerService {
   constructor() {
@@ -22,10 +23,6 @@ class LoggerService {
     }
   }
 
-  /**
-   * Update logger configuration
-   * @param {Object} config 
-   */
   updateConfig(config) {
     if (config.loggingEnabled !== undefined) {
       this.enabled = config.loggingEnabled;
@@ -35,25 +32,43 @@ class LoggerService {
     }
   }
 
-  /**
-   * Get current log file path based on date
-   * Format: Pilotra_logs_YYYYMMDD.log
-   */
   getLogFilePath() {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    return path.join(this.logDir, `Pilotra_logs_${year}${month}${day}.log`);
+    return path.join(this.logDir, `Pilotra_App_logs_${year}${month}${day}.log`);
   }
 
-  formatMessage(level, source, message) {
-    const timestamp = new Date().toISOString();
+  normalizeMessage(message, context) {
+    const text = typeof message === 'string' ? message : JSON.stringify(message);
+    if (context === undefined) {
+      return text;
+    }
+
+    if (context instanceof Error) {
+      return `${text} | ${context.name}: ${context.message}`;
+    }
+
+    if (typeof context === 'string') {
+      return `${text} | ${context}`;
+    }
+
+    try {
+      return `${text} | ${JSON.stringify(context)}`;
+    } catch {
+      return `${text} | [unserializable context]`;
+    }
+  }
+
+  formatMessage(level, source, message, context) {
+    const timestamp = formatTimestamp();
     const sourceTag = source ? ` [${source}]` : '';
-    return `[${timestamp}] [${level.toUpperCase()}]${sourceTag} ${message}\n`;
+    const normalizedMessage = this.normalizeMessage(message, context);
+    return `[${timestamp}] [${level.toUpperCase()}]${sourceTag} ${normalizedMessage}\n`;
   }
 
-  log(level, source, message) {
+  log(level, source, message, context) {
     if (!this.enabled) return;
 
     const currentLevelNum = this.levels[level.toLowerCase()] ?? 1;
@@ -63,9 +78,8 @@ class LoggerService {
       return;
     }
 
-    const formatted = this.formatMessage(level, source, message);
-    
-    // Console output
+    const formatted = this.formatMessage(level, source, message, context);
+
     const consoleMsg = formatted.trim();
     switch (level.toLowerCase()) {
       case 'error':
@@ -81,7 +95,6 @@ class LoggerService {
         console.log(consoleMsg);
     }
 
-    // File output
     try {
       const logFile = this.getLogFilePath();
       fs.appendFileSync(logFile, formatted, 'utf8');
@@ -90,19 +103,25 @@ class LoggerService {
     }
   }
 
-  /**
-   * Open the log directory in system explorer
-   */
   openLogDir() {
     shell.openPath(this.logDir).catch(err => {
       console.error('Failed to open log directory:', err);
     });
   }
 
-  info(source, message) { this.log('info', source, message); }
-  warn(source, message) { this.log('warn', source, message); }
-  error(source, message) { this.log('error', source, message); }
-  debug(source, message) { this.log('debug', source, message); }
+  info(source, message, context) { this.log('info', source, message, context); }
+  warn(source, message, context) { this.log('warn', source, message, context); }
+  error(source, message, context) { this.log('error', source, message, context); }
+  debug(source, message, context) { this.log('debug', source, message, context); }
+
+  createLogger(source) {
+    return {
+      info: (message, context) => this.info(source, message, context),
+      warn: (message, context) => this.warn(source, message, context),
+      error: (message, context) => this.error(source, message, context),
+      debug: (message, context) => this.debug(source, message, context),
+    };
+  }
 }
 
 export const loggerService = new LoggerService();

@@ -34,6 +34,7 @@ export const WORKSPACE_CONSTANTS = {
     UNLOCK: 'contextMenu.unlock',
     SHOW_IN_FOLDER: 'contextMenu.showInFolder',
     PROPERTIES: 'contextMenu.properties',
+    HISTORY: 'contextMenu.history',
   },
   ACTIONS: {
     CREATE_NOTE: 'create-note',
@@ -43,6 +44,7 @@ export const WORKSPACE_CONSTANTS = {
     TOGGLE_LOCK: 'toggle-lock',
     SHOW_IN_FOLDER: 'show-in-folder',
     PROPERTIES: 'properties',
+    HISTORY: 'history',
     NOOP: 'noop',
   },
   MENU_ITEM_TYPE: {

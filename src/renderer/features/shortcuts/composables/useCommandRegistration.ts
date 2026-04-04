@@ -5,11 +5,10 @@ import { useSettings } from '@renderer/features/settings';
 import { useEditor } from '@renderer/features/editor';
 import { useSearch } from '@renderer/features/search';
 import { openSearchPanel } from '@codemirror/search';
+import { createLogger } from '@renderer/features/logger';
 
-/**
- * 注册所有应用命令
- * 在应用启动时调用一次
- */
+const commandRegistrationLogger = createLogger('CommandRegistration');
+
 export function useCommandRegistration() {
   const { createNote } = useWorkspace();
   const { saveActiveNote, deleteActiveNote, renameActiveNote } = useWorkspaceActions();
@@ -18,64 +17,61 @@ export function useCommandRegistration() {
   const { openGlobalSearch } = useSearch();
 
   const registerAllCommands = () => {
-    // 文件操作命令
     commandService.registerCommand('file.new', async () => {
-      console.log('✅ Command executed: file.new');
+      commandRegistrationLogger.debug('Command executed: file.new');
       try {
         await createNote();
       } catch (error) {
-        console.error('Failed to create note:', error);
+        commandRegistrationLogger.error(`Failed to create note: ${error instanceof Error ? error.message : String(error)}`);
       }
     });
 
     commandService.registerCommand('file.save', async () => {
-      console.log('✅ Command executed: file.save');
+      commandRegistrationLogger.debug('Command executed: file.save');
       await saveActiveNote();
     });
 
     commandService.registerCommand('file.delete', async () => {
-      console.log('✅ Command executed: file.delete');
+      commandRegistrationLogger.debug('Command executed: file.delete');
       await deleteActiveNote();
     });
 
     commandService.registerCommand('file.rename', async () => {
-      console.log('✅ Command executed: file.rename');
+      commandRegistrationLogger.debug('Command executed: file.rename');
       await renameActiveNote();
     });
 
-    // 搜索命令
     commandService.registerCommand('search.find', () => {
-      console.log('✅ Command executed: search.find');
+      commandRegistrationLogger.debug('Command executed: search.find');
       const editorView = getEditorView();
       if (editorView) {
         openSearchPanel(editorView);
       } else {
-        console.warn('No active editor view');
+        commandRegistrationLogger.warn('No active editor view');
       }
     });
 
     commandService.registerCommand('search.findInFiles', () => {
-      console.log('✅ Command executed: search.findInFiles');
+      commandRegistrationLogger.debug('Command executed: search.findInFiles');
       openGlobalSearch();
     });
 
-    // 应用命令
     commandService.registerCommand('app.preferences', () => {
-      console.log('✅ Command executed: app.preferences');
+      commandRegistrationLogger.debug('Command executed: app.preferences');
       openSettings();
     });
 
     commandService.registerCommand('app.quit', () => {
-      console.log('✅ Command executed: app.quit');
+      commandRegistrationLogger.debug('Command executed: app.quit');
       window.close();
     });
 
-    console.log('✅ All commands registered successfully');
+    commandRegistrationLogger.info('All commands registered successfully');
   };
 
   const unregisterAllCommands = () => {
     commandService.clear();
-    console.log('✅ All commands unregistered');
+    commandRegistrationLogger.info('All commands unregistered');
   };
 
   onMounted(() => {

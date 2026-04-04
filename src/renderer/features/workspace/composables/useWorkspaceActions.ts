@@ -1,4 +1,7 @@
 import { useWorkspaceStore } from '../store/workspace.store';
+import { createLogger } from '@renderer/features/logger';
+
+const workspaceActionsLogger = createLogger('WorkspaceActions');
 
 /**
  * 工作区操作 composable
@@ -13,7 +16,7 @@ export function useWorkspaceActions() {
   const deleteActiveNote = async () => {
     const activeNote = workspaceStore.activeNote;
     if (!activeNote) {
-      console.warn('No active note to delete');
+      workspaceActionsLogger.warn('No active note to delete');
       return false;
     }
 
@@ -25,7 +28,7 @@ export function useWorkspaceActions() {
       await workspaceStore.deleteNote(activeNote.id);
       return true;
     } catch (error) {
-      console.error('Failed to delete note:', error);
+      workspaceActionsLogger.error(`Failed to delete note: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     }
   };
@@ -36,7 +39,7 @@ export function useWorkspaceActions() {
   const renameActiveNote = async () => {
     const activeNote = workspaceStore.activeNote;
     if (!activeNote) {
-      console.warn('No active note to rename');
+      workspaceActionsLogger.warn('No active note to rename');
       return false;
     }
 
@@ -48,7 +51,7 @@ export function useWorkspaceActions() {
       await workspaceStore.renameNote(activeNote.id, newTitle.trim());
       return true;
     } catch (error) {
-      console.error('Failed to rename note:', error);
+      workspaceActionsLogger.error(`Failed to rename note: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     }
   };
@@ -61,7 +64,7 @@ export function useWorkspaceActions() {
       await workspaceStore.forceFlushAutoSave();
       return true;
     } catch (error) {
-      console.error('Failed to save note:', error);
+      workspaceActionsLogger.error(`Failed to save note: ${error instanceof Error ? error.message : String(error)}`);
       return false;
     }
   };

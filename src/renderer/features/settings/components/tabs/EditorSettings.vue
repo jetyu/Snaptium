@@ -1,14 +1,14 @@
 <template>
   <div class="editor-settings">
-    <h3 class="panel-title">{{ t('paneEditorSettings') }}</h3>
+    <h3 class="panel-title">{{ t('pref.pane.editor') }}</h3>
 
     <!-- Editor Behavior Settings -->
     <div class="settings-grid two-cols" style="margin-top: 0.5rem;">
       <!-- Editor Font Size -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelEditorFontSize') }}</p>
-          <p class="setting-description">{{ t('textEditorFontSize') }}</p>
+          <p class="setting-label">{{ t('label.editorFontSize') }}</p>
+          <p class="setting-description">{{ t('text.editorFontSize') }}</p>
         </div>
         <div class="input-container number-input-container">
           <input type="number" class="settings-input number-input" :value="settingsStore.config.editorFontSize"
@@ -19,8 +19,8 @@
       <!-- Editor Font -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelEditorFont') }}</p>
-          <p class="setting-description">{{ t('textEditorFont') }}</p>
+          <p class="setting-label">{{ t('label.editorFont') }}</p>
+          <p class="setting-description">{{ t('text.editorFont') }}</p>
         </div>
         <label class="select-shell">
           <select class="settings-select" :value="settingsStore.config.editorFont" @change="handleFontChange">
@@ -33,8 +33,8 @@
       <!-- Line Numbers -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelShowLineNumbers') }}</p>
-          <p class="setting-description">{{ t('textShowLineNumbers') }}</p>
+          <p class="setting-label">{{ t('label.showLineNumbers') }}</p>
+          <p class="setting-description">{{ t('text.showLineNumbers ') }}</p>
         </div>
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.showLineNumbers }"
           :aria-pressed="settingsStore.config.showLineNumbers"
@@ -43,7 +43,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.showLineNumbers ? t('statusEnabled') : t('statusDisabled') }}
+            {{ settingsStore.config.showLineNumbers ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
           </span>
         </button>
       </section>
@@ -51,8 +51,8 @@
       <!-- Word Wrap -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelWordWrap') }}</p>
-          <p class="setting-description">{{ t('textWordWrap') }}</p>
+          <p class="setting-label">{{ t('label.wordWrap') }}</p>
+          <p class="setting-description">{{ t('text.wordWrap') }}</p>
         </div>
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.wordWrap }"
           :aria-pressed="settingsStore.config.wordWrap"
@@ -61,7 +61,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.wordWrap ? t('statusEnabled') : t('statusDisabled') }}
+            {{ settingsStore.config.wordWrap ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
           </span>
         </button>
       </section>
@@ -69,8 +69,8 @@
       <!-- Code Folding -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelCodeFolding') }}</p>
-          <p class="setting-description">{{ t('textCodeFolding') }}</p>
+          <p class="setting-label">{{ t('label.codeFolding') }}</p>
+          <p class="setting-description">{{ t('text.codeFolding') }}</p>
         </div>
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.codeFolding }"
           :aria-pressed="settingsStore.config.codeFolding"
@@ -79,7 +79,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.codeFolding ? t('statusEnabled') : t('statusDisabled') }}
+            {{ settingsStore.config.codeFolding ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
           </span>
         </button>
       </section>
@@ -87,7 +87,7 @@
       <!-- Highlight Active Line -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelHighlightActiveLine') }}</p>
+          <p class="setting-label">{{ t('text.highlightActiveLine') }}</p>
           <p class="setting-description">{{ t('textHighlightActiveLine') }}</p>
         </div>
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.highlightActiveLine }"
@@ -97,7 +97,8 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.highlightActiveLine ? t('statusEnabled') : t('statusDisabled') }}
+            {{ settingsStore.config.highlightActiveLine ? t('checkbox.status.enabled') : t('checkbox.status.disabled')
+            }}
           </span>
         </button>
       </section>
@@ -115,7 +116,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.bracketMatching ? t('statusEnabled') : t('statusDisabled') }}
+            {{ settingsStore.config.bracketMatching ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
           </span>
         </button>
       </section>
@@ -123,8 +124,8 @@
       <!-- Auto Close Brackets -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelAutoCloseBrackets') }}</p>
-          <p class="setting-description">{{ t('textAutoCloseBrackets') }}</p>
+          <p class="setting-label">{{ t('label.autoCloseBrackets') }}</p>
+          <p class="setting-description">{{ t('text.autoCloseBrackets') }}</p>
         </div>
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.autoCloseBrackets }"
           :aria-pressed="settingsStore.config.autoCloseBrackets"
@@ -133,7 +134,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.autoCloseBrackets ? t('statusEnabled') : t('statusDisabled') }}
+            {{ settingsStore.config.autoCloseBrackets ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
           </span>
         </button>
       </section>
@@ -141,8 +142,8 @@
       <!-- Auto Indent -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelAutoIndent') }}</p>
-          <p class="setting-description">{{ t('textAutoIndent') }}</p>
+          <p class="setting-label">{{ t('label.autoIndent') }}</p>
+          <p class="setting-description">{{ t('text.autoIndent') }}</p>
         </div>
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.autoIndent }"
           :aria-pressed="settingsStore.config.autoIndent"
@@ -151,7 +152,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.autoIndent ? t('statusEnabled') : t('statusDisabled') }}
+            {{ settingsStore.config.autoIndent ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
           </span>
         </button>
       </section>
@@ -159,8 +160,8 @@
       <!-- Show Status Bar -->
       <section class="setting-card">
         <div class="setting-copy">
-          <p class="setting-label">{{ t('labelShowStatusBar') }}</p>
-          <p class="setting-description">{{ t('textShowStatusBar') }}</p>
+          <p class="setting-label">{{ t('label.showStatusBar') }}</p>
+          <p class="setting-description">{{ t('text.showStatusBar') }}</p>
         </div>
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.showStatusBar }"
           :aria-pressed="settingsStore.config.showStatusBar"
@@ -169,7 +170,7 @@
             <span class="startup-switch-thumb" />
           </span>
           <span class="startup-switch-text">
-            {{ settingsStore.config.showStatusBar ? t('statusEnabled') : t('statusDisabled') }}
+            {{ settingsStore.config.showStatusBar ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
           </span>
         </button>
       </section>

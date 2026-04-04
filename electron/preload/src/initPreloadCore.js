@@ -1,9 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron';
 import { IPC_CHANNELS } from '../../main/constants/ipc.constants.js';
 
-// The shared IPC constants are imported here once and inlined into the built
-// sandbox-compatible preload artifact during the preload build.
-
 const electronAPI = Object.freeze({
   openFile: () => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE),
   saveFile: (payload) => ipcRenderer.invoke(IPC_CHANNELS.SAVE_FILE, payload),
@@ -26,12 +23,24 @@ const electronAPI = Object.freeze({
     showNoteInFolder: (nodeId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER, nodeId),
     deleteNode: (nodeId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_DELETE_NODE, nodeId),
     toggleNodeLock: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK, payload),
+    getTrashedNodes: () => ipcRenderer.invoke(IPC_CHANNELS.VFS_GET_TRASHED_NODES),
+    restoreNode: (nodeId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_RESTORE_NODE, nodeId),
+    permanentlyDeleteNode: (nodeId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_PERMANENTLY_DELETE_NODE, nodeId),
+    emptyTrash: () => ipcRenderer.invoke(IPC_CHANNELS.VFS_EMPTY_TRASH),
+    getHistory: (contentId) => ipcRenderer.invoke(IPC_CHANNELS.VFS_GET_HISTORY, contentId),
+    getHistoryContent: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_GET_HISTORY_CONTENT, payload),
+    recoverVersion: (payload) => ipcRenderer.invoke(IPC_CHANNELS.VFS_RECOVER_VERSION, payload),
   }),
   search: Object.freeze({
     searchNotes: (query) => ipcRenderer.invoke(IPC_CHANNELS.SEARCH_NOTES, query),
   }),
   workspace: Object.freeze({
     showContextMenu: (payload) => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, payload),
+  }),
+  editor: Object.freeze({
+    showContextMenu: (payload) => ipcRenderer.invoke(IPC_CHANNELS.EDITOR_SHOW_CONTEXT_MENU, payload),
+    readClipboard: () => ipcRenderer.invoke(IPC_CHANNELS.EDITOR_READ_CLIPBOARD),
+    writeClipboard: (text) => ipcRenderer.invoke(IPC_CHANNELS.EDITOR_WRITE_CLIPBOARD, text),
   }),
   menu: Object.freeze({
     onOpenPreferences: (callback) => {
@@ -43,6 +52,11 @@ const electronAPI = Object.freeze({
       const subscription = (_event) => callback();
       ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_ABOUT, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_ABOUT, subscription);
+    },
+    onCheckForUpdates: (callback) => {
+      const subscription = (_event) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_CHECK_FOR_UPDATES, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_CHECK_FOR_UPDATES, subscription);
     }
   }),
   settings: Object.freeze({
@@ -51,6 +65,8 @@ const electronAPI = Object.freeze({
     setStartup: (enabled) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
     pickDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_PICK_DIRECTORY),
     switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.SETTINGS_SWITCH_LANGUAGE, locale),
+    exportConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_EXPORT),
+    importConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_IMPORT),
   }),
   aiSource: Object.freeze({
     testConnection: (config) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),
@@ -73,6 +89,55 @@ const electronAPI = Object.freeze({
     exportKeybindings: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_EXPORT_KEYBINDINGS),
     importKeybindings: (config) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_IMPORT_KEYBINDINGS, config),
   }),
+  rag: Object.freeze({
+    initialize: (payload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INITIALIZE, payload),
+    indexNote: (request) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_NOTE, request),
+    rebuildIndex: (request) => ipcRenderer.invoke(IPC_CHANNELS.RAG_REBUILD_INDEX, request),
+    search: (request) => ipcRenderer.invoke(IPC_CHANNELS.RAG_SEARCH, request),
+    deleteNoteIndex: (noteId) => ipcRenderer.invoke(IPC_CHANNELS.RAG_DELETE_NOTE_INDEX, noteId),
+    getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_STATUS),
+    updateConfig: (embeddingConfig) => ipcRenderer.invoke(IPC_CHANNELS.RAG_UPDATE_CONFIG, embeddingConfig),
+  }),
+  aiChat: Object.freeze({
+    generate: (config) => ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT_GENERATE, config),
+  }),
+  updater: Object.freeze({
+    check: (silent) => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_CHECK, silent),
+    download: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_DOWNLOAD),
+    install: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_INSTALL),
+    getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_GET_VERSION),
+    updateConfig: (config) => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_UPDATE_CONFIG, config),
+    onChecking: (callback) => {
+      const subscription = () => callback();
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_CHECKING, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_CHECKING, subscription);
+    },
+    onAvailable: (callback) => {
+      const subscription = (_event, data) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_AVAILABLE, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_AVAILABLE, subscription);
+    },
+    onNotAvailable: (callback) => {
+      const subscription = (_event, data) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_NOT_AVAILABLE, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_NOT_AVAILABLE, subscription);
+    },
+    onDownloadProgress: (callback) => {
+      const subscription = (_event, data) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_DOWNLOAD_PROGRESS, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_DOWNLOAD_PROGRESS, subscription);
+    },
+    onDownloaded: (callback) => {
+      const subscription = (_event, data) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_DOWNLOADED, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_DOWNLOADED, subscription);
+    },
+    onError: (callback) => {
+      const subscription = (_event, data) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_ERROR, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_ERROR, subscription);
+    },
+  }),
 });
 
-contextBridge.exposeInMainWorld('electronAPI', electronAPI);
+contextBridge.exposeInMainWorld(IPC_CHANNELS.ELECTRON_API, electronAPI);

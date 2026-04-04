@@ -48,7 +48,6 @@ class SuggestionWidget extends WidgetType {
   }
 }
 
-// 装饰器插件 - 在光标位置显示补全建议
 const suggestionDecorations = ViewPlugin.fromClass(
   class {
     decorations: DecorationSet;
@@ -122,7 +121,6 @@ const suggestionKeymap = keymap.of([
   {
     key: 'Tab',
     run: acceptSuggestion,
-    // 返回 false 时会继续执行默认的 Tab 行为（缩进）
   },
   {
     key: 'Escape',
@@ -135,7 +133,7 @@ const suggestionKeymap = keymap.of([
  */
 export function showAiSuggestion(view: EditorView, suggestion: string) {
   if (!suggestion) return;
-  
+
   view.dispatch({
     effects: setSuggestion.of(suggestion),
   });
