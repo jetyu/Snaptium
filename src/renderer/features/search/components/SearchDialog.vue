@@ -4,14 +4,15 @@
       <div class="search-dialog">
         <div class="search-header">
           <div class="search-input-row">
-          <div class="search-input-wrapper">
-            <input ref="searchInput" v-model="searchQuery" type="text" class="search-input"
-              :placeholder="useSemanticSearch ? $t('search.semanticPlaceholder') : $t('search.placeholder')"
-              @input="onInput" @keydown.enter="handleSearch(true)" @keydown.esc="close" />
-            <button v-if="searchQuery" class="btn-clear" @click="searchQuery = ''; searchInput?.focus()" :title="$t('common.clear')">
-              <Close theme="outline" :size="14" />
-            </button>
-          </div>
+            <div class="search-input-wrapper">
+              <input ref="searchInput" v-model="searchQuery" type="text" class="search-input"
+                :placeholder="useSemanticSearch ? $t('search.semanticPlaceholder') : $t('search.placeholder')"
+                @input="onInput" @keydown.enter="handleSearch(true)" @keydown.esc="close" />
+              <button v-if="searchQuery" class="btn-clear" @click="searchQuery = ''; searchInput?.focus()"
+                :title="$t('common.clear')">
+                <Close theme="outline" :size="14" />
+              </button>
+            </div>
             <button class="btn-search" @click="handleSearch(true)" :title="$t('search.search')">
               <Search theme="outline" :size="18" />
             </button>
@@ -25,7 +26,7 @@
               <span class="startup-switch-thumb" />
             </span>
             <span class="startup-switch-text">
-              {{ $t('pref.pane.aiRAG') }}
+              {{ $t('search.semanticSearch') }}
             </span>
           </button>
         </div>
@@ -76,7 +77,8 @@
             <div class="status-text">{{ useSemanticSearch ? $t('search.noResultsSemantic') : $t('search.noResultsLocal')
             }}</div>
           </div>
-          <div v-else-if="(!searchQuery || !hasSearched) && (!semanticResults.length && !results.length && !aiAnswer)" class="search-status search-hint">
+          <div v-else-if="(!searchQuery || !hasSearched) && (!semanticResults.length && !results.length && !aiAnswer)"
+            class="search-status search-hint">
             <div class="hint-text">
               {{ useSemanticSearch ? $t('search.semanticHint') : $t('search.typeToSearch') }}
             </div>
