@@ -21,11 +21,11 @@ const newSource = reactive({
   name: '',
   endpoint: '',
   apiKey: '',
-  defaultModel: '',
+  aiModel: '',
 });
 
 // Reset test status when any input field changes
-watch(() => [newSource.name, newSource.endpoint, newSource.apiKey, newSource.defaultModel], () => {
+watch(() => [newSource.name, newSource.endpoint, newSource.apiKey, newSource.aiModel], () => {
   testSuccess.value = false;
   testError.value = null;
 }, { deep: true });
@@ -35,7 +35,7 @@ const canTest = computed(() => {
   return !!(
     newSource.name.trim() &&
     newSource.endpoint.trim() &&
-    newSource.defaultModel.trim() &&
+    newSource.aiModel.trim() &&
     newSource.apiKey.trim()
   );
 });
@@ -55,7 +55,7 @@ const handleAddSource = async () => {
       name: newSource.name,
       endpoint: newSource.endpoint,
       apiKey: newSource.apiKey,
-      defaultModel: newSource.defaultModel,
+      aiModel: newSource.aiModel,
     });
     aisLogger.info(`AI Source added: ${result.name} (ID: ${result.id})`);
 
@@ -63,7 +63,7 @@ const handleAddSource = async () => {
     newSource.name = '';
     newSource.endpoint = '';
     newSource.apiKey = '';
-    newSource.defaultModel = '';
+    newSource.aiModel = '';
     testSuccess.value = false;
     showAddForm.value = false;
   } catch (error) {
@@ -83,11 +83,10 @@ const handleTestNewSource = async () => {
   testError.value = null;
 
   try {
-    // If defaultModel is empty, the backend will use the /models endpoint test
     const result = await settingsStore.testConnection({
       aiEndpoint: newSource.endpoint,
       aiApiKey: newSource.apiKey,
-      aiModel: newSource.defaultModel,
+      aiModel: newSource.aiModel,
     });
 
     if (result?.success) {
@@ -151,7 +150,7 @@ const cancelDelete = () => {
               </div>
               <div class="detail-item">
                 <span class="label">{{ t('label.aiModel') }}</span>
-                <span class="value">{{ source.defaultModel }}</span>
+                <span class="value">{{ source.aiModel }}</span>
               </div>
               <div class="detail-item">
                 <span class="label">{{ t('label.aiApiKey') }}</span>
@@ -175,19 +174,19 @@ const cancelDelete = () => {
 
         <div class="form-group">
           <label class="setting-label">{{ t('label.aiApiEndpoint') }} <span class="required-mark">{{ t('label.starSign')
-              }}</span></label>
+          }}</span></label>
           <input v-model="newSource.endpoint" type="text" class="settings-input"
             :placeholder="t('placeholder.aiAPIEndpoint')" />
         </div>
         <div class="form-group">
           <label class="setting-label">{{ t('label.aiModel') }} <span class="required-mark">{{ t('label.starSign')
-              }}</span></label>
-          <input v-model="newSource.defaultModel" type="text" class="settings-input"
+          }}</span></label>
+          <input v-model="newSource.aiModel" type="text" class="settings-input"
             :placeholder="t('placeholder.aiModel')" />
         </div>
         <div class="form-group">
           <label class="setting-label">{{ t('label.aiApiKey') }} <span class="required-mark">{{ t('label.starSign')
-              }}</span></label>
+          }}</span></label>
           <input v-model="newSource.apiKey" type="password" class="settings-input"
             :placeholder="t('placeholder.aiAPIKey')" />
         </div>

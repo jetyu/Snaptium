@@ -72,7 +72,7 @@ export function registerAiAssistantIpcHandlers() {
       }
 
       // 验证模型
-      const model = aiAssistant.model || source.defaultModel;
+      const model = aiAssistant.model || source.aiModel;
       if (!model) {
         return { success: false, message: 'No model configured' };
       }

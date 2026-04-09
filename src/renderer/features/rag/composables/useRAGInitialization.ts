@@ -13,8 +13,8 @@ export function useRAGInitialization() {
   const { rebuildIndex, indexNote } = useRAGIndex();
   let stopAutoIndexOnSaveWatcher: WatchStopHandle | null = null;
   let stopAutoIndexSettingWatcher: WatchStopHandle | null = null;
-  const resolveEmbeddingModel = (sourceDefaultModel: string) =>
-    settingsStore.config.rag.embeddingModel || sourceDefaultModel;
+  const resolveEmbeddingModel = (aiModel: string) =>
+    settingsStore.config.rag.embeddingModel || aiModel;
 
   const initializeRAG = async () => {
     const ragConfig = settingsStore.config.rag;
@@ -39,7 +39,7 @@ export function useRAGInitialization() {
         return;
       }
 
-      if (!embeddingSource.defaultModel) {
+      if (!embeddingSource.aiModel) {
         ragInitLogger.error('Embedding source has no default model');
         return;
       }
@@ -56,7 +56,7 @@ export function useRAGInitialization() {
         embeddingConfig: {
           endpoint: embeddingSource.endpoint,
           apiKey: embeddingSource.apiKey,
-          model: resolveEmbeddingModel(embeddingSource.defaultModel),
+          model: resolveEmbeddingModel(embeddingSource.aiModel),
         },
       });
 
@@ -156,7 +156,7 @@ export function useRAGInitialization() {
       source => source.id === ragConfig.embeddingSourceId
     );
 
-    if (!embeddingSource || !embeddingSource.defaultModel) {
+    if (!embeddingSource || !embeddingSource.aiModel) {
       return;
     }
 
@@ -164,7 +164,7 @@ export function useRAGInitialization() {
       await ragService.updateConfig({
         endpoint: embeddingSource.endpoint,
         apiKey: embeddingSource.apiKey,
-        model: resolveEmbeddingModel(embeddingSource.defaultModel),
+        model: resolveEmbeddingModel(embeddingSource.aiModel),
       });
       ragInitLogger.info('Embedding config updated');
     } catch (error) {

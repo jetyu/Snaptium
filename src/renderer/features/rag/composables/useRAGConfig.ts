@@ -30,11 +30,11 @@ export function useRAGConfig() {
     const embeddingSource = settingsStore.config.aiSources.find(
       source => source.id === ragConfig.value.embeddingSourceId
     );
-    
+
     return !!(
       ragConfig.value.embeddingSourceId &&
       embeddingSource &&
-      embeddingSource.defaultModel
+      embeddingSource.aiModel
     );
   });
 

@@ -11,7 +11,7 @@ export interface AISource {
   name: string;
   endpoint: string;
   apiKey: string;
-  defaultModel: string;
+  aiModel: string;
 }
 
 export interface AIAssistantSettings {
@@ -185,8 +185,8 @@ export const useSettingsStore = defineStore('settings', () => {
     // Auto-update model if sourceId changes
     if (key === 'sourceId') {
       const source = config.value.aiSources.find(s => s.id === String(value));
-      if (source && source.defaultModel) {
-        config.value.aiAssistant.model = source.defaultModel;
+      if (source && source.aiModel) {
+        config.value.aiAssistant.model = source.aiModel;
       }
     }
 
@@ -202,11 +202,19 @@ export const useSettingsStore = defineStore('settings', () => {
   ) => {
     config.value.rag[key] = value;
 
-    // Auto-update model if embeddingSourceId changes
+    // Auto-update model if sourceId changes
     if (key === 'embeddingSourceId') {
       const source = config.value.aiSources.find(s => s.id === String(value));
-      if (source && source.defaultModel) {
-        config.value.rag.embeddingModel = source.defaultModel;
+      if (source && source.aiModel) {
+        config.value.rag.embeddingModel = source.aiModel;
+      }
+    }
+    if (key === 'ragChatSourceId') {
+      const source = config.value.aiSources.find(s => s.id === String(value));
+      if (source && source.aiModel) {
+        config.value.rag.ragChatModel = source.aiModel;
+      } else if (value === '') {
+        config.value.rag.ragChatModel = '';
       }
     }
 

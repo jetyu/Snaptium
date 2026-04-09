@@ -48,7 +48,7 @@ class RAGService {
       const embeddingConfig = {
         endpoint: source.endpoint,
         apiKey: source.apiKey,
-        model: config.rag.embeddingModel || source.defaultModel,
+        model: config.rag.embeddingModel,
       };
 
       await this.initialize(workspaceRoot, embeddingConfig);

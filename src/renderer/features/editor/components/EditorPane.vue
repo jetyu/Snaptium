@@ -52,7 +52,7 @@ const editorContextMenu = useEditorContextMenu({
     return {
       endpoint: source.endpoint,
       apiKey: source.apiKey,
-      model: config.value.aiAssistant?.model || source.defaultModel || '',
+      model: config.value.aiAssistant?.model || source.aiModel || '',
     };
   },
 });

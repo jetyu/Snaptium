@@ -51,32 +51,38 @@ export function useRAGChat() {
       let aiSource;
       let modelName;
 
-      // 1. Prioritize AI Assistant for Chat
-      const aiConfig = settingsStore.config.aiAssistant;
-      if (aiConfig.sourceId && aiConfig.model) {
+      // 使用 RAG 专用设置，而不是全局 AI Assistant 设置
+      const ragConfig = settingsStore.config.rag;
+      ragChatLogger.debug(`RAG Config check: sourceId="${ragConfig.ragChatSourceId}", model="${ragConfig.ragChatModel}"`);
+
+      // 只有当 sourceId 存在且不为空时，才认为是启用了服务
+      if (ragConfig.ragChatSourceId && ragConfig.ragChatSourceId.trim() !== '') {
         aiSource = settingsStore.config.aiSources.find(
-          source => source.id === aiConfig.sourceId
+          source => source.id === ragConfig.ragChatSourceId
         );
-        modelName = aiConfig.model;
-        ragChatLogger.debug('Using AI Assistant for chat');
+
+        // 使用配置的模型，或者回退到 AI 源的默认模型
+        modelName = ragConfig.ragChatModel && ragConfig.ragChatModel.trim() !== ''
+          ? ragConfig.ragChatModel
+          : aiSource?.aiModel;
+
+        ragChatLogger.debug(`RAG chat resolution: Source=${aiSource?.name || 'NOT FOUND'}, Model=${modelName || 'NOT FOUND'}`);
       } else {
-        ragChatLogger.debug('No valid AI Assistant chat configuration found');
+        ragChatLogger.debug('RAG chat service is disabled (Source ID is empty).');
       }
 
-      ragChatLogger.debug(`Using AI source "${aiSource?.name || 'N/A'}" with model "${modelName || 'N/A'}"`);
-
-      if (!modelName) {
-        ragChatLogger.debug('No chat model configured, returning search results directly');
+      // 如果未配置 AI 源或模型，直接返回检索结果（跳过 AI API 调用）
+      if (!aiSource || !modelName) {
+        ragChatLogger.debug('RAG chat is disabled or missing configuration, falling back to search results only.');
         const searchResultsSummary = searchResults
           .map((res, idx) => `[${idx + 1}] ${res.noteTitle || 'Untitled'}:\n${res.chunk.content}`)
           .join('\n\n');
+
         answer.value = `${t('message.rag.noChatModel')}\n\n${searchResultsSummary}`;
         return answer.value;
       }
 
-      if (!aiSource) {
-        throw new Error('AI Service not found');
-      }
+      ragChatLogger.debug(`Calling AI API with source "${aiSource.name}" and model "${modelName}"`);
 
       const systemPrompt = RAG_CHAT_PROMPTS.SYSTEM.replace('{context}', context);
       const userPrompt = RAG_CHAT_PROMPTS.USER.replace('{question}', question);
