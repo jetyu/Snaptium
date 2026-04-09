@@ -68,14 +68,14 @@ export interface AppSettings {
 export const useSettingsStore = defineStore('settings', () => {
   const settingsLogger = createLogger('SettingsStore');
   const config = ref<AppSettings>({
-    language: 'zh-CN',
+    language: 'en-US',
     autoStartup: false,
     themeMode: 'system',
-    editorFontSize: 16,
+    editorFontSize: 14,
     editorFont: '',
     showLineNumbers: true,
-    wordWrap: false,
-    codeFolding: true,
+    wordWrap: true,
+    codeFolding: false,
     highlightActiveLine: true,
     bracketMatching: true,
     autoCloseBrackets: true,
@@ -92,13 +92,13 @@ export const useSettingsStore = defineStore('settings', () => {
     },
     rag: { ...DEFAULT_RAG_CONFIG },
     loggingEnabled: false,
-    logLevel: 'info',
+    logLevel: 'error',
     noteSavePath: '',
     autoCheckUpdates: true,
     updateCheckInterval: UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL,
     maxHistoryVersions: 50,
     trashAutoClearDays: 30,
-    snapshotInterval: 10,
+    snapshotInterval: 15,
   });
 
   const isLoading = ref(false);
