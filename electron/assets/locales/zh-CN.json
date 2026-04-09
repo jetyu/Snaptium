@@ -551,7 +551,7 @@
   "option.trashAutoClear.days30": "30天后",
   "common.close": "关闭",
   "label.ragChatModel": "生成式模型服务源",
-  "text.ragChatModel": "智能问答功能依赖生成式模型服务支持；未配置将仅返回知识库检索结果",
-  "message.rag.noChatModel": "未配置生成式模型服务源，无法执行智能问答。以下为基于知识库检索的相关内容：",
-  "option.rag.disabled": "禁用"
+  "text.ragChatModel": "智能问答功能依赖生成式模型服务支持；禁用将仅返回知识库检索结果",
+  "message.rag.noChatModel": "生成式模型服务源不可用，无法进行智能问答。以下为基于知识库检索的相关内容：",
+  "option.rag.disabled": "禁用服务"
 }
