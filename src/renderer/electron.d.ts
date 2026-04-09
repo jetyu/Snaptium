@@ -120,8 +120,8 @@ declare global {
         permanentlyDeleteNode: (nodeId: string) => Promise<boolean>;
         emptyTrash: () => Promise<boolean>;
         getHistory: (contentId: string) => Promise<any[]>;
-        getHistoryContent: (payload: { contentId: string; timestamp: number }) => Promise<string>;
-        recoverVersion: (payload: { nodeId: string; timestamp: number }) => Promise<boolean>;
+        getHistoryContent: (payload: { contentId: string; filename: string }) => Promise<string>;
+        recoverVersion: (payload: { nodeId: string; filename: string }) => Promise<boolean>;
       };
 
       search?: {

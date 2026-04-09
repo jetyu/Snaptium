@@ -403,11 +403,11 @@ export const electronApi = {
       return electronApi.vfs.getApi().getHistory(contentId);
     },
 
-    getHistoryContent: (payload: { contentId: string; timestamp: number }): Promise<string> => {
+    getHistoryContent: (payload: { contentId: string; filename: string }): Promise<string> => {
       return electronApi.vfs.getApi().getHistoryContent(payload);
     },
 
-    recoverVersion: (payload: { nodeId: string; timestamp: number }): Promise<boolean> => {
+    recoverVersion: (payload: { nodeId: string; filename: string }): Promise<boolean> => {
       return electronApi.vfs.getApi().recoverVersion(payload);
     },
   },
