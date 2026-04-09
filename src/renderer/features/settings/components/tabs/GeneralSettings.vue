@@ -155,12 +155,6 @@ const handleIntervalChange = (event: Event) => {
   }
 };
 
-const maxHistoryVersions = computed({
-  get: () => settingsStore.config.maxHistoryVersions ?? 50,
-  set: (val: number) => {
-    settingsStore.updateSetting('maxHistoryVersions', val);
-  }
-});
 </script>
 
 <style scoped>
