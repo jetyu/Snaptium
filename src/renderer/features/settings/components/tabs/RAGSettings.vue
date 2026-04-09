@@ -48,7 +48,7 @@
         <label class="select-shell">
           <select class="settings-select" :value="settingsStore.config.rag.ragChatSourceId"
             @change="handleRAGUpdate('ragChatSourceId', ($event.target as HTMLSelectElement).value)"
-            :disabled="settingsStore.config.aiSources.length === 0">
+            :disabled="settingsStore.config.aiSources.length === 0 || !settingsStore.config.rag.enabled">
             <option value="">{{
               t('option.rag.disabled') }}</option>
             <option v-for="source in settingsStore.config.aiSources" :key="source.id" :value="source.id">
