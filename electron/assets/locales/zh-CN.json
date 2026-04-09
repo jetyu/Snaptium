@@ -142,7 +142,7 @@
   "placeholder.aiModel": "例如: deepseek-chat",
   "placeholder.aiAPIKey": "例如：sk-xxxx",
   "button.addAISource": "添加服务源",
-  "label.selectAIAssistantSourceName": "生成式模型服务源",
+  "label.selectAIAssistantSourceName": "生成式模型服务",
   "text.selectAIAssistantSourceName": "用于生成文本的AI服务，需使用Chat模型",
   "option.aiSource.noSourceFound": "请选择",
   "dialogue.confirmDeleteSource": "删除？",
@@ -159,7 +159,7 @@
   "text.AISystemPrompt": "自定义智能写作的行为和风格，留空使用默认提示词",
   "label.aiRAG": "知识库检索",
   "text.aiRAG": "基于笔记内容构建向量索引，实现智能语义搜索和上下文增强",
-  "label.ragEmbeddingModel": "向量化模型服务源",
+  "label.ragEmbeddingModel": "向量化模型服务",
   "text.ragEmbeddingModel": "用于生成向量的AI服务，需使用Embedding模型",
   "labelRAGChunkSize": "文本分块大小",
   "textRAGChunkSize": "每个文本块的字符数",
@@ -550,8 +550,8 @@
   "option.trashAutoClear.days7": "7天后",
   "option.trashAutoClear.days30": "30天后",
   "common.close": "关闭",
-  "label.ragChatModel": "生成式模型服务源",
+  "label.ragChatModel": "生成式模型服务",
   "text.ragChatModel": "智能问答功能依赖生成式模型服务支持；禁用将仅返回知识库检索结果",
-  "message.rag.noChatModel": "生成式模型服务源不可用，无法进行智能问答。以下为基于知识库检索的相关内容：",
+  "message.rag.noChatModel": "生成式模型服务不可用，无法进行智能问答。以下为基于知识库检索的相关内容：",
   "option.rag.disabled": "禁用服务"
 }

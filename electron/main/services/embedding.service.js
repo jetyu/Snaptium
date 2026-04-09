@@ -14,7 +14,7 @@ const logger = loggerService.createLogger('Electron:Embedding Service');
  */
 export async function generateEmbeddings(texts, config) {
   const { endpoint, apiKey, model } = config;
-  logger.debug('Generate embeddings for text chunks', { texts, config });
+
   if (!endpoint || !apiKey || !model) {
     throw new Error('Missing embedding configuration');
   }
@@ -30,7 +30,7 @@ export async function generateEmbeddings(texts, config) {
       model,
       input: texts,
     });
-    logger.debug('Embeddings generated', { data });
+
     if (!data.data || !Array.isArray(data.data)) {
       logger.error('Invalid response format received from embedding endpoint', {
         hasData: Boolean(data?.data),
@@ -70,7 +70,6 @@ export async function generateEmbeddingsBatch(texts, config, batchSize = 100) {
       await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
-  logger.debug('Batch Embeddings generated', { results });
   return results;
 }
 
