@@ -1,3 +1,72 @@
+# GEMINI.md - NoteWizard Context & Instructions
+
+## Project Overview
+NoteWizard is a modern, cross-platform desktop note-taking application built with **Electron**, **Vue 3**, and **CodeMirror 6**. It focuses on a local-first writing experience with Markdown support, integrated AI assistance (RAG), and strong data privacy (AES-256 encryption).
+
+### Key Technologies
+- **Frontend**: Vue 3 (Composition API), Pinia (State Management), TypeScript, Vite.
+- **Backend (Electron Main)**: Node.js, Electron, LanceDB (Vector database for RAG).
+- **Editor**: CodeMirror 6 with custom Markdown extensions.
+- **Architecture**: Domain-driven services in the Main process and feature-based modules in the Renderer process.
+
+---
+
+## Architecture & Directory Structure
+
+### 1. Main Process (`electron/main/`)
+The Main process acts as the application's "backend," handling system-level operations, file system access, and heavy business logic.
+- **`services/`**: Contains core domain services (e.g., `vfs.service.js`, `rag.service.js`, `search.service.js`, `ai-assistant.service.js`). 
+- **`ipc/`**: IPC handlers that delegate to the services. Follow the "Thin IPC, Fat Service" pattern.
+- **`utils/`**: Shared utilities like text chunkers and i18n helpers.
+
+### 2. Renderer Process (`src/renderer/`)
+The Renderer process handles the UI and user interactions.
+- **`features/`**: Feature-based modular structure. Each feature (e.g., `search`, `rag`, `ai`) is self-contained:
+  - `components/`: UI components.
+  - `composables/`: UI state and reactive logic.
+  - `services/`: Data orchestration and IPC communication proxies.
+  - `store/`: Pinia stores for shared state.
+- **`core/`**: Core shared logic like the bridge, editor extensions, and markdown rendering.
+
+---
+
+## Development Conventions
+
+### 1. Service Pattern (Refined)
+Always maintain a clear separation between the Main process and Renderer process:
+- **Main Process**: Business logic should reside in `electron/main/services/`. IPC handlers in `electron/main/ipc/` should only perform light validation and delegate to these services.
+- **Renderer Process**: Use feature-specific services in `src/renderer/features/*/services/` to abstract IPC calls and provide data transformation/formatting logic for the UI.
+
+### 2. Coding Standards
+- **TypeScript**: Use strict typing in the Renderer process.
+- **IPC Communication**: Use the `electronApi` bridge defined in `src/renderer/core/bridge/`. Never use `ipcRenderer` directly in components.
+- **Logging**: Use the centralized `loggerService` for consistent logging across both processes.
+
+---
+
+## Building and Running
+
+### Development
+- **Run all (Renderer + Main)**: `npm run dev`
+- **Run Renderer only**: `npm run dev:renderer`
+- **Run Main only (with hot reload)**: `npm run dev:electron`
+
+### Build & Test
+- **Full Build**: `npm run build`
+- **Unit Tests**: `npm run test:unit`
+- **E2E Tests**: `npm run test:e2e`
+- **Create Distribution**: `npm run dist`
+
+---
+
+## Important Files
+- `package.json`: Project metadata, dependencies, and scripts.
+- `electron/main/index.js`: Main process entry point.
+- `src/renderer/main.ts`: Renderer process entry point.
+- `docs/PRD/NoteWizard_PRD.md`: Comprehensive product requirements and module details.
+- `electron/main/services/vfs.service.js`: The heart of the Virtual File System logic.
+
+开发规约：
 # NoteWizard 开发指南（DevGuide）
 
 > 目标：本指南用于团队持续开发，解释目录职责、架构协作方式，以及新增功能的标准落位规范。

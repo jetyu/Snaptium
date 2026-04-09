@@ -237,7 +237,7 @@ export const vfsService = {
     }
 
     logger.debug(`Workspace initialized at ${resolvedRoot} with ${workspaceState.nodes.size} node(s)`);
-    
+
     vfsService.autoClearTrash(resolvedRoot).catch(error => {
       logger.error(`Failed to auto clear trash: ${error.message}`);
     });
@@ -346,13 +346,13 @@ export const vfsService = {
 
     return enqueueWrite(safeContentId, async () => {
       const config = await settingsService.loadConfig();
-      const interval = (config.snapshotInterval || 10) * 60 * 1000;
+      const interval = (config.snapshotInterval) * 60 * 1000;
       const lastTime = lastSnapshotTimes.get(safeContentId) || 0;
 
       if (config.maxHistoryVersions > 0) {
         try {
           const oldContent = await this.readContent(safeContentId);
-          
+
           // 简化策略：时间间隔到达 且 笔记有一定内容（> 100 字符）
           const isTimeElapsed = (Date.now() - lastTime) >= interval;
           const isMeaningful = text.length > 100;
@@ -397,7 +397,7 @@ export const vfsService = {
 
     const contentId = node.contentId;
     const historyContent = await historyService.getVersionContent(root, contentId, timestamp);
-    
+
     return await this.writeContent(contentId, historyContent);
   },
 

@@ -13,52 +13,19 @@ export function useRAGInitialization() {
   const { rebuildIndex, indexNote } = useRAGIndex();
   let stopAutoIndexOnSaveWatcher: WatchStopHandle | null = null;
   let stopAutoIndexSettingWatcher: WatchStopHandle | null = null;
-  const resolveEmbeddingModel = (aiModel: string) =>
-    settingsStore.config.rag.embeddingModel || aiModel;
 
   const initializeRAG = async () => {
-    const ragConfig = settingsStore.config.rag;
+    const ragConfig = (settingsStore.config as any).rag;
 
-    if (!ragConfig.enabled) {
+    if (!ragConfig?.enabled) {
       ragInitLogger.info('RAG is disabled, skipping initialization');
       return;
     }
 
-    if (!ragConfig.embeddingSourceId) {
-      ragInitLogger.warn('RAG configuration incomplete, skipping initialization');
-      return;
-    }
-
     try {
-      const embeddingSource = settingsStore.config.aiSources.find(
-        source => source.id === ragConfig.embeddingSourceId
-      );
-
-      if (!embeddingSource) {
-        ragInitLogger.error('Embedding source not found');
-        return;
-      }
-
-      if (!embeddingSource.aiModel) {
-        ragInitLogger.error('Embedding source has no default model');
-        return;
-      }
-
-      const workspaceRoot = settingsStore.config.noteSavePath;
-      if (!workspaceRoot) {
-        ragInitLogger.error('Workspace root not configured');
-        return;
-      }
-
       ragInitLogger.info('Initializing RAG service...');
-      const result = await ragService.initialize({
-        workspaceRoot,
-        embeddingConfig: {
-          endpoint: embeddingSource.endpoint,
-          apiKey: embeddingSource.apiKey,
-          model: resolveEmbeddingModel(embeddingSource.aiModel),
-        },
-      });
+      // ragService.initialize reads settings internally
+      const result = await ragService.initialize();
 
       if (result.success) {
         ragInitLogger.info('RAG service initialized successfully');
@@ -69,8 +36,8 @@ export function useRAGInitialization() {
       } else {
         ragInitLogger.error(`RAG initialization failed: ${result.error}`);
       }
-    } catch (error) {
-      ragInitLogger.error(`RAG initialization error: ${error}`);
+    } catch (error: any) {
+      ragInitLogger.error(`RAG initialization error: ${error.message}`);
     }
   };
 
@@ -81,7 +48,7 @@ export function useRAGInitialization() {
       const notes = workspaceStore.notes.map(note => ({
         id: note.id,
         title: note.title,
-        path: `Database/objects/${note.contentId}.md`,
+        content: note.content,
       }));
 
       if (notes.length === 0) {
@@ -91,8 +58,8 @@ export function useRAGInitialization() {
 
       await rebuildIndex(notes);
       ragInitLogger.info(`Auto-indexed ${notes.length} notes`);
-    } catch (error) {
-      ragInitLogger.error(`Auto-indexing failed: ${error}`);
+    } catch (error: any) {
+      ragInitLogger.error(`Auto-indexing failed: ${error.message}`);
     }
   };
 
@@ -117,13 +84,17 @@ export function useRAGInitialization() {
 
           try {
             ragInitLogger.info(`Auto-indexing note on save: ${savedNoteMeta.noteId}`);
+            // Find note content in store
+            const note = workspaceStore.notes.find(n => n.id === savedNoteMeta.noteId);
+            if (!note) return;
+
             await indexNote(
               savedNoteMeta.noteId,
               savedNoteMeta.title,
-              `Database/objects/${savedNoteMeta.contentId}.md`
+              note.content
             );
-          } catch (error) {
-            ragInitLogger.error(`Failed to auto-index note: ${error}`);
+          } catch (error: any) {
+            ragInitLogger.error(`Failed to auto-index note: ${error.message}`);
           }
         }
       );
@@ -131,7 +102,7 @@ export function useRAGInitialization() {
 
     stopAutoIndexSettingWatcher?.();
     stopAutoIndexSettingWatcher = watch(
-      () => [settingsStore.config.rag.enabled, settingsStore.config.rag.indexOnSave] as const,
+      () => [(settingsStore.config as any).rag?.enabled, (settingsStore.config as any).rag?.indexOnSave] as const,
       ([enabled, indexOnSave]) => {
         if (enabled && indexOnSave) {
           installAutoIndexOnSave();
@@ -144,36 +115,8 @@ export function useRAGInitialization() {
     );
   };
 
-
-  const updateEmbeddingConfig = async () => {
-    const ragConfig = settingsStore.config.rag;
-
-    if (!ragConfig.enabled || !ragConfig.embeddingSourceId) {
-      return;
-    }
-
-    const embeddingSource = settingsStore.config.aiSources.find(
-      source => source.id === ragConfig.embeddingSourceId
-    );
-
-    if (!embeddingSource || !embeddingSource.aiModel) {
-      return;
-    }
-
-    try {
-      await ragService.updateConfig({
-        endpoint: embeddingSource.endpoint,
-        apiKey: embeddingSource.apiKey,
-        model: resolveEmbeddingModel(embeddingSource.aiModel),
-      });
-      ragInitLogger.info('Embedding config updated');
-    } catch (error) {
-      ragInitLogger.error(`Failed to update embedding config: ${error}`);
-    }
-  };
-
   watch(
-    () => settingsStore.config.rag.enabled,
+    () => (settingsStore.config as any).rag?.enabled,
     async (enabled) => {
       if (enabled) {
         await initializeRAG();
@@ -181,13 +124,14 @@ export function useRAGInitialization() {
     }
   );
 
+  // When config changes, re-initialize
   watch(
     () => [
-      settingsStore.config.rag.embeddingSourceId,
-      settingsStore.config.rag.embeddingModel,
+      (settingsStore.config as any).rag?.embeddingSourceId,
+      (settingsStore.config as any).rag?.embeddingModel,
     ] as const,
     async () => {
-      await updateEmbeddingConfig();
+      await initializeRAG();
     }
   );
 

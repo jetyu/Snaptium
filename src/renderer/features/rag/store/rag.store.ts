@@ -65,12 +65,12 @@ export const useRAGStore = defineStore('rag', () => {
   /**
    * 索引单个笔记
    */
-  const indexNote = async (noteId: string, noteTitle: string, notePath: string, chunkSize: number, chunkOverlap: number) => {
+  const indexNote = async (noteId: string, noteTitle: string, content: string, chunkSize: number, chunkOverlap: number) => {
     try {
       const result = await ragService.indexNote({ 
         noteId, 
         noteTitle, 
-        notePath, 
+        content, 
         chunkSize, 
         chunkOverlap 
       });
@@ -89,7 +89,7 @@ export const useRAGStore = defineStore('rag', () => {
   /**
    * 重建所有索引
    */
-  const rebuildIndex = async (notes: Array<{ id: string; title: string; path: string }>, chunkSize: number, chunkOverlap: number) => {
+  const rebuildIndex = async (notes: Array<{ id: string; title: string; content: string }>, chunkSize: number, chunkOverlap: number) => {
     indexStatus.value.isIndexing = true;
     indexStatus.value.error = null;
     indexStatus.value.totalNotes = notes.length;
@@ -97,17 +97,19 @@ export const useRAGStore = defineStore('rag', () => {
     indexStatus.value.totalChunks = 0;
 
     try {
-      const result = await ragService.rebuildIndex({ notes, chunkSize, chunkOverlap });
+      const result = await ragService.rebuildIndex(notes, { 
+        chunkSize, 
+        chunkOverlap,
+        onProgress: (p) => {
+          indexStatus.value.indexedNotes = p.success;
+          indexStatus.value.progress = Math.round((p.current / p.total) * 100);
+        }
+      });
       
-      if (result.success) {
-        indexStatus.value.indexedNotes = result.notesIndexed || 0;
-        indexStatus.value.totalChunks = result.totalChunks || 0;
-        indexStatus.value.lastIndexedAt = Date.now();
-        indexStatus.value.progress = 100;
-        ragLogger.info(`Index rebuilt: ${result.notesIndexed} notes, ${result.totalChunks} chunks`);
-      } else {
-        throw new Error(result.error || 'Failed to rebuild index');
-      }
+      indexStatus.value.indexedNotes = result.successCount;
+      indexStatus.value.lastIndexedAt = Date.now();
+      indexStatus.value.progress = 100;
+      ragLogger.info(`Index rebuilt: ${result.successCount} notes succeeded, ${result.failCount} failed`);
     } catch (error) {
       indexStatus.value.error = String(error);
       ragLogger.error(`Failed to rebuild index: ${error}`);

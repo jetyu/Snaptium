@@ -93,7 +93,7 @@ const maxHistoryVersions = computed({
 });
 
 const snapshotInterval = computed({
-    get: () => settingsStore.config.snapshotInterval ?? 10,
+    get: () => settingsStore.config.snapshotInterval ?? 15,
     set: (val: number) => {
         settingsStore.updateSetting('snapshotInterval', val);
     }

@@ -37,7 +37,7 @@ class LoggerService {
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
     const day = String(now.getDate()).padStart(2, '0');
-    return path.join(this.logDir, `Pilotra_App_logs_${year}${month}${day}.log`);
+    return path.join(this.logDir, `Pilotrix_App_logs_${year}${month}${day}.log`);
   }
 
   normalizeMessage(message, context) {

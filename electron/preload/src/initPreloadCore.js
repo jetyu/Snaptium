@@ -74,6 +74,11 @@ const electronAPI = Object.freeze({
   aiAssistant: Object.freeze({
     complete: (payload) => ipcRenderer.invoke(IPC_CHANNELS.AI_ASSISTANT_COMPLETE, payload),
   }),
+  embedding: Object.freeze({
+    generate: (payload) => ipcRenderer.invoke(IPC_CHANNELS.EMBEDDING_GENERATE, payload),
+    generateSingle: (payload) => ipcRenderer.invoke(IPC_CHANNELS.EMBEDDING_GENERATE_SINGLE, payload),
+    generateBatch: (payload) => ipcRenderer.invoke(IPC_CHANNELS.EMBEDDING_GENERATE_BATCH, payload),
+  }),
   shortcuts: Object.freeze({
     getCommands: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS),
     getCommandsByCategory: (category) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS_BY_CATEGORY, category),

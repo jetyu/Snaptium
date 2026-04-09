@@ -162,6 +162,12 @@ declare global {
         complete: (payload: AiCompletePayload) => Promise<AiCompleteResult>;
       };
 
+      embedding?: {
+        generate: (payload: { texts: string[]; config: { endpoint: string; apiKey: string; model: string } }) => Promise<number[][]>;
+        generateSingle: (payload: { text: string; config: { endpoint: string; apiKey: string; model: string } }) => Promise<number[]>;
+        generateBatch: (payload: { texts: string[]; config: { endpoint: string; apiKey: string; model: string } }) => Promise<number[][]>;
+      };
+
       shortcuts?: {
         getCommands: () => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
         getCommandsByCategory: (category: string) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
@@ -187,32 +193,17 @@ declare global {
             model: string;
           };
         }) => Promise<{ success: boolean; error?: string }>;
-        indexNote: (request: {
+        indexNote: (payload: {
           noteId: string;
           noteTitle: string;
-          notePath: string;
-          chunkSize: number;
-          chunkOverlap: number;
+          content: string;
+          chunkSize?: number;
+          chunkOverlap?: number;
         }) => Promise<{ success: boolean; chunksIndexed?: number; error?: string }>;
-        rebuildIndex: (request: {
-          notes: Array<{
-            id: string;
-            title: string;
-            path: string;
-          }>;
-          chunkSize: number;
-          chunkOverlap: number;
-        }) => Promise<{
-          success: boolean;
-          notesIndexed?: number;
-          notesFailed?: number;
-          totalChunks?: number;
-          error?: string;
-        }>;
-        search: (request: {
-          query: string;
-          topK: number;
-          similarityThreshold: number;
+        search: (payload: {
+          queryEmbedding: number[];
+          topK?: number;
+          similarityThreshold?: number;
         }) => Promise<{
           success: boolean;
           results: Array<{

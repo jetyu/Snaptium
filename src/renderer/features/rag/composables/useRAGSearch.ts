@@ -5,7 +5,7 @@
  */
 
 import { computed, ref } from 'vue';
-import { useRAGStore } from '../store/rag.store';
+import { useRAGStore, type SearchResult } from '../store/rag.store';
 import { useRAGConfig } from './useRAGConfig';
 import { createLogger } from '@renderer/features/logger';
 
@@ -69,7 +69,7 @@ export function useRAGSearch() {
     try {
       const results = await ragStore.search(query, topK, ragConfig.value.similarityThreshold);
       // 排除当前笔记
-      return results.filter(r => r.chunk.noteId !== noteId);
+      return results.filter((r: SearchResult) => r.chunk.noteId !== noteId);
     } catch (error) {
       ragSearchLogger.error(`Failed to get context: ${error}`);
       return [];

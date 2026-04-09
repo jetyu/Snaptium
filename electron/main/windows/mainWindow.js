@@ -33,7 +33,7 @@ export function createMainWindow({ isDev, appPath }) {
     minWidth: 960,
     minHeight: 680,
     show: false,
-    title: 'Pilotra',
+    title: 'Pilotrix',
     icon: path.join(appPath, 'electron/assets/logo/app-logo.ico'),
     webPreferences: {
       preload: path.join(appPath, 'electron/preload/index.js'),

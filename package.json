@@ -67,8 +67,8 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.app.Pilotra",
-    "productName": "Pilotra",
+    "appId": "com.app.Pilotrix",
+    "productName": "Pilotrix",
     "copyright": "Copyright © 2026 ${author}",
     "directories": {
       "output": "dist",
@@ -79,7 +79,7 @@
       {
         "provider": "github",
         "owner": "jetyu",
-        "repo": "Pilotra",
+        "repo": "Pilotrix",
         "vPrefixedTagName": true
       }
     ],
@@ -92,7 +92,7 @@
           ]
         }
       ],
-      "artifactName": "Pilotra-Windows-${arch}.${ext}",
+      "artifactName": "Pilotrix-Windows-${arch}.${ext}",
       "icon": "electron/assets/logo/app-logo.ico",
       "verifyUpdateCodeSignature": false
     },
@@ -113,7 +113,7 @@
           ]
         }
       ],
-      "artifactName": "Pilotra-macOS-${arch}.${ext}",
+      "artifactName": "Pilotrix-macOS-${arch}.${ext}",
       "icon": "electron/assets/logo/app-logo.icns",
       "category": "public.app-category.productivity",
       "hardenedRuntime": true,
@@ -160,13 +160,13 @@
           ]
         }
       ],
-      "artifactName": "Pilotra-Linux-${arch}.${ext}",
+      "artifactName": "Pilotrix-Linux-${arch}.${ext}",
       "icon": "electron/assets/logo/app-logo-512.png",
       "category": "Office",
-      "maintainer": "Pilotra Team",
-      "vendor": "Pilotra",
+      "maintainer": "Pilotrix Team",
+      "vendor": "Pilotrix",
       "synopsis": "A powerful note-taking application",
-      "description": "Pilotra is a modern, feature-rich note-taking application for organizing your thoughts and ideas."
+      "description": "Pilotrix is a modern, feature-rich note-taking application for organizing your thoughts and ideas."
     },
     "nsis": {
       "oneClick": false,
@@ -174,8 +174,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Pilotra",
-      "uninstallDisplayName": "Pilotra",
+      "shortcutName": "Pilotrix",
+      "uninstallDisplayName": "Pilotrix",
       "deleteAppDataOnUninstall": true
     },
     "files": [

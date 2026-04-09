@@ -1,8 +1,8 @@
 import { ref, shallowRef } from 'vue';
 import type { EditorView } from '@codemirror/view';
-import { electronApi } from '@renderer/core/bridge/electronApi';
+import { aiService } from '../services/ai.service';
 import { showAiSuggestion, clearAiSuggestion } from '@renderer/core/ai/wordsAutoCompletion';
-import {AI_ASSISTANT_DEFAULTS } from '../constants/ai.constants';
+import { AI_ASSISTANT_DEFAULTS } from '../constants/ai.constants';
 import { createLogger } from '@renderer/features/logger';
 
 const aiAssistantLogger = createLogger('AiAssistant');
@@ -77,18 +77,18 @@ export function useAiAssistant() {
     }, AI_ASSISTANT_DEFAULTS.REQUEST_TIMEOUT);
 
     try {
-      const result = await electronApi.aiAssistant.complete({
+      const result = await aiService.generateCompletion({
         context,
       });
 
       clearTimeout(timeoutId);
 
-      if (result.success && result.completion) {
-        // 显示灰色的补全建议
-        showAiSuggestion(editorView, result.completion);
+      if (result.success && result.answer) {
+        // Show the completion suggestion
+        showAiSuggestion(editorView, result.answer);
       } else {
-        state.value.lastError = result.message || 'Completion failed';
-        aiAssistantLogger.warn(`Completion failed: ${result.message || 'Unknown failure'}`);
+        state.value.lastError = result.error || 'Completion failed';
+        aiAssistantLogger.warn(`Completion failed: ${result.error || 'Unknown failure'}`);
       }
     } catch (error: any) {
       clearTimeout(timeoutId);

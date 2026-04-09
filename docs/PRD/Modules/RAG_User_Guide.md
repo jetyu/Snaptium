@@ -2,7 +2,7 @@
 
 ## 什么是 RAG？
 
-RAG（Retrieval-Augmented Generation，检索增强生成）是一种结合了信息检索和AI生成的技术。在 Pilotra 中，RAG 功能可以：
+RAG（Retrieval-Augmented Generation，检索增强生成）是一种结合了信息检索和AI生成的技术。在 Pilotrix 中，RAG 功能可以：
 
 - 🔍 **语义搜索**：理解问题的含义，而不仅仅是关键词匹配
 - 🎯 **智能检索**：找到语义相关的笔记内容，即使没有完全匹配的关键词

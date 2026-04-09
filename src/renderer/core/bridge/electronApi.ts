@@ -121,25 +121,15 @@ export interface RagInitializePayload {
 export interface RagIndexNotePayload {
   noteId: string;
   noteTitle: string;
-  notePath: string;
-  chunkSize: number;
-  chunkOverlap: number;
-}
-
-export interface RagRebuildIndexPayload {
-  notes: Array<{
-    id: string;
-    title: string;
-    path: string;
-  }>;
-  chunkSize: number;
-  chunkOverlap: number;
+  content: string;
+  chunkSize?: number;
+  chunkOverlap?: number;
 }
 
 export interface RagSearchPayload {
-  query: string;
-  topK: number;
-  similarityThreshold: number;
+  queryEmbedding: number[];
+  topK?: number;
+  similarityThreshold?: number;
 }
 
 export interface RagSearchResult {
@@ -160,6 +150,22 @@ export interface RagStatusResult {
   totalChunks: number;
   tableName?: string;
   error?: string;
+}
+
+export interface EmbeddingConfig {
+  endpoint: string;
+  apiKey: string;
+  model: string;
+}
+
+export interface EmbeddingGeneratePayload {
+  texts: string[];
+  config: EmbeddingConfig;
+}
+
+export interface EmbeddingGenerateSinglePayload {
+  text: string;
+  config: EmbeddingConfig;
 }
 
 function ensureElectronApi() {
@@ -203,6 +209,24 @@ export const electronApi = {
     },
     complete: (payload: AiCompletePayload): Promise<AiCompleteResult> => {
       return electronApi.aiAssistant.getApi().complete(payload);
+    },
+  },
+
+  embedding: {
+    isAvailable: (): boolean => !!window.electronAPI?.embedding,
+    getApi: () => {
+      const api = ensureElectronApi().embedding;
+      if (!api) throw new Error('Embedding bridge is unavailable');
+      return api;
+    },
+    generate: (payload: EmbeddingGeneratePayload): Promise<number[][]> => {
+      return electronApi.embedding.getApi().generate(payload);
+    },
+    generateSingle: (payload: EmbeddingGenerateSinglePayload): Promise<number[]> => {
+      return electronApi.embedding.getApi().generateSingle(payload);
+    },
+    generateBatch: (payload: EmbeddingGeneratePayload): Promise<number[][]> => {
+      return electronApi.embedding.getApi().generateBatch(payload);
     },
   },
 
@@ -291,16 +315,13 @@ export const electronApi = {
     indexNote: (payload: RagIndexNotePayload) => {
       return electronApi.rag.getApi().indexNote(payload);
     },
-    rebuildIndex: (payload: RagRebuildIndexPayload) => {
-      return electronApi.rag.getApi().rebuildIndex(payload);
-    },
     search: (payload: RagSearchPayload) => {
       return electronApi.rag.getApi().search(payload);
     },
     deleteNoteIndex: (noteId: string) => {
       return electronApi.rag.getApi().deleteNoteIndex(noteId);
     },
-    getStatus: () => {
+    getStatus: (): Promise<RagStatusResult> => {
       return electronApi.rag.getApi().getStatus();
     },
     updateConfig: (payload: { endpoint: string; apiKey: string; model: string }) => {
@@ -466,4 +487,3 @@ export async function saveMarkdownFile(payload: SaveFilePayload): Promise<SaveFi
 export function logToMain(payload: LogPayload): void {
   electronApi.logger.log(payload);
 }
-

@@ -10,7 +10,7 @@ export type { TextChunk, SearchResult, IndexStatus } from './store/rag.store';
 
 // Services
 export { ragService } from './services/rag.service';
-export type { IndexNoteRequest, SearchRequest } from './services/rag.service';
+export type { IndexNoteRequest } from './services/rag.service';
 
 // Composables
 export { useRAGConfig } from './composables/useRAGConfig';
