@@ -44,6 +44,7 @@ export interface IndexStatus {
   progress: number;
   lastIndexedAt: number | null;
   error: string | null;
+  rebuildReason: 'manual' | 'embedding-change' | 'auto-index' | null;
 }
 
 export const useRAGStore = defineStore('rag', () => {
@@ -56,6 +57,7 @@ export const useRAGStore = defineStore('rag', () => {
     progress: 0,
     lastIndexedAt: null,
     error: null,
+    rebuildReason: null,
   });
 
   // 搜索结果
@@ -89,12 +91,18 @@ export const useRAGStore = defineStore('rag', () => {
   /**
    * 重建所有索引
    */
-  const rebuildIndex = async (notes: Array<{ id: string; title: string; content: string }>, chunkSize: number, chunkOverlap: number) => {
+  const rebuildIndex = async (
+    notes: Array<{ id: string; title: string; content: string }>,
+    chunkSize: number,
+    chunkOverlap: number,
+    reason: IndexStatus['rebuildReason'] = 'manual'
+  ) => {
     indexStatus.value.isIndexing = true;
     indexStatus.value.error = null;
     indexStatus.value.totalNotes = notes.length;
     indexStatus.value.indexedNotes = 0;
     indexStatus.value.totalChunks = 0;
+    indexStatus.value.rebuildReason = reason;
 
     try {
       const result = await ragService.rebuildIndex(notes, { 
@@ -109,6 +117,10 @@ export const useRAGStore = defineStore('rag', () => {
       indexStatus.value.indexedNotes = result.successCount;
       indexStatus.value.lastIndexedAt = Date.now();
       indexStatus.value.progress = 100;
+      const status = await ragService.getStatus();
+      if (status.success) {
+        indexStatus.value.totalChunks = status.totalChunks || 0;
+      }
       ragLogger.info(`Index rebuilt: ${result.successCount} notes succeeded, ${result.failCount} failed`);
     } catch (error) {
       indexStatus.value.error = String(error);
@@ -116,6 +128,9 @@ export const useRAGStore = defineStore('rag', () => {
       throw error;
     } finally {
       indexStatus.value.isIndexing = false;
+      if (indexStatus.value.error) {
+        indexStatus.value.rebuildReason = null;
+      }
     }
   };
 

@@ -238,6 +238,7 @@ declare global {
           apiKey: string;
           model: string;
         }) => Promise<{ success: boolean; error?: string }>;
+        rebuildIndex: () => Promise<{ success: boolean; error?: string }>;
       };
 
       aiChat?: {

@@ -1,5 +1,7 @@
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import { createLogger } from '@renderer/features/logger';
+import { AI_ERROR_MESSAGES } from '../constants/ai.constants';
+import i18n from '@renderer/features/i18n';
 
 const aiLogger = createLogger('Renderer:AiService');
 
@@ -16,6 +18,25 @@ export interface AiGenerateRequest {
   systemPrompt?: string;
 }
 
+interface AiSource {
+  id: string;
+  endpoint: string;
+  apiKey: string;
+  aiModel: string;
+}
+
+interface AiAssistantConfig {
+  enabled?: boolean;
+  sourceId?: string;
+  model?: string;
+  systemPrompt?: string;
+}
+
+interface AppConfig {
+  aiAssistant?: AiAssistantConfig;
+  aiSources?: AiSource[];
+}
+
 /**
  * Unified AI Service - Orchestration Layer
  * Acts as the single entry point for all AI capabilities in the renderer.
@@ -27,7 +48,7 @@ export const aiService = {
   async generate(request: AiGenerateRequest): Promise<{ success: boolean; answer?: string; error?: string }> {
     try {
       const messages = [...request.messages];
-      
+
       // Inject system prompt if provided and not already present
       if (request.systemPrompt && !messages.find(m => m.role === 'system')) {
         messages.unshift({ role: 'system', content: request.systemPrompt });
@@ -41,30 +62,24 @@ export const aiService = {
       });
 
       return response;
-    } catch (error: any) {
-      aiLogger.error('AI generation failed', { error: error.message });
-      return { success: false, error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      aiLogger.error('AI generation failed', { error: message });
+      return { success: false, error: message };
     }
   },
 
   /**
-   * Specialized RAG answer generation
+   * Specialized RAG answer generation.
+   * The caller is responsible for building the system prompt (e.g. injecting context snippets),
+   * keeping this service free of RAG-specific knowledge.
    */
   async generateRagAnswer(params: {
     query: string;
-    contexts: string[];
+    systemPrompt: string;
     config: { endpoint: string; apiKey: string; model: string };
   }) {
-    const { query, contexts, config } = params;
-
-    const systemPrompt = `You are a helpful AI assistant for a note-taking app called NoteWizard. 
-Use the following context snippets from the user's notes to answer the question. 
-If the answer is not in the context, say you don't know based on the notes, but try to be helpful generally.
-
-Context:
-${contexts.join('\n---\n')}
-`;
-
+    const { query, systemPrompt, config } = params;
     return this.generate({
       ...config,
       systemPrompt,
@@ -81,23 +96,22 @@ ${contexts.join('\n---\n')}
     const { context } = params;
 
     try {
-      // 1. Load settings (Business Logic)
-      const config = await electronApi.settings.getConfig();
-      const { aiAssistant, aiSources } = config as any;
+      const rawConfig = await electronApi.settings.getConfig();
+      const config = rawConfig as unknown as AppConfig;
+      const { aiAssistant, aiSources } = config;
 
       if (!aiAssistant?.enabled) {
-        return { success: false, error: 'AI Assistant is disabled' };
+        return { success: false, error: AI_ERROR_MESSAGES.DISABLED };
       }
 
-      const source = aiSources?.find((s: any) => s.id === aiAssistant.sourceId);
+      const source = aiSources?.find(s => s.id === aiAssistant.sourceId);
       if (!source) {
-        return { success: false, error: 'AI source not found' };
+        return { success: false, error: AI_ERROR_MESSAGES.NO_SOURCE };
       }
 
       const model = aiAssistant.model || source.aiModel;
-      const systemPrompt = aiAssistant.systemPrompt?.trim() || "You are a writing assistant. Continue the user's text naturally and concisely. Provide only the continuation text without any preamble or quotes.";
+      const systemPrompt = aiAssistant.systemPrompt?.trim() || i18n.global.t('ai.prompt.autoComplete');
 
-      // 2. Coordinate AI via unified entry
       return await this.generate({
         endpoint: source.endpoint,
         apiKey: source.apiKey,
@@ -105,9 +119,10 @@ ${contexts.join('\n---\n')}
         systemPrompt,
         messages: [{ role: 'user', content: context }],
       });
-    } catch (error: any) {
-      aiLogger.error('Completion generation failed', { error: error.message });
-      return { success: false, error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      aiLogger.error('Completion generation failed', { error: message });
+      return { success: false, error: message };
     }
   }
 };

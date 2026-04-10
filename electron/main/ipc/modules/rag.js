@@ -104,6 +104,16 @@ export function registerRAGHandlers() {
     }
   });
 
+  ipcMain.handle(IPC_CHANNELS.RAG_REBUILD_INDEX, async () => {
+    try {
+      await ragService.clear();
+      return { success: true };
+    } catch (error) {
+      logger.error(`RAG_REBUILD_INDEX error: ${error.message}`);
+      return { success: false, error: error.message };
+    }
+  });
+
   // Update embedding configuration (Atomic)
   ipcMain.handle(IPC_CHANNELS.RAG_UPDATE_CONFIG, async (event, request) => {
     try {

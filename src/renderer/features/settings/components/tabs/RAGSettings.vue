@@ -161,30 +161,30 @@
           <p class="setting-description">{{ t('textRAGIndexStatus') }}</p>
         </div>
         <div class="index-status-container">
-          <div class="status-info">
-            <div class="status-item">
-              <span class="status-label">{{ t('labelRAGTotalChunks') }}:</span>
-              <span class="status-value">{{ indexStatus.totalChunks || 0 }}</span>
-            </div>
-            <div v-if="indexStatus.lastIndexedAt" class="status-item">
-              <span class="status-label">{{ t('labelRAGLastIndexed') }}:</span>
-              <span class="status-value">{{ formatDate(indexStatus.lastIndexedAt) }}</span>
-            </div>
-          </div>
+           <div class="status-info">
+             <div class="status-item">
+               <span class="status-label">{{ t('labelRAGTotalChunks') }}:</span>
+               <span class="status-value">{{ indexStatus.totalChunks || 0 }}</span>
+             </div>
+             <div v-if="indexStatus.lastIndexedAt" class="status-item">
+               <span class="status-label">{{ t('labelRAGLastIndexed') }}:</span>
+               <span class="status-value">{{ formatDate(indexStatus.lastIndexedAt) }}</span>
+             </div>
+           </div>
 
-          <button type="button" class="action-button" :disabled="isIndexing || !isConfigured"
-            @click="handleRebuildIndex">
-            <span v-if="isIndexing" class="spinner"></span>
-            <span>{{ isIndexing ? t('button.rebuildingIndex') : t('button.rebuildIndex') }}</span>
-          </button>
-        </div>
+           <button type="button" class="action-button" :disabled="isIndexing || !isConfigured"
+             @click="handleRebuildIndex">
+             <span v-if="isIndexing" class="spinner"></span>
+             <span>{{ rebuildButtonText }}</span>
+           </button>
+         </div>
       </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore, type RAGSettings } from '../../store/settings.store';
 import { useRAGIndex, useRAGConfig } from '@renderer/features/rag';
@@ -243,6 +243,14 @@ const handleRebuildIndex = async () => {
     ragSettingsLogger.error(`Failed to rebuild index: ${error instanceof Error ? error.message : String(error)}`);
   }
 };
+
+const rebuildButtonText = computed(() => {
+  if (!isIndexing.value) {
+    return t('button.rebuildIndex');
+  }
+
+  return `${t('button.rebuildingIndex')}（${indexStatus.value.progress}%）`;
+});
 
 const formatDate = (timestamp: number) => {
   const date = new Date(timestamp);

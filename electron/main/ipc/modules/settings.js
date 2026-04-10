@@ -2,6 +2,7 @@ import { ipcMain, app } from 'electron';
 import { settingsService } from '../../services/settings.service.js';
 import { loggerService } from '../../services/logger.service.js';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
+import { clearAiAssistantConfigCache } from './ai-assistant.js';
 
 const logger = loggerService.createLogger('Electron:Settings IPC');
 
@@ -22,6 +23,7 @@ export function registerSettingsIpcHandlers() {
   ipcMain.handle(IPC_CHANNELS.SETTINGS_SAVE, async (_event, config) => {
     const nextConfig = await settingsService.saveConfig(config);
     loggerService.updateConfig(nextConfig);
+    clearAiAssistantConfigCache();
     logger.debug('Settings saved');
     return nextConfig;
   });

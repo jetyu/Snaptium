@@ -85,6 +85,8 @@ export const RAG_EVENTS = {
 export const RAG_ERROR_MESSAGES = {
   CONFIG_INVALID: 'RAG configuration is invalid',
   CONFIG_MISSING: 'RAG configuration is missing',
+  DISABLED: 'RAG is disabled in settings',
+  NO_WORKSPACE: 'No workspace root configured',
   SOURCE_NOT_FOUND: 'Embedding source not found',
   MODEL_NOT_SPECIFIED: 'Embedding model not specified',
   EMBEDDING_FAILED: 'Failed to generate embedding',
@@ -92,6 +94,11 @@ export const RAG_ERROR_MESSAGES = {
   SEARCH_FAILED: 'Failed to search',
   STORAGE_FAILED: 'Failed to access storage',
   NOT_INITIALIZED: 'RAG service not initialized',
+  NO_CONTEXT: 'No relevant context found in notes',
+} as const;
+
+export const RAG_ERROR_CODES = {
+  INDEX_DIMENSION_MISMATCH: 'INDEX_DIMENSION_MISMATCH',
 } as const;
 
 /**

@@ -19,7 +19,8 @@
             <button class="btn-close" @click="close" :title="$t('common.close')">
               <Close theme="outline" :size="18" />
             </button>
-          </div> <button v-if="ragAvailable" type="button" class="startup-switch"
+          </div>
+          <button v-if="ragAvailable" type="button" class="startup-switch"
             :class="{ enabled: useSemanticSearch }"
             @click="useSemanticSearch = !useSemanticSearch; handleSearchModeChange()">
             <span class="startup-switch-track">
@@ -32,11 +33,10 @@
         </div>
 
         <div class="search-results">
-
           <div v-if="useSemanticSearch && (isAIGenerating || aiAnswer)" class="ai-answer-section">
             <div class="ai-answer-header">
               <span class="ai-icon">
-                <MessageSearch theme="outline" size="14" fill="currentColor" />
+                <Search theme="outline" size="14" />
               </span>
               {{ $t('label.aiRAGSearch') }}
             </div>
@@ -70,6 +70,9 @@
               {{ useSemanticSearch ? $t('search.semanticSearching') : $t('search.searching') }}
             </div>
           </div>
+          <div v-else-if="searchError" class="search-status">
+            <div class="status-text error-text">{{ searchError }}</div>
+          </div>
           <div
             v-else-if="hasSearched && searchQuery && (useSemanticSearch ? semanticResults.length === 0 : results.length === 0)"
             class="search-status">
@@ -83,22 +86,20 @@
               {{ useSemanticSearch ? $t('search.semanticHint') : $t('search.typeToSearch') }}
             </div>
           </div>
-          <div v-else class="results-list">
-            <div v-if="!useSemanticSearch">
-              <div v-for="result in results" :key="result.id" class="result-item" @click="selectResult(result)">
-                <div class="result-title">
-                  <span v-html="highlightText(result.title, searchQuery)"></span>
-                  <span v-if="result.titleMatch" class="title-badge">{{ $t('search.titleMatch') }}</span>
+          <div v-else-if="!useSemanticSearch" class="results-list">
+            <div v-for="result in results" :key="result.id" class="result-item" @click="selectResult(result)">
+              <div class="result-title">
+                <span v-html="highlightText(result.title, searchQuery)"></span>
+                <span v-if="result.titleMatch" class="title-badge">{{ $t('search.titleMatch') }}</span>
+              </div>
+              <div v-if="result.matches.length > 0" class="result-matches">
+                <div v-for="(match, idx) in result.matches.slice(0, 3)" :key="idx" class="match-line"
+                  @click.stop="selectMatch(result, match)">
+                  <span class="match-line-number">{{ match.line }}</span>
+                  <span class="match-text" v-html="highlightMatch(match)"></span>
                 </div>
-                <div v-if="result.matches.length > 0" class="result-matches">
-                  <div v-for="(match, idx) in result.matches.slice(0, 3)" :key="idx" class="match-line"
-                    @click.stop="selectMatch(result, match)">
-                    <span class="match-line-number">{{ match.line }}</span>
-                    <span class="match-text" v-html="highlightMatch(match)"></span>
-                  </div>
-                  <div v-if="result.matches.length > 3" class="more-matches">
-                    +{{ result.matches.length - 3 }} {{ $t('search.moreMatches') }}
-                  </div>
+                <div v-if="result.matches.length > 3" class="more-matches">
+                  +{{ result.matches.length - 3 }} {{ $t('search.moreMatches') }}
                 </div>
               </div>
             </div>
@@ -111,7 +112,8 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from 'vue';
-import { Close, MessageSearch, FileText, Search } from '@icon-park/vue-next';
+import { useI18n } from 'vue-i18n';
+import { Close, FileText, Search } from '@icon-park/vue-next';
 import { useRAGSearch, useRAGConfig, useRAGChat } from '@renderer/features/rag';
 import { createLogger } from '@renderer/features/logger';
 import { searchService } from '../services/search.service';
@@ -153,12 +155,14 @@ const emit = defineEmits<{
   select: [result: SearchResult | SemanticSearchResult, match?: SearchMatch];
 }>();
 const searchDialogLogger = createLogger('SearchDialog');
+const { t } = useI18n();
 
 const searchQuery = ref('');
 const results = ref<SearchResult[]>([]);
 const semanticResults = ref<SemanticSearchResult[]>([]);
 const isSearching = ref(false);
 const hasSearched = ref(false);
+const searchError = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
 const useSemanticSearch = ref(false);
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -167,17 +171,16 @@ const { search: ragSearch } = useRAGSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
 const { askQuestion, isGenerating: isAIGenerating, answer: aiAnswer } = useRAGChat();
 const ragAvailable = computed(() => ragEnabled.value && ragConfigured.value);
-
 const uniqueSources = computed(() => {
-  const sourcesMap = new Map<string, { noteId: string; noteTitle: string; originalResult: any }>();
+  const sourcesMap = new Map<string, { noteId: string; noteTitle: string; originalResult: SemanticSearchResult }>();
 
   semanticResults.value.forEach(result => {
     const noteId = result.chunk.noteId;
     if (!sourcesMap.has(noteId)) {
       sourcesMap.set(noteId, {
-        noteId: noteId,
+        noteId,
         noteTitle: result.noteTitle || 'Untitled Note',
-        originalResult: result
+        originalResult: result,
       });
     }
   });
@@ -195,6 +198,7 @@ watch(() => props.isOpen, (open) => {
     results.value = [];
     semanticResults.value = [];
     aiAnswer.value = '';
+    searchError.value = '';
   }
 });
 
@@ -228,6 +232,7 @@ async function handleSearch(isExplicitTrigger = true) {
   if (!query) {
     results.value = [];
     semanticResults.value = [];
+    searchError.value = '';
     isSearching.value = false;
     return;
   }
@@ -237,17 +242,19 @@ async function handleSearch(isExplicitTrigger = true) {
     isSearching.value = true;
     hasSearched.value = false;
     aiAnswer.value = '';
+    searchError.value = '';
     try {
       if (useSemanticSearch.value && ragAvailable.value) {
         const ragResults = await ragSearch(query);
         semanticResults.value = ragResults;
         results.value = [];
-
         if (ragResults.length > 0) {
           try {
             await askQuestion(query);
           } catch (error) {
-            searchDialogLogger.error(`AI answer generation failed: ${error instanceof Error ? error.message : String(error)}`);
+            const message = error instanceof Error ? error.message : String(error);
+            searchDialogLogger.error(`AI answer generation failed: ${message}`);
+            searchError.value = message;
           }
         }
       } else {
@@ -256,7 +263,9 @@ async function handleSearch(isExplicitTrigger = true) {
         semanticResults.value = [];
       }
     } catch (error) {
-      searchDialogLogger.error(`Search error: ${error instanceof Error ? error.message : String(error)}`);
+      const message = error instanceof Error ? error.message : String(error);
+      searchDialogLogger.error(`Search error: ${message}`);
+      searchError.value = message;
       results.value = [];
       semanticResults.value = [];
     } finally {
@@ -534,7 +543,6 @@ function selectSemanticResult(result: SemanticSearchResult) {
   white-space: nowrap;
 }
 
-
 .loading-spinner.small {
   width: 16px;
   height: 16px;
@@ -572,6 +580,10 @@ function selectSemanticResult(result: SemanticSearchResult) {
 .status-text {
   font-size: 14px;
   color: var(--text-muted);
+}
+
+.error-text {
+  color: var(--color-danger, #ef4444);
 }
 
 .empty-icon {

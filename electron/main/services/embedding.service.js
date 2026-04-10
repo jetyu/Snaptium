@@ -3,6 +3,19 @@ import { loggerService } from './logger.service.js';
 
 const logger = loggerService.createLogger('Electron:Embedding Service');
 
+function normalizeEmbedding(embedding) {
+  if (!Array.isArray(embedding) || embedding.length === 0) {
+    throw new Error('Invalid embedding vector');
+  }
+
+  const magnitude = Math.sqrt(embedding.reduce((sum, value) => sum + value * value, 0));
+  if (!Number.isFinite(magnitude) || magnitude === 0) {
+    throw new Error('Invalid embedding magnitude');
+  }
+
+  return embedding.map(value => value / magnitude);
+}
+
 /**
  * Generate embeddings for text chunks
  * @param {Array<string>} texts - Array of text strings to embed
@@ -38,7 +51,7 @@ export async function generateEmbeddings(texts, config) {
       throw new Error('Invalid embedding response format');
     }
 
-    const embeddings = data.data.map(item => item.embedding);
+    const embeddings = data.data.map(item => normalizeEmbedding(item.embedding));
     return embeddings;
   } catch (error) {
     logger.error('Failed to generate embeddings', { error: error.message });

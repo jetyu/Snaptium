@@ -1,8 +1,30 @@
 import { electronApi, type RagSearchResult, type RagStatusResult } from '@renderer/core/bridge/electronApi';
 import { aiService } from '@renderer/features/ai/services/ai.service';
 import { createLogger } from '@renderer/features/logger';
+import { DEFAULT_RAG_CONFIG, RAG_ERROR_MESSAGES, RAG_ERROR_CODES, RAG_CHAT_PROMPTS } from '../constants/rag.constants';
 
 const ragLogger = createLogger('Renderer:RAG Service');
+
+interface AiSource {
+  id: string;
+  endpoint: string;
+  apiKey: string;
+  aiModel: string;
+}
+
+interface RagConfig {
+  enabled?: boolean;
+  embeddingSourceId?: string;
+  embeddingModel?: string;
+  ragChatSourceId?: string;
+  ragChatModel?: string;
+}
+
+interface AppConfig {
+  rag?: RagConfig;
+  noteSavePath?: string;
+  aiSources?: AiSource[];
+}
 
 export interface IndexNoteRequest {
   noteId: string;
@@ -33,27 +55,27 @@ export const ragService = {
    */
   async initialize(): Promise<{ success: boolean; error?: string }> {
     try {
-      const config = await electronApi.settings.getConfig() as any;
+      const config = await electronApi.settings.getConfig() as unknown as AppConfig;
       if (!config.rag?.enabled) {
-        return { success: false, error: 'RAG is disabled in settings' };
+        return { success: false, error: RAG_ERROR_MESSAGES.DISABLED };
       }
 
-      const workspaceRoot = config.noteSavePath as string;
+      const workspaceRoot = config.noteSavePath;
       if (!workspaceRoot) {
-        return { success: false, error: 'No workspace root configured' };
+        return { success: false, error: RAG_ERROR_MESSAGES.NO_WORKSPACE };
       }
 
       const sourceId = config.rag.embeddingSourceId;
-      const source = (config.aiSources as any[]).find(s => s.id === sourceId);
+      const source = config.aiSources?.find(s => s.id === sourceId);
 
       if (!source) {
-        return { success: false, error: 'Embedding source not found' };
+        return { success: false, error: RAG_ERROR_MESSAGES.SOURCE_NOT_FOUND };
       }
 
       const embeddingConfig = {
         endpoint: source.endpoint,
         apiKey: source.apiKey,
-        model: config.rag.embeddingModel,
+        model: config.rag.embeddingModel ?? '',
       };
 
       const result = await electronApi.rag.initialize({
@@ -62,9 +84,10 @@ export const ragService = {
       });
 
       return result;
-    } catch (error: any) {
-      ragLogger.error('RAG initialization failed', { error: error.message });
-      return { success: false, error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      ragLogger.error('RAG initialization failed', { error: message });
+      return { success: false, error: message };
     }
   },
 
@@ -86,6 +109,11 @@ export const ragService = {
     notes: Array<{ id: string; title: string; content: string }>,
     options: { chunkSize: number; chunkOverlap: number; onProgress?: (p: RebuildIndexProgress) => void }
   ) {
+    const clearResult = await electronApi.rag.clearIndex();
+    if (!clearResult.success) {
+      throw new Error(clearResult.error || 'Failed to clear vector index');
+    }
+
     const total = notes.length;
     let successCount = 0;
     let failCount = 0;
@@ -127,16 +155,16 @@ export const ragService = {
   async search(params: { query: string; topK: number; similarityThreshold: number }): Promise<{ success: boolean; results: RagSearchResult[]; error?: string }> {
     try {
       const { query, topK, similarityThreshold } = params;
-      const config = await electronApi.settings.getConfig() as any;
-      const sourceId = config.rag.embeddingSourceId;
-      const source = (config.aiSources as any[]).find((s: any) => s.id === sourceId);
+      const config = await electronApi.settings.getConfig() as unknown as AppConfig;
+      const sourceId = config.rag?.embeddingSourceId;
+      const source = config.aiSources?.find(s => s.id === sourceId);
 
-      if (!source) throw new Error('Embedding source not found');
+      if (!source) throw new Error(RAG_ERROR_MESSAGES.SOURCE_NOT_FOUND);
 
       const embeddingConfig = {
         endpoint: source.endpoint,
         apiKey: source.apiKey,
-        model: config.rag.embeddingModel,
+        model: config.rag?.embeddingModel ?? '',
       };
 
       // 1. Generate query embedding (Atomic Main call)
@@ -152,10 +180,32 @@ export const ragService = {
         similarityThreshold,
       });
 
+      if (!searchRes.success) {
+        const errorMessage = searchRes.error || 'Search failed';
+        const isDimensionMismatch =
+          errorMessage.includes('No vector column found') &&
+          errorMessage.toLowerCase().includes('dimension');
+
+        return {
+          success: false,
+          results: [],
+          error: isDimensionMismatch ? RAG_ERROR_CODES.INDEX_DIMENSION_MISMATCH : errorMessage,
+        };
+      }
+
       return searchRes;
-    } catch (error: any) {
-      ragLogger.error('RAG search failed', { error: error.message });
-      return { success: false, results: [], error: error.message };
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      ragLogger.error('RAG search failed', { error: errorMessage });
+      const isDimensionMismatch =
+        errorMessage.includes('No vector column found') &&
+        errorMessage.toLowerCase().includes('dimension');
+
+      return {
+        success: false,
+        results: [],
+        error: isDimensionMismatch ? RAG_ERROR_CODES.INDEX_DIMENSION_MISMATCH : errorMessage,
+      };
     }
   },
 
@@ -164,16 +214,16 @@ export const ragService = {
    */
   async askQuestion(query: string): Promise<{ success: boolean; answer?: string; error?: string }> {
     try {
-      const config = await electronApi.settings.getConfig() as any;
-      const sourceId = config.rag.embeddingSourceId;
-      const source = (config.aiSources as any[]).find((s: any) => s.id === sourceId);
+      const config = await electronApi.settings.getConfig() as unknown as AppConfig;
+      const sourceId = config.rag?.embeddingSourceId;
+      const source = config.aiSources?.find(s => s.id === sourceId);
 
-      if (!source) throw new Error('Embedding source not found');
+      if (!source) throw new Error(RAG_ERROR_MESSAGES.SOURCE_NOT_FOUND);
 
       const embeddingConfig = {
         endpoint: source.endpoint,
         apiKey: source.apiKey,
-        model: config.rag.embeddingModel,
+        model: config.rag?.embeddingModel ?? '',
       };
 
       // 1. Generate query embedding (Atomic Main call)
@@ -185,20 +235,22 @@ export const ragService = {
       // 2. Vector Search (Atomic Main call)
       const searchRes = await electronApi.rag.search({
         queryEmbedding,
-        topK: 5,
-        similarityThreshold: 0.4,
+        topK: DEFAULT_RAG_CONFIG.topK,
+        similarityThreshold: DEFAULT_RAG_CONFIG.similarityThreshold,
       });
 
       if (!searchRes.success || !searchRes.results?.length) {
-        return { success: false, error: 'No relevant context found in notes' };
+        return { success: false, error: RAG_ERROR_MESSAGES.NO_CONTEXT };
       }
 
       // 3. Coordinate AI via unified service
       const contexts = searchRes.results.map(r => r.chunk.content);
-      
-      const chatSourceId = config.aiChat?.sourceId || sourceId;
-      const chatSource = (config.aiSources as any[]).find((s: any) => s.id === chatSourceId);
-      
+
+      const chatSourceId = config.rag?.ragChatSourceId;
+      const chatSource = chatSourceId
+        ? config.aiSources?.find(s => s.id === chatSourceId)
+        : null;
+
       if (!chatSource) {
         ragLogger.info('No chat model configured, falling back to search results');
         const summary = searchRes.results
@@ -207,18 +259,21 @@ export const ragService = {
         return { success: true, answer: summary };
       }
 
+      const systemPrompt = RAG_CHAT_PROMPTS.SYSTEM.replace('{context}', contexts.join('\n---\n'));
+
       return await aiService.generateRagAnswer({
         query,
-        contexts,
+        systemPrompt,
         config: {
           endpoint: chatSource.endpoint,
           apiKey: chatSource.apiKey,
-          model: config.aiChat?.model || chatSource.model || chatSource.aiModel,
+          model: config.rag?.ragChatModel || chatSource.aiModel,
         },
       });
-    } catch (error: any) {
-      ragLogger.error('RAG question failed', { error: error.message });
-      return { success: false, error: error.message };
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      ragLogger.error('RAG question failed', { error: message });
+      return { success: false, error: message };
     }
   },
 

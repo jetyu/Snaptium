@@ -14,7 +14,7 @@ export function useRAGInitialization() {
   let stopAutoIndexOnSaveWatcher: WatchStopHandle | null = null;
   let stopAutoIndexSettingWatcher: WatchStopHandle | null = null;
 
-  const initializeRAG = async () => {
+  const initializeRAG = async (options?: { skipAutoIndex?: boolean }) => {
     const ragConfig = (settingsStore.config as any).rag;
 
     if (!ragConfig?.enabled) {
@@ -30,8 +30,8 @@ export function useRAGInitialization() {
       if (result.success) {
         ragInitLogger.info('RAG service initialized successfully');
 
-        if (ragConfig.autoIndex) {
-          await autoIndexAllNotes();
+        if (ragConfig.autoIndex && !options?.skipAutoIndex) {
+          await autoIndexAllNotes('auto-index');
         }
       } else {
         ragInitLogger.error(`RAG initialization failed: ${result.error}`);
@@ -41,7 +41,7 @@ export function useRAGInitialization() {
     }
   };
 
-  const autoIndexAllNotes = async () => {
+  const autoIndexAllNotes = async (reason: 'embedding-change' | 'auto-index' = 'auto-index') => {
     try {
       ragInitLogger.info('Starting auto-indexing...');
 
@@ -56,7 +56,7 @@ export function useRAGInitialization() {
         return;
       }
 
-      await rebuildIndex(notes);
+      await rebuildIndex(notes, reason);
       ragInitLogger.info(`Auto-indexed ${notes.length} notes`);
     } catch (error: any) {
       ragInitLogger.error(`Auto-indexing failed: ${error.message}`);
@@ -130,8 +130,18 @@ export function useRAGInitialization() {
       (settingsStore.config as any).rag?.embeddingSourceId,
       (settingsStore.config as any).rag?.embeddingModel,
     ] as const,
-    async () => {
-      await initializeRAG();
+    async (current, previous) => {
+      if (!previous || current[0] === previous[0] && current[1] === previous[1]) {
+        return;
+      }
+
+      const ragConfig = (settingsStore.config as any).rag;
+      if (!ragConfig?.enabled || !current[0] || !current[1]) {
+        return;
+      }
+
+      await initializeRAG({ skipAutoIndex: true });
+      await autoIndexAllNotes('embedding-change');
     }
   );
 

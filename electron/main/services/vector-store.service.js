@@ -92,6 +92,7 @@ class VectorStoreService {
 
       const results = await this.table
         .search(queryEmbedding)
+        .column('vector')
         .limit(topK * 2)
         .execute();
 
@@ -134,8 +135,7 @@ class VectorStoreService {
         `After deduplication: ${uniqueResults.length} results (removed ${withScores.length - uniqueResults.length} duplicates)`
       );
 
-      const MIN_EFFECTIVE_SCORE = 0.4;
-      const effectiveThreshold = Math.max(threshold, MIN_EFFECTIVE_SCORE);
+      const effectiveThreshold = Math.max(0, Math.min(1, threshold));
 
       const filtered = uniqueResults
         .filter(result => result.score >= effectiveThreshold)
@@ -213,10 +213,11 @@ class VectorStoreService {
     }
 
     try {
-      if (this.table) {
+      const tableNames = await this.db.tableNames();
+      if (tableNames.includes(this.tableName)) {
         await this.db.dropTable(this.tableName);
-        this.table = null;
       }
+      this.table = null;
       logger.debug('Data cleared');
     } catch (error) {
       logger.error(`Error clearing data: ${error instanceof Error ? error.message : String(error)}`);

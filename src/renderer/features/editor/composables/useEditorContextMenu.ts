@@ -1,5 +1,5 @@
 import type { EditorView } from '@codemirror/view';
-import { electronApi } from '@renderer/core/bridge/electronApi';
+import { aiService } from '@renderer/features/ai/services/ai.service';
 import { createLogger } from '@renderer/features/logger';
 import {
   showNativeEditorContextMenu,
@@ -54,7 +54,7 @@ export function useEditorContextMenu(options: UseEditorContextMenuOptions) {
 
       const systemPrompt = options.t(promptKey);
 
-      const result = await electronApi.aiChat.generate({
+      const result = await aiService.generate({
         endpoint: aiConfig.endpoint,
         apiKey: aiConfig.apiKey,
         model: aiConfig.model,

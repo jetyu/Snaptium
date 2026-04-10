@@ -333,6 +333,9 @@ export const electronApi = {
     updateConfig: (payload: { endpoint: string; apiKey: string; model: string }) => {
       return electronApi.rag.getApi().updateConfig(payload);
     },
+    clearIndex: (): Promise<{ success: boolean; error?: string }> => {
+      return electronApi.rag.getApi().rebuildIndex();
+    },
   },
 
   workspace: {

@@ -47,7 +47,10 @@ export function useRAGIndex() {
    * 重建所有索引
    * @param notes - 笔记列表
    */
-  const rebuildIndex = async (notes: Array<{ id: string; title: string; content: string }>) => {
+  const rebuildIndex = async (
+    notes: Array<{ id: string; title: string; content: string }>,
+    reason: 'manual' | 'embedding-change' | 'auto-index' = 'manual'
+  ) => {
     if (!isEnabled.value || !isConfigured.value) {
       throw new Error('RAG is not enabled or configured');
     }
@@ -56,7 +59,8 @@ export function useRAGIndex() {
       await ragStore.rebuildIndex(
         notes,
         ragConfig.value.chunkSize,
-        ragConfig.value.chunkOverlap
+        ragConfig.value.chunkOverlap,
+        reason
       );
     } catch (error) {
       ragIndexLogger.error(`Failed to rebuild index: ${error}`);
