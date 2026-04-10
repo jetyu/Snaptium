@@ -95,6 +95,7 @@ interface HistoryVersion {
 
 declare global {
   interface Window {
+    __vfsListenerAdded?: boolean;
     electronAPI: {
       // Legacy file open/save (editor module)
       openFile: () => Promise<import('./core/bridge/electronApi').OpenFileResult | null>;

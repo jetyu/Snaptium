@@ -15,7 +15,7 @@ export function useRAGInitialization() {
   let stopAutoIndexSettingWatcher: WatchStopHandle | null = null;
 
   const initializeRAG = async (options?: { skipAutoIndex?: boolean }) => {
-    const ragConfig = (settingsStore.config as any).rag;
+    const ragConfig = settingsStore.config.rag;
 
     if (!ragConfig?.enabled) {
       ragInitLogger.info('RAG is disabled, skipping initialization');
@@ -102,7 +102,7 @@ export function useRAGInitialization() {
 
     stopAutoIndexSettingWatcher?.();
     stopAutoIndexSettingWatcher = watch(
-      () => [(settingsStore.config as any).rag?.enabled, (settingsStore.config as any).rag?.indexOnSave] as const,
+      () => [settingsStore.config.rag?.enabled, settingsStore.config.rag?.indexOnSave] as const,
       ([enabled, indexOnSave]) => {
         if (enabled && indexOnSave) {
           installAutoIndexOnSave();
@@ -116,7 +116,7 @@ export function useRAGInitialization() {
   };
 
   watch(
-    () => (settingsStore.config as any).rag?.enabled,
+    () => (settingsStore.config.rag?.enabled),
     async (enabled) => {
       if (enabled) {
         await initializeRAG();
@@ -127,15 +127,15 @@ export function useRAGInitialization() {
   // When config changes, re-initialize
   watch(
     () => [
-      (settingsStore.config as any).rag?.embeddingSourceId,
-      (settingsStore.config as any).rag?.embeddingModel,
+      (settingsStore.config.rag?.embeddingSourceId),
+      (settingsStore.config.rag?.embeddingModel),
     ] as const,
     async (current, previous) => {
       if (!previous || current[0] === previous[0] && current[1] === previous[1]) {
         return;
       }
 
-      const ragConfig = (settingsStore.config as any).rag;
+      const ragConfig = settingsStore.config.rag;
       if (!ragConfig?.enabled || !current[0] || !current[1]) {
         return;
       }

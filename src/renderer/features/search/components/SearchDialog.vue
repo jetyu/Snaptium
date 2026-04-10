@@ -112,7 +112,6 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
 import { Close, FileText, Search } from '@icon-park/vue-next';
 import { useRAGSearch, useRAGConfig, useRAGChat } from '@renderer/features/rag';
 import { createLogger } from '@renderer/features/logger';
@@ -155,7 +154,6 @@ const emit = defineEmits<{
   select: [result: SearchResult | SemanticSearchResult, match?: SearchMatch];
 }>();
 const searchDialogLogger = createLogger('SearchDialog');
-const { t } = useI18n();
 
 const searchQuery = ref('');
 const results = ref<SearchResult[]>([]);

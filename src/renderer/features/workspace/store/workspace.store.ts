@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import { createLogger } from '@renderer/features/logger';
+import  { type HistoryVersion } from '@renderer/core/bridge/electronApi';
 import { workspaceService, type Note, type Notebook } from '../services/workspace.service';
 import { WORKSPACE_CONSTANTS, type SaveStatus } from '../constants/workspace.constants';
 
@@ -18,7 +19,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       lastSavedNoteMeta: null as { noteId: string; title: string; contentId: string; savedAt: number } | null,
       saveError: null as string | null,
       isHistoryDialogOpen: false,
-      historyVersions: [] as any[],
+      historyVersions: [] as HistoryVersion[],
       historyLoading: false,
     };
   },
@@ -47,12 +48,12 @@ export const useWorkspaceStore = defineStore('workspace', {
         return;
       }
 
-      if (!(window as any).__vfsListenerAdded) {
+      if (!window.__vfsListenerAdded) {
         window.addEventListener('vfs-changed', () => {
           logger.info('VFS change detected, refreshing workspace...');
           this.initializeWorkspace(true);
         });
-        (window as any).__vfsListenerAdded = true;
+        window.__vfsListenerAdded = true;
       }
 
       if (!workspaceService.isAvailable()) {

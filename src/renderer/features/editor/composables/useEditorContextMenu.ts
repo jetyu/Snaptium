@@ -82,28 +82,28 @@ export function useEditorContextMenu(options: UseEditorContextMenuOptions) {
     if (!view || !action) return;
 
     // 处理基础编辑操作
-    const basicActions = [
+    const basicActions: EditorContextAction[] = [
       EDITOR_CONSTANTS.ACTIONS.CUT,
       EDITOR_CONSTANTS.ACTIONS.COPY,
       EDITOR_CONSTANTS.ACTIONS.PASTE,
       EDITOR_CONSTANTS.ACTIONS.DELETE,
       EDITOR_CONSTANTS.ACTIONS.SELECT_ALL,
-    ] as const;
+    ];
     
-    if (basicActions.includes(action as any)) {
+    if (basicActions.includes(action)) {
       executeEditorAction(action, view);
       return;
     }
 
     // 处理AI操作
-    const aiActions = [
+    const aiActions: EditorContextAction[] = [
       EDITOR_CONSTANTS.ACTIONS.AI_REWRITE,
       EDITOR_CONSTANTS.ACTIONS.AI_EXPAND,
       EDITOR_CONSTANTS.ACTIONS.AI_SIMPLIFY,
       EDITOR_CONSTANTS.ACTIONS.AI_SUMMARIZE,
-    ] as const;
+    ];
     
-    if (aiActions.includes(action as any)) {
+    if (aiActions.includes(action)) {
       const selectedText = getSelectedText(view);
       if (selectedText) {
         await handleAiOperation(action, selectedText);
