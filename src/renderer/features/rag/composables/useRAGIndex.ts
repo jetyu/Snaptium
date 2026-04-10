@@ -23,7 +23,7 @@ export function useRAGIndex() {
   /**
    * 索引单个笔记
    */
-  const indexNote = async (noteId: string, noteTitle: string, notePath: string) => {
+  const indexNote = async (noteId: string, noteTitle: string, content: string) => {
     if (!isEnabled.value || !isConfigured.value) {
       ragIndexLogger.warn('RAG is not enabled or configured, skipping indexing');
       return;
@@ -33,7 +33,7 @@ export function useRAGIndex() {
       await ragStore.indexNote(
         noteId,
         noteTitle,
-        notePath,
+        content,
         ragConfig.value.chunkSize,
         ragConfig.value.chunkOverlap
       );
@@ -47,7 +47,7 @@ export function useRAGIndex() {
    * 重建所有索引
    * @param notes - 笔记列表
    */
-  const rebuildIndex = async (notes: Array<{ id: string; title: string; path: string }>) => {
+  const rebuildIndex = async (notes: Array<{ id: string; title: string; content: string }>) => {
     if (!isEnabled.value || !isConfigured.value) {
       throw new Error('RAG is not enabled or configured');
     }

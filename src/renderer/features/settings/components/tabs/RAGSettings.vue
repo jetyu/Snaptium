@@ -229,7 +229,7 @@ const handleRebuildIndex = async () => {
     const notes = workspaceStore.notes.map((node) => ({
       id: node.id,
       title: node.title,
-      path: `Database/objects/${node.contentId}.md`,
+      content: node.content,
     }));
 
     if (notes.length === 0) {
