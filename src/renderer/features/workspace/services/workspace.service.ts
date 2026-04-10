@@ -1,5 +1,5 @@
 import { i18n } from '@renderer/features/i18n';
-import { electronApi } from '@renderer/core/bridge/electronApi';
+import { electronApi, type HistoryVersion } from '@renderer/core/bridge/electronApi';
 
 export interface Note {
     id: string;
@@ -279,7 +279,7 @@ export const workspaceService = {
         notifyVfsChanged(); // Lock status is structural enough for refreshes
     },
 
-    async getHistory(contentId: string): Promise<any[]> {
+    async getHistory(contentId: string): Promise<HistoryVersion[]> {
         if (!isAvailable()) {
             return [];
         }

@@ -168,6 +168,12 @@ export interface EmbeddingGenerateSinglePayload {
   config: EmbeddingConfig;
 }
 
+export interface HistoryVersion {
+  timestamp: number;
+  filename: string;
+  size: number;
+}
+
 function ensureElectronApi() {
   if (!window.electronAPI) {
     throw new Error('electronAPI bridge is unavailable. Make sure preload is loaded.');
@@ -420,7 +426,7 @@ export const electronApi = {
       return electronApi.vfs.getApi().emptyTrash();
     },
 
-    getHistory: (contentId: string): Promise<any[]> => {
+    getHistory: (contentId: string): Promise<HistoryVersion[]> => {
       return electronApi.vfs.getApi().getHistory(contentId);
     },
 

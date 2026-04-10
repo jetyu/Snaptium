@@ -83,6 +83,12 @@ interface SearchResult {
   titleMatch: boolean;
 }
 
+interface HistoryVersion {
+  timestamp: number;
+  filename: string;
+  size: number;
+}
+
 // ---------------------------------------------------------------------------
 // Global window augmentation
 // ---------------------------------------------------------------------------
@@ -119,7 +125,7 @@ declare global {
         restoreNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
         permanentlyDeleteNode: (nodeId: string) => Promise<boolean>;
         emptyTrash: () => Promise<boolean>;
-        getHistory: (contentId: string) => Promise<any[]>;
+        getHistory: (contentId: string) => Promise<HistoryVersion[]>;
         getHistoryContent: (payload: { contentId: string; filename: string }) => Promise<string>;
         recoverVersion: (payload: { nodeId: string; filename: string }) => Promise<boolean>;
       };

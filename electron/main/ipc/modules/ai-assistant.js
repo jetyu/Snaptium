@@ -1,4 +1,5 @@
 import { ipcMain } from 'electron';
+import { z } from 'zod';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { settingsService } from '../../services/settings.service.js';
 import { $t } from '../../utils/i18n.js';
@@ -9,6 +10,10 @@ let cachedConfig = null;
 let configLoadTime = 0;
 const CONFIG_CACHE_TTL = 5000; // 5秒缓存
 const logger = loggerService.createLogger('Electron:AI Assistant IPC');
+
+const AiAssistantCompleteSchema = z.object({
+  context: z.string().min(1).max(10000),
+});
 
 /**
  * 获取配置（带缓存）
@@ -41,16 +46,8 @@ export function registerAiAssistantIpcHandlers() {
    */
   ipcMain.handle(IPC_CHANNELS.AI_ASSISTANT_COMPLETE, async (_event, payload) => {
     try {
-      const { context } = payload;
-
-      // 验证输入
-      if (!context || typeof context !== 'string') {
-        return { success: false, message: 'Invalid context' };
-      }
-
-      if (context.length > 10000) {
-        return { success: false, message: 'Context too long (max 10000 characters)' };
-      }
+      const validated = AiAssistantCompleteSchema.parse(payload);
+      const { context } = validated;
 
       // 加载配置
       const config = await getConfig();
@@ -108,6 +105,9 @@ export function registerAiAssistantIpcHandlers() {
       }
 
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return { success: false, message: `Validation error: ${error.message}` };
+      }
       logger.error(`Unhandled error: ${error instanceof Error ? error.message : String(error)}`);
       return {
         success: false,

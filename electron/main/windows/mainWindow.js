@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron';
 import path from 'node:path';
+import { $t } from '../utils/i18n.js';
 
 export function secureWebContents(win, isDev) {
   const webC = win.webContents;
@@ -33,7 +34,7 @@ export function createMainWindow({ isDev, appPath }) {
     minWidth: 960,
     minHeight: 680,
     show: false,
-    title: 'Pilotrix',
+    title: $t('common.appName'),
     icon: path.join(appPath, 'electron/assets/logo/app-logo.ico'),
     webPreferences: {
       preload: path.join(appPath, 'electron/preload/index.js'),
