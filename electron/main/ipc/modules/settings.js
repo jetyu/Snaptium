@@ -62,4 +62,17 @@ export function registerSettingsIpcHandlers() {
     }
     return result;
   });
+
+  /**
+   * Handle resetting settings to defaults
+   */
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_RESET, async () => {
+    logger.debug('Settings reset');
+    const result = await settingsService.resetConfig();
+    if (result) {
+      app.relaunch();
+      app.exit(0);
+    }
+    return result;
+  });
 }

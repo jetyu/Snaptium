@@ -141,6 +141,7 @@
   "importSuccess": "Import successful: ",
   "exportFailed": "Export failed: ",
   "exportSuccess": "Export successful: ",
+  "button.resetSettings": "Reset Settings",
   "resetConfirmNotify": "Reset preferences to default configuration?",
   "label.aiSystemPrompt": "System Prompt",
   "text.AISystemPrompt": "Customize AI writing behavior and style, leave empty to use default",

@@ -14,6 +14,7 @@
     "start": "npm run build:preload && electron .",
     "build:preload": "vite build --config vite.preload.config.ts",
     "check:preload": "node scripts/check-preload.mjs",
+    "smoke:electron": "node scripts/electron-smoke.mjs",
     "build": "npm run build:preload && vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",

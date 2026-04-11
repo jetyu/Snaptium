@@ -6,20 +6,17 @@
 import { ipcMain } from 'electron';
 import { z } from 'zod';
 import { ragService } from '../../services/rag.service.js';
+import { generateEmbeddingSingle } from '../../services/embedding.service.js';
+import { remoteAiService } from '../../services/remote-ai.service.js';
+import { aiConfigService } from '../../services/ai-config.service.js';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
+import { $t } from '../../utils/i18n.js';
 
 const logger = loggerService.createLogger('Main:RAG IPC');
 
 // Validation Schemas
-const InitializeSchema = z.object({
-  workspaceRoot: z.string().min(1),
-  embeddingConfig: z.object({
-    endpoint: z.string().url(),
-    apiKey: z.string().min(1),
-    model: z.string().min(1),
-  }),
-});
+const InitializeSchema = z.object({}).optional();
 
 const IndexNoteSchema = z.object({
   noteId: z.string().min(1),
@@ -29,16 +26,14 @@ const IndexNoteSchema = z.object({
   chunkOverlap: z.number().int().nonnegative().optional().default(50),
 });
 
-const SearchByVectorSchema = z.object({
-  queryEmbedding: z.array(z.number()),
+const SearchTextSchema = z.object({
+  query: z.string().min(1),
   topK: z.number().int().positive().optional().default(5),
   similarityThreshold: z.number().min(0).max(1).optional().default(0),
 });
 
-const UpdateConfigSchema = z.object({
-  endpoint: z.string().url(),
-  apiKey: z.string().min(1),
-  model: z.string().min(1),
+const AskQuestionSchema = z.object({
+  query: z.string().min(1),
 });
 
 /**
@@ -48,8 +43,9 @@ export function registerRAGHandlers() {
   // Initialize RAG service
   ipcMain.handle(IPC_CHANNELS.RAG_INITIALIZE, async (event, request) => {
     try {
-      const validated = InitializeSchema.parse(request);
-      await ragService.initialize(validated.workspaceRoot, validated.embeddingConfig);
+      InitializeSchema.parse(request);
+      const ragConfig = await aiConfigService.resolveRagConfig();
+      await ragService.initialize(ragConfig.workspaceRoot, ragConfig.embeddingConfig);
       return { success: true };
     } catch (error) {
       logger.error(`RAG_INITIALIZE error: ${error.message}`);
@@ -69,14 +65,27 @@ export function registerRAGHandlers() {
     }
   });
 
-  // Search by vector (Atomic)
-  ipcMain.handle(IPC_CHANNELS.RAG_SEARCH, async (event, request) => {
+  ipcMain.handle(IPC_CHANNELS.RAG_SEARCH_TEXT, async (_event, request) => {
     try {
-      const validated = SearchByVectorSchema.parse(request);
-      const results = await ragService.searchByVector(validated);
+      const validated = SearchTextSchema.parse(request);
+      const ragConfig = await aiConfigService.resolveRagConfig();
+
+      if (!ragService.isReady()) {
+        await ragService.initialize(ragConfig.workspaceRoot, ragConfig.embeddingConfig);
+      } else {
+        ragService.updateEmbeddingConfig(ragConfig.embeddingConfig);
+      }
+
+      const queryEmbedding = await generateEmbeddingSingle(validated.query, ragConfig.embeddingConfig);
+      const results = await ragService.searchByVector({
+        queryEmbedding,
+        topK: validated.topK,
+        similarityThreshold: validated.similarityThreshold,
+      });
+
       return { success: true, results };
     } catch (error) {
-      logger.error(`RAG_SEARCH error: ${error.message}`);
+      logger.error(`RAG_SEARCH_TEXT error: ${error.message}`);
       return { success: false, error: error.message, results: [] };
     }
   });
@@ -114,14 +123,72 @@ export function registerRAGHandlers() {
     }
   });
 
-  // Update embedding configuration (Atomic)
-  ipcMain.handle(IPC_CHANNELS.RAG_UPDATE_CONFIG, async (event, request) => {
+  ipcMain.handle(IPC_CHANNELS.RAG_ASK_QUESTION, async (_event, request) => {
     try {
-      const validated = UpdateConfigSchema.parse(request);
-      ragService.updateEmbeddingConfig(validated);
-      return { success: true };
+      const validated = AskQuestionSchema.parse(request);
+      const ragConfig = await aiConfigService.resolveRagConfig();
+
+      if (!ragService.isReady()) {
+        await ragService.initialize(ragConfig.workspaceRoot, ragConfig.embeddingConfig);
+      } else {
+        ragService.updateEmbeddingConfig(ragConfig.embeddingConfig);
+      }
+
+      const queryEmbedding = await generateEmbeddingSingle(validated.query, ragConfig.embeddingConfig);
+      const results = await ragService.searchByVector({
+        queryEmbedding,
+        topK: ragConfig.rag.topK,
+        similarityThreshold: ragConfig.rag.similarityThreshold,
+      });
+
+      if (!results.length) {
+        return { success: false, error: 'No relevant context found in notes' };
+      }
+
+      if (!ragConfig.chatConfig) {
+        const fallbackHeader = $t('message.rag.noChatModel', 'No chat model configured. Here are the relevant findings:');
+        const summary = results
+          .map((res, idx) => `[${idx + 1}] ${res.noteTitle || 'Untitled'}:\n${res.chunk.content}`)
+          .join('\n\n');
+        return {
+          success: true,
+          answer: `${fallbackHeader}\n\n${summary}`,
+          usedSearchFallback: true,
+        };
+      }
+
+      const contextText = results.map((res) => res.chunk.content).join('\n---\n');
+      const systemPrompt = [
+        '你是一个专业的笔记助手。请基于提供的笔记内容进行简洁、专业的回答。',
+        '',
+        '必须严格遵守下列规则：',
+        '1. 只能使用用户提供的笔记内容进行回答。',
+        '2. 在正文中直接回答问题，给出结论和要点，不要转述无关背景，不要包含冗余的解释，保证文本简洁明了。',
+        '3. 回答时禁止包含笔记中未提及的外部知识。',
+        '',
+        '笔记内容：',
+        contextText,
+      ].join('\n');
+
+      const response = await remoteAiService.chat({
+        endpoint: ragConfig.chatConfig.endpoint,
+        apiKey: ragConfig.chatConfig.apiKey,
+        model: ragConfig.chatConfig.model,
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: validated.query },
+        ],
+        temperature: 0.7,
+        max_tokens: 1000,
+      });
+
+      return {
+        success: true,
+        answer: response.choices?.[0]?.message?.content,
+        usedSearchFallback: false,
+      };
     } catch (error) {
-      logger.error(`RAG_UPDATE_CONFIG error: ${error.message}`);
+      logger.error(`RAG_ASK_QUESTION error: ${error.message}`);
       return { success: false, error: error.message };
     }
   });

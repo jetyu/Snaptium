@@ -18,7 +18,6 @@ interface UseEditorContextMenuOptions {
   t: (key: string, named?: Record<string, unknown>) => string;
   editorView: () => EditorView | null;
   aiAssistantEnabled: () => boolean;
-  getAiConfig: () => { endpoint: string; apiKey: string; model: string } | null;
 }
 
 export function useEditorContextMenu(options: UseEditorContextMenuOptions) {
@@ -28,12 +27,6 @@ export function useEditorContextMenu(options: UseEditorContextMenuOptions) {
   async function handleAiOperation(operation: string, selectedText: string) {
     const view = options.editorView();
     if (!view || !selectedText) return;
-
-    const aiConfig = options.getAiConfig();
-    if (!aiConfig) {
-      logger.error('AI configuration not available');
-      return;
-    }
 
     try {
       let promptKey = 'ai.prompt.default';
@@ -55,11 +48,8 @@ export function useEditorContextMenu(options: UseEditorContextMenuOptions) {
       const systemPrompt = options.t(promptKey);
 
       const result = await aiService.generate({
-        endpoint: aiConfig.endpoint,
-        apiKey: aiConfig.apiKey,
-        model: aiConfig.model,
+        systemPrompt,
         messages: [
-          { role: 'system', content: systemPrompt },
           { role: 'user', content: selectedText },
         ],
       });

@@ -16,6 +16,10 @@ class RAGService {
     this.embeddingConfig = null;
   }
 
+  isReady() {
+    return this.isInitialized;
+  }
+
   /**
    * Initialize RAG service (Atomic)
    * @param {string} workspaceRoot - Workspace root directory

@@ -27,6 +27,7 @@ export const settingsService = {
       bracketMatching: true,
       autoCloseBrackets: true,
       autoIndent: true,
+      showStatusBar: true,
       aiSources: [],
       aiAssistant: {
         enabled: false,
@@ -36,6 +37,19 @@ export const settingsService = {
         minInputLength: 10,
         systemPrompt: '',
       },
+      rag: {
+        enabled: false,
+        embeddingSourceId: '',
+        embeddingModel: '',
+        ragChatSourceId: '',
+        ragChatModel: '',
+        chunkSize: 500,
+        chunkOverlap: 50,
+        topK: 5,
+        similarityThreshold: 0.45,
+        autoIndex: false,
+        indexOnSave: false,
+      },
       loggingEnabled: false,
       logLevel: 'error',
       noteSavePath: path.join(app.getPath(VFS_CONSTANTS.DOCUMENTS_FOLDER), VFS_CONSTANTS.CURRENT_WORKSPACE_NAME),
@@ -43,6 +57,7 @@ export const settingsService = {
       updateCheckInterval: UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL,
       maxHistoryVersions: 50,
       trashAutoClearDays: 30,
+      snapshotInterval: 15,
     };
   },
 
@@ -143,6 +158,35 @@ export const settingsService = {
       return true;
     } catch (error) {
       logger.error('Failed to export settings', { error: error.message });
+      throw error;
+    }
+  },
+
+  /**
+   * Reset settings to defaults and restart the application
+   */
+  async resetConfig() {
+    const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+    const { response } = await dialog.showMessageBox(focusedWindow, {
+      type: 'warning',
+      buttons: [$t('dialog.ok'), $t('dialog.cancel')],
+      defaultId: 1,
+      cancelId: 1,
+      message: $t('resetConfirmNotify'),
+    });
+
+    if (response !== 0) {
+      return false;
+    }
+
+    try {
+      const targetFilePath = this.getSettingsPath();
+      const defaultConfig = this.getDefaultConfig();
+      await fs.writeFile(targetFilePath, JSON.stringify(defaultConfig, null, 2), 'utf-8');
+      return true;
+    } catch (error) {
+      logger.error('Failed to reset settings', { error: error.message });
       throw error;
     }
   },

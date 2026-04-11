@@ -36,10 +36,12 @@ export interface AiChatMessage {
 }
 
 export interface AiChatGeneratePayload {
-  endpoint: string;
-  apiKey: string;
-  model: string;
   messages: AiChatMessage[];
+}
+
+export interface AiChatGenerateCompletionPayload {
+  context: string;
+  systemPrompt?: string;
 }
 
 export interface AiChatGenerateResult {
@@ -99,15 +101,6 @@ export interface WorkspaceRootPayload {
   nodes: WorkspaceNodePayload[];
 }
 
-export interface RagInitializePayload {
-  workspaceRoot: string;
-  embeddingConfig: {
-    endpoint: string;
-    apiKey: string;
-    model: string;
-  };
-}
-
 export interface RagIndexNotePayload {
   noteId: string;
   noteTitle: string;
@@ -116,10 +109,15 @@ export interface RagIndexNotePayload {
   chunkOverlap?: number;
 }
 
-export interface RagSearchPayload {
-  queryEmbedding: number[];
-  topK?: number;
-  similarityThreshold?: number;
+export interface RagAskQuestionPayload {
+  query: string;
+}
+
+export interface RagAskQuestionResult {
+  success: boolean;
+  answer?: string;
+  error?: string;
+  usedSearchFallback?: boolean;
 }
 
 export interface RagSearchResult {
@@ -140,22 +138,6 @@ export interface RagStatusResult {
   totalChunks: number;
   tableName?: string;
   error?: string;
-}
-
-export interface EmbeddingConfig {
-  endpoint: string;
-  apiKey: string;
-  model: string;
-}
-
-export interface EmbeddingGeneratePayload {
-  texts: string[];
-  config: EmbeddingConfig;
-}
-
-export interface EmbeddingGenerateSinglePayload {
-  text: string;
-  config: EmbeddingConfig;
 }
 
 export interface HistoryVersion {
@@ -193,24 +175,6 @@ export const electronApi = {
     },
     openDir: (): Promise<boolean> => {
       return electronApi.logger.getLoggerApi().openDir();
-    },
-  },
-
-  embedding: {
-    isAvailable: (): boolean => !!window.electronAPI?.embedding,
-    getApi: () => {
-      const api = ensureElectronApi().embedding;
-      if (!api) throw new Error('Embedding bridge is unavailable');
-      return api;
-    },
-    generate: (payload: EmbeddingGeneratePayload): Promise<number[][]> => {
-      return electronApi.embedding.getApi().generate(payload);
-    },
-    generateSingle: (payload: EmbeddingGenerateSinglePayload): Promise<number[]> => {
-      return electronApi.embedding.getApi().generateSingle(payload);
-    },
-    generateBatch: (payload: EmbeddingGeneratePayload): Promise<number[][]> => {
-      return electronApi.embedding.getApi().generateBatch(payload);
     },
   },
 
@@ -252,6 +216,7 @@ export const electronApi = {
     pickDirectory: () => electronApi.settings.getApi().pickDirectory(),
     exportConfig: () => electronApi.settings.getApi().exportConfig(),
     importConfig: () => electronApi.settings.getApi().importConfig(),
+    resetConfig: () => electronApi.settings.getApi().resetConfig(),
   },
 
   search: {
@@ -284,6 +249,9 @@ export const electronApi = {
     generate: (payload: AiChatGeneratePayload) => {
       return electronApi.aiChat.getApi().generate(payload);
     },
+    generateCompletion: (payload: AiChatGenerateCompletionPayload) => {
+      return electronApi.aiChat.getApi().generateCompletion(payload);
+    },
   },
 
   rag: {
@@ -293,23 +261,23 @@ export const electronApi = {
       if (!api) throw new Error('RAG bridge is unavailable');
       return api;
     },
-    initialize: (payload: RagInitializePayload) => {
-      return electronApi.rag.getApi().initialize(payload);
+    initialize: () => {
+      return electronApi.rag.getApi().initialize();
     },
     indexNote: (payload: RagIndexNotePayload) => {
       return electronApi.rag.getApi().indexNote(payload);
     },
-    search: (payload: RagSearchPayload) => {
-      return electronApi.rag.getApi().search(payload);
+    searchText: (payload: { query: string; topK?: number; similarityThreshold?: number }) => {
+      return electronApi.rag.getApi().searchText(payload);
+    },
+    askQuestion: (payload: RagAskQuestionPayload): Promise<RagAskQuestionResult> => {
+      return electronApi.rag.getApi().askQuestion(payload);
     },
     deleteNoteIndex: (noteId: string) => {
       return electronApi.rag.getApi().deleteNoteIndex(noteId);
     },
     getStatus: (): Promise<RagStatusResult> => {
       return electronApi.rag.getApi().getStatus();
-    },
-    updateConfig: (payload: { endpoint: string; apiKey: string; model: string }) => {
-      return electronApi.rag.getApi().updateConfig(payload);
     },
     clearIndex: (): Promise<{ success: boolean; error?: string }> => {
       return electronApi.rag.getApi().rebuildIndex();

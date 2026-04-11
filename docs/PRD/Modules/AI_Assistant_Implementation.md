@@ -39,14 +39,14 @@ AI辅助写作功能为用户提供智能续写建议，类似于 GitHub Copilot
 ### 架构组件
 
 #### 1. 主进程 (Electron Main)
-- **文件**: `electron/main/ipc/modules/ai-assistant.js`
+- **文件**: `electron/main/ipc/modules/ai-chat.js`, `electron/main/services/ai-config.service.js`, `electron/main/services/remote-ai.service.js`
 - **功能**: 
   - 处理AI补全请求
-  - 配置缓存机制（5秒TTL）
+  - 在主进程内读取并解析 AI Assistant 配置
+  - 统一解析 AI Source、模型和系统提示词
   - 请求超时控制（30秒）
   - 输入验证和错误处理
-  - 从配置中读取AI源和模型信息
-  - 调用OpenAI兼容的API
+  - 调用 OpenAI 兼容 API
   - 返回补全结果
 
 #### 2. 编辑器插件
@@ -83,10 +83,11 @@ AI辅助写作功能为用户提供智能续写建议，类似于 GitHub Copilot
 用户输入 
   → EditorPane.onChange (isAiCompletion=false)
   → useAiAssistant.handleTyping (延迟2秒)
-  → electronApi.aiAssistant.complete
-  → IPC: AI_ASSISTANT_COMPLETE
-  → ai-assistant.js (主进程)
-  → OpenAI API
+  → aiService.generateCompletion
+  → electronApi.aiChat.generateCompletion
+  → IPC: AI_CHAT_GENERATE_COMPLETION
+  → ai-chat.js / ai-config.service.js (主进程)
+  → remote-ai.service.js
   → 返回补全结果
   → showAiSuggestion (显示灰色预览)
   → 用户按Tab接受

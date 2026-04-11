@@ -41,20 +41,6 @@ const editorContextMenu = useEditorContextMenu({
   t,
   editorView: () => editorApi?.view ?? null,
   aiAssistantEnabled: () => config.value.aiAssistant?.enabled ?? false,
-  getAiConfig: () => {
-    const sourceId = config.value.aiAssistant?.sourceId;
-    if (!sourceId) return null;
-
-    const sources = config.value.aiSources || [];
-    const source = sources.find((s: any) => s.id === sourceId);
-    if (!source) return null;
-
-    return {
-      endpoint: source.endpoint,
-      apiKey: source.apiKey,
-      model: config.value.aiAssistant?.model || source.aiModel || '',
-    };
-  },
 });
 
 const handleContextMenu = () => {

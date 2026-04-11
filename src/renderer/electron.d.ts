@@ -59,6 +59,7 @@ interface AiSourceConfig {
 
 interface AiCompletePayload {
   context: string;
+  systemPrompt?: string;
 }
 
 interface AiCompleteResult {
@@ -159,6 +160,7 @@ declare global {
         switchLanguage: (locale: string) => void;
         exportConfig: () => Promise<boolean>;
         importConfig: () => Promise<boolean>;
+        resetConfig: () => Promise<boolean>;
       };
 
       aiSource?: {
@@ -167,12 +169,6 @@ declare global {
 
       aiAssistant?: {
         complete: (payload: AiCompletePayload) => Promise<AiCompleteResult>;
-      };
-
-      embedding?: {
-        generate: (payload: { texts: string[]; config: { endpoint: string; apiKey: string; model: string } }) => Promise<number[][]>;
-        generateSingle: (payload: { text: string; config: { endpoint: string; apiKey: string; model: string } }) => Promise<number[]>;
-        generateBatch: (payload: { texts: string[]; config: { endpoint: string; apiKey: string; model: string } }) => Promise<number[][]>;
       };
 
       shortcuts?: {
@@ -192,14 +188,7 @@ declare global {
       };
 
       rag?: {
-        initialize: (payload: {
-          workspaceRoot: string;
-          embeddingConfig: {
-            endpoint: string;
-            apiKey: string;
-            model: string;
-          };
-        }) => Promise<{ success: boolean; error?: string }>;
+        initialize: () => Promise<{ success: boolean; error?: string }>;
         indexNote: (payload: {
           noteId: string;
           noteTitle: string;
@@ -207,8 +196,8 @@ declare global {
           chunkSize?: number;
           chunkOverlap?: number;
         }) => Promise<{ success: boolean; chunksIndexed?: number; error?: string }>;
-        search: (payload: {
-          queryEmbedding: number[];
+        searchText: (payload: {
+          query: string;
           topK?: number;
           similarityThreshold?: number;
         }) => Promise<{
@@ -226,6 +215,12 @@ declare global {
           }>;
           error?: string;
         }>;
+        askQuestion: (payload: { query: string }) => Promise<{
+          success: boolean;
+          answer?: string;
+          error?: string;
+          usedSearchFallback?: boolean;
+        }>;
         deleteNoteIndex: (noteId: string) => Promise<{ success: boolean; error?: string }>;
         getStatus: () => Promise<{
           success: boolean;
@@ -234,24 +229,17 @@ declare global {
           tableName?: string;
           error?: string;
         }>;
-        updateConfig: (embeddingConfig: {
-          endpoint: string;
-          apiKey: string;
-          model: string;
-        }) => Promise<{ success: boolean; error?: string }>;
         rebuildIndex: () => Promise<{ success: boolean; error?: string }>;
       };
 
       aiChat?: {
         generate: (config: {
-          endpoint: string;
-          apiKey: string;
-          model: string;
           messages: Array<{
             role: 'system' | 'user' | 'assistant';
             content: string;
           }>;
         }) => Promise<{ success: boolean; answer?: string; error?: string }>;
+        generateCompletion: (payload: AiCompletePayload) => Promise<{ success: boolean; answer?: string; error?: string }>;
       };
 
       updater?: {

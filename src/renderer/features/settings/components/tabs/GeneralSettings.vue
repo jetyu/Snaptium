@@ -85,6 +85,9 @@
           <button type="button" class="action-button" @click="handleImportSettings">
             {{ t('button.importSettings') }}
           </button>
+          <button type="button" class="action-button" @click="handleResetSettings">
+            {{ t('button.resetSettings') }}
+          </button>
         </div>
       </section>
 
@@ -119,6 +122,10 @@ const handleExportSettings = async () => {
 
 const handleImportSettings = async () => {
   await settingsService.importConfig();
+};
+
+const handleResetSettings = async () => {
+  await settingsService.resetConfig();
 };
 
 const handleStartupToggle = async () => {

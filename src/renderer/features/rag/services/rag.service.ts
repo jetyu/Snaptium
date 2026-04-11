@@ -1,29 +1,17 @@
 import { electronApi, type RagSearchResult, type RagStatusResult } from '@renderer/core/bridge/electronApi';
-import { aiService } from '@renderer/features/ai/services/ai.service';
 import { createLogger } from '@renderer/features/logger';
-import { DEFAULT_RAG_CONFIG, RAG_ERROR_MESSAGES, RAG_ERROR_CODES, RAG_CHAT_PROMPTS } from '../constants/rag.constants';
+import { RAG_ERROR_MESSAGES, RAG_ERROR_CODES } from '../constants/rag.constants';
 
 const ragLogger = createLogger('Renderer:RAG Service');
-
-interface AiSource {
-  id: string;
-  endpoint: string;
-  apiKey: string;
-  aiModel: string;
-}
 
 interface RagConfig {
   enabled?: boolean;
   embeddingSourceId?: string;
-  embeddingModel?: string;
-  ragChatSourceId?: string;
-  ragChatModel?: string;
 }
 
 interface AppConfig {
   rag?: RagConfig;
   noteSavePath?: string;
-  aiSources?: AiSource[];
 }
 
 export interface IndexNoteRequest {
@@ -65,23 +53,7 @@ export const ragService = {
         return { success: false, error: RAG_ERROR_MESSAGES.NO_WORKSPACE };
       }
 
-      const sourceId = config.rag.embeddingSourceId;
-      const source = config.aiSources?.find(s => s.id === sourceId);
-
-      if (!source) {
-        return { success: false, error: RAG_ERROR_MESSAGES.SOURCE_NOT_FOUND };
-      }
-
-      const embeddingConfig = {
-        endpoint: source.endpoint,
-        apiKey: source.apiKey,
-        model: config.rag.embeddingModel ?? '',
-      };
-
-      const result = await electronApi.rag.initialize({
-        workspaceRoot,
-        embeddingConfig,
-      });
+      const result = await electronApi.rag.initialize();
 
       return result;
     } catch (error: unknown) {
@@ -154,30 +126,10 @@ export const ragService = {
    */
   async search(params: { query: string; topK: number; similarityThreshold: number }): Promise<{ success: boolean; results: RagSearchResult[]; error?: string }> {
     try {
-      const { query, topK, similarityThreshold } = params;
-      const config = await electronApi.settings.getConfig() as unknown as AppConfig;
-      const sourceId = config.rag?.embeddingSourceId;
-      const source = config.aiSources?.find(s => s.id === sourceId);
-
-      if (!source) throw new Error(RAG_ERROR_MESSAGES.SOURCE_NOT_FOUND);
-
-      const embeddingConfig = {
-        endpoint: source.endpoint,
-        apiKey: source.apiKey,
-        model: config.rag?.embeddingModel ?? '',
-      };
-
-      // 1. Generate query embedding (Atomic Main call)
-      const queryEmbedding = await electronApi.embedding.generateSingle({
-        text: query,
-        config: embeddingConfig,
-      });
-
-      // 2. Vector Search (Atomic Main call)
-      const searchRes = await electronApi.rag.search({
-        queryEmbedding,
-        topK,
-        similarityThreshold,
+      const searchRes = await electronApi.rag.searchText({
+        query: params.query,
+        topK: params.topK,
+        similarityThreshold: params.similarityThreshold,
       });
 
       if (!searchRes.success) {
@@ -214,62 +166,7 @@ export const ragService = {
    */
   async askQuestion(query: string): Promise<{ success: boolean; answer?: string; error?: string; usedSearchFallback?: boolean }> {
     try {
-      const config = await electronApi.settings.getConfig() as unknown as AppConfig;
-      const sourceId = config.rag?.embeddingSourceId;
-      const source = config.aiSources?.find(s => s.id === sourceId);
-
-      if (!source) throw new Error(RAG_ERROR_MESSAGES.SOURCE_NOT_FOUND);
-
-      const embeddingConfig = {
-        endpoint: source.endpoint,
-        apiKey: source.apiKey,
-        model: config.rag?.embeddingModel ?? '',
-      };
-
-      // 1. Generate query embedding (Atomic Main call)
-      const queryEmbedding = await electronApi.embedding.generateSingle({
-        text: query,
-        config: embeddingConfig,
-      });
-
-      // 2. Vector Search (Atomic Main call)
-      const searchRes = await electronApi.rag.search({
-        queryEmbedding,
-        topK: DEFAULT_RAG_CONFIG.topK,
-        similarityThreshold: DEFAULT_RAG_CONFIG.similarityThreshold,
-      });
-
-      if (!searchRes.success || !searchRes.results?.length) {
-        return { success: false, error: RAG_ERROR_MESSAGES.NO_CONTEXT };
-      }
-
-      // 3. Coordinate AI via unified service
-      const contexts = searchRes.results.map(r => r.chunk.content);
-
-      const chatSourceId = config.rag?.ragChatSourceId;
-      const chatSource = chatSourceId
-        ? config.aiSources?.find(s => s.id === chatSourceId)
-        : null;
-
-      if (!chatSource) {
-        ragLogger.info('No chat model configured, falling back to search results');
-        const summary = searchRes.results
-          .map((res, idx) => `[${idx + 1}] ${res.noteTitle || 'Untitled'}:\n${res.chunk.content}`)
-          .join('\n\n');
-        return { success: true, answer: summary, usedSearchFallback: true };
-      }
-
-      const systemPrompt = RAG_CHAT_PROMPTS.SYSTEM.replace('{context}', contexts.join('\n---\n'));
-
-      return await aiService.generateRagAnswer({
-        query,
-        systemPrompt,
-        config: {
-          endpoint: chatSource.endpoint,
-          apiKey: chatSource.apiKey,
-          model: config.rag?.ragChatModel || chatSource.aiModel,
-        },
-      });
+      return await electronApi.rag.askQuestion({ query });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);
       ragLogger.error('RAG question failed', { error: message });

@@ -1,7 +1,6 @@
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import { createLogger } from '@renderer/features/logger';
 import { AI_ERROR_MESSAGES } from '../constants/ai.constants';
-import i18n from '@renderer/features/i18n';
 
 const aiLogger = createLogger('Renderer:AiService');
 
@@ -11,30 +10,8 @@ export interface AiChatMessage {
 }
 
 export interface AiGenerateRequest {
-  endpoint: string;
-  apiKey: string;
-  model: string;
   messages: AiChatMessage[];
   systemPrompt?: string;
-}
-
-interface AiSource {
-  id: string;
-  endpoint: string;
-  apiKey: string;
-  aiModel: string;
-}
-
-interface AiAssistantConfig {
-  enabled?: boolean;
-  sourceId?: string;
-  model?: string;
-  systemPrompt?: string;
-}
-
-interface AppConfig {
-  aiAssistant?: AiAssistantConfig;
-  aiSources?: AiSource[];
 }
 
 /**
@@ -43,7 +20,7 @@ interface AppConfig {
  */
 export const aiService = {
   /**
-   * Core generation method
+   * Core assistant generation using main-process configuration
    */
   async generate(request: AiGenerateRequest): Promise<{ success: boolean; answer?: string; error?: string }> {
     try {
@@ -54,12 +31,7 @@ export const aiService = {
         messages.unshift({ role: 'system', content: request.systemPrompt });
       }
 
-      const response = await electronApi.aiChat.generate({
-        endpoint: request.endpoint,
-        apiKey: request.apiKey,
-        model: request.model,
-        messages,
-      });
+      const response = await electronApi.aiChat.generate({ messages });
 
       return response;
     } catch (error: unknown) {
@@ -70,54 +42,22 @@ export const aiService = {
   },
 
   /**
-   * Specialized RAG answer generation.
-   * The caller is responsible for building the system prompt (e.g. injecting context snippets),
-   * keeping this service free of RAG-specific knowledge.
-   */
-  async generateRagAnswer(params: {
-    query: string;
-    systemPrompt: string;
-    config: { endpoint: string; apiKey: string; model: string };
-  }) {
-    const { query, systemPrompt, config } = params;
-    return this.generate({
-      ...config,
-      systemPrompt,
-      messages: [{ role: 'user', content: query }],
-    });
-  },
-
-  /**
    * Specialized writing completion (Assistant) - Orchestration Layer
    */
   async generateCompletion(params: {
     context: string;
+    systemPrompt?: string;
   }): Promise<{ success: boolean; answer?: string; error?: string }> {
-    const { context } = params;
+    const { context, systemPrompt } = params;
 
     try {
-      const rawConfig = await electronApi.settings.getConfig();
-      const config = rawConfig as unknown as AppConfig;
-      const { aiAssistant, aiSources } = config;
-
-      if (!aiAssistant?.enabled) {
-        return { success: false, error: AI_ERROR_MESSAGES.DISABLED };
+      if (!context.trim()) {
+        return { success: false, error: AI_ERROR_MESSAGES.INVALID_CONTEXT };
       }
 
-      const source = aiSources?.find(s => s.id === aiAssistant.sourceId);
-      if (!source) {
-        return { success: false, error: AI_ERROR_MESSAGES.NO_SOURCE };
-      }
-
-      const model = aiAssistant.model || source.aiModel;
-      const systemPrompt = aiAssistant.systemPrompt?.trim() || i18n.global.t('ai.prompt.autoComplete');
-
-      return await this.generate({
-        endpoint: source.endpoint,
-        apiKey: source.apiKey,
-        model,
+      return await electronApi.aiChat.generateCompletion({
+        context,
         systemPrompt,
-        messages: [{ role: 'user', content: context }],
       });
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error);

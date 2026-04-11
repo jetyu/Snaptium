@@ -225,6 +225,11 @@ window.electronAPI.rag = {
 - ✅ `src/renderer/features/rag/store/rag.store.ts` - 更新store方法
 - ✅ `src/renderer/features/rag/composables/useRAGSearch.ts` - 搜索composable
 
+**当前边界说明：**
+- ✅ Renderer 仅保留 UI 编排、索引重建循环和状态管理
+- ✅ Main 统一负责读取设置、解析 embedding/chat source、执行 embedding/chat 请求
+- ✅ 语义搜索与问答已通过 IPC 由主进程完成配置解析，避免 renderer 传递 endpoint/apiKey/model
+
 ### 第五阶段：自动索引集成 🔄
 
 **待实现：**

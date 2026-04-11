@@ -67,14 +67,10 @@ const electronAPI = Object.freeze({
     switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.SETTINGS_SWITCH_LANGUAGE, locale),
     exportConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_EXPORT),
     importConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_IMPORT),
+    resetConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_RESET),
   }),
   aiSource: Object.freeze({
     testConnection: (config) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),
-  }),
-  embedding: Object.freeze({
-    generate: (payload) => ipcRenderer.invoke(IPC_CHANNELS.EMBEDDING_GENERATE, payload),
-    generateSingle: (payload) => ipcRenderer.invoke(IPC_CHANNELS.EMBEDDING_GENERATE_SINGLE, payload),
-    generateBatch: (payload) => ipcRenderer.invoke(IPC_CHANNELS.EMBEDDING_GENERATE_BATCH, payload),
   }),
   shortcuts: Object.freeze({
     getCommands: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS),
@@ -92,16 +88,17 @@ const electronAPI = Object.freeze({
     importKeybindings: (config) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_IMPORT_KEYBINDINGS, config),
   }),
   rag: Object.freeze({
-    initialize: (payload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INITIALIZE, payload),
+    initialize: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_INITIALIZE),
     indexNote: (request) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_NOTE, request),
     rebuildIndex: (request) => ipcRenderer.invoke(IPC_CHANNELS.RAG_REBUILD_INDEX, request),
-    search: (request) => ipcRenderer.invoke(IPC_CHANNELS.RAG_SEARCH, request),
+    searchText: (request) => ipcRenderer.invoke(IPC_CHANNELS.RAG_SEARCH_TEXT, request),
+    askQuestion: (payload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_ASK_QUESTION, payload),
     deleteNoteIndex: (noteId) => ipcRenderer.invoke(IPC_CHANNELS.RAG_DELETE_NOTE_INDEX, noteId),
     getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_STATUS),
-    updateConfig: (embeddingConfig) => ipcRenderer.invoke(IPC_CHANNELS.RAG_UPDATE_CONFIG, embeddingConfig),
   }),
   aiChat: Object.freeze({
-    generate: (config) => ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT_GENERATE, config),
+    generate: (payload) => ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT_GENERATE, payload),
+    generateCompletion: (payload) => ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT_GENERATE_COMPLETION, payload),
   }),
   updater: Object.freeze({
     check: (silent) => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_CHECK, silent),

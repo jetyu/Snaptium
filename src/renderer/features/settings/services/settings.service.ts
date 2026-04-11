@@ -38,6 +38,9 @@ export const settingsService = {
 
   importConfig: (): Promise<boolean> =>
     electronApi.settings.importConfig(),
+
+  resetConfig: (): Promise<boolean> =>
+    electronApi.settings.resetConfig(),
 };
 
 /**
