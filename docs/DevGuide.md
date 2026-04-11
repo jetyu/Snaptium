@@ -68,12 +68,12 @@ NoteWizard 采用：
 
 本项目采用双层 Service 架构：
 
-- Electron Service：只提供原子能力（无业务流程）
-- Renderer Service：负责编排业务流程（可组合多个能力）
+- Electron Service：只提供原子能力（无业务流程）,能力提供者（Execution Layer）
+- Renderer Service：负责编排业务流程（可组合多个能力）,能力编排者（Orchestration Layer）不得仅调用 electronApi（禁止假分层）
 
 严禁职责混淆。
 
-
+不得存在重复实现（Renderer / Electron 各一份逻辑）
 ---
 
 ## 3. 架构调用链
@@ -532,7 +532,7 @@ en-US.json
 
 ---
 
-## 9. 依赖安全（标准）
+### 9. 依赖安全（标准）
 
 - [ ] 执行 `npm audit` 无高危漏洞
 - [ ] 依赖版本锁定（lock 文件存在）
@@ -541,7 +541,7 @@ en-US.json
 
 ---
 
-## 10. 测试（建议）
+### 10. 测试（建议）
 
 - [ ] 核心逻辑具备单元测试
 - [ ] 关键流程覆盖测试
@@ -550,7 +550,7 @@ en-US.json
 
 ---
 
-## 11. 用户体验（UX）（建议）
+### 11. 用户体验（UX）（建议）
 
 - [ ] 加载态处理完整
 - [ ] 空状态处理完整
@@ -560,7 +560,7 @@ en-US.json
 
 ---
 
-## 12. 最终发布确认（可选）
+### 12. 最终发布确认（可选）
 
 - [ ] 版本号正确
 - [ ] Changelog 已更新
@@ -570,243 +570,6 @@ en-US.json
 ---
 
 
----
 
-## 20. Service 分层强约束（必须遵守）
 
-本项目采用双层 Service 架构：
 
-- Electron Service：能力提供者（Execution Layer）
-- Renderer Service：能力编排者（Orchestration Layer）
-
-严禁职责混淆。
-
----
-
-### 20.1 Renderer Service（编排层）
-
-必须满足以下至少两项，否则视为违规：
-
-- 包含业务流程控制（if / fallback / 分支）
-- 包含数据处理（slice / map / format）
-- 组合多个能力调用（如 search + AI）
-- 包含策略逻辑（topK / 模型选择）
-
-#### ❌ 禁止写法（假分层）
-
-```ts
-async search(query) {
-  return electronApi.rag.search(query)
-}
-```
-
-说明：
-
-- 仅做 API 转发，没有业务逻辑
-- 属于“假分层”，禁止提交
-
----
-
-#### ✅ 合法示例
-
-```ts
-async generateRagAnswer(query) {
-  const docs = await electronApi.rag.search(query)
-
-  const topDocs = docs.slice(0, 5)
-
-  if (!hasModel()) {
-    return topDocs
-  }
-
-  const prompt = buildPrompt(query, topDocs)
-
-  return await electronApi.aiChat.generate({ prompt })
-}
-```
-
----
-
-### 20.2 Electron Service（执行层）
-
-必须满足：
-
-- 单一职责（只做一件事）
-- 不包含业务流程（禁止 if/编排）
-- 不依赖 UI / Renderer 状态
-- 不实现 fallback 逻辑
-
----
-
-#### ❌ 禁止写法（业务下沉）
-
-```ts
-async generateAnswer(query) {
-  const docs = await search(query)
-
-  if (!model) return docs
-
-  return ai.generate(...)
-}
-```
-
----
-
-#### ✅ 合法示例
-
-```ts
-async search(query) {
-  const embedding = await embed(query)
-  return vectorDB.search(embedding)
-}
-```
-
----
-
-## 21. Electron API 设计规范
-
-### 21.1 必须为“原子能力”
-
-允许：
-
-- rag.search
-- ai.generate
-- embedding.embed
-
-禁止：
-
-- rag.generateAnswer
-- rag.ask
-- ai.ragChat
-
-说明：
-
-复合逻辑属于 Renderer Service，不允许下沉到 Electron。
-
----
-
-## 22. RAG 架构规范
-
-### 22.1 RAG 流程必须在 Renderer 编排
-
-标准流程：
-
-query → search → topK → prompt → LLM → fallback
-
-职责划分：
-
-- search：Electron
-- prompt：Renderer
-- fallback：Renderer
-
----
-
-### 22.2 必须支持降级
-
-当未配置 AI 模型时：
-
-```ts
-return searchResults
-```
-
-禁止：
-
-- 抛异常
-- 返回空数据
-- 强依赖 AI
-
----
-
-### 22.3 Prompt 构建位置
-
-必须在 Renderer Service 中实现。
-
-禁止写在：
-
-- Electron Service
-- IPC handler
-
----
-
-## 23. AI 调用规范
-
-### 23.1 必须通过统一入口
-
-Renderer 层必须通过：
-
-```ts
-ai.service.ts
-```
-
-统一调用 AI。
-
----
-
-### 23.2 禁止直接调用
-
-禁止：
-
-- electronApi.aiChat
-- electronApi.aiAssistant
-
-必须封装后再使用。
-
----
-
-### 23.3 统一接口
-
-```ts
-aiService.generate({
-  mode: 'chat' | 'completion' | 'rag',
-  prompt,
-})
-```
-
----
-
-## 24. 反例（必须避免）
-
-### ❌ 假分层
-
-```ts
-async search(q) {
-  return electronApi.rag.search(q)
-}
-```
-
----
-
-### ❌ 业务逻辑写入 Electron
-
-```ts
-async generateAnswer() {
-  if (!model) return []
-}
-```
-
----
-
-### ❌ API 黑盒设计
-
-```ts
-electronApi.rag.ask()
-```
-
----
-
-## 25. Code Review 强制检查
-
-提交 PR 前必须检查：
-
-- [ ] Renderer Service 不得仅调用 electronApi（禁止假分层）
-- [ ] 是否存在业务逻辑写在 Electron Service 中
-- [ ] 是否存在重复实现（Renderer / Electron 各一份逻辑）
-- [ ] 是否实现 fallback（特别是 AI / RAG）
-- [ ] 是否存在 API 黑盒（复合能力下沉）
-
----
-
-## 26. 核心原则总结
-
-> Renderer Service 负责“怎么组合能力”，  
-> Electron Service 只负责“提供能力”，不允许反向越界。
