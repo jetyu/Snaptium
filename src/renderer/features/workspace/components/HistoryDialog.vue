@@ -58,10 +58,8 @@ import { ref, computed, watch, nextTick } from 'vue';
 import { useWorkspaceStore } from '../store/workspace.store';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { Close } from '@icon-park/vue-next';
-import { useI18n } from 'vue-i18n';
 const workspaceStore = useWorkspaceStore();
 const overlayRef = ref<HTMLElement | null>(null);
-const { t } = useI18n();
 const selectedVersion = ref<string | null>(null);
 const selectedContentHtml = ref<string>('');
 const isLoadingContent = ref(false);
@@ -93,13 +91,10 @@ const selectVersion = async (filename: string) => {
 
 const handleRestore = async () => {
   if (!selectedVersion.value) return;
-  if (!confirm(t('history.restoreConfirm'))) {
-    return;
-  }
 
   isRestoring.value = true;
   try {
-    await workspaceStore.recoverVersion(selectedVersion.value);
+    await workspaceStore.confirmRecoverVersion(selectedVersion.value);
   } finally {
     isRestoring.value = false;
   }

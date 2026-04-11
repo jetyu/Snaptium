@@ -1,25 +1,11 @@
 import { ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { updaterService } from '../services/updater.service';
-
-interface UpdateInfo {
-  version: string;
-  releaseDate?: string;
-  releaseNotes?: string;
-  files?: any[];
-}
-
-interface ProgressInfo {
-  percent: number;
-  bytesPerSecond: number;
-  transferred: number;
-  total: number;
-}
-
-interface ErrorInfo {
-  message: string;
-  code: string;
-}
+import {
+  updaterService,
+  type ErrorInfo,
+  type ProgressInfo,
+  type UpdateInfo,
+} from '../services/updater.service';
 
 export function useUpdater() {
   const { t } = useI18n();
@@ -100,7 +86,7 @@ export function useUpdater() {
     }
   };
 
-  const updateConfig = async (config: any) => {
+  const updateConfig = async (config: { autoCheckUpdates: boolean; updateCheckInterval: number }) => {
     try {
       await updaterService.updateConfig(config);
     } catch (err) {
@@ -157,21 +143,23 @@ export function useUpdater() {
     });
   };
 
-  const cleanupFunctions: Array<() => void> = [];
+  let cleanupListeners: (() => void) | null = null;
 
   onMounted(() => {
     getCurrentVersion();
-    cleanupFunctions.push(updaterService.onChecking(handleUpdateChecking));
-    cleanupFunctions.push(updaterService.onAvailable(handleUpdateAvailable));
-    cleanupFunctions.push(updaterService.onNotAvailable(handleUpdateNotAvailable));
-    cleanupFunctions.push(updaterService.onDownloadProgress(handleDownloadProgress));
-    cleanupFunctions.push(updaterService.onDownloaded(handleUpdateDownloaded));
-    cleanupFunctions.push(updaterService.onError(handleUpdateError));
+    cleanupListeners = updaterService.subscribe({
+      onChecking: handleUpdateChecking,
+      onAvailable: handleUpdateAvailable,
+      onNotAvailable: handleUpdateNotAvailable,
+      onDownloadProgress: handleDownloadProgress,
+      onDownloaded: handleUpdateDownloaded,
+      onError: handleUpdateError,
+    });
   });
 
   onUnmounted(() => {
-    cleanupFunctions.forEach(cleanup => cleanup());
-    cleanupFunctions.length = 0;
+    cleanupListeners?.();
+    cleanupListeners = null;
   });
 
   return {

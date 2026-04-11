@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia';
-import { ref, toRaw } from 'vue';
-import { settingsService } from '../services/settings.service';
-import { switchLanguage } from '@renderer/features/i18n';
+import { ref } from 'vue';
 import { createLogger } from '@renderer/features/logger';
 import { DEFAULT_RAG_CONFIG } from '@renderer/features/rag/constants/rag.constants';
 import { UPDATER_CONSTANTS } from '@renderer/features/updater/constants/updater.constants';
+import { settingsService } from '../services/settings.service';
 
 export interface AISource {
   id: string;
@@ -65,9 +64,8 @@ export interface AppSettings {
   // ... future properties
 }
 
-export const useSettingsStore = defineStore('settings', () => {
-  const settingsLogger = createLogger('SettingsStore');
-  const config = ref<AppSettings>({
+function createDefaultConfig(): AppSettings {
+  return {
     language: 'en-US',
     autoStartup: false,
     themeMode: 'system',
@@ -99,7 +97,12 @@ export const useSettingsStore = defineStore('settings', () => {
     maxHistoryVersions: 50,
     trashAutoClearDays: 30,
     snapshotInterval: 15,
-  });
+  };
+}
+
+export const useSettingsStore = defineStore('settings', () => {
+  const settingsLogger = createLogger('SettingsStore');
+  const config = ref<AppSettings>(createDefaultConfig());
 
   const isLoading = ref(false);
 
@@ -109,11 +112,7 @@ export const useSettingsStore = defineStore('settings', () => {
   const loadSettings = async () => {
     isLoading.value = true;
     try {
-      const savedConfig = await settingsService.loadConfig();
-      if (savedConfig) {
-        config.value = { ...config.value, ...savedConfig };
-      }
-      config.value.language = await switchLanguage(config.value.language);
+      config.value = await settingsService.loadConfig(createDefaultConfig());
     } catch (e) {
       settingsLogger.error(`Failed to load settings: ${e}`);
     } finally {
@@ -127,18 +126,14 @@ export const useSettingsStore = defineStore('settings', () => {
   const saveSettings = async (newConfig: Partial<AppSettings>) => {
     config.value = { ...config.value, ...newConfig };
     try {
-      // Use toRaw to strip Vue markers and deep clone to avoid IPC issues
-      const rawConfig = JSON.parse(JSON.stringify(toRaw(config.value)));
-      const savedConfig = await settingsService.saveConfig(rawConfig);
-      config.value = { ...config.value, ...savedConfig };
+      config.value = await settingsService.saveConfig(config.value);
     } catch (e) {
       settingsLogger.error(`Failed to save settings: ${e}`);
     }
   };
 
   const setLanguage = async (language: string) => {
-    const nextLanguage = await switchLanguage(language);
-    settingsService.notifyLanguageChanged(nextLanguage);
+    const nextLanguage = await settingsService.changeLanguage(language);
     await saveSettings({ language: nextLanguage });
   };
 
@@ -277,7 +272,7 @@ export const useSettingsStore = defineStore('settings', () => {
         }
       }
 
-      return await settingsService.testConnection(payload);
+      return await settingsService.testConnection(config.value, payload);
     } catch (e) {
       settingsLogger.error(`Failed to test AI connection: ${e}`);
       return { success: false, message: String(e) };
@@ -285,6 +280,38 @@ export const useSettingsStore = defineStore('settings', () => {
   };
 
   const openLogDir = (): Promise<boolean | undefined> => settingsService.openLogDir();
+
+  const exportSettings = (): Promise<boolean> => settingsService.exportConfig();
+
+  const importSettings = async (): Promise<boolean> => {
+    try {
+      const importedConfig = await settingsService.importConfig(createDefaultConfig());
+      if (!importedConfig) {
+        return false;
+      }
+
+      config.value = importedConfig;
+      return true;
+    } catch (e) {
+      settingsLogger.error(`Failed to import settings: ${e}`);
+      return false;
+    }
+  };
+
+  const resetSettings = async (): Promise<boolean> => {
+    try {
+      const resetConfig = await settingsService.resetConfig(createDefaultConfig());
+      if (!resetConfig) {
+        return false;
+      }
+
+      config.value = resetConfig;
+      return true;
+    } catch (e) {
+      settingsLogger.error(`Failed to reset settings: ${e}`);
+      return false;
+    }
+  };
 
   return {
     config,
@@ -301,6 +328,9 @@ export const useSettingsStore = defineStore('settings', () => {
     updateAiSource,
     testConnection,
     openLogDir,
+    exportSettings,
+    importSettings,
+    resetSettings,
     setNoteSavePath,
   };
 });

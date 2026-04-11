@@ -38,24 +38,76 @@ interface WorkspaceData {
     notebooks: Notebook[];
 }
 
-function isAvailable(): boolean {
+interface SaveNoteContentResult {
+    success: boolean;
+    content: string;
+}
+
+interface ToggleNodeLockResult {
+    locked: boolean;
+    updatedAt: number;
+}
+
+function isVfsAvailable(): boolean {
     return electronApi.vfs.isAvailable();
 }
 
-/**
- * Dispatch a global event to notify that the VFS structure (files/folders) has changed.
- */
+function ensureVfsAvailable() {
+    if (!isVfsAvailable()) {
+        throw new Error('VFS not available');
+    }
+}
+
+function normalizeNodeId(nodeId: string): string {
+    const normalized = nodeId.trim();
+    if (!normalized) {
+        throw new Error('Node ID cannot be empty');
+    }
+    return normalized;
+}
+
+function normalizeContentId(contentId: string): string {
+    const normalized = contentId.trim();
+    if (!normalized) {
+        throw new Error('Content ID cannot be empty');
+    }
+    return normalized;
+}
+
+function normalizeFilename(filename: string): string {
+    const normalized = filename.trim();
+    if (!normalized) {
+        throw new Error('Filename cannot be empty');
+    }
+    return normalized;
+}
+
+function normalizeNoteTitle(title?: string | null): string {
+    const normalized = title?.trim();
+    return normalized || i18n.global.t('common.untitledNote');
+}
+
+function normalizeNotebookName(name?: string | null): string {
+    const normalized = name?.trim();
+    return normalized || i18n.global.t('common.untitledNotebook');
+}
+
+function normalizeDialogName(name?: string | null): string {
+    const normalized = name?.trim();
+    return normalized || i18n.global.t('default.thisItem');
+}
+
+function normalizeMultilineContent(content: string): string {
+    return content.replace(/\r\n/g, '\n');
+}
+
 function notifyVfsChanged() {
     window.dispatchEvent(new CustomEvent('vfs-changed'));
 }
 
-/**
- * Dispatch a granular event to notify that a specific note's content has been updated.
- */
 function notifyNoteUpdated(noteId: string) {
     window.dispatchEvent(new CustomEvent('note-updated', { detail: { noteId } }));
 }
-
 
 function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
     if (node.type !== 'file' || !node.contentId || node.trashed) {
@@ -65,15 +117,14 @@ function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
     return {
         id: node.id,
         contentId: node.contentId,
-        title: node.name?.trim(),
-        content,
+        title: normalizeNoteTitle(node.name),
+        content: normalizeMultilineContent(content),
         parentId: node.parentId ?? null,
         createdAt: node.createdAt,
         updatedAt: node.updatedAt,
         locked: node.locked ?? false,
     };
 }
-
 
 function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
     if (node.type !== 'folder' || node.trashed) {
@@ -82,7 +133,7 @@ function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
 
     return {
         id: node.id,
-        name: node.name?.trim() || i18n.global.t('common.untitledNotebook'),
+        name: normalizeNotebookName(node.name),
         parentId: node.parentId ?? null,
         createdAt: node.createdAt,
         updatedAt: node.updatedAt,
@@ -91,12 +142,12 @@ function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
 }
 
 export const workspaceService = {
-
-    isAvailable,
-
+    isAvailable(): boolean {
+        return isVfsAvailable();
+    },
 
     async initWorkspace(): Promise<WorkspaceData> {
-        if (!isAvailable()) {
+        if (!isVfsAvailable()) {
             return { notes: [], notebooks: [] };
         }
 
@@ -126,13 +177,10 @@ export const workspaceService = {
         return { notes, notebooks };
     },
 
-
     async createNote(parentId: string | null, title?: string): Promise<Note> {
-        if (!isAvailable()) {
-            throw new Error('VFS not available');
-        }
+        ensureVfsAvailable();
 
-        const noteTitle = title?.trim() || i18n.global.t('common.untitledNote');
+        const noteTitle = normalizeNoteTitle(title);
         const content = `# ${noteTitle}\n\n`;
 
         const node = await electronApi.vfs.createFile({
@@ -146,7 +194,7 @@ export const workspaceService = {
         return {
             id: node.id,
             contentId: node.contentId!,
-            title: node.name,
+            title: normalizeNoteTitle(node.name),
             content,
             parentId: node.parentId ?? null,
             createdAt: node.createdAt,
@@ -155,13 +203,10 @@ export const workspaceService = {
         };
     },
 
-
     async createNotebook(parentId: string | null, name?: string): Promise<Notebook> {
-        if (!isAvailable()) {
-            throw new Error('VFS not available');
-        }
+        ensureVfsAvailable();
 
-        const notebookName = name?.trim() || i18n.global.t('common.untitledNotebook');
+        const notebookName = normalizeNotebookName(name);
 
         const node = await electronApi.vfs.createFolder({
             parentId,
@@ -172,7 +217,7 @@ export const workspaceService = {
 
         return {
             id: node.id,
-            name: node.name,
+            name: normalizeNotebookName(node.name),
             parentId: node.parentId ?? null,
             createdAt: node.createdAt,
             updatedAt: node.updatedAt,
@@ -180,128 +225,142 @@ export const workspaceService = {
         };
     },
 
-
     async renameNote(note: Note, newTitle: string): Promise<{ title: string; content: string; updatedAt: number }> {
-        if (!isAvailable()) {
-            throw new Error('VFS not available');
-        }
+        ensureVfsAvailable();
 
-        const trimmedTitle = newTitle.trim();
-        if (!trimmedTitle) {
-            throw new Error('Title cannot be empty');
-        }
-
+        const trimmedTitle = normalizeNoteTitle(newTitle);
         const renamedNode = await electronApi.vfs.renameNode({
-            nodeId: note.id,
+            nodeId: normalizeNodeId(note.id),
             name: trimmedTitle,
         });
 
         notifyVfsChanged();
 
         return {
-            title: renamedNode.name,
-            content: note.content,
+            title: normalizeNoteTitle(renamedNode.name),
+            content: normalizeMultilineContent(note.content),
             updatedAt: renamedNode.updatedAt,
         };
     },
 
     async renameNotebook(notebookId: string, newName: string): Promise<{ name: string; updatedAt: number }> {
-        if (!isAvailable()) {
-            throw new Error('VFS not available');
-        }
+        ensureVfsAvailable();
 
-        const trimmedName = newName.trim();
-        if (!trimmedName) {
-            throw new Error('Name cannot be empty');
-        }
-
+        const trimmedName = normalizeNotebookName(newName);
         const renamedNode = await electronApi.vfs.renameNode({
-            nodeId: notebookId,
+            nodeId: normalizeNodeId(notebookId),
             name: trimmedName,
         });
 
         notifyVfsChanged();
 
         return {
-            name: renamedNode.name,
+            name: normalizeNotebookName(renamedNode.name),
             updatedAt: renamedNode.updatedAt,
         };
     },
 
+    async saveNoteContent(noteId: string, contentId: string, content: string): Promise<SaveNoteContentResult> {
+        ensureVfsAvailable();
 
-    async writeContent(contentId: string, content: string, noteId?: string | null): Promise<boolean> {
-        if (!isAvailable()) {
-            return false;
+        const normalizedNoteId = normalizeNodeId(noteId);
+        const normalizedContent = normalizeMultilineContent(content);
+        const success = await electronApi.vfs.writeContent({
+            contentId: normalizeContentId(contentId),
+            content: normalizedContent,
+        });
+
+        if (success) {
+            notifyNoteUpdated(normalizedNoteId);
         }
 
-        const success = await electronApi.vfs.writeContent({ contentId, content });
-        if (success && noteId) {
-            notifyNoteUpdated(noteId);
-        }
-        return success;
+        return {
+            success,
+            content: normalizedContent,
+        };
     },
 
+    async showNoteInFolder(nodeId: string): Promise<void> {
+        ensureVfsAvailable();
 
-    async readContent(contentId: string): Promise<string> {
-        if (!isAvailable()) {
-            throw new Error('VFS not available');
+        const revealed = await electronApi.vfs.showNoteInFolder(normalizeNodeId(nodeId));
+        if (!revealed) {
+            throw new Error('Failed to reveal note in folder');
         }
-
-        return await electronApi.vfs.readContent(contentId);
     },
-
 
     async deleteNode(nodeId: string): Promise<void> {
-        if (!isAvailable()) {
-            throw new Error('VFS not available');
-        }
+        ensureVfsAvailable();
 
-        await electronApi.vfs.deleteNode(nodeId);
+        await electronApi.vfs.deleteNode(normalizeNodeId(nodeId));
         notifyVfsChanged();
     },
 
-
-    async showNoteInFolder(nodeId: string): Promise<void> {
-        if (!isAvailable()) {
-            throw new Error('VFS not available');
+    async confirmDeleteNode(name: string): Promise<boolean> {
+        if (!isVfsAvailable()) {
+            return false;
         }
 
-        await electronApi.vfs.showNoteInFolder(nodeId);
+        return await electronApi.vfs.confirmDeleteNode(normalizeDialogName(name));
     },
 
+    async toggleNodeLock(nodeId: string, locked: boolean): Promise<ToggleNodeLockResult> {
+        ensureVfsAvailable();
 
-    async toggleNodeLock(nodeId: string, locked: boolean): Promise<void> {
-        if (!isAvailable()) {
-            throw new Error('VFS not available');
-        }
+        const updatedNode = await electronApi.vfs.toggleNodeLock({
+            nodeId: normalizeNodeId(nodeId),
+            locked,
+        });
+        notifyVfsChanged();
 
-        await electronApi.vfs.toggleNodeLock({ nodeId, locked });
-        notifyVfsChanged(); // Lock status is structural enough for refreshes
+        return {
+            locked: updatedNode.locked ?? locked,
+            updatedAt: updatedNode.updatedAt,
+        };
     },
 
     async getHistory(contentId: string): Promise<HistoryVersion[]> {
-        if (!isAvailable()) {
+        if (!isVfsAvailable()) {
             return [];
         }
-        return await electronApi.vfs.getHistory(contentId);
+
+        const historyVersions = await electronApi.vfs.getHistory(normalizeContentId(contentId));
+        return [...historyVersions].sort((a, b) => b.timestamp - a.timestamp);
     },
 
     async getHistoryContent(contentId: string, filename: string): Promise<string> {
-        if (!isAvailable()) {
-            throw new Error('VFS not available');
-        }
-        return await electronApi.vfs.getHistoryContent({ contentId, filename });
+        ensureVfsAvailable();
+
+        return await electronApi.vfs.getHistoryContent({
+            contentId: normalizeContentId(contentId),
+            filename: normalizeFilename(filename),
+        });
     },
 
     async recoverVersion(nodeId: string, filename: string): Promise<boolean> {
-        if (!isAvailable()) {
+        if (!isVfsAvailable()) {
             return false;
         }
-        const success = await electronApi.vfs.recoverVersion({ nodeId, filename });
+
+        const normalizedNodeId = normalizeNodeId(nodeId);
+        const success = await electronApi.vfs.recoverVersion({
+            nodeId: normalizedNodeId,
+            filename: normalizeFilename(filename),
+        });
+
         if (success) {
             notifyVfsChanged();
-            notifyNoteUpdated(nodeId);
+            notifyNoteUpdated(normalizedNodeId);
         }
+
         return success;
+    },
+
+    async confirmRecoverVersion(): Promise<boolean> {
+        if (!isVfsAvailable()) {
+            return false;
+        }
+
+        return await electronApi.vfs.confirmRecoverVersion();
     },
 };

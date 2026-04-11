@@ -138,7 +138,6 @@ function closeAddDialog() {
 }
 
 async function handleReset() {
-  if (!confirm(t('shortcuts.resetConfirm'))) return;
   try {
     await shortcutsStore.resetToDefaults();
   } catch (error) {

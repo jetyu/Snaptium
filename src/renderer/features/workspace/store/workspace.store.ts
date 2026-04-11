@@ -1,11 +1,25 @@
 import { defineStore } from 'pinia';
 import { createLogger } from '@renderer/features/logger';
-import  { type HistoryVersion } from '@renderer/core/bridge/electronApi';
+import type { HistoryVersion } from '@renderer/core/bridge/electronApi';
 import { workspaceService, type Note, type Notebook } from '../services/workspace.service';
 import { WORKSPACE_CONSTANTS, type SaveStatus } from '../constants/workspace.constants';
 
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const logger = createLogger('Workspace Store');
+
+function getDescendantIds(notes: Note[], notebooks: Notebook[], parentId: string): string[] {
+  const childNotes = notes.filter((note) => note.parentId === parentId).map((note) => note.id);
+  const childNotebooks = notebooks.filter((notebook) => notebook.parentId === parentId);
+
+  let descendantIds = [...childNotes];
+  for (const childNotebook of childNotebooks) {
+    descendantIds.push(childNotebook.id);
+    descendantIds = descendantIds.concat(getDescendantIds(notes, notebooks, childNotebook.id));
+  }
+
+  return descendantIds;
+}
+
 export const useWorkspaceStore = defineStore('workspace', {
   state: () => {
     return {
@@ -71,8 +85,7 @@ export const useWorkspaceStore = defineStore('workspace', {
         this.notes = notes;
         this.notebooks = notebooks;
 
-        // Keep current active note if it still exists, otherwise pick first
-        if (this.activeNoteId && !this.notes.find((n) => n.id === this.activeNoteId)) {
+        if (this.activeNoteId && !this.notes.find((note) => note.id === this.activeNoteId)) {
           this.activeNoteId = notes[0]?.id ?? null;
         } else if (!this.activeNoteId) {
           this.activeNoteId = notes[0]?.id ?? null;
@@ -193,12 +206,13 @@ export const useWorkspaceStore = defineStore('workspace', {
           noteId,
           setTimeout(async () => {
             saveTimers.delete(noteId);
-            const latest = this.notes.find((n) => n.id === noteId);
+            const latest = this.notes.find((candidate) => candidate.id === noteId);
             if (!latest) return;
 
             try {
-              const saved = await workspaceService.writeContent(contentId, latest.content, noteId);
-              if (saved) {
+              const result = await workspaceService.saveNoteContent(noteId, contentId, latest.content);
+              if (result.success) {
+                latest.content = result.content;
                 const savedAt = Date.now();
                 this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
                 this.lastSaveTime = savedAt;
@@ -237,12 +251,13 @@ export const useWorkspaceStore = defineStore('workspace', {
         clearTimeout(timer);
         saveTimers.delete(noteId);
 
-        const note = this.notes.find((n) => n.id === noteId);
+        const note = this.notes.find((candidate) => candidate.id === noteId);
         if (note) {
           this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVING;
           promises.push(
-            workspaceService.writeContent(note.contentId, note.content, noteId).then((saved) => {
-              if (saved) {
+            workspaceService.saveNoteContent(noteId, note.contentId, note.content).then((result) => {
+              if (result.success) {
+                note.content = result.content;
                 const savedAt = Date.now();
                 this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
                 this.lastSaveTime = savedAt;
@@ -254,8 +269,9 @@ export const useWorkspaceStore = defineStore('workspace', {
                 };
               } else {
                 this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR;
+                this.saveError = WORKSPACE_CONSTANTS.ERROR_MESSAGES.SAVE_FAILED;
               }
-              return saved;
+              return result.success;
             })
           );
         }
@@ -299,8 +315,23 @@ export const useWorkspaceStore = defineStore('workspace', {
       logger.info(`Deleted note: ${id}`);
     },
 
+    async confirmDeleteNote(id: string): Promise<boolean> {
+      const note = this.notes.find((candidate) => candidate.id === id);
+      if (!note) {
+        return false;
+      }
+
+      const confirmed = await workspaceService.confirmDeleteNode(note.title);
+      if (!confirmed) {
+        return false;
+      }
+
+      await this.deleteNote(id);
+      return true;
+    },
+
     async deleteNotebook(id: string) {
-      const notebook = this.notebooks.find((nb) => nb.id === id);
+      const notebook = this.notebooks.find((candidate) => candidate.id === id);
       if (!notebook) return;
 
       try {
@@ -311,22 +342,10 @@ export const useWorkspaceStore = defineStore('workspace', {
         return;
       }
 
-      const getDescendantIds = (parentId: string): string[] => {
-        const childNotes = this.notes.filter((n) => n.parentId === parentId).map((n) => n.id);
-        const childNotebooks = this.notebooks.filter((nb) => nb.parentId === parentId);
-
-        let descendantIds = [...childNotes];
-        for (const childNb of childNotebooks) {
-          descendantIds.push(childNb.id);
-          descendantIds = descendantIds.concat(getDescendantIds(childNb.id));
-        }
-        return descendantIds;
-      };
-
-      const idsToRemove = new Set([id, ...getDescendantIds(id)]);
+      const idsToRemove = new Set([id, ...getDescendantIds(this.notes, this.notebooks, id)]);
 
       this.notes = this.notes.filter((note) => !idsToRemove.has(note.id));
-      this.notebooks = this.notebooks.filter((nb) => !idsToRemove.has(nb.id));
+      this.notebooks = this.notebooks.filter((candidate) => !idsToRemove.has(candidate.id));
 
       if (idsToRemove.has(this.activeNoteId ?? '')) {
         this.activeNoteId = this.notes[0]?.id ?? null;
@@ -338,18 +357,32 @@ export const useWorkspaceStore = defineStore('workspace', {
       logger.info(`Deleted notebook and descendants: ${id} (Total items removed: ${idsToRemove.size})`);
     },
 
+    async confirmDeleteNotebook(id: string): Promise<boolean> {
+      const notebook = this.notebooks.find((candidate) => candidate.id === id);
+      if (!notebook) {
+        return false;
+      }
+
+      const confirmed = await workspaceService.confirmDeleteNode(notebook.name);
+      if (!confirmed) {
+        return false;
+      }
+
+      await this.deleteNotebook(id);
+      return true;
+    },
+
     async toggleNodeLock(id: string, locked: boolean) {
       try {
-        const note = this.notes.find((n) => n.id === id);
+        const note = this.notes.find((candidate) => candidate.id === id);
         if (!note) {
           logger.warn(`Cannot lock node ${id}: not a note or not found.`);
           return;
         }
 
-        await workspaceService.toggleNodeLock(id, locked);
-
-        note.locked = locked;
-        note.updatedAt = Date.now();
+        const result = await workspaceService.toggleNodeLock(id, locked);
+        note.locked = result.locked;
+        note.updatedAt = result.updatedAt;
 
         logger.info(`${locked ? 'Locked' : 'Unlocked'} note: ${id}`);
       } catch (err: unknown) {
@@ -359,9 +392,9 @@ export const useWorkspaceStore = defineStore('workspace', {
     },
 
     async openHistoryDialog(noteId: string) {
-      const note = this.notes.find(n => n.id === noteId);
+      const note = this.notes.find((candidate) => candidate.id === noteId);
       if (!note) return;
-      
+
       this.activeNoteId = noteId;
       this.isHistoryDialogOpen = true;
       await this.fetchHistory(note.contentId);
@@ -385,8 +418,10 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     async getHistoryContent(filename: string) {
       if (!this.activeNoteId) return '';
-      const note = this.notes.find(n => n.id === this.activeNoteId);
+
+      const note = this.notes.find((candidate) => candidate.id === this.activeNoteId);
       if (!note) return '';
+
       try {
         return await workspaceService.getHistoryContent(note.contentId, filename);
       } catch (err: unknown) {
@@ -397,7 +432,7 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     async recoverVersion(filename: string) {
       if (!this.activeNoteId) return;
-      
+
       try {
         const success = await workspaceService.recoverVersion(this.activeNoteId, filename);
         if (success) {
@@ -408,6 +443,20 @@ export const useWorkspaceStore = defineStore('workspace', {
       } catch (err: unknown) {
         logger.error(`Failed to recover version: ${err}`);
       }
+    },
+
+    async confirmRecoverVersion(filename: string): Promise<boolean> {
+      if (!this.activeNoteId) {
+        return false;
+      }
+
+      const confirmed = await workspaceService.confirmRecoverVersion();
+      if (!confirmed) {
+        return false;
+      }
+
+      await this.recoverVersion(filename);
+      return true;
     },
   },
 });

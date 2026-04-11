@@ -101,7 +101,6 @@ import { useI18n } from 'vue-i18n';
 import { languageOptions } from '@renderer/features/i18n';
 import { updaterService } from '@renderer/features/updater/services/updater.service';
 import { useSettingsStore } from '../../store/settings.store';
-import { settingsService } from '../../services/settings.service';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
@@ -117,15 +116,15 @@ const handleThemeChange = async (event: Event) => {
 };
 
 const handleExportSettings = async () => {
-  await settingsService.exportConfig();
+  await settingsStore.exportSettings();
 };
 
 const handleImportSettings = async () => {
-  await settingsService.importConfig();
+  await settingsStore.importSettings();
 };
 
 const handleResetSettings = async () => {
-  await settingsService.resetConfig();
+  await settingsStore.resetSettings();
 };
 
 const handleStartupToggle = async () => {

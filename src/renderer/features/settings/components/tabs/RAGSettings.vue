@@ -227,7 +227,10 @@ const handleRAGUpdate = async (key: keyof RAGSettings, value: any, event?: Event
   if (key === 'embeddingSourceId') {
     if (value === settingsStore.config.rag[key]) return;
 
-    const confirmed = await settingsService.confirmEmbeddingSourceChange();
+    const confirmed = await settingsService.confirmEmbeddingSourceChange(
+      settingsStore.config.rag.embeddingSourceId,
+      String(value)
+    );
     if (!confirmed) {
       revertSelectValue(key, event);
       return;
@@ -288,7 +291,7 @@ const rebuildButtonText = computed(() => {
     return t('button.rebuildIndex');
   }
 
-  return `${t('button.rebuildingIndex')}（${indexStatus.value.progress}%）`;
+  return `${indexStatus.value.progress} %`;
 });
 
 const formatDate = (timestamp: number) => {

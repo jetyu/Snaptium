@@ -15,8 +15,8 @@ interface UseWorkspaceContextMenuOptions {
   createNote: (parentId?: string | null) => Promise<void>;
   createNotebook: (parentId?: string | null) => Promise<void>;
   showNoteInFolder: (id: string) => Promise<void>;
-  deleteNote: (id: string) => Promise<void>;
-  deleteNotebook: (id: string) => Promise<void>;
+  deleteNote: (id: string) => Promise<unknown>;
+  deleteNotebook: (id: string) => Promise<unknown>;
   selectNote: (id: string) => void;
   selectNotebook: (id: string) => void;
   beginRenamingNote: (note: Note) => void;

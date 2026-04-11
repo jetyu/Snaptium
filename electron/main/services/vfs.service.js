@@ -1,8 +1,9 @@
-import { app, shell } from 'electron';
+import { app, shell, BrowserWindow, dialog } from 'electron';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
+import { $t } from '../utils/i18n.js';
 import { writeUtf8 } from './file.service.js';
 import { loggerService } from './logger.service.js';
 import { historyService } from './history.service.js';
@@ -112,6 +113,16 @@ async function atomicWriteFile(targetPath, content) {
 
 function getWorkspaceRootByName(workspaceName) {
   return path.join(app.getPath(VFS_CONSTANTS.DOCUMENTS_FOLDER), workspaceName);
+}
+
+function getFocusedWindow() {
+  return BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+}
+
+function interpolateMessage(template, replacements = {}) {
+  return Object.entries(replacements).reduce((message, [key, value]) => {
+    return message.replaceAll(`{${key}}`, String(value));
+  }, template);
 }
 
 function normalizeWorkspaceRoot(rootPath) {
@@ -490,6 +501,66 @@ export const vfsService = {
     await persistAllNodes(root);
     logger.debug(`Emptied trash, removed ${trashedNodes.length} top-level node tree(s).`);
     return true;
+  },
+
+  async confirmPermanentDeleteNode() {
+    const { response } = await dialog.showMessageBox(getFocusedWindow(), {
+      type: 'warning',
+      buttons: [$t('dialog.cancel'), $t('trash.deletePermanently')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      title: $t('trash.title'),
+      message: $t('trash.permanentDeleteConfirm'),
+    });
+
+    return response === 1;
+  },
+
+  async confirmEmptyTrash() {
+    const { response } = await dialog.showMessageBox(getFocusedWindow(), {
+      type: 'warning',
+      buttons: [$t('dialog.cancel'), $t('trash.empty')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      title: $t('trash.title'),
+      message: $t('trash.emptyConfirm'),
+    });
+
+    return response === 1;
+  },
+
+  async confirmDeleteNode(name) {
+    const displayName = typeof name === 'string' && name.trim().length > 0
+      ? name.trim()
+      : $t('default.thisItem');
+
+    const { response } = await dialog.showMessageBox(getFocusedWindow(), {
+      type: 'warning',
+      buttons: [$t('dialog.cancel'), $t('dialog.ok')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      title: $t('common.deleteNode'),
+      message: interpolateMessage($t('dialog.deleteConfirm'), { name: displayName }),
+    });
+
+    return response === 1;
+  },
+
+  async confirmRecoverVersion() {
+    const { response } = await dialog.showMessageBox(getFocusedWindow(), {
+      type: 'warning',
+      buttons: [$t('dialog.cancel'), $t('history.restore')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      title: $t('history.title'),
+      message: $t('history.restoreConfirm'),
+    });
+
+    return response === 1;
   },
 
   async autoClearTrash(root) {

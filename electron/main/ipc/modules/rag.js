@@ -146,13 +146,12 @@ export function registerRAGHandlers() {
       }
 
       if (!ragConfig.chatConfig) {
-        const fallbackHeader = $t('message.rag.noChatModel', 'No chat model configured. Here are the relevant findings:');
         const summary = results
           .map((res, idx) => `[${idx + 1}] ${res.noteTitle || 'Untitled'}:\n${res.chunk.content}`)
           .join('\n\n');
         return {
           success: true,
-          answer: `${fallbackHeader}\n\n${summary}`,
+          answer: `${summary}`,
           usedSearchFallback: true,
         };
       }

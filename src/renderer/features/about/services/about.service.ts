@@ -1,32 +1,44 @@
-import { electronApi } from '@renderer/core/bridge/electronApi';
+import { electronApi, type AppEnvVersion } from '@renderer/core/bridge/electronApi';
 
-export interface AppVersionInfo {
-  appVersion: string;
+export interface AboutInfo {
   appName: string;
+  appVersion: string;
+  envVersion: AppEnvVersion;
 }
 
-export interface EnvVersionInfo {
-  electron: string;
-  node: string;
-  chrome: string;
-  v8: string;
+function normalizeText(value: string | undefined | null, fallback: string): string {
+  const normalized = value?.trim();
+  return normalized ? normalized : fallback;
 }
 
-export class AboutService {
+function normalizeEnvVersion(envVersion: AppEnvVersion): AppEnvVersion {
+  return {
+    electron: normalizeText(envVersion.electron, 'unknown'),
+    node: normalizeText(envVersion.node, 'unknown'),
+    chrome: normalizeText(envVersion.chrome, 'unknown'),
+    v8: normalizeText(envVersion.v8, 'unknown'),
+  };
+}
+
+class AboutService {
   onOpenAbout(callback: () => void): () => void {
-    return electronApi.menu.onOpenAbout(callback);
+    return electronApi.menu.onOpenAbout(() => {
+      callback();
+    });
   }
 
-  async getAppVersion(): Promise<string> {
-    return await electronApi.app.getVersion();
-  }
+  async loadAboutInfo(): Promise<AboutInfo> {
+    const [appVersion, appName, envVersion] = await Promise.all([
+      electronApi.app.getVersion(),
+      electronApi.app.getName(),
+      electronApi.app.getEnvVersion(),
+    ]);
 
-  async getAppName(): Promise<string> {
-    return await electronApi.app.getName();
-  }
-
-  async getEnvVersion(): Promise<EnvVersionInfo> {
-    return await electronApi.app.getEnvVersion();
+    return {
+      appName: normalizeText(appName, 'Unknown App'),
+      appVersion: normalizeText(appVersion, '0.0.0'),
+      envVersion: normalizeEnvVersion(envVersion),
+    };
   }
 }
 

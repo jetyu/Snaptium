@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { useAboutStore } from '../store/about.store';
 import { aboutService } from '../services/about.service';
-import type { EnvVersionInfo } from '../services/about.service';
+import type { AboutInfo } from '../services/about.service';
 import { createLogger } from '@renderer/features/logger';
 
 const aboutLogger = createLogger('About');
@@ -12,7 +12,7 @@ export function useAbout() {
   const { isOpen } = storeToRefs(aboutStore);
   const appVersion = ref('');
   const appName = ref('');
-  const envVersion = ref<EnvVersionInfo>({
+  const envVersion = ref<AboutInfo['envVersion']>({
     electron: '',
     node: '',
     chrome: '',
@@ -21,9 +21,10 @@ export function useAbout() {
 
   const loadVersionInfo = async () => {
     try {
-      appVersion.value = await aboutService.getAppVersion();
-      appName.value = await aboutService.getAppName();
-      envVersion.value = await aboutService.getEnvVersion();
+      const aboutInfo = await aboutService.loadAboutInfo();
+      appVersion.value = aboutInfo.appVersion;
+      appName.value = aboutInfo.appName;
+      envVersion.value = aboutInfo.envVersion;
     } catch (error) {
       aboutLogger.error(`Failed to load version info: ${error instanceof Error ? error.message : String(error)}`);
     }

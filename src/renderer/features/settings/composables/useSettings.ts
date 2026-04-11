@@ -1,10 +1,13 @@
 import { ref, readonly } from 'vue';
 import { settingsService } from '../services/settings.service';
+import { useSettingsStore } from '../store/settings.store';
 
 const isOpen = ref(false);
 const activeTab = ref('general');
 
 export function useSettings() {
+  const settingsStore = useSettingsStore();
+
   const openSettings = (tab?: string) => {
     if (tab) {
       activeTab.value = tab;
@@ -27,11 +30,11 @@ export function useSettings() {
   };
 
   const exportSettings = async () => {
-    return await settingsService.exportConfig();
+    return await settingsStore.exportSettings();
   };
 
   const importSettings = async () => {
-    return await settingsService.importConfig();
+    return await settingsStore.importSettings();
   };
 
   return {

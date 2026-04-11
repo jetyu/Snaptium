@@ -1,39 +1,123 @@
 import { electronApi } from '@renderer/core/bridge/electronApi';
 
+const MIN_UPDATE_INTERVAL = 60 * 60 * 1000;
+
+export interface UpdateInfo {
+  version: string;
+  releaseDate?: string;
+  releaseNotes?: string;
+  files?: unknown[];
+}
+
+export interface ProgressInfo {
+  percent: number;
+  bytesPerSecond: number;
+  transferred: number;
+  total: number;
+}
+
+export interface ErrorInfo {
+  message: string;
+  code: string;
+}
+
+export interface UpdaterConfig {
+  autoCheckUpdates: boolean;
+  updateCheckInterval: number;
+}
+
+export interface UpdateEventHandlers {
+  onChecking?: () => void;
+  onAvailable?: (info: UpdateInfo) => void;
+  onNotAvailable?: (info: UpdateInfo) => void;
+  onDownloadProgress?: (progress: ProgressInfo) => void;
+  onDownloaded?: (info: UpdateInfo) => void;
+  onError?: (error: ErrorInfo) => void;
+}
+
+function normalizeUpdateInfo(payload: unknown): UpdateInfo {
+  const info = (typeof payload === 'object' && payload !== null ? payload : {}) as Partial<UpdateInfo>;
+  return {
+    version: typeof info.version === 'string' ? info.version : '',
+    releaseDate: typeof info.releaseDate === 'string' ? info.releaseDate : undefined,
+    releaseNotes: typeof info.releaseNotes === 'string' ? info.releaseNotes : undefined,
+    files: Array.isArray(info.files) ? info.files : undefined,
+  };
+}
+
+function normalizeProgressInfo(payload: unknown): ProgressInfo {
+  const progress = (typeof payload === 'object' && payload !== null ? payload : {}) as Partial<ProgressInfo>;
+  return {
+    percent: Number(progress.percent ?? 0),
+    bytesPerSecond: Number(progress.bytesPerSecond ?? 0),
+    transferred: Number(progress.transferred ?? 0),
+    total: Number(progress.total ?? 0),
+  };
+}
+
+function normalizeErrorInfo(payload: unknown): ErrorInfo {
+  if (payload instanceof Error) {
+    return {
+      message: payload.message,
+      code: 'UNKNOWN',
+    };
+  }
+
+  const errorInfo = (typeof payload === 'object' && payload !== null ? payload : {}) as Partial<ErrorInfo>;
+  return {
+    message: typeof errorInfo.message === 'string' ? errorInfo.message : 'Unknown updater error',
+    code: typeof errorInfo.code === 'string' ? errorInfo.code : 'UNKNOWN',
+  };
+}
+
+function normalizeUpdaterConfig(config: UpdaterConfig): UpdaterConfig {
+  return {
+    autoCheckUpdates: Boolean(config.autoCheckUpdates),
+    updateCheckInterval: Math.max(MIN_UPDATE_INTERVAL, Math.trunc(config.updateCheckInterval || MIN_UPDATE_INTERVAL)),
+  };
+}
+
 export const updaterService = {
-  onCheckForUpdates: (callback: () => void): (() => void) =>
-    electronApi.menu.onCheckForUpdates(callback),
+  onCheckForUpdates(callback: () => void): () => void {
+    return electronApi.menu.onCheckForUpdates(() => {
+      callback();
+    });
+  },
 
-  check: (silent = false): Promise<{ success: boolean }> =>
-    electronApi.updater.check(silent),
+  async check(silent = false): Promise<{ success: boolean }> {
+    return await electronApi.updater.check(Boolean(silent));
+  },
 
-  download: (): Promise<{ success: boolean }> =>
-    electronApi.updater.download(),
+  async download(): Promise<{ success: boolean }> {
+    return await electronApi.updater.download();
+  },
 
-  install: (): Promise<{ success: boolean }> =>
-    electronApi.updater.install(),
+  async install(): Promise<{ success: boolean }> {
+    return await electronApi.updater.install();
+  },
 
-  getVersion: (): Promise<string> =>
-    electronApi.updater.getVersion(),
+  async getVersion(): Promise<string> {
+    const version = await electronApi.updater.getVersion();
+    const normalized = version.trim();
+    return normalized || '0.0.0';
+  },
 
-  updateConfig: (config: { autoCheckUpdates: boolean; updateCheckInterval: number }): Promise<{ success: boolean }> =>
-    electronApi.updater.updateConfig(config),
+  async updateConfig(config: UpdaterConfig): Promise<{ success: boolean }> {
+    return await electronApi.updater.updateConfig(normalizeUpdaterConfig(config));
+  },
 
-  onChecking: (callback: () => void): (() => void) =>
-    electronApi.updater.onChecking(callback),
+  subscribe(handlers: UpdateEventHandlers): () => void {
+    const cleanups = [
+      electronApi.updater.onChecking(() => handlers.onChecking?.()),
+      electronApi.updater.onAvailable((payload: unknown) => handlers.onAvailable?.(normalizeUpdateInfo(payload))),
+      electronApi.updater.onNotAvailable((payload: unknown) => handlers.onNotAvailable?.(normalizeUpdateInfo(payload))),
+      electronApi.updater.onDownloadProgress((payload: unknown) => handlers.onDownloadProgress?.(normalizeProgressInfo(payload))),
+      electronApi.updater.onDownloaded((payload: unknown) => handlers.onDownloaded?.(normalizeUpdateInfo(payload))),
+      electronApi.updater.onError((payload: unknown) => handlers.onError?.(normalizeErrorInfo(payload))),
+    ];
 
-  onAvailable: (callback: (data: any) => void): (() => void) =>
-    electronApi.updater.onAvailable(callback),
-
-  onNotAvailable: (callback: (data: any) => void): (() => void) =>
-    electronApi.updater.onNotAvailable(callback),
-
-  onDownloadProgress: (callback: (data: any) => void): (() => void) =>
-    electronApi.updater.onDownloadProgress(callback),
-
-  onDownloaded: (callback: (data: any) => void): (() => void) =>
-    electronApi.updater.onDownloaded(callback),
-
-  onError: (callback: (data: any) => void): (() => void) =>
-    electronApi.updater.onError(callback),
+    return () => {
+      cleanups.forEach((cleanup) => cleanup());
+    };
+  },
 };

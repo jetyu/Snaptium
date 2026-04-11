@@ -14,6 +14,7 @@
                 class="btn-empty" 
                 @click="onEmptyTrash"
                 :title="$t('trash.empty')"
+                :disabled="isEmptying || Boolean(activeNodeId)"
               >
                 <Clear theme="outline" :size="16" />
                 <span>{{ $t('trash.empty') }}</span>
@@ -25,6 +26,12 @@
           </div>
 
           <div class="trash-content">
+            <div v-if="error" class="error-banner" role="alert">
+              <span class="error-text">{{ error }}</span>
+              <button class="error-dismiss" aria-label="Dismiss error" @click="clearError">
+                <Close theme="outline" :size="14" />
+              </button>
+            </div>
             <div v-if="isLoading" class="loading-state">
               <div class="spinner"></div>
             </div>
@@ -58,15 +65,17 @@
                       <div class="action-buttons">
                         <button 
                           class="btn-inline-action restore" 
-                          @click="restoreNode(node.id)"
+                          @click="onRestoreNode(node.id)"
                           :title="$t('trash.restore') || 'Restore'"
+                          :disabled="Boolean(activeNodeId) || isEmptying"
                         >
                           <Refresh theme="outline" :size="14" />
                         </button>
                         <button 
                           class="btn-inline-action delete" 
-                          @click="permanentlyDeleteNode(node.id)"
+                          @click="onDeleteNode(node.id)"
                           :title="$t('trash.deletePermanently') || 'Delete Permanently'"
+                          :disabled="Boolean(activeNodeId) || isEmptying"
                         >
                           <Delete theme="outline" :size="14" />
                         </button>
@@ -84,20 +93,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, nextTick } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import { useTrash } from '../composables/useTrash';
 import { Delete, Close, Clear, Refresh, Notes, NotebookOne } from '@icon-park/vue-next';
 
-const { isOpen, trashedNodes, isLoading, closeTrash, restoreNode, permanentlyDeleteNode, emptyTrash } = useTrash();
+const { isOpen, trashedNodes, isLoading, error, clearError, closeTrash, restoreNode, permanentlyDeleteNode, emptyTrash } = useTrash();
 const overlayRef = ref<HTMLElement | null>(null);
+const activeNodeId = ref<string | null>(null);
+const isEmptying = ref(false);
 
 const formatTime = (timestamp: number) => {
   return new Date(timestamp).toLocaleString();
 };
 
 const onEmptyTrash = async () => {
-  if (confirm('Are you sure you want to empty the trash? This action cannot be undone.')) {
+  isEmptying.value = true;
+  try {
     await emptyTrash();
+  } finally {
+    isEmptying.value = false;
+  }
+};
+
+const onRestoreNode = async (nodeId: string) => {
+  activeNodeId.value = nodeId;
+  try {
+    await restoreNode(nodeId);
+  } finally {
+    activeNodeId.value = null;
+  }
+};
+
+const onDeleteNode = async (nodeId: string) => {
+  activeNodeId.value = nodeId;
+  try {
+    await permanentlyDeleteNode(nodeId);
+  } finally {
+    activeNodeId.value = null;
   }
 };
 
@@ -209,6 +241,34 @@ watch(isOpen, async (newVal) => {
   padding: 0;
 }
 
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 12px 16px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(220, 38, 38, 0.24);
+  background: rgba(220, 38, 38, 0.08);
+  color: #991b1b;
+}
+
+.error-text {
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.error-dismiss {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 2px;
+}
+
 .empty-state {
   height: 100%;
   display: flex;
@@ -313,6 +373,12 @@ watch(isOpen, async (newVal) => {
   color: var(--text-muted, #9ca3af);
   transition: all 0.2s;
   display: flex;
+}
+
+.btn-empty:disabled,
+.btn-inline-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .btn-inline-action.restore:hover {

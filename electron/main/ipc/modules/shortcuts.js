@@ -129,6 +129,22 @@ export function registerShortcutsHandlers() {
     }
   });
 
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_CONFIRM_RESET_TO_DEFAULTS, async () => {
+    try {
+      const confirmed = await shortcutsService.confirmResetToDefaults();
+      return {
+        success: true,
+        data: confirmed,
+      };
+    } catch (error) {
+      logger.error('Failed to confirm reset keybindings', { error: error.message });
+      return {
+        success: false,
+        error: error.message,
+      };
+    }
+  });
+
   ipcMain.handle(IPC_CHANNELS.SHORTCUTS_DETECT_CONFLICTS, async (_event, { key, excludeCommandId }) => {
     try {
       const conflicts = await shortcutsService.detectConflicts(key, excludeCommandId);

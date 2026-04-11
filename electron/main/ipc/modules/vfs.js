@@ -25,6 +25,10 @@ export function registerVfsIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.VFS_RESTORE_NODE);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_PERMANENTLY_DELETE_NODE);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_EMPTY_TRASH);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_CONFIRM_PERMANENT_DELETE_NODE);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_CONFIRM_EMPTY_TRASH);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_CONFIRM_DELETE_NODE);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_CONFIRM_RECOVER_VERSION);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_GET_HISTORY);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_GET_HISTORY_CONTENT);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_RECOVER_VERSION);
@@ -107,6 +111,22 @@ export function registerVfsIpcHandlers() {
   ipcMain.handle(IPC_CHANNELS.VFS_EMPTY_TRASH, () =>
     vfsService.emptyTrash(),
   );
+
+  ipcMain.handle(IPC_CHANNELS.VFS_CONFIRM_PERMANENT_DELETE_NODE, () => {
+    return vfsService.confirmPermanentDeleteNode();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_CONFIRM_EMPTY_TRASH, () => {
+    return vfsService.confirmEmptyTrash();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_CONFIRM_DELETE_NODE, (_event, nodeName) => {
+    return vfsService.confirmDeleteNode(nodeName);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_CONFIRM_RECOVER_VERSION, () => {
+    return vfsService.confirmRecoverVersion();
+  });
 
   ipcMain.handle(IPC_CHANNELS.VFS_GET_HISTORY, (_event, contentId) => {
     return vfsService.getHistory(uuidSchema.parse(contentId));

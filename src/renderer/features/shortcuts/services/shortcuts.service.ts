@@ -90,6 +90,14 @@ export const shortcutsService = {
     return result.data as Keybinding[];
   },
 
+  async confirmResetToDefaults(): Promise<boolean> {
+    const result = await electronApi.shortcuts.confirmResetToDefaults();
+    if (!result || !result.success) {
+      throw new Error(result?.error || 'Failed to confirm reset keybindings');
+    }
+    return Boolean(result.data);
+  },
+
   /**
    * 检测快捷键冲突
    */

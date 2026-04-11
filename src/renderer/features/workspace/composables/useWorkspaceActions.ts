@@ -20,13 +20,8 @@ export function useWorkspaceActions() {
       return false;
     }
 
-    // TODO: 使用自定义确认对话框替代 confirm
-    const confirmed = confirm(`确定要删除笔记 "${activeNote.title}" 吗？`);
-    if (!confirmed) return false;
-
     try {
-      await workspaceStore.deleteNote(activeNote.id);
-      return true;
+      return await workspaceStore.confirmDeleteNote(activeNote.id);
     } catch (error) {
       workspaceActionsLogger.error(`Failed to delete note: ${error instanceof Error ? error.message : String(error)}`);
       return false;
@@ -43,7 +38,6 @@ export function useWorkspaceActions() {
       return false;
     }
 
-    // TODO: 使用自定义输入对话框替代 prompt
     const newTitle = prompt('请输入新的笔记标题:', activeNote.title);
     if (!newTitle || newTitle.trim() === '') return false;
 

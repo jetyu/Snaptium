@@ -377,7 +377,7 @@ tests
 - 在 `electron/main/ipc/modules/tags.js` 增加 handler
 - 在 `electron/main/ipc/index.js` 注册
 - 在 `electron/preload/index.js` 暴露白名单 API
-- 在 `src/renderer/services/electronApi.ts` 增加前端调用封装
+- 在 `src/renderer/core/bridge/electronApi.ts` 增加前端调用封装
 
 测试：
 
@@ -452,7 +452,7 @@ en-US.json
 ## 19. 实现后检查清单
 ### 1. 类型与编译（必须）
 
-- [ ] TypeScript 类型检查通过（无 `any` 滥用）
+- [ ] TypeScript 类型检查通过（无 `any` 类型，类型必须明确）
 - [ ] ESLint / Prettier 校验通过
 - [ ] 无编译错误 / 警告
 - [ ] 无未使用变量 / 无死代码
@@ -568,8 +568,3 @@ en-US.json
 - [ ] 安装 / 升级流程验证通过
 
 ---
-
-
-
-
-

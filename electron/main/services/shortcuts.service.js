@@ -1,11 +1,16 @@
-import { app, globalShortcut } from 'electron';
+import { app, globalShortcut, BrowserWindow, dialog } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { getAllCommands } from '../constants/commands.constants.js';
+import { $t } from '../utils/i18n.js';
 import { loggerService } from './logger.service.js';
 
 const logger = loggerService.createLogger('Electron:Shortcuts Service');
+
+function getFocusedWindow() {
+  return BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+}
 
 export const shortcutsService = {
   getShortcutsPath() {
@@ -80,6 +85,20 @@ export const shortcutsService = {
   async resetToDefaults() {
     const defaults = this.getDefaultKeybindings();
     return await this.saveKeybindings(defaults);
+  },
+
+  async confirmResetToDefaults() {
+    const { response } = await dialog.showMessageBox(getFocusedWindow(), {
+      type: 'warning',
+      buttons: [$t('dialog.cancel'), $t('shortcuts.resetToDefaults')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      title: $t('shortcuts.title'),
+      message: $t('shortcuts.resetConfirm'),
+    });
+
+    return response === 1;
   },
 
   async detectConflicts(key, excludeCommandId = null) {

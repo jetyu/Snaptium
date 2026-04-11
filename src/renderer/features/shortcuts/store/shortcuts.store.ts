@@ -191,6 +191,18 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
 
   async function resetToDefaults() {
     try {
+      error.value = null;
+      const confirmed = await shortcutsService.confirmResetToDefaults();
+      if (!confirmed) {
+        return;
+      }
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'Failed to confirm reset keybindings';
+      shortcutsLogger.error(`Failed to confirm reset keybindings: ${e instanceof Error ? e.message : String(e)}`);
+      throw e;
+    }
+
+    try {
       loading.value = true;
       error.value = null;
       keybindings.value = await shortcutsService.resetToDefaults();

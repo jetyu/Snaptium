@@ -127,6 +127,10 @@ declare global {
         restoreNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
         permanentlyDeleteNode: (nodeId: string) => Promise<boolean>;
         emptyTrash: () => Promise<boolean>;
+        confirmPermanentDeleteNode: () => Promise<boolean>;
+        confirmEmptyTrash: () => Promise<boolean>;
+        confirmDeleteNode: (name: string) => Promise<boolean>;
+        confirmRecoverVersion: () => Promise<boolean>;
         getHistory: (contentId: string) => Promise<HistoryVersion[]>;
         getHistoryContent: (payload: { contentId: string; filename: string }) => Promise<string>;
         recoverVersion: (payload: { nodeId: string; filename: string }) => Promise<boolean>;
@@ -180,6 +184,7 @@ declare global {
         addKeybinding: (payload: { commandId: string; key: string; when?: string | null }) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
         removeKeybinding: (payload: { commandId: string; key: string }) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
         resetToDefaults: () => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
+        confirmResetToDefaults: () => Promise<{ success: boolean; data?: boolean; error?: string }>;
         detectConflicts: (payload: { key: string; excludeCommandId?: string }) => Promise<{ success: boolean; data?: unknown[]; error?: string }>;
         validateKeybinding: (key: string) => Promise<{ success: boolean; data?: boolean; error?: string }>;
         normalizeKeybinding: (key: string) => Promise<{ success: boolean; data?: string; error?: string }>;

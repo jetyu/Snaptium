@@ -376,6 +376,22 @@ export const electronApi = {
       return electronApi.vfs.getApi().emptyTrash();
     },
 
+    confirmPermanentDeleteNode: (): Promise<boolean> => {
+      return electronApi.vfs.getApi().confirmPermanentDeleteNode();
+    },
+
+    confirmEmptyTrash: (): Promise<boolean> => {
+      return electronApi.vfs.getApi().confirmEmptyTrash();
+    },
+
+    confirmDeleteNode: (name: string): Promise<boolean> => {
+      return electronApi.vfs.getApi().confirmDeleteNode(name);
+    },
+
+    confirmRecoverVersion: (): Promise<boolean> => {
+      return electronApi.vfs.getApi().confirmRecoverVersion();
+    },
+
     getHistory: (contentId: string): Promise<HistoryVersion[]> => {
       return electronApi.vfs.getApi().getHistory(contentId);
     },
@@ -403,6 +419,7 @@ export const electronApi = {
     addKeybinding: (payload: { commandId: string; key: string; when?: string | null }) => electronApi.shortcuts.getApi().addKeybinding(payload),
     removeKeybinding: (payload: { commandId: string; key: string }) => electronApi.shortcuts.getApi().removeKeybinding(payload),
     resetToDefaults: () => electronApi.shortcuts.getApi().resetToDefaults(),
+    confirmResetToDefaults: () => electronApi.shortcuts.getApi().confirmResetToDefaults(),
     detectConflicts: (payload: { key: string; excludeCommandId?: string }) => electronApi.shortcuts.getApi().detectConflicts(payload),
     validateKeybinding: (key: string) => electronApi.shortcuts.getApi().validateKeybinding(key),
     normalizeKeybinding: (key: string) => electronApi.shortcuts.getApi().normalizeKeybinding(key),
