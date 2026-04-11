@@ -19,6 +19,7 @@ export const DEFAULT_RAG_CONFIG = {
   similarityThreshold: 0.45,
   autoIndex: false,
   indexOnSave: false,
+  lastIndexedAt: null,
 };
 
 

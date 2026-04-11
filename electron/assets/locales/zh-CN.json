@@ -582,8 +582,8 @@
   "option.trashAutoClear.days30": "30天后",
   "common.close": "关闭",
   "common.deleteNode": "删除笔记",
-  "label.ragChatModel": "智能问答模型服务",
-  "text.ragChatModel": "智能问答所使用的AI服务；禁用将仅返回知识库检索结果",
+  "label.ragChatModel": "问答模型服务",
+  "text.ragChatModel": "知识库智能问答模型所使用的AI服务；禁用将仅返回知识库检索结果",
   "message.rag.noChatModel": "智能问答模型服务不可用，无法进行智能问答。以下为基于知识库检索的相关内容：",
   "option.rag.disabled": "禁用服务"
 }

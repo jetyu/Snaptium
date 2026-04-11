@@ -9,6 +9,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { ragService } from '../services/rag.service';
 import { createLogger } from '@renderer/features/logger';
+import { useSettingsStore } from '../../settings/store/settings.store';
 
 const ragLogger = createLogger('RAGStore');
 
@@ -69,16 +70,20 @@ export const useRAGStore = defineStore('rag', () => {
    */
   const indexNote = async (noteId: string, noteTitle: string, content: string, chunkSize: number, chunkOverlap: number) => {
     try {
-      const result = await ragService.indexNote({ 
-        noteId, 
-        noteTitle, 
-        content, 
-        chunkSize, 
-        chunkOverlap 
+      const result = await ragService.indexNote({
+        noteId,
+        noteTitle,
+        content,
+        chunkSize,
+        chunkOverlap
       });
-      
+
       if (result.success) {
         ragLogger.info(`Indexed note: ${noteId}, chunks: ${result.chunksIndexed}`);
+        const lastIndexedDate = Date.now();
+        indexStatus.value.lastIndexedAt = lastIndexedDate;
+        const settingsStore = useSettingsStore();
+        settingsStore.updateRAGSetting('lastIndexedAt', lastIndexedDate);
       } else {
         throw new Error(result.error || 'Failed to index note');
       }
@@ -105,17 +110,20 @@ export const useRAGStore = defineStore('rag', () => {
     indexStatus.value.rebuildReason = reason;
 
     try {
-      const result = await ragService.rebuildIndex(notes, { 
-        chunkSize, 
+      const result = await ragService.rebuildIndex(notes, {
+        chunkSize,
         chunkOverlap,
         onProgress: (p) => {
           indexStatus.value.indexedNotes = p.success;
           indexStatus.value.progress = Math.round((p.current / p.total) * 100);
         }
       });
-      
+
       indexStatus.value.indexedNotes = result.successCount;
-      indexStatus.value.lastIndexedAt = Date.now();
+      const lastIndexedDate = Date.now();
+      indexStatus.value.lastIndexedAt = lastIndexedDate;
+      const settingsStore = useSettingsStore();
+      settingsStore.updateRAGSetting('lastIndexedAt', lastIndexedDate);
       indexStatus.value.progress = 100;
       const status = await ragService.getStatus();
       if (status.success) {
@@ -143,7 +151,7 @@ export const useRAGStore = defineStore('rag', () => {
 
     try {
       const response = await ragService.search({ query, topK, similarityThreshold: threshold });
-      
+
       if (response.success) {
         const results = response.results || [];
         searchResults.value = results;
@@ -166,13 +174,13 @@ export const useRAGStore = defineStore('rag', () => {
   const getStatus = async () => {
     try {
       const response = await ragService.getStatus();
-      
+
       if (response.success) {
         // 更新索引状态
         indexStatus.value.totalChunks = response.totalChunks || 0;
         ragLogger.info(`Status: ${response.totalChunks} chunks indexed`);
       }
-      
+
       return response;
     } catch (error) {
       ragLogger.error(`Failed to get status: ${error}`);
@@ -186,7 +194,7 @@ export const useRAGStore = defineStore('rag', () => {
   const deleteNoteIndex = async (noteId: string) => {
     try {
       const result = await ragService.deleteNoteIndex(noteId);
-      
+
       if (result.success) {
         ragLogger.info(`Deleted index for note: ${noteId}`);
       } else {
@@ -204,11 +212,13 @@ export const useRAGStore = defineStore('rag', () => {
   const clearIndex = async () => {
     try {
       const result = await ragService.clearIndex();
-      
+
       if (result.success) {
         indexStatus.value.totalChunks = 0;
         indexStatus.value.indexedNotes = 0;
-        indexStatus.value.lastIndexedAt = null;
+        indexStatus.value.lastIndexedAt = 0;
+        const settingsStore = useSettingsStore();
+        settingsStore.updateRAGSetting('lastIndexedAt', indexStatus.value.lastIndexedAt);
         ragLogger.info('Cleared all index data');
       } else {
         throw new Error(result.error || 'Failed to clear index');

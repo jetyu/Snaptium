@@ -102,6 +102,7 @@ export const settingsService = {
         similarityThreshold: 0.45,
         autoIndex: false,
         indexOnSave: false,
+        lastIndexedAt: null,
       },
       loggingEnabled: false,
       logLevel: 'error',

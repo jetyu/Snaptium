@@ -166,9 +166,9 @@
               <span class="status-label">{{ t('labelRAGTotalChunks') }}:</span>
               <span class="status-value">{{ indexStatus.totalChunks || 0 }}</span>
             </div>
-            <div v-if="indexStatus.lastIndexedAt" class="status-item">
+            <div v-if="settingsStore.config.rag.lastIndexedAt" class="status-item">
               <span class="status-label">{{ t('labelRAGLastIndexed') }}:</span>
-              <span class="status-value">{{ formatDate(indexStatus.lastIndexedAt) }}</span>
+              <span class="status-value">{{ formatDate(settingsStore.config.rag.lastIndexedAt) }}</span>
             </div>
           </div>
 

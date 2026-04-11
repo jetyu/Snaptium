@@ -44,6 +44,7 @@ export interface RAGSettings {
   similarityThreshold: number;
   autoIndex: boolean;
   indexOnSave: boolean;
+  lastIndexedAt: number | null;
 }
 
 export interface AppSettings {
