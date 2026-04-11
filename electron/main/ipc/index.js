@@ -11,7 +11,6 @@ import { registerShortcutsHandlers } from './modules/shortcuts.js';
 import { registerRAGHandlers } from './modules/rag.js';
 import { registerEmbeddingHandlers } from './modules/embedding.js';
 import { registerAIChatHandlers } from './modules/ai-chat.js';
-import { registerAiAssistantIpcHandlers } from './modules/ai-assistant.js';
 import { registerUpdaterHandlers } from './modules/updater.js';
 
 export function registerIpcHandlers(mainWindow) {
@@ -28,6 +27,5 @@ export function registerIpcHandlers(mainWindow) {
   registerRAGHandlers();
   registerEmbeddingHandlers();
   registerAIChatHandlers();
-  registerAiAssistantIpcHandlers();
   registerUpdaterHandlers();
 }

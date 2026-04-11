@@ -71,9 +71,6 @@ const electronAPI = Object.freeze({
   aiSource: Object.freeze({
     testConnection: (config) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),
   }),
-  aiAssistant: Object.freeze({
-    complete: (payload) => ipcRenderer.invoke(IPC_CHANNELS.AI_ASSISTANT_COMPLETE, payload),
-  }),
   embedding: Object.freeze({
     generate: (payload) => ipcRenderer.invoke(IPC_CHANNELS.EMBEDDING_GENERATE, payload),
     generateSingle: (payload) => ipcRenderer.invoke(IPC_CHANNELS.EMBEDDING_GENERATE_SINGLE, payload),

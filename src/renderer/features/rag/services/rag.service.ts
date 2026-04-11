@@ -212,7 +212,7 @@ export const ragService = {
   /**
    * Orchestrate query -> search -> AI answer (Business Orchestration)
    */
-  async askQuestion(query: string): Promise<{ success: boolean; answer?: string; error?: string }> {
+  async askQuestion(query: string): Promise<{ success: boolean; answer?: string; error?: string; usedSearchFallback?: boolean }> {
     try {
       const config = await electronApi.settings.getConfig() as unknown as AppConfig;
       const sourceId = config.rag?.embeddingSourceId;
@@ -256,7 +256,7 @@ export const ragService = {
         const summary = searchRes.results
           .map((res, idx) => `[${idx + 1}] ${res.noteTitle || 'Untitled'}:\n${res.chunk.content}`)
           .join('\n\n');
-        return { success: true, answer: summary };
+        return { success: true, answer: summary, usedSearchFallback: true };
       }
 
       const systemPrompt = RAG_CHAT_PROMPTS.SYSTEM.replace('{context}', contexts.join('\n---\n'));

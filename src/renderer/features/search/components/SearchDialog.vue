@@ -47,6 +47,10 @@
             </div>
 
             <div v-else-if="aiAnswer" class="ai-answer-wrapper">
+              <div v-if="usedSearchFallback" class="ai-fallback-notice">
+                {{ $t('message.rag.noChatModel') }}
+              </div>
+
               <div class="ai-answer-content">
                 {{ aiAnswer }}
               </div>
@@ -167,7 +171,7 @@ let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const { search: ragSearch } = useRAGSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
-const { askQuestion, isGenerating: isAIGenerating, answer: aiAnswer } = useRAGChat();
+const { askQuestion, isGenerating: isAIGenerating, answer: aiAnswer, usedSearchFallback } = useRAGChat();
 const ragAvailable = computed(() => ragEnabled.value && ragConfigured.value);
 const uniqueSources = computed(() => {
   const sourcesMap = new Map<string, { noteId: string; noteTitle: string; originalResult: SemanticSearchResult }>();
@@ -196,6 +200,7 @@ watch(() => props.isOpen, (open) => {
     results.value = [];
     semanticResults.value = [];
     aiAnswer.value = '';
+    usedSearchFallback.value = false;
     searchError.value = '';
   }
 });
@@ -232,6 +237,7 @@ async function handleSearch(isExplicitTrigger = true) {
     semanticResults.value = [];
     searchError.value = '';
     isSearching.value = false;
+    usedSearchFallback.value = false;
     return;
   }
 
@@ -240,6 +246,7 @@ async function handleSearch(isExplicitTrigger = true) {
     isSearching.value = true;
     hasSearched.value = false;
     aiAnswer.value = '';
+    usedSearchFallback.value = false;
     searchError.value = '';
     try {
       if (useSemanticSearch.value && ragAvailable.value) {
@@ -401,6 +408,16 @@ function selectSemanticResult(result: SemanticSearchResult) {
 .search-header :deep(.startup-switch) {
   align-self: flex-start;
   margin-left: 2px;
+}
+
+.ai-fallback-notice {
+  margin-bottom: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .btn-close,

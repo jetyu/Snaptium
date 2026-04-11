@@ -19,16 +19,6 @@ export interface LogPayload {
   context?: unknown;
 }
 
-export interface AiCompletePayload {
-  context: string;
-}
-
-export interface AiCompleteResult {
-  success: boolean;
-  completion?: string;
-  message?: string;
-}
-
 export interface AiSourceConfig {
   aiEndpoint: string;
   aiApiKey: string;
@@ -203,18 +193,6 @@ export const electronApi = {
     },
     openDir: (): Promise<boolean> => {
       return electronApi.logger.getLoggerApi().openDir();
-    },
-  },
-
-  aiAssistant: {
-    isAvailable: (): boolean => !!window.electronAPI?.aiAssistant,
-    getApi: () => {
-      const api = ensureElectronApi().aiAssistant;
-      if (!api) throw new Error('AI Assistant bridge is unavailable');
-      return api;
-    },
-    complete: (payload: AiCompletePayload): Promise<AiCompleteResult> => {
-      return electronApi.aiAssistant.getApi().complete(payload);
     },
   },
 

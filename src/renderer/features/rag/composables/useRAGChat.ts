@@ -8,6 +8,7 @@ export function useRAGChat() {
   const isGenerating = ref(false);
   const answer = ref('');
   const error = ref<string | null>(null);
+  const usedSearchFallback = ref(false);
 
   /**
    * Ask a question using the RAG orchestration service
@@ -21,6 +22,7 @@ export function useRAGChat() {
     isGenerating.value = true;
     error.value = null;
     answer.value = '';
+    usedSearchFallback.value = false;
 
     try {
       const result = await ragService.askQuestion(question);
@@ -28,6 +30,7 @@ export function useRAGChat() {
       if (result.success) {
         const generatedAnswer = result.answer || 'No answer generated';
         answer.value = generatedAnswer;
+        usedSearchFallback.value = Boolean(result.usedSearchFallback);
         return generatedAnswer;
       } else {
         throw new Error(result.error || 'Failed to generate answer');
@@ -47,5 +50,6 @@ export function useRAGChat() {
     isGenerating,
     answer,
     error,
+    usedSearchFallback,
   };
 }

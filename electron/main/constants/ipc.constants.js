@@ -1,5 +1,4 @@
 export const IPC_CHANNELS = {
-  AI_ASSISTANT_COMPLETE: 'ai-assistant:complete',
   AI_CHAT_GENERATE: 'ai-chat:generate',
   AI_SOURCE_TEST_CONNECTION: 'ai-source:test-connection',
   EMBEDDING_GENERATE: 'embedding:generate',
