@@ -31,7 +31,10 @@ async function generateAIResponse(config) {
       temperature: 0.7,
       max_tokens: 1000,
     });
-    logger.debug('Generated AI response', { data });
+    logger.debug('Generated AI response', {
+      hasChoices: Array.isArray(data?.choices),
+      choiceCount: Array.isArray(data?.choices) ? data.choices.length : 0,
+    });
     const answer = data.choices?.[0]?.message?.content;
     return answer;
   } catch (error) {
@@ -51,7 +54,10 @@ export function registerAIChatHandlers() {
         model: assistantConfig.model,
         messages: validatedPayload.messages,
       });
-      logger.debug('Generated AI response', { answer });
+      logger.debug('Generated AI response delivered', {
+        hasAnswer: Boolean(answer),
+        answerLength: answer?.length ?? 0,
+      });
       return { success: true, answer };
     } catch (error) {
       logger.error('IPC ai-chat:generate failed', { error: error.message });

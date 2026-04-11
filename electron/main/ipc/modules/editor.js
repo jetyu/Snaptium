@@ -25,7 +25,7 @@ export function registerEditorIpcHandlers(mainWindow) {
       properties: ['openFile'],
       filters: [{ name: 'Markdown', extensions: ['md', 'markdown', 'txt'] }],
     });
-    logger.debug('Opening file', { canceled, filePaths });
+    logger.debug('Opening file', { canceled, selectedCount: filePaths.length });
     if (canceled || filePaths.length === 0) {
       return null;
     }
@@ -38,7 +38,7 @@ export function registerEditorIpcHandlers(mainWindow) {
   ipcMain.handle(IPC_CHANNELS.SAVE_FILE, async (_event, payload) => {
     const parsed = saveFilePayloadSchema.parse(payload);
     const { filePath, content } = parsed;
-    logger.debug('Saving file1', { filePath, content });
+    logger.debug('Saving file', { hasFilePath: Boolean(filePath), contentLength: content.length });
     if (filePath) {
       await writeUtf8(filePath, content);
       return { filePath };
@@ -48,7 +48,7 @@ export function registerEditorIpcHandlers(mainWindow) {
       defaultPath: 'untitled.md',
       filters: [{ name: 'Markdown', extensions: ['md'] }],
     });
-    logger.debug('Saving file2', { canceled, savePath });
+    logger.debug('Saving file via dialog', { canceled, hasSavePath: Boolean(savePath) });
     if (canceled || !savePath) {
       return null;
     }

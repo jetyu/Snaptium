@@ -1,5 +1,5 @@
+import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
-import sanitizeHtml from 'sanitize-html';
 
 const markdownIt = new MarkdownIt({
   html: false,
@@ -28,21 +28,17 @@ markdownIt.renderer.rules.link_open = (tokens, idx, options, env, self) => {
   return defaultLinkRenderer(tokens, idx, options, env, self);
 };
 
-const HTML_WHITELIST_OPTIONS: sanitizeHtml.IOptions = {
-  allowedTags: [
+const HTML_WHITELIST_OPTIONS = {
+  ALLOWED_TAGS: [
     'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
     'blockquote', 'p', 'a', 'ul', 'ol', 'li',
     'b', 'i', 'strong', 'em', 'strike', 'code', 'pre',
     'hr', 'br', 'div', 'span', 'table', 'thead', 'tbody', 'tr', 'th', 'td',
     'img',
   ],
-  allowedAttributes: {
-    a: ['href', 'name', 'target', 'rel'],
-    img: ['src', 'alt', 'title', 'width', 'height'],
-    '*': ['class'],
-  },
-  allowedSchemes: ['http', 'https', 'mailto'],
-  disallowedTagsMode: 'discard',
+  ALLOWED_ATTR: ['href', 'name', 'target', 'rel', 'src', 'alt', 'title', 'width', 'height', 'class'],
+  ALLOW_DATA_ATTR: false,
+  ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
 };
 
 export function renderMarkdown(markdown: string, options?: { allowHtml?: boolean }) {
@@ -51,9 +47,9 @@ export function renderMarkdown(markdown: string, options?: { allowHtml?: boolean
   if (allowHtml) {
     const htmlEnabled = markdownIt.set({ html: true }).render(markdown);
     markdownIt.set({ html: false });
-    return sanitizeHtml(htmlEnabled, HTML_WHITELIST_OPTIONS);
+    return DOMPurify.sanitize(htmlEnabled, HTML_WHITELIST_OPTIONS);
   }
 
   const html = markdownIt.render(markdown);
-  return sanitizeHtml(html, HTML_WHITELIST_OPTIONS);
+  return DOMPurify.sanitize(html, HTML_WHITELIST_OPTIONS);
 }

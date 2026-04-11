@@ -7,6 +7,41 @@ import { UPDATER_CONSTANTS } from '../constants/updater.constants.js';
 import { loggerService } from './logger.service.js';
 
 const logger = loggerService.createLogger('Electron:Settings Service');
+const LOG_AUTO_CLEAR_DAY_OPTIONS = new Set([0, 10, 20]);
+
+function normalizeLogLevel(logLevel) {
+  if (typeof logLevel !== 'string') {
+    return 'error';
+  }
+
+  const normalizedLevel = logLevel.toLowerCase();
+  const supportedLevels = new Set(['debug', 'info', 'warn', 'error']);
+
+  if (!supportedLevels.has(normalizedLevel)) {
+    return 'error';
+  }
+
+  return normalizedLevel;
+}
+
+function normalizeLogAutoClearDays(days) {
+  const normalizedDays = Number(days);
+
+  if (!Number.isFinite(normalizedDays)) {
+    return 0;
+  }
+
+  return LOG_AUTO_CLEAR_DAY_OPTIONS.has(normalizedDays) ? normalizedDays : 0;
+}
+
+function normalizeLoggingConfig(config) {
+  return {
+    ...config,
+    loggingEnabled: Boolean(config.loggingEnabled),
+    logLevel: normalizeLogLevel(config.logLevel),
+    logAutoClearDays: normalizeLogAutoClearDays(config.logAutoClearDays),
+  };
+}
 
 export const settingsService = {
   getSettingsPath() {
@@ -52,6 +87,7 @@ export const settingsService = {
       },
       loggingEnabled: false,
       logLevel: 'error',
+      logAutoClearDays: 10,
       noteSavePath: path.join(app.getPath(VFS_CONSTANTS.DOCUMENTS_FOLDER), VFS_CONSTANTS.CURRENT_WORKSPACE_NAME),
       autoCheckUpdates: true,
       updateCheckInterval: UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL,
@@ -69,12 +105,12 @@ export const settingsService = {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       const parsed = JSON.parse(content);
-      return { ...this.getDefaultConfig(), ...parsed };
+      return normalizeLoggingConfig({ ...this.getDefaultConfig(), ...parsed });
     } catch (error) {
       if (error.code !== 'ENOENT') {
         logger.error('Failed to load settings', { error: error.message });
       }
-      return this.getDefaultConfig();
+      return normalizeLoggingConfig(this.getDefaultConfig());
     }
   },
 
@@ -85,7 +121,7 @@ export const settingsService = {
     const filePath = this.getSettingsPath();
     try {
       await fs.mkdir(path.dirname(filePath), { recursive: true });
-      const nextConfig = { ...this.getDefaultConfig(), ...config };
+      const nextConfig = normalizeLoggingConfig({ ...this.getDefaultConfig(), ...config });
       await fs.writeFile(filePath, JSON.stringify(nextConfig, null, 2), 'utf-8');
       return nextConfig;
     } catch (error) {

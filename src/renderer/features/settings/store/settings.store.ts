@@ -55,6 +55,7 @@ export interface AppSettings {
   rag: RAGSettings;
   loggingEnabled: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
+  logAutoClearDays: number;
   noteSavePath: string;
   autoCheckUpdates: boolean;
   updateCheckInterval: number;
@@ -91,6 +92,7 @@ function createDefaultConfig(): AppSettings {
     rag: { ...DEFAULT_RAG_CONFIG },
     loggingEnabled: false,
     logLevel: 'error',
+    logAutoClearDays: 0,
     noteSavePath: '',
     autoCheckUpdates: true,
     updateCheckInterval: UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL,

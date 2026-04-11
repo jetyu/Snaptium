@@ -33,8 +33,7 @@
             : openNotebookMenu(entry.item)
           ">
         <button v-if="entry.kind === 'notebook'" class="workspace-row__chevron icon-wrapper"
-          :class="{ 'is-expanded': !collapsedIds.has(entry.id) }" @click.stop="toggleCollapse(entry.id)"
-          :aria-label="collapsedIds.has(entry.id) ? $t('expand') : $t('collapse')">
+          :class="{ 'is-expanded': !collapsedIds.has(entry.id) }" @click.stop="toggleCollapse(entry.id)">
           <Right v-if="entry.hasChildren" theme="outline" :size="14" />
         </button>
         <span v-else class="workspace-row__chevron workspace-row__chevron--placeholder" />

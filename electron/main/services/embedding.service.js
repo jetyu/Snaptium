@@ -64,7 +64,9 @@ export async function generateEmbeddings(texts, config) {
  */
 export async function generateEmbeddingSingle(text, config) {
   const embeddings = await generateEmbeddings([text], config);
-  logger.debug('Single Embedding generated', { embeddings });
+  logger.debug('Single embedding generated', {
+    vectorLength: Array.isArray(embeddings[0]) ? embeddings[0].length : 0,
+  });
   return embeddings[0];
 }
 

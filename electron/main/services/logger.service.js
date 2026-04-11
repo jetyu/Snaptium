@@ -3,11 +3,16 @@ import path from 'node:path';
 import { app, shell } from 'electron';
 import { formatTimestamp } from '../utils/formatTools.js';
 
+const LOG_AUTO_CLEAR_DAY_OPTIONS = new Set([0, 10, 20]);
+const DAY_IN_MS = 24 * 60 * 60 * 1000;
+
 class LoggerService {
   constructor() {
     this.logDir = path.join(app.getPath('userData'), 'logs');
     this.enabled = true;
-    this.level = 'info';
+    this.level = 'error';
+    this.cleanupDays = 0;
+    this.lastCleanupDateKey = '';
     this.levels = {
       'debug': 0,
       'info': 1,
@@ -15,6 +20,79 @@ class LoggerService {
       'error': 3
     };
     this.init();
+  }
+
+  normalizeLevel(level) {
+    if (typeof level !== 'string') {
+      return null;
+    }
+
+    const normalizedLevel = level.toLowerCase();
+    return Object.prototype.hasOwnProperty.call(this.levels, normalizedLevel)
+      ? normalizedLevel
+      : null;
+  }
+
+  normalizeConfiguredLevel(level) {
+    const normalizedLevel = this.normalizeLevel(level) ?? 'error';
+
+    return normalizedLevel;
+  }
+
+  normalizeCleanupDays(days) {
+    const normalizedDays = Number(days);
+
+    if (!Number.isFinite(normalizedDays)) {
+      return 0;
+    }
+
+    return LOG_AUTO_CLEAR_DAY_OPTIONS.has(normalizedDays) ? normalizedDays : 0;
+  }
+
+  getCleanupDateKey(date = new Date()) {
+    return date.toISOString().slice(0, 10);
+  }
+
+  cleanupExpiredLogs(force = false) {
+    const cleanupDays = this.normalizeCleanupDays(this.cleanupDays);
+    if (cleanupDays <= 0) {
+      return 0;
+    }
+
+    const todayKey = this.getCleanupDateKey();
+    if (!force && this.lastCleanupDateKey === todayKey) {
+      return 0;
+    }
+
+    this.lastCleanupDateKey = todayKey;
+    const expireBefore = Date.now() - (cleanupDays * DAY_IN_MS);
+    let deletedCount = 0;
+
+    try {
+      const entries = fs.readdirSync(this.logDir, { withFileTypes: true });
+
+      for (const entry of entries) {
+        if (!entry.isFile() || path.extname(entry.name).toLowerCase() !== '.log') {
+          continue;
+        }
+
+        const filePath = path.join(this.logDir, entry.name);
+
+        try {
+          const stats = fs.statSync(filePath);
+          if (stats.mtimeMs < expireBefore) {
+            fs.unlinkSync(filePath);
+            deletedCount += 1;
+          }
+        } catch (error) {
+          console.error(`Failed to evaluate log file for cleanup: ${entry.name}`, error);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to cleanup expired log files:', error);
+    }
+
+    return deletedCount;
   }
 
   init() {
@@ -28,8 +106,16 @@ class LoggerService {
       this.enabled = config.loggingEnabled;
     }
     if (config.logLevel !== undefined) {
-      this.level = config.logLevel.toLowerCase();
+      this.level = this.normalizeConfiguredLevel(config.logLevel);
     }
+    if (config.logAutoClearDays !== undefined) {
+      this.cleanupDays = this.normalizeCleanupDays(config.logAutoClearDays);
+      if (this.cleanupDays === 0) {
+        this.lastCleanupDateKey = '';
+      }
+    }
+
+    this.cleanupExpiredLogs(true);
   }
 
   getLogFilePath() {
@@ -69,24 +155,34 @@ class LoggerService {
   }
 
   log(level, source, message, context) {
+    this.cleanupExpiredLogs();
+
     if (!this.enabled) return;
 
-    const currentLevelNum = this.levels[level.toLowerCase()] ?? 1;
+    const normalizedLevel = this.normalizeLevel(level);
+    if (!normalizedLevel) {
+      return;
+    }
+
+    const currentLevelNum = this.levels[normalizedLevel];
     const minLevelNum = this.levels[this.level] ?? 1;
 
     if (currentLevelNum < minLevelNum) {
       return;
     }
 
-    const formatted = this.formatMessage(level, source, message, context);
+    const formatted = this.formatMessage(normalizedLevel, source, message, context);
 
     const consoleMsg = formatted.trim();
-    switch (level.toLowerCase()) {
+    switch (normalizedLevel) {
       case 'error':
         console.error(consoleMsg);
         break;
       case 'warn':
         console.warn(consoleMsg);
+        break;
+      case 'info':
+        console.info(consoleMsg);
         break;
       case 'debug':
         console.debug(consoleMsg);
