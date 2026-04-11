@@ -41,7 +41,7 @@ export function useRAGInitialization() {
     }
   };
 
-  const autoIndexAllNotes = async (reason: 'embedding-change' | 'auto-index' = 'auto-index') => {
+  const autoIndexAllNotes = async (reason: 'auto-index' = 'auto-index') => {
     try {
       ragInitLogger.info('Starting auto-indexing...');
 
@@ -141,7 +141,7 @@ export function useRAGInitialization() {
       }
 
       await initializeRAG({ skipAutoIndex: true });
-      await autoIndexAllNotes('embedding-change');
+      ragInitLogger.info('Embedding model changed. Old index not automatically rebuilt as per user preference.');
     }
   );
 

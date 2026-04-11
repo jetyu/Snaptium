@@ -187,6 +187,8 @@
   "button.rebuildingIndex": "正在重建...",
   "message.error.ragNotConfigured": "RAG未配置完整，请先配置嵌入模型",
   "message.error.ragIndexDimensionMismatch": "当前向量索引与嵌入模型维度不兼容，请重新重建索引后再检索",
+  "message.confirm.changeEmbeddingModel": "更改向量模型会导致已有的知识库索引失效，是否确认更换模型？",
+  "message.confirm.autoRebuildIndex": "索引数据已被清空。是否立即开始根据新模型全量重新构建索引？",
   "message.error.indexNotesNotFound": "没有找到可索引的笔记",
   "message.fail.rebuildIndexFailed": "重建索引失败：{error}",
   "menu.file": "文件",

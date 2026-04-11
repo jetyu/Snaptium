@@ -284,4 +284,11 @@ export const ragService = {
   async deleteNoteIndex(noteId: string): Promise<{ success: boolean; error?: string }> {
     return await electronApi.rag.deleteNoteIndex(noteId);
   },
+
+  /**
+   * Clear all index data from the vector store
+   */
+  async clearIndex(): Promise<{ success: boolean; error?: string }> {
+    return await electronApi.rag.clearIndex();
+  },
 };

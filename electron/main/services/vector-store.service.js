@@ -61,7 +61,7 @@ class VectorStoreService {
       logger.debug(`Adding ${chunks.length} chunks`);
 
       if (!this.table) {
-        this.table = await this.db.createTable(this.tableName, chunks);
+        this.table = await this.db.createTable(this.tableName, chunks, { mode: 'overwrite' });
         logger.debug(`Created new table: ${this.tableName}`);
       } else {
         await this.table.add(chunks);

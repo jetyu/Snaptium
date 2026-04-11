@@ -44,7 +44,7 @@ export interface IndexStatus {
   progress: number;
   lastIndexedAt: number | null;
   error: string | null;
-  rebuildReason: 'manual' | 'embedding-change' | 'auto-index' | null;
+  rebuildReason: 'manual' | 'auto-index' | null;
 }
 
 export const useRAGStore = defineStore('rag', () => {
@@ -199,6 +199,27 @@ export const useRAGStore = defineStore('rag', () => {
   };
 
   /**
+   * 清除所有索引数据
+   */
+  const clearIndex = async () => {
+    try {
+      const result = await ragService.clearIndex();
+      
+      if (result.success) {
+        indexStatus.value.totalChunks = 0;
+        indexStatus.value.indexedNotes = 0;
+        indexStatus.value.lastIndexedAt = null;
+        ragLogger.info('Cleared all index data');
+      } else {
+        throw new Error(result.error || 'Failed to clear index');
+      }
+    } catch (error) {
+      ragLogger.error(`Failed to clear index: ${error}`);
+      throw error;
+    }
+  };
+
+  /**
    * 清除搜索结果
    */
   const clearSearchResults = () => {
@@ -217,6 +238,7 @@ export const useRAGStore = defineStore('rag', () => {
     search,
     getStatus,
     deleteNoteIndex,
+    clearIndex,
     clearSearchResults,
   };
 });

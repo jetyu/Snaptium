@@ -11,10 +11,9 @@
     "skipLibCheck": true,
     "lib": ["ES2022", "DOM"],
     "types": ["vite/client", "node"],
-    "baseUrl": ".",
     "paths": {
-      "@renderer/*": ["src/renderer/*"],
-      "@assets/*": ["src/assets/*"]
+      "@renderer/*": ["./src/renderer/*"],
+      "@assets/*": ["./src/assets/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "electron/**/*.ts", "vitest.config.ts"]

@@ -28,7 +28,7 @@
         </div>
         <label class="select-shell">
           <select class="settings-select" :value="settingsStore.config.rag.embeddingSourceId"
-            @change="handleRAGUpdate('embeddingSourceId', ($event.target as HTMLSelectElement).value)"
+            @change="handleRAGUpdate('embeddingSourceId', ($event.target as HTMLSelectElement).value, $event)"
             :disabled="!settingsStore.config.rag.enabled">
             <option v-if="settingsStore.config.aiSources.length === 0" value="">{{
               t('option.aiSource.noSourceFound') }}</option>
@@ -161,23 +161,23 @@
           <p class="setting-description">{{ t('textRAGIndexStatus') }}</p>
         </div>
         <div class="index-status-container">
-           <div class="status-info">
-             <div class="status-item">
-               <span class="status-label">{{ t('labelRAGTotalChunks') }}:</span>
-               <span class="status-value">{{ indexStatus.totalChunks || 0 }}</span>
-             </div>
-             <div v-if="indexStatus.lastIndexedAt" class="status-item">
-               <span class="status-label">{{ t('labelRAGLastIndexed') }}:</span>
-               <span class="status-value">{{ formatDate(indexStatus.lastIndexedAt) }}</span>
-             </div>
-           </div>
+          <div class="status-info">
+            <div class="status-item">
+              <span class="status-label">{{ t('labelRAGTotalChunks') }}:</span>
+              <span class="status-value">{{ indexStatus.totalChunks || 0 }}</span>
+            </div>
+            <div v-if="indexStatus.lastIndexedAt" class="status-item">
+              <span class="status-label">{{ t('labelRAGLastIndexed') }}:</span>
+              <span class="status-value">{{ formatDate(indexStatus.lastIndexedAt) }}</span>
+            </div>
+          </div>
 
-           <button type="button" class="action-button" :disabled="isIndexing || !isConfigured"
-             @click="handleRebuildIndex">
-             <span v-if="isIndexing" class="spinner"></span>
-             <span>{{ rebuildButtonText }}</span>
-           </button>
-         </div>
+          <button type="button" class="action-button" :disabled="isIndexing || !isConfigured"
+            @click="handleRebuildIndex">
+            <span v-if="isIndexing" class="spinner"></span>
+            <span>{{ rebuildButtonText }}</span>
+          </button>
+        </div>
       </section>
     </div>
   </div>
@@ -190,12 +190,13 @@ import { useSettingsStore, type RAGSettings } from '../../store/settings.store';
 import { useRAGIndex, useRAGConfig } from '@renderer/features/rag';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { createLogger } from '@renderer/features/logger';
+import { ragService } from '@renderer/features/rag/services/rag.service';
 
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
 const workspaceStore = useWorkspaceStore();
-const { indexStatus, isIndexing, rebuildIndex, refreshStatus } = useRAGIndex();
+const { indexStatus, isIndexing, rebuildIndex, refreshStatus, clearIndex } = useRAGIndex();
 const { isConfigured } = useRAGConfig();
 const ragSettingsLogger = createLogger('RAGSettings');
 
@@ -209,7 +210,36 @@ const handleToggle = async (key: keyof RAGSettings) => {
   await settingsStore.updateRAGSetting(key, !settingsStore.config.rag[key]);
 };
 
-const handleRAGUpdate = async (key: keyof RAGSettings, value: any) => {
+const handleRAGUpdate = async (key: keyof RAGSettings, value: any, event?: Event) => {
+  if (key === 'embeddingSourceId') {
+    if (value === settingsStore.config.rag[key]) return;
+
+    const confirmed = window.confirm(t('message.confirm.changeEmbeddingModel'));
+    if (!confirmed) {
+      if (event && event.target) {
+        (event.target as HTMLSelectElement).value = settingsStore.config.rag[key];
+      }
+      return;
+    }
+
+    // Process change
+    await settingsStore.updateRAGSetting(key, value);
+
+    try {
+      await ragService.initialize();
+      await clearIndex();
+      await refreshStatus(); // Update ui immediately after clear
+
+      const shouldRebuild = window.confirm(t('message.confirm.autoRebuildIndex'));
+      if (shouldRebuild) {
+        handleRebuildIndex();
+      }
+    } catch (e) {
+      ragSettingsLogger.error(`Failed to handle clear index after model change: ${e}`);
+    }
+    return;
+  }
+
   await settingsStore.updateRAGSetting(key, value);
 };
 

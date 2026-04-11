@@ -49,7 +49,7 @@ export function useRAGIndex() {
    */
   const rebuildIndex = async (
     notes: Array<{ id: string; title: string; content: string }>,
-    reason: 'manual' | 'embedding-change' | 'auto-index' = 'manual'
+    reason: 'manual' | 'auto-index' = 'manual'
   ) => {
     if (!isEnabled.value || !isConfigured.value) {
       throw new Error('RAG is not enabled or configured');
@@ -86,6 +86,23 @@ export function useRAGIndex() {
   };
 
   /**
+   * 清除整库索引
+   */
+  const clearIndex = async () => {
+    if (!isEnabled.value || !isConfigured.value) {
+      ragIndexLogger.warn('RAG is not enabled or configured, skipping clear index');
+      return;
+    }
+
+    try {
+      await ragStore.clearIndex();
+    } catch (error) {
+      ragIndexLogger.error(`Failed to clear index: ${error}`);
+      throw error;
+    }
+  };
+
+  /**
    * 获取索引状态
    */
   const refreshStatus = async () => {
@@ -102,7 +119,7 @@ export function useRAGIndex() {
   onMounted(() => {
     if (isEnabled.value) {
       refreshStatus();
-      statusInterval = setInterval(refreshStatus, 30000); // 每30秒刷新一次
+      statusInterval = setInterval(refreshStatus, 30000);
     }
   });
 
@@ -122,6 +139,7 @@ export function useRAGIndex() {
     indexNote,
     rebuildIndex,
     deleteNoteIndex,
+    clearIndex,
     refreshStatus,
   };
 }
