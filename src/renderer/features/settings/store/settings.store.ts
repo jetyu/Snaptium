@@ -1,6 +1,14 @@
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { createLogger } from '@renderer/features/logger';
+import {
+  AI_WRITING_DEFAULTS,
+  type AiWritingScenario,
+  type AiWritingStyle,
+} from '@shared/ai.constants';
+import {
+  AI_ASSISTANT_DEFAULTS,
+} from '@renderer/features/ai/constants/ai.constants';
 import { DEFAULT_RAG_CONFIG } from '@renderer/features/rag/constants/rag.constants';
 import { UPDATER_CONSTANTS } from '@renderer/features/updater/constants/updater.constants';
 import { settingsService } from '../services/settings.service';
@@ -19,6 +27,8 @@ export interface AIAssistantSettings {
   model: string;
   typingDelay: number;
   minInputLength: number;
+  writingStyle: AiWritingStyle;
+  writingScenario: AiWritingScenario;
   systemPrompt: string;
 }
 
@@ -85,8 +95,10 @@ function createDefaultConfig(): AppSettings {
       enabled: false,
       sourceId: '',
       model: '',
-      typingDelay: 2000,
-      minInputLength: 10,
+      typingDelay: AI_ASSISTANT_DEFAULTS.TYPING_DELAY,
+      minInputLength: AI_ASSISTANT_DEFAULTS.MIN_INPUT_LENGTH,
+      writingStyle: AI_WRITING_DEFAULTS.STYLE,
+      writingScenario: AI_WRITING_DEFAULTS.SCENARIO,
       systemPrompt: '',
     },
     rag: { ...DEFAULT_RAG_CONFIG },

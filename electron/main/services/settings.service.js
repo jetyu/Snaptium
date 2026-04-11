@@ -2,6 +2,7 @@ import { app, dialog, BrowserWindow } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { $t } from '../utils/i18n.js';
+import { AI_WRITING_DEFAULTS } from '../../shared/ai.constants.js';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { UPDATER_CONSTANTS } from '../constants/updater.constants.js';
 import { loggerService } from './logger.service.js';
@@ -43,6 +44,21 @@ function normalizeLoggingConfig(config) {
   };
 }
 
+function mergeConfigWithDefaults(defaultConfig, incomingConfig = {}) {
+  return {
+    ...defaultConfig,
+    ...incomingConfig,
+    aiAssistant: {
+      ...defaultConfig.aiAssistant,
+      ...(incomingConfig.aiAssistant || {}),
+    },
+    rag: {
+      ...defaultConfig.rag,
+      ...(incomingConfig.rag || {}),
+    },
+  };
+}
+
 export const settingsService = {
   getSettingsPath() {
     return path.join(app.getPath(VFS_CONSTANTS.USER_DATA), VFS_CONSTANTS.PREFERENCES_FILE);
@@ -70,6 +86,8 @@ export const settingsService = {
         model: '',
         typingDelay: 2000,
         minInputLength: 10,
+        writingStyle: AI_WRITING_DEFAULTS.STYLE,
+        writingScenario: AI_WRITING_DEFAULTS.SCENARIO,
         systemPrompt: '',
       },
       rag: {
@@ -105,7 +123,7 @@ export const settingsService = {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       const parsed = JSON.parse(content);
-      return normalizeLoggingConfig({ ...this.getDefaultConfig(), ...parsed });
+      return normalizeLoggingConfig(mergeConfigWithDefaults(this.getDefaultConfig(), parsed));
     } catch (error) {
       if (error.code !== 'ENOENT') {
         logger.error('Failed to load settings', { error: error.message });
@@ -121,7 +139,7 @@ export const settingsService = {
     const filePath = this.getSettingsPath();
     try {
       await fs.mkdir(path.dirname(filePath), { recursive: true });
-      const nextConfig = normalizeLoggingConfig({ ...this.getDefaultConfig(), ...config });
+      const nextConfig = normalizeLoggingConfig(mergeConfigWithDefaults(this.getDefaultConfig(), config));
       await fs.writeFile(filePath, JSON.stringify(nextConfig, null, 2), 'utf-8');
       return nextConfig;
     } catch (error) {

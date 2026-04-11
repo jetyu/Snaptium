@@ -1,4 +1,5 @@
 import type { EditorView } from '@codemirror/view';
+import { AI_TEXT_OPERATION_PROMPTS } from '@shared/ai.constants';
 import { aiService } from '@renderer/features/ai/services/ai.service';
 import { createLogger } from '@renderer/features/logger';
 import {
@@ -29,23 +30,21 @@ export function useEditorContextMenu(options: UseEditorContextMenuOptions) {
     if (!view || !selectedText) return;
 
     try {
-      let promptKey = 'ai.prompt.default';
+      let systemPrompt = AI_TEXT_OPERATION_PROMPTS.DEFAULT;
       switch (operation) {
         case EDITOR_CONSTANTS.ACTIONS.AI_REWRITE:
-          promptKey = 'ai.prompt.rewrite';
+          systemPrompt = AI_TEXT_OPERATION_PROMPTS.REWRITE;
           break;
         case EDITOR_CONSTANTS.ACTIONS.AI_EXPAND:
-          promptKey = 'ai.prompt.expand';
+          systemPrompt = AI_TEXT_OPERATION_PROMPTS.EXPAND;
           break;
         case EDITOR_CONSTANTS.ACTIONS.AI_SIMPLIFY:
-          promptKey = 'ai.prompt.simplify';
+          systemPrompt = AI_TEXT_OPERATION_PROMPTS.SIMPLIFY;
           break;
         case EDITOR_CONSTANTS.ACTIONS.AI_SUMMARIZE:
-          promptKey = 'ai.prompt.summarize';
+          systemPrompt = AI_TEXT_OPERATION_PROMPTS.SUMMARIZE;
           break;
       }
-
-      const systemPrompt = options.t(promptKey);
 
       const result = await aiService.generate({
         systemPrompt,

@@ -1,5 +1,11 @@
 import { settingsService } from './settings.service.js';
 import { $t } from '../utils/i18n.js';
+import {
+  AI_WRITING_DEFAULTS,
+  buildAiAssistantSystemPrompt,
+  isValidAiWritingScenario,
+  isValidAiWritingStyle,
+} from '../../shared/ai.constants.js';
 
 function requireConfiguredSource(aiSources, sourceId, errorMessage) {
   if (!sourceId) {
@@ -20,6 +26,21 @@ function resolveModel(preferredModel, fallbackModel, errorMessage) {
     throw new Error(errorMessage);
   }
   return model;
+}
+
+function resolveAssistantSystemPrompt(aiAssistant) {
+  const legacySystemPrompt = (aiAssistant.systemPrompt || '').trim();
+  const hasWritingStyle = isValidAiWritingStyle(aiAssistant.writingStyle);
+  const hasWritingScenario = isValidAiWritingScenario(aiAssistant.writingScenario);
+
+  if (!hasWritingStyle && !hasWritingScenario && legacySystemPrompt) {
+    return legacySystemPrompt;
+  }
+
+  return buildAiAssistantSystemPrompt(
+    hasWritingStyle ? aiAssistant.writingStyle : AI_WRITING_DEFAULTS.STYLE,
+    hasWritingScenario ? aiAssistant.writingScenario : AI_WRITING_DEFAULTS.SCENARIO
+  );
 }
 
 export const aiConfigService = {
@@ -50,7 +71,7 @@ export const aiConfigService = {
         source.aiModel,
         $t('aiAssistant.error.noModelConfigured', 'No model configured')
       ),
-      systemPrompt: (aiAssistant.systemPrompt || '').trim() || $t('ai.prompt.autoComplete'),
+      systemPrompt: resolveAssistantSystemPrompt(aiAssistant),
     };
   },
 

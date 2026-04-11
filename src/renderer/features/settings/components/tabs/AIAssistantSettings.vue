@@ -40,6 +40,40 @@
         </label>
       </section>
       <div class="settings-row-grid">
+        <section class="setting-card">
+          <div class="setting-copy">
+            <p class="setting-label">{{ t('label.aiWritingStyle') }}</p>
+            <p class="setting-description">{{ t('text.aiWritingStyle') }}</p>
+          </div>
+          <label class="select-shell">
+            <select class="settings-select" :value="settingsStore.config.aiAssistant.writingStyle"
+              @change="handleAssistantUpdate('writingStyle', ($event.target as HTMLSelectElement).value)"
+              :disabled="!settingsStore.config.aiAssistant.enabled">
+              <option v-for="option in writingStyleOptions" :key="option.value" :value="option.value">
+                {{ t(option.labelKey) }}
+              </option>
+            </select>
+          </label>
+        </section>
+
+        <section class="setting-card">
+          <div class="setting-copy">
+            <p class="setting-label">{{ t('label.aiWritingScenario') }}</p>
+            <p class="setting-description">{{ t('text.aiWritingScenario') }}</p>
+          </div>
+          <label class="select-shell">
+            <select class="settings-select" :value="settingsStore.config.aiAssistant.writingScenario"
+              @change="handleAssistantUpdate('writingScenario', ($event.target as HTMLSelectElement).value)"
+              :disabled="!settingsStore.config.aiAssistant.enabled">
+              <option v-for="option in writingScenarioOptions" :key="option.value" :value="option.value">
+                {{ t(option.labelKey) }}
+              </option>
+            </select>
+          </label>
+        </section>
+      </div>
+
+      <div class="settings-row-grid">
         <!-- Input Delay -->
         <section class="setting-card">
           <div class="setting-copy">
@@ -68,28 +102,44 @@
           </div>
         </section>
       </div>
-
-
-      <!-- System Prompt -->
-      <section class="setting-card col-span-full vertical-layout">
-        <div class="setting-copy">
-          <p class="setting-label">{{ t('label.aiSystemPrompt') }}</p>
-          <p class="setting-description">{{ t('text.AISystemPrompt') }}</p>
-        </div>
-        <textarea class="settings-textarea" :value="settingsStore.config.aiAssistant.systemPrompt"
-          @input="handleAssistantUpdate('systemPrompt', ($event.target as HTMLTextAreaElement).value)"
-          :placeholder="t('ai.prompt.autoComplete')" :disabled="!settingsStore.config.aiAssistant.enabled"></textarea>
-      </section>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {
+  AI_WRITING_SCENARIO_OPTIONS,
+  AI_WRITING_STYLE_OPTIONS,
+} from '@renderer/features/ai/constants/ai.constants';
 import { useSettingsStore, type AIAssistantSettings } from '../../store/settings.store';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
+const writingStyleOptions = AI_WRITING_STYLE_OPTIONS;
+const writingScenarioOptions = AI_WRITING_SCENARIO_OPTIONS;
+
+const currentWritingStyleSummary = computed(() => {
+  const selectedOption = writingStyleOptions.find(
+    (option) => option.value === settingsStore.config.aiAssistant.writingStyle
+  ) ?? writingStyleOptions[0];
+
+  return t(selectedOption.summaryKey);
+});
+
+const currentWritingScenarioLabel = computed(() => {
+  const selectedOption = writingScenarioOptions.find(
+    (option) => option.value === settingsStore.config.aiAssistant.writingScenario
+  ) ?? writingScenarioOptions[0];
+
+  return t(selectedOption.labelKey);
+});
+
+const systemPromptPreview = computed(() => t('text.aiSystemPromptPreview', {
+  style: currentWritingStyleSummary.value,
+  scenario: currentWritingScenarioLabel.value,
+}));
 
 const handleToggle = async (key: keyof AIAssistantSettings) => {
   await settingsStore.updateAssistantSetting(key, !settingsStore.config.aiAssistant[key]);
@@ -124,5 +174,10 @@ const handleAssistantNumberUpdate = async (key: keyof AIAssistantSettings, event
 
 .settings-textarea {
   height: 200px;
+}
+
+.prompt-preview {
+  height: 72px;
+  resize: none;
 }
 </style>

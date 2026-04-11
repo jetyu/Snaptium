@@ -2,6 +2,72 @@
  * AI功能相关的常量配置
  */
 
+import {
+  AI_WRITING_SCENARIO,
+  AI_WRITING_STYLE,
+} from '@shared/ai.constants';
+
+export type { AiWritingScenario, AiWritingStyle } from '@shared/ai.constants';
+
+export const AI_WRITING_STYLE_OPTIONS = [
+  {
+    value: AI_WRITING_STYLE.CONCISE,
+    labelKey: 'option.aiWritingStyle.concise',
+    summaryKey: 'text.aiWritingStylePrompt.concise',
+  },
+  {
+    value: AI_WRITING_STYLE.RIGOROUS,
+    labelKey: 'option.aiWritingStyle.rigorous',
+    summaryKey: 'text.aiWritingStylePrompt.rigorous',
+  },
+  {
+    value: AI_WRITING_STYLE.PROFESSIONAL,
+    labelKey: 'option.aiWritingStyle.professional',
+    summaryKey: 'text.aiWritingStylePrompt.professional',
+  },
+  {
+    value: AI_WRITING_STYLE.ACCESSIBLE,
+    labelKey: 'option.aiWritingStyle.accessible',
+    summaryKey: 'text.aiWritingStylePrompt.accessible',
+  },
+  {
+    value: AI_WRITING_STYLE.VIVID,
+    labelKey: 'option.aiWritingStyle.vivid',
+    summaryKey: 'text.aiWritingStylePrompt.vivid',
+  },
+] as const;
+
+export const AI_WRITING_SCENARIO_OPTIONS = [
+  {
+    value: AI_WRITING_SCENARIO.GENERAL,
+    labelKey: 'option.aiWritingScenario.general',
+  },
+  {
+    value: AI_WRITING_SCENARIO.TECHNICAL_DOCUMENT,
+    labelKey: 'option.aiWritingScenario.technicalDocument',
+  },
+  {
+    value: AI_WRITING_SCENARIO.PRODUCT_DOCUMENT,
+    labelKey: 'option.aiWritingScenario.productDocument',
+  },
+  {
+    value: AI_WRITING_SCENARIO.SUMMARY_REPORT,
+    labelKey: 'option.aiWritingScenario.summaryReport',
+  },
+  {
+    value: AI_WRITING_SCENARIO.DAILY_RECORD,
+    labelKey: 'option.aiWritingScenario.dailyRecord',
+  },
+  {
+    value: AI_WRITING_SCENARIO.CONTENT_CREATION,
+    labelKey: 'option.aiWritingScenario.contentCreation',
+  },
+  {
+    value: AI_WRITING_SCENARIO.OFFICIAL_WRITING,
+    labelKey: 'option.aiWritingScenario.officialWriting',
+  },
+] as const;
+
 /**
  * AI助手默认配置
  */
@@ -46,13 +112,13 @@ export const AI_FEATURES = {
   /** 写作助手 */
   WRITING_ASSISTANT: 'writing-assistant',
   
-  /** AI聊天（未来） */
+  /** AI聊天 */
   CHAT: 'chat',
   
-  /** AI摘要（未来） */
+  /** AI摘要 */
   SUMMARY: 'summary',
   
-  /** AI翻译（未来） */
+  /** AI翻译 */
   TRANSLATION: 'translation',
 } as const;
 

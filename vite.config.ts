@@ -16,6 +16,7 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      '@shared': path.resolve(__dirname, 'electron/shared'),
       '@renderer': path.resolve(__dirname, 'src/renderer'),
       '@assets': path.resolve(__dirname, 'electron/assets'),
     },
