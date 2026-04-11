@@ -136,6 +136,21 @@ export const settingsService = {
     return result.filePaths[0];
   },
 
+  async confirmEmbeddingSourceChange() {
+    const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+    const { response } = await dialog.showMessageBox(focusedWindow, {
+      type: 'warning',
+      buttons: [$t('dialog.cancel'), $t('button.changeAndRebuildIndex')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      message: $t('message.confirm.changeEmbeddingModel'),
+    });
+
+    return response === 1;
+  },
+
   /**
    * Export settings to a JSON file
    */

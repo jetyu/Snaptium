@@ -187,6 +187,7 @@
 import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore, type RAGSettings } from '../../store/settings.store';
+import { settingsService } from '../../services/settings.service';
 import { useRAGIndex, useRAGConfig } from '@renderer/features/rag';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { createLogger } from '@renderer/features/logger';
@@ -210,32 +211,44 @@ const handleToggle = async (key: keyof RAGSettings) => {
   await settingsStore.updateRAGSetting(key, !settingsStore.config.rag[key]);
 };
 
+const revertSelectValue = (key: keyof RAGSettings, event?: Event) => {
+  if (event?.target) {
+    (event.target as HTMLSelectElement).value = String(settingsStore.config.rag[key] ?? '');
+  }
+};
+
+const getNotesForIndexing = () => workspaceStore.notes.map((node) => ({
+  id: node.id,
+  title: node.title,
+  content: node.content,
+}));
+
 const handleRAGUpdate = async (key: keyof RAGSettings, value: any, event?: Event) => {
   if (key === 'embeddingSourceId') {
     if (value === settingsStore.config.rag[key]) return;
 
-    const confirmed = window.confirm(t('message.confirm.changeEmbeddingModel'));
+    const confirmed = await settingsService.confirmEmbeddingSourceChange();
     if (!confirmed) {
-      if (event && event.target) {
-        (event.target as HTMLSelectElement).value = settingsStore.config.rag[key];
-      }
+      revertSelectValue(key, event);
       return;
     }
 
-    // Process change
     await settingsStore.updateRAGSetting(key, value);
 
     try {
       await ragService.initialize();
-      await clearIndex();
-      await refreshStatus(); // Update ui immediately after clear
 
-      const shouldRebuild = window.confirm(t('message.confirm.autoRebuildIndex'));
-      if (shouldRebuild) {
-        handleRebuildIndex();
+      const notes = getNotesForIndexing();
+      if (notes.length === 0) {
+        await clearIndex();
+      } else {
+        await rebuildIndex(notes);
       }
+
+      await refreshStatus();
     } catch (e) {
       ragSettingsLogger.error(`Failed to handle clear index after model change: ${e}`);
+      revertSelectValue(key, event);
     }
     return;
   }
@@ -256,11 +269,7 @@ const handleRebuildIndex = async () => {
   }
 
   try {
-    const notes = workspaceStore.notes.map((node) => ({
-      id: node.id,
-      title: node.title,
-      content: node.content,
-    }));
+    const notes = getNotesForIndexing();
 
     if (notes.length === 0) {
       ragSettingsLogger.error(t('message.error.indexNotesNotFound'));

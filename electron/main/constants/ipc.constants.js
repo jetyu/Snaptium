@@ -29,6 +29,7 @@ export const IPC_CHANNELS = {
   SAVE_FILE: 'editor:save-file',
   SEARCH_NOTES: 'search:notes',
   SETTINGS_EXPORT: 'settings:export',
+  SETTINGS_CONFIRM_EMBEDDING_SOURCE_CHANGE: 'settings:confirm-embedding-source-change',
   SETTINGS_IMPORT: 'settings:import',
   SETTINGS_LOAD: 'settings:load',
   SETTINGS_RESET: 'settings:reset',

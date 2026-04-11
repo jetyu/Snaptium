@@ -43,6 +43,14 @@ export function registerSettingsIpcHandlers() {
   });
 
   /**
+   * Confirm embedding source change using the native Electron dialog
+   */
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_EMBEDDING_SOURCE_CHANGE, async () => {
+    logger.debug('Settings confirm embedding source change');
+    return await settingsService.confirmEmbeddingSourceChange();
+  });
+
+  /**
    * Handle exporting settings
    */
   ipcMain.handle(IPC_CHANNELS.SETTINGS_EXPORT, async () => {

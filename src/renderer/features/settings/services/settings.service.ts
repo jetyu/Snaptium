@@ -33,6 +33,9 @@ export const settingsService = {
   pickDirectory: (): Promise<string | null> =>
     electronApi.settings.pickDirectory(),
 
+  confirmEmbeddingSourceChange: (): Promise<boolean> =>
+    electronApi.settings.confirmEmbeddingSourceChange(),
+
   exportConfig: (): Promise<boolean> =>
     electronApi.settings.exportConfig(),
 

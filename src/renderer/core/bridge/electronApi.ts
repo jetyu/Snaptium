@@ -214,6 +214,7 @@ export const electronApi = {
     setStartup: (enabled: boolean) => electronApi.settings.getApi().setStartup(enabled),
     switchLanguage: (locale: string) => electronApi.settings.getApi().switchLanguage(locale),
     pickDirectory: () => electronApi.settings.getApi().pickDirectory(),
+    confirmEmbeddingSourceChange: () => electronApi.settings.getApi().confirmEmbeddingSourceChange(),
     exportConfig: () => electronApi.settings.getApi().exportConfig(),
     importConfig: () => electronApi.settings.getApi().importConfig(),
     resetConfig: () => electronApi.settings.getApi().resetConfig(),
