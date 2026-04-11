@@ -10,6 +10,12 @@ import { loggerService } from './logger.service.js';
 const logger = loggerService.createLogger('Electron:Settings Service');
 const LOG_AUTO_CLEAR_DAY_OPTIONS = new Set([0, 10, 20]);
 
+function interpolateMessage(template, replacements = {}) {
+  return Object.entries(replacements).reduce((message, [key, value]) => {
+    return message.replaceAll(`{${key}}`, String(value));
+  }, template);
+}
+
 function normalizeLogLevel(logLevel) {
   if (typeof logLevel !== 'string') {
     return 'error';
@@ -201,6 +207,22 @@ export const settingsService = {
       cancelId: 0,
       noLink: true,
       message: $t('message.confirm.changeEmbeddingModel'),
+    });
+
+    return response === 1;
+  },
+
+  async confirmDeleteAiSource(name) {
+    const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+    const { response } = await dialog.showMessageBox(focusedWindow, {
+      type: 'warning',
+      buttons: [$t('dialog.cancel'), $t('trash.delete')],
+      defaultId: 0,
+      cancelId: 0,
+      noLink: true,
+      title: $t('common.delete'),
+      message: interpolateMessage($t('dialog.deleteConfirm'), { name }),
     });
 
     return response === 1;

@@ -69,6 +69,7 @@ const electronAPI = Object.freeze({
     setStartup: (enabled) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
     pickDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_PICK_DIRECTORY),
     confirmEmbeddingSourceChange: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_EMBEDDING_SOURCE_CHANGE),
+    confirmDeleteAiSource: (name) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_DELETE_AI_SOURCE, name),
     switchLanguage: (locale) => ipcRenderer.send(IPC_CHANNELS.SETTINGS_SWITCH_LANGUAGE, locale),
     exportConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_EXPORT),
     importConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_IMPORT),

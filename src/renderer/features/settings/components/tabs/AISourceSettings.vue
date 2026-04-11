@@ -2,8 +2,9 @@
 import { ref, computed, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../store/settings.store';
+import { settingsService } from '../../services/settings.service';
 import { createLogger } from '../../../logger';
-import { Plus, Light, Delete, Attention } from '@icon-park/vue-next';
+import { Plus, Light, Delete, Attention, Edit } from '@icon-park/vue-next';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
@@ -15,7 +16,9 @@ const addError = ref<string | null>(null);
 const isTesting = ref(false);
 const testSuccess = ref(false);
 const testError = ref<string | null>(null);
-const deleteConfirmId = ref<string | null>(null);
+const editingSourceId = ref<string | null>(null);
+
+const isEditMode = computed(() => !!editingSourceId.value);
 
 const newSource = reactive({
   name: '',
@@ -46,32 +49,60 @@ const isFormValid = computed(() => canTest.value);
 const handleAddSource = async () => {
   if (!isFormValid.value || isAdding.value) return;
 
-  aisLogger.info(`Adding AI source after successful test: ${newSource.name}`);
   isAdding.value = true;
   addError.value = null;
 
   try {
-    const result = await settingsStore.addAiSource({
+    const payload = {
       name: newSource.name,
       endpoint: newSource.endpoint,
       apiKey: newSource.apiKey,
       aiModel: newSource.aiModel,
-    });
-    aisLogger.info(`AI Source added: ${result.name} (ID: ${result.id})`);
+    };
+
+    if (isEditMode.value && editingSourceId.value) {
+      aisLogger.info(`Updating AI source: ${newSource.name} (ID: ${editingSourceId.value})`);
+      await settingsStore.updateAiSource(editingSourceId.value, payload);
+    } else {
+      aisLogger.info(`Adding AI source after successful test: ${newSource.name}`);
+      const result = await settingsStore.addAiSource(payload);
+      aisLogger.info(`AI Source added: ${result.name} (ID: ${result.id})`);
+    }
 
     // Success: Reset and Hide
-    newSource.name = '';
-    newSource.endpoint = '';
-    newSource.apiKey = '';
-    newSource.aiModel = '';
-    testSuccess.value = false;
+    resetForm();
     showAddForm.value = false;
   } catch (error) {
-    aisLogger.error(`Failed to add AI source: ${error}`);
+    aisLogger.error(`Failed to handle AI source: ${error}`);
     addError.value = (error as Error).message;
   } finally {
     isAdding.value = false;
   }
+};
+
+const handleEditSource = (source: any) => {
+  editingSourceId.value = source.id;
+  newSource.name = source.name;
+  newSource.endpoint = source.endpoint;
+  newSource.apiKey = source.apiKey;
+  newSource.aiModel = source.aiModel;
+  showAddForm.value = true;
+};
+
+const resetForm = () => {
+  newSource.name = '';
+  newSource.endpoint = '';
+  newSource.apiKey = '';
+  newSource.aiModel = '';
+  editingSourceId.value = null;
+  testSuccess.value = false;
+  testError.value = null;
+  addError.value = null;
+};
+
+const handleCancelAdd = () => {
+  resetForm();
+  showAddForm.value = false;
 };
 
 const handleTestNewSource = async () => {
@@ -104,17 +135,12 @@ const handleTestNewSource = async () => {
   }
 };
 
-const removeSource = async (id: string) => {
-  if (deleteConfirmId.value === id) {
-    await settingsStore.removeAiSource(id);
-    deleteConfirmId.value = null;
-  } else {
-    deleteConfirmId.value = id;
+const removeSource = async (source: any) => {
+  const confirmed = await settingsService.confirmDeleteAiSource(source.name);
+  if (confirmed) {
+    await settingsStore.removeAiSource(source.id);
+    aisLogger.info(`AI Source removed: ${source.id}`);
   }
-};
-
-const cancelDelete = () => {
-  deleteConfirmId.value = null;
 };
 </script>
 
@@ -132,13 +158,11 @@ const cancelDelete = () => {
           <div class="source-info">
             <div class="source-header">
               <h4 class="source-title">{{ source.name }}</h4>
-              <div class="delete-actions">
-                <template v-if="deleteConfirmId === source.id">
-                  <span class="delete-confirm-text">{{ t('dialogue.confirmDeleteSource') }}</span>
-                  <button class="delete-btn-confirm" @click="removeSource(source.id)">Y</button>
-                  <button class="delete-btn-cancel" @click="cancelDelete">N</button>
-                </template>
-                <button v-else class="delete-btn" @click="removeSource(source.id)" :title="t('trash.delete')">
+              <div class="card-actions">
+                <button class="action-btn" @click="handleEditSource(source)" :title="t('common.editor')">
+                  <Edit theme="outline" size="14" />
+                </button>
+                <button class="action-btn delete" @click="removeSource(source)" :title="t('trash.delete')">
                   <Delete theme="outline" size="14" />
                 </button>
               </div>
@@ -216,7 +240,7 @@ const cancelDelete = () => {
             <button class="action-button secondary" @click="handleTestNewSource" :disabled="!canTest || isTesting">
               {{ t('button.testConnection') }}
             </button>
-            <button class="action-button secondary" @click="showAddForm = false">
+            <button class="action-button secondary" @click="handleCancelAdd">
               {{ t('dialog.cancel') }}
             </button>
             <button class="action-button primary" @click="handleAddSource" :disabled="!isFormValid || isAdding">
@@ -427,20 +451,40 @@ const cancelDelete = () => {
   margin-bottom: 8px;
 }
 
-.delete-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.4rem;
-  color: #999;
-  cursor: pointer;
-  line-height: 1;
-  padding: 0 5px;
-  border-radius: 4px;
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.delete-btn:hover {
+.action-btn {
+  background: transparent;
+  border: none;
+  font-size: 1.2rem;
+  color: #94a3b8;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  color: var(--primary-color);
+  background: rgba(74, 144, 226, 0.1);
+}
+
+.action-btn.delete:hover {
   color: #e74c3c;
   background: rgba(231, 76, 60, 0.1);
+}
+
+.delete-btn-cancel,
+.delete-btn-confirm {
+  font-size: 0.82rem;
 }
 
 .source-details {
@@ -498,22 +542,6 @@ const cancelDelete = () => {
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
-}
-
-.delete-actions {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.delete-confirm-text {
-  font-size: 0.82rem;
-  color: #e74c3c;
-}
-
-.delete-btn-cancel,
-.delete-btn-confirm {
-  font-size: 0.82rem;
 }
 
 .add-error-text {

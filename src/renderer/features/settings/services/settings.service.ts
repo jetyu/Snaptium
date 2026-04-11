@@ -138,6 +138,10 @@ export const settingsService = {
     return await electronApi.settings.confirmEmbeddingSourceChange();
   },
 
+  async confirmDeleteAiSource(name: string): Promise<boolean> {
+    return await electronApi.settings.confirmDeleteAiSource(name);
+  },
+
   async exportConfig(): Promise<boolean> {
     return await electronApi.settings.exportConfig();
   },

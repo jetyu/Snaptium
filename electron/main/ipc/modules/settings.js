@@ -51,6 +51,14 @@ export function registerSettingsIpcHandlers() {
   });
 
   /**
+   * Confirm AI source deletion using the native Electron dialog
+   */
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_DELETE_AI_SOURCE, async (_event, name) => {
+    logger.debug('Settings confirm AI source deletion');
+    return await settingsService.confirmDeleteAiSource(name);
+  });
+
+  /**
    * Handle exporting settings
    */
   ipcMain.handle(IPC_CHANNELS.SETTINGS_EXPORT, async () => {

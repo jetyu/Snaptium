@@ -162,6 +162,7 @@ declare global {
         setStartup: (enabled: boolean) => Promise<{ enabled: boolean; supported: boolean }>;
         pickDirectory: () => Promise<string | null>;
         confirmEmbeddingSourceChange: () => Promise<boolean>;
+        confirmDeleteAiSource: (name: string) => Promise<boolean>;
         switchLanguage: (locale: string) => void;
         exportConfig: () => Promise<boolean>;
         importConfig: () => Promise<boolean>;
