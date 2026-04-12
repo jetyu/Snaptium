@@ -19,7 +19,7 @@ class VectorStoreService {
    */
   async initialize(workspaceRoot) {
     try {
-      const dbPath = path.join(workspaceRoot, 'Database');
+      const dbPath = path.join(workspaceRoot, '.lancedb');
 
       await fs.mkdir(dbPath, { recursive: true });
 

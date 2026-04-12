@@ -25,6 +25,8 @@
     "dist": "npm run build && electron-builder"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1029.0",
+    "@aws-sdk/lib-storage": "^3.1029.0",
     "@codemirror/autocomplete": "^6.20.1",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-markdown": "^6.3.4",
@@ -41,6 +43,7 @@
     "pinia": "^2.2.4",
     "vue": "^3.5.22",
     "vue-i18n": "^11.1.1",
+    "webdav": "^5.9.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {

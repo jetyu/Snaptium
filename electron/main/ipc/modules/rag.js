@@ -11,7 +11,6 @@ import { remoteAiService } from '../../services/remote-ai.service.js';
 import { aiConfigService } from '../../services/ai-config.service.js';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
-import { $t } from '../../utils/i18n.js';
 
 const logger = loggerService.createLogger('Main:RAG IPC');
 

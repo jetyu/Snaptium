@@ -32,7 +32,7 @@
             @change="handleAssistantUpdate('sourceId', ($event.target as HTMLSelectElement).value)"
             :disabled="!settingsStore.config.aiAssistant.enabled">
             <option v-if="settingsStore.config.aiSources.length === 0" value="" disabled>{{
-              t('option.aiSource.noSourceFound') }}</option>
+              t('option.default.selectOption') }}</option>
             <option v-for="source in settingsStore.config.aiSources" :key="source.id" :value="source.id">
               {{ source.name }}
             </option>
@@ -107,7 +107,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   AI_WRITING_SCENARIO_OPTIONS,
@@ -119,27 +118,6 @@ const { t } = useI18n();
 const settingsStore = useSettingsStore();
 const writingStyleOptions = AI_WRITING_STYLE_OPTIONS;
 const writingScenarioOptions = AI_WRITING_SCENARIO_OPTIONS;
-
-const currentWritingStyleSummary = computed(() => {
-  const selectedOption = writingStyleOptions.find(
-    (option) => option.value === settingsStore.config.aiAssistant.writingStyle
-  ) ?? writingStyleOptions[0];
-
-  return t(selectedOption.summaryKey);
-});
-
-const currentWritingScenarioLabel = computed(() => {
-  const selectedOption = writingScenarioOptions.find(
-    (option) => option.value === settingsStore.config.aiAssistant.writingScenario
-  ) ?? writingScenarioOptions[0];
-
-  return t(selectedOption.labelKey);
-});
-
-const systemPromptPreview = computed(() => t('text.aiSystemPromptPreview', {
-  style: currentWritingStyleSummary.value,
-  scenario: currentWritingScenarioLabel.value,
-}));
 
 const handleToggle = async (key: keyof AIAssistantSettings) => {
   await settingsStore.updateAssistantSetting(key, !settingsStore.config.aiAssistant[key]);

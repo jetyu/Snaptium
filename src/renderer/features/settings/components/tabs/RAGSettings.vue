@@ -31,7 +31,7 @@
             @change="handleRAGUpdate('embeddingSourceId', ($event.target as HTMLSelectElement).value, $event)"
             :disabled="!settingsStore.config.rag.enabled">
             <option v-if="settingsStore.config.aiSources.length === 0" value="">{{
-              t('option.aiSource.noSourceFound') }}</option>
+              t('option.default.selectOption') }}</option>
             <option v-for="source in settingsStore.config.aiSources" :key="source.id" :value="source.id">
               {{ source.name }}
             </option>
