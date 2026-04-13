@@ -30,6 +30,47 @@ export interface AiSourceTestResult {
   message?: string;
 }
 
+export interface SyncSummary {
+  uploaded: number;
+  downloaded: number;
+  deletedLocal: number;
+  deletedRemote: number;
+  merged: number;
+  conflicts: number;
+}
+
+export interface SyncErrorInfo {
+  code: string;
+  message: string;
+  at?: number;
+}
+
+export interface SyncTestConnectionResult {
+  success: boolean;
+  code?: string;
+  message?: string;
+}
+
+export interface SyncRunPayload {
+  config: Record<string, unknown>;
+  trigger: 'manual' | 'timer' | 'save';
+}
+
+export interface SyncRunResult {
+  success: boolean;
+  syncedAt?: number;
+  summary?: SyncSummary;
+  recoveredPendingSession?: boolean;
+}
+
+export interface SyncStatusResult {
+  success: boolean;
+  lastSyncedAt: number | null;
+  lastSummary: SyncSummary | null;
+  lastError: SyncErrorInfo | null;
+  recoveredPendingSession: boolean;
+}
+
 export interface AiChatMessage {
   role: 'system' | 'user' | 'assistant';
   content: string;
@@ -239,6 +280,24 @@ export const electronApi = {
       return api;
     },
     testConnection: (config: AiSourceConfig) => electronApi.aiSource.getApi().testConnection(config),
+  },
+
+  sync: {
+    isAvailable: (): boolean => !!window.electronAPI?.sync,
+    getApi: () => {
+      const api = ensureElectronApi().sync;
+      if (!api) throw new Error('Sync bridge is unavailable');
+      return api;
+    },
+    testConnection: (config: Record<string, unknown>): Promise<SyncTestConnectionResult> => {
+      return electronApi.sync.getApi().testConnection(config);
+    },
+    run: (payload: SyncRunPayload): Promise<SyncRunResult> => {
+      return electronApi.sync.getApi().run(payload);
+    },
+    getStatus: (): Promise<SyncStatusResult> => {
+      return electronApi.sync.getApi().getStatus();
+    },
   },
 
   aiChat: {

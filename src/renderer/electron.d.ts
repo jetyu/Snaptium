@@ -68,6 +68,27 @@ interface AiCompleteResult {
   message?: string;
 }
 
+interface SyncSummary {
+  uploaded: number;
+  downloaded: number;
+  deletedLocal: number;
+  deletedRemote: number;
+  merged: number;
+  conflicts: number;
+}
+
+interface SyncErrorInfo {
+  code: string;
+  message: string;
+  at?: number;
+}
+
+interface SyncTestConnectionResult {
+  success: boolean;
+  code?: string;
+  message?: string;
+}
+
 interface SearchMatch {
   line: number;
   column: number;
@@ -171,6 +192,26 @@ declare global {
 
       aiSource?: {
         testConnection: (config: AiSourceConfig) => Promise<{ success: boolean; message?: string }>;
+      };
+
+      sync?: {
+        testConnection: (config: Record<string, unknown>) => Promise<SyncTestConnectionResult>;
+        run: (payload: {
+          config: Record<string, unknown>;
+          trigger: 'manual' | 'timer' | 'save';
+        }) => Promise<{
+          success: boolean;
+          syncedAt?: number;
+          summary?: SyncSummary;
+          recoveredPendingSession?: boolean;
+        }>;
+        getStatus: () => Promise<{
+          success: boolean;
+          lastSyncedAt: number | null;
+          lastSummary: SyncSummary | null;
+          lastError: SyncErrorInfo | null;
+          recoveredPendingSession: boolean;
+        }>;
       };
 
       aiAssistant?: {

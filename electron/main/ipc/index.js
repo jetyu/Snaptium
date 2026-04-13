@@ -10,6 +10,7 @@ import { registerSearchIpcHandlers } from './modules/search.js';
 import { registerShortcutsHandlers } from './modules/shortcuts.js';
 import { registerRAGHandlers } from './modules/rag.js';
 import { registerAIChatHandlers } from './modules/ai-chat.js';
+import { registerSyncHandlers } from './modules/sync.js';
 import { registerUpdaterHandlers } from './modules/updater.js';
 
 export function registerIpcHandlers(mainWindow) {
@@ -25,5 +26,6 @@ export function registerIpcHandlers(mainWindow) {
   registerShortcutsHandlers();
   registerRAGHandlers();
   registerAIChatHandlers();
+  registerSyncHandlers();
   registerUpdaterHandlers();
 }

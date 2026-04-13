@@ -10,6 +10,7 @@ import {
   AI_ASSISTANT_DEFAULTS,
 } from '@renderer/features/ai/constants/ai.constants';
 import { DEFAULT_RAG_CONFIG } from '@renderer/features/rag/constants/rag.constants';
+import { DEFAULT_SYNC_SETTINGS, type SyncProvider } from '@shared/sync.constants';
 import { UPDATER_CONSTANTS } from '@renderer/features/updater/constants/updater.constants';
 import { settingsService } from '../services/settings.service';
 
@@ -47,6 +48,32 @@ export interface RAGSettings {
   lastIndexedAt: number | null;
 }
 
+export interface WebDavSyncSettings {
+  url: string;
+  username: string;
+  password: string;
+}
+
+export interface OssS3SyncSettings {
+  endpoint: string;
+  region: string;
+  bucket: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  forcePathStyle: boolean;
+}
+
+export interface SyncSettings {
+  enabled: boolean;
+  provider: SyncProvider;
+  intervalMinutes: number;
+  autoSyncOnSave: boolean;
+  remotePath: string;
+  webdav: WebDavSyncSettings;
+  ossS3: OssS3SyncSettings;
+  lastSyncedAt: number | null;
+}
+
 export interface AppSettings {
   language: string;
   autoStartup: boolean;
@@ -64,6 +91,7 @@ export interface AppSettings {
   aiSources: AISource[];
   aiAssistant: AIAssistantSettings;
   rag: RAGSettings;
+  sync: SyncSettings;
   loggingEnabled: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
   logAutoClearDays: number;
@@ -74,6 +102,14 @@ export interface AppSettings {
   trashAutoClearDays: number;
   snapshotInterval: number;
   // ... future properties
+}
+
+function createDefaultSyncConfig(): SyncSettings {
+  return {
+    ...DEFAULT_SYNC_SETTINGS,
+    webdav: { ...DEFAULT_SYNC_SETTINGS.webdav },
+    ossS3: { ...DEFAULT_SYNC_SETTINGS.ossS3 },
+  };
 }
 
 function createDefaultConfig(): AppSettings {
@@ -103,6 +139,7 @@ function createDefaultConfig(): AppSettings {
       systemPrompt: '',
     },
     rag: { ...DEFAULT_RAG_CONFIG },
+    sync: createDefaultSyncConfig(),
     loggingEnabled: false,
     logLevel: 'error',
     logAutoClearDays: 0,
@@ -139,7 +176,30 @@ export const useSettingsStore = defineStore('settings', () => {
    * Save settings to persistent storage
    */
   const saveSettings = async (newConfig: Partial<AppSettings>) => {
-    config.value = { ...config.value, ...newConfig };
+    config.value = {
+      ...config.value,
+      ...newConfig,
+      aiAssistant: {
+        ...config.value.aiAssistant,
+        ...(newConfig.aiAssistant ?? {}),
+      },
+      rag: {
+        ...config.value.rag,
+        ...(newConfig.rag ?? {}),
+      },
+      sync: {
+        ...config.value.sync,
+        ...(newConfig.sync ?? {}),
+        webdav: {
+          ...config.value.sync.webdav,
+          ...(newConfig.sync?.webdav ?? {}),
+        },
+        ossS3: {
+          ...config.value.sync.ossS3,
+          ...(newConfig.sync?.ossS3 ?? {}),
+        },
+      },
+    };
     try {
       config.value = await settingsService.saveConfig(config.value);
     } catch (e) {
@@ -228,6 +288,26 @@ export const useSettingsStore = defineStore('settings', () => {
       }
     }
 
+    await saveSettings({});
+  };
+
+  const updateSyncSetting = async <K extends keyof SyncSettings>(
+    key: K,
+    value: SyncSettings[K]
+  ) => {
+    config.value.sync[key] = value;
+    await saveSettings({});
+  };
+
+  const updateSyncProviderSetting = async <
+    Provider extends keyof Pick<SyncSettings, 'webdav' | 'ossS3'>,
+    Key extends keyof SyncSettings[Provider]
+  >(
+    provider: Provider,
+    key: Key,
+    value: SyncSettings[Provider][Key]
+  ) => {
+    config.value.sync[provider][key] = value;
     await saveSettings({});
   };
 
@@ -338,6 +418,8 @@ export const useSettingsStore = defineStore('settings', () => {
     updateSetting,
     updateAssistantSetting,
     updateRAGSetting,
+    updateSyncSetting,
+    updateSyncProviderSetting,
     addAiSource,
     removeAiSource,
     updateAiSource,

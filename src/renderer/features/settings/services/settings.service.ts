@@ -34,6 +34,11 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
       aiSources: normalizeAiSources(baseConfig.aiSources),
       aiAssistant: { ...baseConfig.aiAssistant },
       rag: { ...baseConfig.rag },
+      sync: {
+        ...baseConfig.sync,
+        webdav: { ...baseConfig.sync.webdav },
+        ossS3: { ...baseConfig.sync.ossS3 },
+      },
     };
   }
 
@@ -48,6 +53,18 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
     rag: {
       ...baseConfig.rag,
       ...(incomingConfig.rag ?? {}),
+    },
+    sync: {
+      ...baseConfig.sync,
+      ...(incomingConfig.sync ?? {}),
+      webdav: {
+        ...baseConfig.sync.webdav,
+        ...(incomingConfig.sync?.webdav ?? {}),
+      },
+      ossS3: {
+        ...baseConfig.sync.ossS3,
+        ...(incomingConfig.sync?.ossS3 ?? {}),
+      },
     },
   };
 }

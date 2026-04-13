@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { onMounted } from 'vue';
 import MainLayout from './MainLayout.vue';
-import { SettingsDialog,useSettingsStore } from '@renderer/features/settings';
+import { SettingsDialog, useSettingsStore } from '@renderer/features/settings';
 import { AboutDialog } from '@renderer/features/about';
 import { UpdateDialog } from '@renderer/features/updater';
 import { TrashDialog } from '@renderer/features/trash';
@@ -23,11 +23,13 @@ import { useCommandRegistration } from '@renderer/features/shortcuts/composables
 import { useRAGInitialization } from '@renderer/features/rag';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { HistoryDialog } from '@renderer/features/workspace';
+import { useSyncLifecycle } from '@renderer/features/sync';
 
 const settingsStore = useSettingsStore();
 const shortcutsStore = useShortcutsStore();
 const workspaceStore = useWorkspaceStore();
 const { initializeRAG, setupAutoIndexOnSave } = useRAGInitialization();
+const { initializeSync, setupAutoSync } = useSyncLifecycle();
 
 useEditorSettings();
 useGeneralSettings();
@@ -39,11 +41,14 @@ onMounted(async () => {
   
   // 等待工作区初始化完成
   await workspaceStore.initializeWorkspace();
+
+  await initializeSync();
   
   // 初始化 RAG 服务
   await initializeRAG();
   
   // 设置保存时自动索引
   setupAutoIndexOnSave();
+  setupAutoSync();
 });
 </script>

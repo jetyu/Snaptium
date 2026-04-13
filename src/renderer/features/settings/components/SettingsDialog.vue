@@ -59,6 +59,7 @@ import RAGSettings from './tabs/RAGSettings.vue';
 import LogSettings from './tabs/LogSettings.vue';
 import ShortcutSettings from './tabs/ShortcutSettings.vue';
 import NoteSettings from './tabs/NoteSettings.vue';
+import SyncSettings from './tabs/SyncSettings.vue';
 
 const { t } = useI18n();
 const { isOpen, activeTab, closeSettings, setActiveTab, initMainProcessListeners } = useSettings();
@@ -78,6 +79,7 @@ const tabs: TabItem[] = [
   { id: 'ai-sources', labelKey: 'pref.pane.aiSources', component: AISourceSettings },
   { id: 'ai-assistant', labelKey: 'pref.pane.aiAssistant', component: AIAssistantSettings },
   { id: 'rag', labelKey: 'pref.pane.aiRAG', component: RAGSettings },
+  { id: 'sync', labelKey: 'pref.pane.sync', component: SyncSettings },
   { id: 'sep-2', type: 'separator' },
   { id: 'shortcuts', labelKey: 'pref.pane.shortcuts', component: ShortcutSettings },
   { id: 'log', labelKey: 'pref.pane.log', component: LogSettings },

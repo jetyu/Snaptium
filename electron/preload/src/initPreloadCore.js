@@ -78,6 +78,11 @@ const electronAPI = Object.freeze({
   aiSource: Object.freeze({
     testConnection: (config) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),
   }),
+  sync: Object.freeze({
+    testConnection: (config) => ipcRenderer.invoke(IPC_CHANNELS.SYNC_TEST_CONNECTION, config),
+    run: (payload) => ipcRenderer.invoke(IPC_CHANNELS.SYNC_RUN, payload),
+    getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.SYNC_GET_STATUS),
+  }),
   shortcuts: Object.freeze({
     getCommands: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS),
     getCommandsByCategory: (category) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS_BY_CATEGORY, category),

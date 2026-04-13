@@ -256,6 +256,15 @@ export const vfsService = {
     return { root: resolvedRoot, nodes: Array.from(workspaceState.nodes.values()) };
   },
 
+  async reloadWorkspaceState(rootPath) {
+    const resolvedRoot = await resolveWorkspaceRoot(rootPath ?? workspaceState.root ?? undefined);
+    await ensureWorkspaceStructure(resolvedRoot);
+    workspaceState.root = resolvedRoot;
+    workspaceState.nodes = await loadAllNodes(resolvedRoot);
+    logger.debug(`Workspace cache reloaded at ${resolvedRoot} with ${workspaceState.nodes.size} node(s)`);
+    return { root: resolvedRoot, nodes: Array.from(workspaceState.nodes.values()) };
+  },
+
   async ensureInitialized(rootPath) {
     if (!workspaceState.root) {
       const { root } = await this.initializeWorkspace(rootPath);

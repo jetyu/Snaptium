@@ -3,6 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { $t } from '../utils/i18n.js';
 import { AI_WRITING_DEFAULTS } from '../../shared/ai.constants.js';
+import { DEFAULT_SYNC_SETTINGS, SYNC_INTERVALS, SYNC_PROVIDERS } from '../../shared/sync.constants.js';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { UPDATER_CONSTANTS } from '../constants/updater.constants.js';
 import { loggerService } from './logger.service.js';
@@ -50,6 +51,63 @@ function normalizeLoggingConfig(config) {
   };
 }
 
+function createDefaultSyncConfig() {
+  return {
+    ...DEFAULT_SYNC_SETTINGS,
+    webdav: { ...DEFAULT_SYNC_SETTINGS.webdav },
+    ossS3: { ...DEFAULT_SYNC_SETTINGS.ossS3 },
+  };
+}
+
+function normalizeSyncProvider(provider) {
+  return provider === SYNC_PROVIDERS.OSS_S3 ? SYNC_PROVIDERS.OSS_S3 : SYNC_PROVIDERS.WEBDAV;
+}
+
+function normalizeSyncIntervalMinutes(value) {
+  const supportedIntervals = new Set(Object.values(SYNC_INTERVALS));
+  const normalizedValue = Number(value);
+  return supportedIntervals.has(normalizedValue) ? normalizedValue : SYNC_INTERVALS.MANUAL;
+}
+
+function normalizeSyncConfig(config = {}) {
+  const defaultConfig = createDefaultSyncConfig();
+  const mergedConfig = {
+    ...defaultConfig,
+    ...config,
+    webdav: {
+      ...defaultConfig.webdav,
+      ...(config.webdav || {}),
+    },
+    ossS3: {
+      ...defaultConfig.ossS3,
+      ...(config.ossS3 || {}),
+    },
+  };
+
+  return {
+    ...mergedConfig,
+    enabled: Boolean(mergedConfig.enabled),
+    provider: normalizeSyncProvider(mergedConfig.provider),
+    intervalMinutes: normalizeSyncIntervalMinutes(mergedConfig.intervalMinutes),
+    autoSyncOnSave: Boolean(mergedConfig.autoSyncOnSave),
+    remotePath: String(mergedConfig.remotePath ?? defaultConfig.remotePath).trim() || defaultConfig.remotePath,
+    webdav: {
+      url: String(mergedConfig.webdav.url ?? '').trim(),
+      username: String(mergedConfig.webdav.username ?? '').trim(),
+      password: String(mergedConfig.webdav.password ?? ''),
+    },
+    ossS3: {
+      endpoint: String(mergedConfig.ossS3.endpoint ?? '').trim(),
+      region: String(mergedConfig.ossS3.region ?? '').trim(),
+      bucket: String(mergedConfig.ossS3.bucket ?? '').trim(),
+      accessKeyId: String(mergedConfig.ossS3.accessKeyId ?? '').trim(),
+      secretAccessKey: String(mergedConfig.ossS3.secretAccessKey ?? ''),
+      forcePathStyle: Boolean(mergedConfig.ossS3.forcePathStyle),
+    },
+    lastSyncedAt: Number.isFinite(Number(mergedConfig.lastSyncedAt)) ? Number(mergedConfig.lastSyncedAt) : null,
+  };
+}
+
 function mergeConfigWithDefaults(defaultConfig, incomingConfig = {}) {
   return {
     ...defaultConfig,
@@ -62,6 +120,7 @@ function mergeConfigWithDefaults(defaultConfig, incomingConfig = {}) {
       ...defaultConfig.rag,
       ...(incomingConfig.rag || {}),
     },
+    sync: normalizeSyncConfig(incomingConfig.sync),
   };
 }
 
@@ -110,6 +169,7 @@ export const settingsService = {
         indexOnSave: false,
         lastIndexedAt: null,
       },
+      sync: createDefaultSyncConfig(),
       loggingEnabled: false,
       logLevel: 'error',
       logAutoClearDays: 10,

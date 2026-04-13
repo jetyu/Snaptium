@@ -6,6 +6,10 @@
         <button class="btn-search icon-wrapper" :title="$t('search.openSearch')" @click="$emit('open-search')">
           <Search theme="outline" :size="16" />
         </button>
+        <button class="btn-sync icon-wrapper" :title="$t('tooltip.syncNow')" :disabled="!canTriggerSync"
+          @click="handleManualSync">
+          <Refresh theme="outline" :size="16" :class="{ 'is-spinning': syncStore.isSyncing }" />
+        </button>
         <button class="btn-new-note icon-wrapper" :title="$t('tooltip.newNoteOrNotebook')"
           @click="openCreateButtonMenu">
           <Plus theme="outline" :size="16" />
@@ -82,9 +86,12 @@
 import { computed, nextTick, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useWorkspace } from "@renderer/features/workspace";
+import { useSyncStore } from '@renderer/features/sync';
+import { useSettingsStore } from '@renderer/features/settings';
+import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import type { Note, Notebook } from "../services/workspace.service";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
-import { Search, Plus, Right, FileLockOne, Notes, NotebookOne, Delete } from '@icon-park/vue-next';
+import { Search, Plus, Right, FileLockOne, Notes, NotebookOne, Delete, Refresh } from '@icon-park/vue-next';
 import { useTrash } from "@renderer/features/trash";
 
 
@@ -121,6 +128,9 @@ const {
 
 const { t } = useI18n();
 const { openTrash } = useTrash();
+const syncStore = useSyncStore();
+const settingsStore = useSettingsStore();
+const workspaceStore = useWorkspaceStore();
 const renameTarget = ref<RenameTarget>(null);
 
 const renameDraft = ref("");
@@ -167,6 +177,19 @@ function isEditing(entry: WorkspaceTreeEntry) {
 function cancelRename() {
   renameTarget.value = null;
   renameDraft.value = "";
+}
+
+const canTriggerSync = computed(() => {
+  return settingsStore.config.sync.enabled && !syncStore.isSyncing;
+});
+
+async function handleManualSync() {
+  if (!canTriggerSync.value) {
+    return;
+  }
+
+  await workspaceStore.forceFlushAutoSave();
+  await syncStore.runSync(settingsStore.config.sync, 'manual');
 }
 
 watch(
@@ -440,6 +463,7 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
 }
 
 .btn-search,
+.btn-sync,
 .btn-new-note {
   flex: 0 0 auto;
   width: 28px;
@@ -454,8 +478,28 @@ const treeEntries = computed<WorkspaceTreeEntry[]>(() => {
 }
 
 .btn-search:hover,
+.btn-sync:hover,
 .btn-new-note:hover {
   background: var(--panel-hover);
   color: var(--accent);
+}
+
+.btn-sync:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.is-spinning {
+  animation: sync-spin 1s linear infinite;
+}
+
+@keyframes sync-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 </style>
