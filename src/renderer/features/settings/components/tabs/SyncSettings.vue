@@ -1,201 +1,226 @@
 <template>
     <div class="sync-settings">
         <h3 class="panel-title">{{ t('pref.pane.sync') }}</h3>
-
-        <div class="settings-grid">
-            <section class="setting-card">
-                <div class="setting-copy">
-                    <p class="setting-label">{{ t('label.syncRemoteData') }}</p>
-                    <p class="setting-description">{{ t('text.syncRemoteData') }}</p>
-                </div>
-                <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.sync.enabled }"
-                    :aria-pressed="settingsStore.config.sync.enabled" @click="toggleSyncEnabled">
-                    <span class="startup-switch-track">
-                        <span class="startup-switch-thumb" />
-                    </span>
-                    <span class="startup-switch-text">
-                        {{ settingsStore.config.sync.enabled ? t('checkbox.status.enabled') :
-                            t('checkbox.status.disabled') }}
-                    </span>
+        <div class="sync-layout">
+            <aside class="sync-subpane-nav">
+                <button type="button" class="subpane-btn" :class="{ active: activeSubview === 'general' }"
+                    @click="activeSubview = 'general'">
+                    {{ t('label.syncRemoteData') }}
                 </button>
-            </section>
-            <div class="settings-row-grid">
-                <section class="setting-card">
-                    <div class="setting-copy">
-                        <p class="setting-label">{{ t('label.syncInterval') }}</p>
-                        <p class="setting-description">{{ t('text.syncInterval') }}</p>
-                    </div>
-                    <label class="select-shell">
-                        <select class="settings-select" :value="settingsStore.config.sync.intervalMinutes"
-                            @change="handleIntervalChange">
-                            <option v-for="option in SYNC_INTERVAL_OPTIONS" :key="option.value" :value="option.value">
-                                {{ t(option.labelKey) }}
-                            </option>
-                        </select>
-                    </label>
-                </section>
+                <button type="button" class="subpane-btn" :class="{ active: activeSubview === 'provider' }"
+                    @click="activeSubview = 'provider'">
+                    {{ t('label.syncTarget') }}
+                </button>
+                <button type="button" class="subpane-btn" :class="{ active: activeSubview === 'status' }"
+                    @click="activeSubview = 'status'">
+                    {{ t('label.syncStatus') }}
+                </button>
+            </aside>
 
-                <section class="setting-card">
-                    <div class="setting-copy">
-                        <p class="setting-label">{{ t('label.syncAutoOnSave') }}</p>
-                        <p class="setting-description">{{ t('text.syncAutoOnSave') }}</p>
+            <div class="settings-grid sync-subpane-content">
+                <template v-if="activeSubview === 'general'">
+                    <section class="setting-card">
+                        <div class="setting-copy">
+                            <p class="setting-label">{{ t('label.syncRemoteData') }}</p>
+                            <p class="setting-description">{{ t('text.syncRemoteData') }}</p>
+                        </div>
+                        <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.sync.enabled }"
+                            :aria-pressed="settingsStore.config.sync.enabled" @click="toggleSyncEnabled">
+                            <span class="startup-switch-track">
+                                <span class="startup-switch-thumb" />
+                            </span>
+                            <span class="startup-switch-text">
+                                {{ settingsStore.config.sync.enabled ? t('checkbox.status.enabled') :
+                                    t('checkbox.status.disabled') }}
+                            </span>
+                        </button>
+                    </section>
+
+                    <div class="settings-row-grid">
+                        <section class="setting-card">
+                            <div class="setting-copy">
+                                <p class="setting-label">{{ t('label.syncInterval') }}</p>
+                                <p class="setting-description">{{ t('text.syncInterval') }}</p>
+                            </div>
+                            <label class="select-shell">
+                                <select class="settings-select" :value="settingsStore.config.sync.intervalMinutes"
+                                    @change="handleIntervalChange">
+                                    <option v-for="option in SYNC_INTERVAL_OPTIONS" :key="option.value" :value="option.value">
+                                        {{ t(option.labelKey) }}
+                                    </option>
+                                </select>
+                            </label>
+                        </section>
+
+                        <section class="setting-card">
+                            <div class="setting-copy">
+                                <p class="setting-label">{{ t('label.syncAutoOnSave') }}</p>
+                                <p class="setting-description">{{ t('text.syncAutoOnSave') }}</p>
+                            </div>
+                            <button type="button" class="startup-switch"
+                                :class="{ enabled: settingsStore.config.sync.autoSyncOnSave }"
+                                :aria-pressed="settingsStore.config.sync.autoSyncOnSave" @click="toggleAutoSyncOnSave">
+                                <span class="startup-switch-track">
+                                    <span class="startup-switch-thumb" />
+                                </span>
+                                <span class="startup-switch-text">
+                                    {{ settingsStore.config.sync.autoSyncOnSave ? t('checkbox.status.enabled') :
+                                        t('checkbox.status.disabled') }}
+                                </span>
+                            </button>
+                        </section>
                     </div>
-                    <button type="button" class="startup-switch"
-                        :class="{ enabled: settingsStore.config.sync.autoSyncOnSave }"
-                        :aria-pressed="settingsStore.config.sync.autoSyncOnSave" @click="toggleAutoSyncOnSave">
-                        <span class="startup-switch-track">
-                            <span class="startup-switch-thumb" />
-                        </span>
-                        <span class="startup-switch-text">
-                            {{ settingsStore.config.sync.autoSyncOnSave ? t('checkbox.status.enabled') :
-                                t('checkbox.status.disabled') }}
-                        </span>
-                    </button>
-                </section>
+                </template>
+
+                <template v-else-if="activeSubview === 'provider'">
+                    <div class="settings-row-grid">
+                        <section class="setting-card">
+                            <div class="setting-copy">
+                                <p class="setting-label">{{ t('label.syncTarget') }}</p>
+                                <p class="setting-description">{{ t('text.syncTarget') }}</p>
+                            </div>
+                            <label class="select-shell">
+                                <select class="settings-select" :value="settingsStore.config.sync.provider"
+                                    @change="handleProviderChange">
+                                    <option value="webdav">{{ t('option.sync.webdav') }}</option>
+                                    <option value="oss-s3">{{ t('option.sync.oss') }}</option>
+                                </select>
+                            </label>
+                        </section>
+                        <section class="setting-card">
+                            <div class="setting-copy">
+                                <p class="setting-label">{{ t('label.remotePath') }}</p>
+                                <p class="setting-description">{{ t('text.remotePath') }}</p>
+                            </div>
+                            <input class="settings-input sync-remote-path" :value="settingsStore.config.sync.remotePath"
+                                @change="handleRemotePathChange" />
+                        </section>
+                    </div>
+
+                    <template v-if="settingsStore.config.sync.provider === 'webdav'">
+                        <div class="settings-row-grid">
+                            <section class="setting-card">
+                                <div class="setting-copy">
+                                    <p class="setting-label">{{ t('label.webdavUrl') }}</p>
+                                    <p class="setting-description">{{ t('text.webdavUrl') }}</p>
+                                </div>
+                                <input class="settings-input sync-webdav-url" :value="settingsStore.config.sync.webdav.url"
+                                    @change="handleWebDavFieldChange('url', $event)" />
+                            </section>
+
+                            <section class="setting-card">
+                                <div class="setting-copy">
+                                    <p class="setting-label">{{ t('label.webdavUsername') }}</p>
+                                    <p class="setting-description">{{ t('text.webdavUsername') }}</p>
+                                </div>
+                                <input class="settings-input sync-webdav-username"
+                                    :value="settingsStore.config.sync.webdav.username"
+                                    @change="handleWebDavFieldChange('username', $event)" />
+                            </section>
+                        </div>
+
+                        <section class="setting-card">
+                            <div class="setting-copy">
+                                <p class="setting-label">{{ t('label.webdavPassword') }}</p>
+                                <p class="setting-description">{{ t('text.webdavPassword') }}</p>
+                            </div>
+                            <input type="password" class="settings-input sync-webdav-password"
+                                :value="settingsStore.config.sync.webdav.password"
+                                @change="handleWebDavFieldChange('password', $event)" />
+                        </section>
+                    </template>
+
+                    <template v-else>
+                        <div class="settings-row-grid">
+                            <section class="setting-card">
+                                <div class="setting-copy">
+                                    <p class="setting-label">{{ t('label.ossEndpoint') }}</p>
+                                    <p class="setting-description">{{ t('text.ossEndpoint') }}</p>
+                                </div>
+                                <input class="settings-input sync-oss-endpoint"
+                                    :value="settingsStore.config.sync.ossS3.endpoint"
+                                    @change="handleOssFieldChange('endpoint', $event)" />
+                            </section>
+
+                            <section class="setting-card">
+                                <div class="setting-copy">
+                                    <p class="setting-label">{{ t('label.ossRegion') }}</p>
+                                    <p class="setting-description">{{ t('text.ossRegion') }}</p>
+                                </div>
+                                <input class="settings-input sync-oss-region" :value="settingsStore.config.sync.ossS3.region"
+                                    @change="handleOssFieldChange('region', $event)" />
+                            </section>
+                        </div>
+
+                        <div class="settings-row-grid">
+                            <section class="setting-card">
+                                <div class="setting-copy">
+                                    <p class="setting-label">{{ t('label.ossBucket') }}</p>
+                                    <p class="setting-description">{{ t('text.ossBucket') }}</p>
+                                </div>
+                                <input class="settings-input sync-oss-bucket" :value="settingsStore.config.sync.ossS3.bucket"
+                                    @change="handleOssFieldChange('bucket', $event)" />
+                            </section>
+
+                            <section class="setting-card">
+                                <div class="setting-copy">
+                                    <p class="setting-label">{{ t('label.ossAccessKey') }}</p>
+                                    <p class="setting-description">{{ t('text.ossAccessKey') }}</p>
+                                </div>
+                                <input class="settings-input sync-oss-access-key"
+                                    :value="settingsStore.config.sync.ossS3.accessKeyId"
+                                    @change="handleOssFieldChange('accessKeyId', $event)" />
+                            </section>
+                        </div>
+
+                        <section class="setting-card">
+                            <div class="setting-copy">
+                                <p class="setting-label">{{ t('label.ossSecretKey') }}</p>
+                                <p class="setting-description">{{ t('text.ossSecretKey') }}</p>
+                            </div>
+                            <input type="password" class="settings-input sync-oss-secret-key"
+                                :value="settingsStore.config.sync.ossS3.secretAccessKey"
+                                @change="handleOssFieldChange('secretAccessKey', $event)" />
+                        </section>
+                    </template>
+                </template>
+
+                <template v-else>
+                    <section class="setting-card sync-status-card">
+                        <div class="setting-copy">
+                            <p class="setting-label">{{ t('label.syncStatus') }}</p>
+                            <div class="sync-status-line">
+                                <span class="sync-status-pill" :class="statusToneClass">{{ statusLabel }}</span>
+                                <span v-if="formattedLastSynced" class="setting-meta sync-status-item">
+                                    {{ t('label.lastSynced') }}: {{ formattedLastSynced }}
+                                </span>
+                                <span v-if="statusFeedbackMessage" class="setting-meta sync-status-item"
+                                    :class="statusFeedbackClass">
+                                    {{ statusFeedbackMessage }}
+                                </span>
+                            </div>
+
+                            <div v-if="syncStore.lastSummary" class="sync-summary-inline">
+                                <span class="sync-summary-label">{{ t('label.syncSummary') }}</span>
+                                <div class="summary-grid summary-grid--compact sync-summary-pills">
+                                    <span v-for="item in summaryItems" :key="item" class="summary-pill">{{ item }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="action-row">
+                            <button type="button" class="action-button"
+                                :disabled="syncStore.isTestingConnection || !isConfigReady" @click="handleTestConnection">
+                                {{ syncStore.isTestingConnection ? t('button.testing') : t('button.testConnection') }}
+                            </button>
+                            <button type="button" class="action-button"
+                                :disabled="syncStore.isSyncing || !settingsStore.config.sync.enabled || !isConfigReady"
+                                @click="handleSyncNow">
+                                {{ syncStore.isSyncing ? t('button.syncing') : t('button.syncNow') }}
+                            </button>
+                        </div>
+                    </section>
+                </template>
             </div>
-            <div class="settings-row-grid">
-                <section class="setting-card">
-                    <div class="setting-copy">
-                        <p class="setting-label">{{ t('label.syncTarget') }}</p>
-                        <p class="setting-description">{{ t('text.syncTarget') }}</p>
-                    </div>
-                    <label class="select-shell">
-                        <select class="settings-select" :value="settingsStore.config.sync.provider"
-                            @change="handleProviderChange">
-                            <option value="webdav">{{ t('option.sync.webdav') }}</option>
-                            <option value="oss-s3">{{ t('option.sync.oss') }}</option>
-                        </select>
-                    </label>
-                </section>
-                <section class="setting-card">
-                    <div class="setting-copy">
-                        <p class="setting-label">{{ t('label.remotePath') }}</p>
-                        <p class="setting-description">{{ t('text.remotePath') }}</p>
-                    </div>
-                    <input class="settings-input sync-remote-path" :value="settingsStore.config.sync.remotePath"
-                        @change="handleRemotePathChange" />
-                </section>
-            </div>
-            <template v-if="settingsStore.config.sync.provider === 'webdav'">
-                <div class="settings-row-grid">
-                    <section class="setting-card">
-                        <div class="setting-copy">
-                            <p class="setting-label">{{ t('label.webdavUrl') }}</p>
-                            <p class="setting-description">{{ t('text.webdavUrl') }}</p>
-                        </div>
-                        <input class="settings-input sync-webdav-url" :value="settingsStore.config.sync.webdav.url"
-                            @change="handleWebDavFieldChange('url', $event)" />
-                    </section>
-
-                    <section class="setting-card">
-                        <div class="setting-copy">
-                            <p class="setting-label">{{ t('label.webdavUsername') }}</p>
-                            <p class="setting-description">{{ t('text.webdavUsername') }}</p>
-                        </div>
-                        <input class="settings-input sync-webdav-username"
-                            :value="settingsStore.config.sync.webdav.username"
-                            @change="handleWebDavFieldChange('username', $event)" />
-                    </section>
-                </div>
-
-                <section class="setting-card">
-                    <div class="setting-copy">
-                        <p class="setting-label">{{ t('label.webdavPassword') }}</p>
-                        <p class="setting-description">{{ t('text.webdavPassword') }}</p>
-                    </div>
-                    <input type="password" class="settings-input sync-webdav-password"
-                        :value="settingsStore.config.sync.webdav.password"
-                        @change="handleWebDavFieldChange('password', $event)" />
-                </section>
-            </template>
-
-            <template v-else>
-                <div class="settings-row-grid">
-                    <section class="setting-card">
-                        <div class="setting-copy">
-                            <p class="setting-label">{{ t('label.ossEndpoint') }}</p>
-                            <p class="setting-description">{{ t('text.ossEndpoint') }}</p>
-                        </div>
-                        <input class="settings-input sync-oss-endpoint"
-                            :value="settingsStore.config.sync.ossS3.endpoint"
-                            @change="handleOssFieldChange('endpoint', $event)" />
-                    </section>
-
-                    <section class="setting-card">
-                        <div class="setting-copy">
-                            <p class="setting-label">{{ t('label.ossRegion') }}</p>
-                            <p class="setting-description">{{ t('text.ossRegion') }}</p>
-                        </div>
-                        <input class="settings-input sync-oss-region" :value="settingsStore.config.sync.ossS3.region"
-                            @change="handleOssFieldChange('region', $event)" />
-                    </section>
-                </div>
-
-                <div class="settings-row-grid">
-                    <section class="setting-card">
-                        <div class="setting-copy">
-                            <p class="setting-label">{{ t('label.ossBucket') }}</p>
-                            <p class="setting-description">{{ t('text.ossBucket') }}</p>
-                        </div>
-                        <input class="settings-input sync-oss-bucket" :value="settingsStore.config.sync.ossS3.bucket"
-                            @change="handleOssFieldChange('bucket', $event)" />
-                    </section>
-
-                    <section class="setting-card">
-                        <div class="setting-copy">
-                            <p class="setting-label">{{ t('label.ossAccessKey') }}</p>
-                            <p class="setting-description">{{ t('text.ossAccessKey') }}</p>
-                        </div>
-                        <input class="settings-input sync-oss-access-key"
-                            :value="settingsStore.config.sync.ossS3.accessKeyId"
-                            @change="handleOssFieldChange('accessKeyId', $event)" />
-                    </section>
-                </div>
-
-                <section class="setting-card">
-                    <div class="setting-copy">
-                        <p class="setting-label">{{ t('label.ossSecretKey') }}</p>
-                        <p class="setting-description">{{ t('text.ossSecretKey') }}</p>
-                    </div>
-                    <input type="password" class="settings-input sync-oss-secret-key"
-                        :value="settingsStore.config.sync.ossS3.secretAccessKey"
-                        @change="handleOssFieldChange('secretAccessKey', $event)" />
-                </section>
-            </template>
-
-            <section class="setting-card sync-status-card">
-                <div class="setting-copy">
-                    <p class="setting-label">{{ t('label.syncStatus') }}</p>
-                    <div class="sync-status-line">
-                        <span class="sync-status-pill" :class="statusToneClass">{{ statusLabel }}</span>
-                        <span v-if="formattedLastSynced" class="setting-meta sync-status-item">
-                            {{ t('label.lastSynced') }}: {{ formattedLastSynced }}
-                        </span>
-                        <span v-if="statusFeedbackMessage" class="setting-meta sync-status-item"
-                            :class="statusFeedbackClass">
-                            {{ statusFeedbackMessage }}
-                        </span>
-                    </div>
-
-                    <div v-if="syncStore.lastSummary" class="sync-summary-inline">
-                        <span class="sync-summary-label">{{ t('label.syncSummary') }}</span>
-                        <div class="summary-grid summary-grid--compact sync-summary-pills">
-                            <span v-for="item in summaryItems" :key="item" class="summary-pill">{{ item }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="action-row">
-                    <button type="button" class="action-button"
-                        :disabled="syncStore.isTestingConnection || !isConfigReady" @click="handleTestConnection">
-                        {{ syncStore.isTestingConnection ? t('button.testing') : t('button.testConnection') }}
-                    </button>
-                    <button type="button" class="action-button"
-                        :disabled="syncStore.isSyncing || !settingsStore.config.sync.enabled || !isConfigReady"
-                        @click="handleSyncNow">
-                        {{ syncStore.isSyncing ? t('button.syncing') : t('button.syncNow') }}
-                    </button>
-                </div>
-            </section>
         </div>
     </div>
 </template>
@@ -211,6 +236,7 @@ const { t } = useI18n();
 const settingsStore = useSettingsStore();
 const syncStore = useSyncStore();
 const workspaceStore = useWorkspaceStore();
+const activeSubview = ref<'general' | 'provider' | 'status'>('general');
 const testMessage = ref('');
 const testState = ref<'idle' | 'success' | 'error'>('idle');
 
@@ -325,6 +351,48 @@ const handleSyncNow = async () => {
     display: flex;
     flex-direction: column;
     gap: 1.1rem;
+}
+
+.sync-layout {
+    display: grid;
+    grid-template-columns: 180px minmax(0, 1fr);
+    gap: 0.75rem;
+    align-items: start;
+}
+
+.sync-subpane-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    position: sticky;
+    top: 0;
+}
+
+.subpane-btn {
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #344054;
+    border-radius: 10px;
+    text-align: left;
+    padding: 0.55rem 0.7rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.subpane-btn:hover {
+    border-color: #cbd5e1;
+    background: #f8fafc;
+}
+
+.subpane-btn.active {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+}
+
+.sync-subpane-content {
+    min-width: 0;
 }
 
 .settings-row-grid {
@@ -458,6 +526,20 @@ const handleSyncNow = async () => {
 }
 
 @media (max-width: 1024px) {
+    .sync-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .sync-subpane-nav {
+        position: static;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .subpane-btn {
+        flex: 1 1 32%;
+        min-width: 145px;
+    }
 
     .setting-card>.settings-input,
     .setting-card>.select-shell {
