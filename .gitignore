@@ -1,0 +1,10 @@
+/node_modules/*
+/dist/*
+/electron-cache/*
+
+/release/*
+electron/preload/index.js
+
+/.*/
+!.github/
+!.github/** 

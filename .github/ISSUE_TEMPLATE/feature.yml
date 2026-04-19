@@ -1,0 +1,69 @@
+name: Feature Request
+description: Request a new feature / 提出新的功能需求
+labels: ["Feature"]
+assignees:
+  - jetyu
+  
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Request / 功能需求 
+
+        Thanks for suggesting a new feature request. Please provide as much detail as possible to help us understand and evaluate the feature.  
+        
+        感谢你为项目提出新的需求，请尽量提供完整信息，这有助于我们更快理解和评估该功能。 
+        
+  - type: dropdown
+    id: os
+    attributes:
+     label: Operating System / 操作系统
+     description: Select the operating system you are using. Required | 当前使用的操作系统（必填）
+     options:
+       - Windows 11
+       - Windows 10
+       - macOS (Intel)
+       - macOS (Apple Silicon)
+       - Linux
+    validations:
+     required: true
+
+  - type: input
+    id: os_version
+    attributes:
+      label: Operating System Version / 操作系统版本
+      description: The version of OS you are using. Required | 当前使用的操作系统版本（必填）
+      placeholder: e.g. Windows 11 23H2, macOS 13.6, Ubuntu 20.04 LTS, CentOS 9 and etc.
+    validations:
+      required: true
+
+  - type: input
+    id: notewizard_version
+    attributes:
+      label: NoteWizard Version / NoteWizard版本
+      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
+      placeholder: e.g. 1.0.1
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Feature Description / 功能描述
+      description: What problem does this feature solve?  Required | 新功能可以解决什么问题？（必填）
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Proposed Solution / 方案建议
+      description: How should this feature work?  Required | 希望它如何工作？（必填）
+      placeholder: |
+           e.g. Describe expected behavio of the feature in detail.
+           例：请详细描述该功能的期望行为。
+    validations:
+      required: true
+
+  - type: textarea
+    attributes:
+      label: Alternatives Considered / 替代方案
+      description: Any alternative solutions or workarounds? | 是否考虑过其他方案？

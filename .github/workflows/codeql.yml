@@ -1,0 +1,45 @@
+name: Code Security Scan
+
+on:
+  push:
+    branches:
+      - develop
+  schedule:
+    - cron: '0 0 * * 5'
+  workflow_dispatch:
+
+concurrency:
+  group: codeql-js-ts
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (JavaScript / TypeScript)
+    runs-on: ubuntu-latest
+
+    permissions:
+      security-events: write
+      packages: read
+      actions: read
+      contents: read
+
+    steps:
+      - name: Checkout repository (schedule -> develop)
+        if: github.event_name == 'schedule'
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Checkout repository (non-schedule)
+        if: github.event_name != 'schedule'
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+          build-mode: none
+          queries: security-extended
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4

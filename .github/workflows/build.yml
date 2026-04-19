@@ -1,0 +1,210 @@
+name: NoteWizard Release
+
+on:
+  push:
+    tags:
+      - 'v*.*'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+ 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  prepare:
+    name: Release Preparation 
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.versioning.outputs.version }}
+      tag: ${{ steps.versioning.outputs.tag }}
+      is_dev: ${{ steps.versioning.outputs.is_dev }}
+      release_name: ${{ steps.versioning.outputs.release_name }}
+      prerelease: ${{ steps.versioning.outputs.prerelease }}
+      make_latest: ${{ steps.versioning.outputs.make_latest }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute Release Info
+        id: versioning
+        run: |
+          if [[ "${{ github.ref }}" != refs/tags/v* ]]; then
+            echo "::error::Release must be triggered by tag."
+            exit 1
+          fi
+
+          TAG="${GITHUB_REF_NAME}"
+          VERSION="${TAG#v}"
+
+          echo "Tag: $TAG"
+          echo "Version: $VERSION"
+
+          TAG_COMMIT=$(git rev-list -n 1 "$TAG")
+          BRANCHES=$(git branch -r --contains "$TAG_COMMIT")
+
+          echo "Branches containing this commit:"
+          echo "$BRANCHES"
+
+          IS_MAIN=false
+          IS_DEVELOP=false
+          IS_FEATURE=false
+
+          if echo "$BRANCHES" | grep -qE "origin/main$"; then
+            IS_MAIN=true
+          fi
+          if echo "$BRANCHES" | grep -qE "origin/develop$"; then
+            IS_DEVELOP=true
+          fi
+          if echo "$BRANCHES" | grep -qE "origin/feature/"; then
+            IS_FEATURE=true
+          fi
+          
+          if [[ "$IS_MAIN" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+            echo "Stable Release (main)"
+            echo "is_dev=false" >> $GITHUB_OUTPUT
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+            echo "make_latest=true" >> $GITHUB_OUTPUT
+          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[bBrR].*$ ]]; then
+            echo "Beta/RC Release (develop)"
+            echo "is_dev=true" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+            echo "make_latest=false" >> $GITHUB_OUTPUT
+          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[aA].*$ ]]; then
+            echo "Alpha Release (feature)"
+            echo "is_dev=true" >> $GITHUB_OUTPUT
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+            echo "make_latest=false" >> $GITHUB_OUTPUT
+          else
+            echo "::error::Tag $TAG does not match branch release policy."
+            exit 1
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "release_name=$TAG" >> $GITHUB_OUTPUT
+          
+      - name: Upload Release Notes Template File
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: .github/RELEASE_TEMPLATE/release_note.md
+
+  build:
+    name: Build on ${{ matrix.os }}
+    needs: prepare
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, ubuntu-latest, macos-latest]
+        arch: [x64]
+        include:
+          - os: windows-latest
+            platform: win
+            artifact_pattern: |
+              dist/*.exe
+              dist/*.blockmap
+          - os: ubuntu-latest
+            platform: linux
+            artifact_pattern: |
+              dist/*.AppImage
+              dist/*.deb
+              dist/*.rpm
+          - os: macos-latest
+            platform: mac
+            artifact_pattern: |
+              dist/*.dmg
+              dist/*.zip
+              dist/*.blockmap
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          check-latest: true
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Set Version
+        run: |
+          npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
+      - name: Lint
+        run: npm run lint || true
+
+      - name: Clean Dist folder
+        run: npm run clean
+
+      - name: Build for ${{ matrix.platform }}
+        run: npm run dist:${{ matrix.platform }} --verbose
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+          USE_HARD_LINKS: false
+
+      - name: Upload Package Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: NoteWizard-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
+          path: ${{ matrix.artifact_pattern }}
+          retention-days: 30
+          if-no-files-found: error
+
+  release:
+    name: Publishing Release 
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download Release Notes File
+        if: needs.prepare.outputs.is_dev == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+          path: .
+
+      - name: Prepare Pre-Release Notes or Release Notes File
+        run: |
+          node scripts/generate-release-notes.js ${{ needs.prepare.outputs.tag }}
+          cp .github/RELEASE_TEMPLATE/release_note.md updated_note.md
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Release installers for all platforms
+        run: |
+          mkdir release_files
+          find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
+
+      - name: Generate GitHub Release Page
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.prepare.outputs.tag }}
+          name: ${{ needs.prepare.outputs.release_name }}
+          prerelease: ${{ needs.prepare.outputs.prerelease }}
+          make_latest: ${{ needs.prepare.outputs.make_latest }}
+          body_path: updated_note.md
+          files: release_files/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

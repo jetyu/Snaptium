@@ -1,0 +1,71 @@
+import { useWorkspaceStore } from '../store/workspace.store';
+import { createLogger } from '@renderer/features/logger';
+
+const workspaceActionsLogger = createLogger('WorkspaceActions');
+
+/**
+ * 工作区操作 composable
+ * 提供带 UI 交互的工作区操作方法
+ */
+export function useWorkspaceActions() {
+  const workspaceStore = useWorkspaceStore();
+
+  /**
+   * 删除当前活动笔记（带确认）
+   */
+  const deleteActiveNote = async () => {
+    const activeNote = workspaceStore.activeNote;
+    if (!activeNote) {
+      workspaceActionsLogger.warn('No active note to delete');
+      return false;
+    }
+
+    try {
+      return await workspaceStore.confirmDeleteNote(activeNote.id);
+    } catch (error) {
+      workspaceActionsLogger.error(`Failed to delete note: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  };
+
+  /**
+   * 重命名当前活动笔记（带输入）
+   */
+  const renameActiveNote = async () => {
+    const activeNote = workspaceStore.activeNote;
+    if (!activeNote) {
+      workspaceActionsLogger.warn('No active note to rename');
+      return false;
+    }
+
+    const newTitle = prompt('请输入新的笔记标题:', activeNote.title);
+    if (!newTitle || newTitle.trim() === '') return false;
+
+    try {
+      await workspaceStore.renameNote(activeNote.id, newTitle.trim());
+      return true;
+    } catch (error) {
+      workspaceActionsLogger.error(`Failed to rename note: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  };
+
+  /**
+   * 保存当前笔记
+   */
+  const saveActiveNote = async () => {
+    try {
+      await workspaceStore.forceFlushAutoSave();
+      return true;
+    } catch (error) {
+      workspaceActionsLogger.error(`Failed to save note: ${error instanceof Error ? error.message : String(error)}`);
+      return false;
+    }
+  };
+
+  return {
+    deleteActiveNote,
+    renameActiveNote,
+    saveActiveNote,
+  };
+}
