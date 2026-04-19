@@ -145,9 +145,6 @@ jobs:
       - name: Lint
         run: npm run lint || true
 
-      - name: Clean Dist folder
-        run: npm run clean
-
       - name: Build for ${{ matrix.platform }}
         run: npm run dist:${{ matrix.platform }} --verbose
         env:
