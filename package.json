@@ -36,7 +36,7 @@
     "@codemirror/view": "^6.38.6",
     "@icon-park/vue-next": "^1.4.2",
     "@lancedb/lancedb": "^0.27.2",
-    "apache-arrow": "^21.1.0",
+    "apache-arrow": "^18.1.0",
     "dompurify": "^3.3.3",
     "electron-updater": "^6.8.3",
     "markdown-it": "^14.1.0",
