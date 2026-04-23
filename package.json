@@ -1,6 +1,6 @@
 {
   "name": "notewizard",
-  "version": "1.2.0",
+  "version": "1.0.0",
   "type": "module",
   "description": "NoteWizard Installer",
   "license": "MIT License",
@@ -32,7 +32,7 @@
   },
   "devDependencies": {
     "concurrently": "^9.2.1",
-    "electron": "^41.0.2",
+    "electron": "^41.1.0",
     "electron-builder": "^26.7.0",
     "electron-reload": "^1.5.0",
     "nodemon": "^3.1.14",
