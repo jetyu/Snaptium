@@ -1,0 +1,10 @@
+[
+  { "id": "system",         "label": "System Default",    "value": "" },
+  { "id": "jetbrains-mono", "label": "JetBrains Mono",   "value": "'JetBrains Mono', monospace" },
+  { "id": "fira-code",      "label": "Fira Code",         "value": "'Fira Code', monospace" },
+  { "id": "cascadia-code",  "label": "Cascadia Code",     "value": "'Cascadia Code', monospace" },
+  { "id": "source-code-pro","label": "Source Code Pro",   "value": "'Source Code Pro', monospace" },
+  { "id": "consolas",       "label": "Consolas",          "value": "Consolas, monospace" },
+  { "id": "monaco",         "label": "Monaco",            "value": "Monaco, monospace" },
+  { "id": "courier-new",    "label": "Courier New",       "value": "'Courier New', monospace" }
+]

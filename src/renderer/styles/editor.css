@@ -1,0 +1,163 @@
+/* ===== EditorPane  ===== */
+.editor-wrapper {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.editor-pane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  height: 100%;
+}
+
+.editor-host {
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--panel);
+}
+
+.editor-host .cm-editor {
+  height: 100%;
+  min-height: 100%;
+  outline: none !important;
+}
+
+.editor-host .cm-content {
+  font-size: var(--editor-font-size, 16px);
+  font-family: var(--editor-font-family, inherit);
+}
+
+.editor-host .cm-scroller {
+  overflow: auto;
+}
+
+.editor-host .cm-placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+  opacity: 0.6;
+}
+
+.editor-host .cm-gutter {
+  background-color: var(--panel-hover);
+  border-right: 1px solid var(--panel-border);
+  color: var(--text-muted);
+}
+
+.editor-host .cm-activeLineGutter {
+  background-color: color-mix(in srgb, var(--accent) 10%, transparent);
+  color: var(--accent);
+}
+
+.editor-host .cm-activeLine {
+  background-color: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+/* ===== CodeMirror Search Panel Customization ===== */
+.editor-host .cm-panel.cm-search {
+  background-color: var(--panel);
+  color: var(--text);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-family: inherit;
+  font-size: 0.9em;
+}
+
+.editor-host .cm-panel.cm-search input.cm-textfield {
+  background-color: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 4px 8px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.editor-host .cm-panel.cm-search input.cm-textfield:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+.editor-host .cm-panel.cm-search button.cm-button {
+  background-color: var(--panel-hover);
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 4px 10px;
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.2s;
+  background-image: none;
+  font-weight: 500;
+  text-transform: capitalize;
+}
+
+.editor-host .cm-panel.cm-search button.cm-button:hover {
+  background-color: color-mix(in srgb, var(--accent) 10%, var(--panel-hover));
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.editor-host .cm-panel.cm-search button.cm-button:active {
+  background-color: color-mix(in srgb, var(--accent) 20%, var(--panel-hover));
+}
+
+.editor-host .cm-panel.cm-search label {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 0.9em;
+  cursor: pointer;
+}
+
+.editor-host .cm-panel.cm-search input[type="checkbox"] {
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+
+/* Close button on the far right */
+.editor-host .cm-panel.cm-search button[name="close"] {
+  margin-left: auto;
+  padding: 4px 8px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.2em;
+  border-radius: 4px;
+}
+.editor-host .cm-panel.cm-search button[name="close"]:hover {
+  background: color-mix(in srgb, #ef4444 10%, transparent);
+  color: #ef4444;
+}
+
+/* ===== AI Completion Suggestion ===== */
+.editor-host .cm-ai-suggestion {
+  color: #888;
+  opacity: 0.6;
+  font-style: italic;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Dark mode adjustment */
+@media (prefers-color-scheme: dark) {
+  .editor-host .cm-ai-suggestion {
+    color: #999;
+    opacity: 0.5;
+  }
+}
+
+/* Light mode adjustment */
+@media (prefers-color-scheme: light) {
+  .editor-host .cm-ai-suggestion {
+    color: #666;
+    opacity: 0.6;
+  }
+}

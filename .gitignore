@@ -1,0 +1,13 @@
+/node_modules/*
+/dist/*
+/electron-cache/*
+
+/release/*
+/.electron-build/
+/main.js
+/preload.js
+/electron/**/*.js
+
+/.*/
+!.github/
+!.github/** 
