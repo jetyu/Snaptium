@@ -11,7 +11,7 @@
 
           <div class="about-content">
             <div class="about-header">
-              <img src="@assets/logo/app-logo-512.png" alt="Snaptive Logo" class="about-logo" />
+              <img src="@assets/logo/app-logo-512.png" alt="Snaptium Logo" class="about-logo" />
               <h1 class="about-title">{{ appName }}</h1>
               <p class="about-version">{{ t('about.version') }}: {{ appVersion }}</p>
             </div>

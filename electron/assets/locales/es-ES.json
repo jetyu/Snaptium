@@ -105,7 +105,7 @@
   "dataTransfer.markdown.sectionTitle": "Markdown 格式笔记数据",
   "dataTransfer.markdownExport.dialogTitle": "选择 Markdown 导出目录",
   "dataTransfer.markdownImport.dialogTitle": "选择 Markdown 源目录",
-  "dataTransfer.sppx.sectionDescription": "导入/导出 Snaptive 格式，适用于完整备份与数据恢复（导入将覆盖当前数据）",
+  "dataTransfer.sppx.sectionDescription": "导入/导出 Snaptium 格式，适用于完整备份与数据恢复（导入将覆盖当前数据）",
   "dataTransfer.sppx.sectionTitle": "SPPX 格式笔记数据",
   "dataTransfer.sppxImport.confirmDetail": "如需保留现有内容，请在导入前先手动备份当前工作区。\n是否继续导入？",
   "dataTransfer.sppxImport.confirmMessage": "导入 SPPX 格式文件将覆盖当前工作区的全部笔记数据。",

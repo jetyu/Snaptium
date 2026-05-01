@@ -36,7 +36,7 @@ function buildDefaultPackageName(timestamp = Date.now()) {
   const hour = formatDatePart(date.getHours());
   const minute = formatDatePart(date.getMinutes());
   const second = formatDatePart(date.getSeconds());
-  return `SnaptiveBakcup-${year}${month}${day}-${hour}${minute}${second}${DEFAULT_EXTENSION}`;
+  return `SnaptiumBakcup-${year}${month}${day}-${hour}${minute}${second}${DEFAULT_EXTENSION}`;
 }
 
 function normalizeSavePath(filePath: string): string {
@@ -82,7 +82,7 @@ export const sppxExportService = {
       title: $t('dataTransfer.sppxExport.dialogTitle'),
       defaultPath,
       filters: [
-        { name: 'Snaptive Portable Package Exchange', extensions: ['sppx', 'nwp'] },
+        { name: 'Snaptium Portable Package Exchange', extensions: ['sppx', 'nwp'] },
       ],
     };
     const dialogResult = focusedWindow

@@ -45,7 +45,7 @@ export declare const SYNC_ERROR_CODES: {
 export type SyncErrorCode = (typeof SYNC_ERROR_CODES)[keyof typeof SYNC_ERROR_CODES];
 
 export declare const SYNC_REMOTE_METADATA: {
-  readonly DIRECTORY: '.snaptive-sync';
+  readonly DIRECTORY: '.snaptium-sync';
   readonly LOCK_FILE: 'lock.json';
   readonly MANIFEST_FILE: 'manifest.json';
 };
@@ -62,7 +62,7 @@ export declare const DEFAULT_SYNC_SETTINGS: {
   readonly provider: typeof SYNC_PROVIDERS.WEBDAV;
   readonly intervalMinutes: typeof SYNC_INTERVALS.MANUAL;
   readonly autoSyncOnSave: false;
-  readonly remotePath: '/snaptive';
+  readonly remotePath: '/snaptium';
   readonly webdav: {
     readonly url: '';
     readonly username: '';

@@ -148,7 +148,7 @@ export function registerE2eeHandlers(): void {
     try {
       const recoveryKey = recoveryKeySchema.parse(rawRecoveryKey);
       const { canceled, filePath } = await dialog.showSaveDialog({
-        defaultPath: 'snaptive-recovery-key.txt',
+        defaultPath: 'snaptium-recovery-key.txt',
         filters: [{ name: 'Text File', extensions: ['txt'] }],
       });
 

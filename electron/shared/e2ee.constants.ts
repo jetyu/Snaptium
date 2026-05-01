@@ -30,7 +30,7 @@ export const E2EE_ARGON2_CONFIG = {
   hashLength: number;
 };
 
-export const E2EE_CIPHERTEXT_PREFIX = 'snaptive-e2ee:' as const;
+export const E2EE_CIPHERTEXT_PREFIX = 'snaptium-e2ee:' as const;
 
 export const E2EE_ERROR_CODES = {
   MASTER_PASSWORD_REQUIRED: 'MASTER_PASSWORD_REQUIRED',

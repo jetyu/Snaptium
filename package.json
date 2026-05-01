@@ -1,10 +1,10 @@
 {
-  "name": "Snaptive",
+  "name": "Snaptium",
   "version": "2.0.0",
   "author": "Notewizard Team",
   "private": true,
   "type": "module",
-  "description": "Snaptive Installer",
+  "description": "Snaptium Installer",
   "main": ".electron-build/main.js",
   "scripts": {
     "dev:renderer": "vite",
@@ -76,8 +76,8 @@
     "wait-on": "^8.0.1"
   },
   "build": {
-    "appId": "com.app.snaptive",
-    "productName": "snaptive",
+    "appId": "com.app.snaptium",
+    "productName": "snaptium",
     "copyright": "Copyright © 2026 ${author}",
     "directories": {
       "output": "dist",
@@ -101,7 +101,7 @@
           ]
         }
       ],
-      "artifactName": "Snaptive-Windows-${arch}.${ext}",
+      "artifactName": "Snaptium-Windows-${arch}.${ext}",
       "icon": "electron/assets/logo/app-logo.ico",
       "verifyUpdateCodeSignature": false
     },
@@ -122,7 +122,7 @@
           ]
         }
       ],
-      "artifactName": "Snaptive-macOS-${arch}.${ext}",
+      "artifactName": "Snaptium-macOS-${arch}.${ext}",
       "icon": "electron/assets/logo/app-logo.icns",
       "category": "public.app-category.productivity",
       "hardenedRuntime": true,
@@ -169,13 +169,13 @@
           ]
         }
       ],
-      "artifactName": "Snaptive-Linux-${arch}.${ext}",
+      "artifactName": "Snaptium-Linux-${arch}.${ext}",
       "icon": "electron/assets/logo/app-logo-512.png",
       "category": "Office",
-      "maintainer": "Snaptive Team",
-      "vendor": "Snaptive",
+      "maintainer": "Snaptium Team",
+      "vendor": "Snaptium",
       "synopsis": "A powerful note-taking application",
-      "description": "Snaptive is a modern, feature-rich note-taking application for organizing your thoughts and ideas."
+      "description": "Snaptium is a modern, feature-rich note-taking application for organizing your thoughts and ideas."
     },
     "nsis": {
       "oneClick": false,
@@ -183,8 +183,8 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Snaptive",
-      "uninstallDisplayName": "Snaptive",
+      "shortcutName": "Snaptium",
+      "uninstallDisplayName": "Snaptium",
       "deleteAppDataOnUninstall": true
     },
     "files": [

@@ -144,7 +144,7 @@ export const sppxImportService = {
       title: $t('dataTransfer.sppxImport.dialogTitle'),
       properties: ['openFile'],
       filters: [
-        { name: 'Snaptive Portable Package Exchange', extensions: ['sppx', 'nwp'] },
+        { name: 'Snaptium Portable Package Exchange', extensions: ['sppx', 'nwp'] },
       ],
     };
     const openDialogResult = focusedWindow

@@ -1,5 +1,5 @@
 ### [2.0.0] - 2026-04-19
-We are pleased to announce the official release of snaptive v2.0. NoteWizard has been fully upgraded to snaptive. It has been rebuilt on a new architecture to deliver a more modern product experience and capability system. NoteWizard 1.x will continue to receive security updates for no less than 6 months, ensuring stability and data safety for existing users.
+We are pleased to announce the official release of snaptium v2.0. NoteWizard has been fully upgraded to snaptium. It has been rebuilt on a new architecture to deliver a more modern product experience and capability system. NoteWizard 1.x will continue to receive security updates for no less than 6 months, ensuring stability and data safety for existing users.
 #### New
 - Added a Workspace module for unified management of notes, tasks, knowledge, and core features.
 - Introduced Workspaces to support multi-scenario organization and clearer knowledge structuring.
@@ -175,7 +175,7 @@ During 7 months of continuous iteration and optimization, this version delivers 
 
 ### [0.3.0] - 2025-10-24
 #### New
-- Added note import and export functionality, supporting the import and export of Snaptive Portable Package Exchange (.nwp) and Markdown (.md) formats.
+- Added note import and export functionality, supporting the import and export of Snaptium Portable Package Exchange (.nwp) and Markdown (.md) formats.
 #### Fixed
 - Fixed known issues.
 - Fixed translation issues in other languages.

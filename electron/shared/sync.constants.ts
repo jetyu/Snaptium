@@ -47,7 +47,7 @@ export const SYNC_ERROR_CODES = Object.freeze({
 export type SyncErrorCode = (typeof SYNC_ERROR_CODES)[keyof typeof SYNC_ERROR_CODES];
 
 export const SYNC_REMOTE_METADATA = Object.freeze({
-  DIRECTORY: '.snaptive-sync',
+  DIRECTORY: '.snaptium-sync',
   LOCK_FILE: 'lock.json',
   MANIFEST_FILE: 'manifest.json',
 } as const);
@@ -64,7 +64,7 @@ export const DEFAULT_SYNC_SETTINGS = Object.freeze({
   provider: SYNC_PROVIDERS.WEBDAV,
   intervalMinutes: SYNC_INTERVALS.MANUAL,
   autoSyncOnSave: false,
-  remotePath: '/snaptive',
+  remotePath: '/snaptium',
   webdav: Object.freeze({
     url: '',
     username: '',
