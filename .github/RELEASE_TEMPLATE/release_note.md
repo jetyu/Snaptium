@@ -1,4 +1,4 @@
-### NoteWizard 
+### Snaptium 
 
 <!-- PRE_RELEASE_WARNING_START -->
 **⚠️ This is a pre-release version intended for testing and evaluation only.**
@@ -18,6 +18,5 @@ _No changelog available for this release_
 
 <!-- FULL_CHANGELOG_START -->
 #### Full Changelog
-- [English](https://github.com/jetyu/NoteWizard/blob/main/src/assets/changelog/history_en.md)
-- [简体中文](https://github.com/jetyu/NoteWizard/blob/main/src/assets/changelog/history_cn.md)
+- [Changelog](https://snaptium.com/changelog)
 <!-- FULL_CHANGELOG_END -->

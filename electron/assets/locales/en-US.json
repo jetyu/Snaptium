@@ -442,7 +442,7 @@
   "text.ragChatModel": "AI service used for knowledge-base question answering; disable it to only return retrieval results.",
   "text.ragEmbeddingModel": "AI service for generating text embeddings",
   "text.ragSimilarityThreshold": "Minimum similarity score (0-1)",
-  "text.remotePath": "The cloud folder path for storing notes, e.g., /NoteWizard",
+  "text.remotePath": "The cloud folder path for storing notes, e.g., /SnaptiumSync",
   "text.selectAIAssistantSourceName": "智能写作所使用的AI服务",
   "text.showLineNumbers ": "Display line numbers",
   "text.showStatusBar": "Display status bar with word count, line count, and cursor position",

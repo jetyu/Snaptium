@@ -147,7 +147,7 @@ function getHelpMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
       {
         label: $t('menu.help.website'),
         click: async () => {
-          await shell.openExternal('https://github.com/jetyu/NoteWizard');
+          await shell.openExternal('https://snaptium.com');
         },
       },
       {

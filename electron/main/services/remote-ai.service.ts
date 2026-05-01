@@ -85,8 +85,8 @@ export const remoteAiService = {
     return {
       Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://github.com/jetyu/NoteWizard',
-      'X-Title': 'NoteWizard',
+      'HTTP-Referer': 'https://snaptium.com',
+      'X-Title': 'Snaptium AI API Request',
     };
   },
 

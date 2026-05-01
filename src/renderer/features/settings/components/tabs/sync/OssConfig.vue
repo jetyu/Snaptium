@@ -18,7 +18,7 @@
       </div>
       <div class="input-container">
         <input class="settings-input" :value="settingsStore.config.sync.remotePath" @change="handleRemotePathChange"
-          placeholder="/NoteWizard" />
+          placeholder="/Snaptium" />
       </div>
     </section>
 
