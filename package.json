@@ -53,6 +53,7 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.54.2",
     "@types/markdown-it": "^14.1.2",
     "@types/node": "^22.13.0",

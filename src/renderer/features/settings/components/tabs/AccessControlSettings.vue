@@ -14,23 +14,23 @@
 
             <div class="settings-card-actions" v-if="isAccessControlAvailable">
               <button v-if="AccessControlIsLocked" type="button" class="action-button primary"
-                :disabled="AccessControlLoading || !AccessControlConfig.enabled"
+                :disabled="AccessControlLoading || !accessControlConfig.enabled"
                 @click="openView('accessControlUnlock')">
                 {{ t('e2ee.accessControl.unlock') }}
               </button>
               <button v-else type="button" class="action-button secondary"
-                :disabled="AccessControlLoading || !AccessControlConfig.enabled" @click="handleLockAccessControlNow">
+                :disabled="AccessControlLoading || !accessControlConfig.enabled" @click="handleLockAccessControlNow">
                 {{ t('e2ee.accessControl.lockNow') }}
               </button>
 
-              <button type="button" class="startup-switch" :class="{ enabled: AccessControlConfig.enabled }"
-                :aria-pressed="AccessControlConfig.enabled" :disabled="AccessControlActionDisabled"
+              <button type="button" class="startup-switch" :class="{ enabled: accessControlConfig.enabled }"
+                :aria-pressed="accessControlConfig.enabled" :disabled="AccessControlActionDisabled"
                 @click="handleToggleAccessControlEnabled">
                 <span class="startup-switch-track">
                   <span class="startup-switch-thumb" />
                 </span>
                 <span class="startup-switch-text">
-                  {{ AccessControlConfig.enabled ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
+                  {{ accessControlConfig.enabled ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
                 </span>
               </button>
             </div>
@@ -43,8 +43,8 @@
               <p class="setting-description">{{ t('e2ee.accessControl.lockOnStartupDesc') || '' }}</p>
             </div>
             <div class="settings-card-actions">
-              <button type="button" class="startup-switch" :class="{ enabled: AccessControlConfig.lockOnStartup }"
-                :aria-pressed="AccessControlConfig.lockOnStartup" :disabled="AccessControlControlDisabled"
+              <button type="button" class="startup-switch" :class="{ enabled: accessControlConfig.lockOnStartup }"
+                :aria-pressed="accessControlConfig.lockOnStartup" :disabled="AccessControlControlDisabled"
                 @click="handleLockOnStartupChange">
                 <span class="startup-switch-track">
                   <span class="startup-switch-thumb" />
@@ -61,7 +61,7 @@
             </div>
             <div class="settings-card-actions">
               <label class="select-shell security-timeout-select" :class="{ disabled: AccessControlControlDisabled }">
-                <select class="settings-select" :value="AccessControlConfig.autoLockTimeoutMinutes"
+                <select class="settings-select" :value="accessControlConfig.autoLockTimeoutMinutes"
                   :disabled="AccessControlControlDisabled" @change="handleAutoLockTimeoutChange">
                   <option v-for="option in AccessControlTimeoutOptions" :key="option.value" :value="option.value">
                     {{ t(option.labelKey) }}
@@ -119,6 +119,7 @@ import {
   type E2eeStatus,
   type SecurityError,
 } from '@renderer/features/security';
+import { type AccessControlConfig } from '@renderer/core/bridge/electronApi';
 
 interface AccessControlOption {
   value: AccessControlTimeout;
@@ -155,7 +156,7 @@ let removeAccessControlListener: (() => void) | null = null;
 
 const isAccessControlAvailable = computed(() => securityService.isAccessControlAvailable());
 const e2eeHasKeySlots = computed(() => Boolean(e2eeState.value?.hasKeySlots));
-const AccessControlConfig = computed(() => AccessControlState.value?.config ?? defaultAccessControlConfig);
+const accessControlConfig = computed(() => AccessControlState.value?.config ?? defaultAccessControlConfig);
 const AccessControlIsLocked = computed(() => Boolean(AccessControlState.value?.isLocked));
 
 const pageTitle = computed(() => {
@@ -187,20 +188,20 @@ const AccessControlConfigDisabled = computed(() => (
 const AccessControlControlDisabled = computed(() => (
   AccessControlLoading.value
   || AccessControlConfigDisabled.value
-  || !AccessControlConfig.value.enabled
+  || !accessControlConfig.value.enabled
 ));
 
 const AccessControlActionDisabled = computed(() => (
   AccessControlLoading.value
   || !isAccessControlAvailable.value
-  || (!e2eeHasKeySlots.value && !AccessControlConfig.value.enabled)
+  || (!e2eeHasKeySlots.value && !accessControlConfig.value.enabled)
 ));
 
 
 const AccessControlDescription = computed(() => {
   if (!isAccessControlAvailable.value) return t('e2ee.accessControl.unavailable');
   if (!e2eeHasKeySlots.value) return t('e2ee.accessControl.requireMasterPassword');
-  if (!AccessControlConfig.value.enabled) return t('e2ee.accessControl.disabledDescription');
+  if (!accessControlConfig.value.enabled) return t('e2ee.accessControl.disabledDescription');
   return AccessControlIsLocked.value ? t('e2ee.accessControl.lockedDescription') : t('e2ee.accessControl.enabledDescription');
 });
 
@@ -236,7 +237,7 @@ async function refreshAccessControlState(): Promise<void> {
   finally { AccessControlLoading.value = false; }
 }
 
-async function updateAccessControlConfig(nextConfig: any): Promise<void> {
+async function updateAccessControlConfig(nextConfig: AccessControlConfig): Promise<void> {
   try {
     await securityService.updateAccessControlConfig(nextConfig);
     await refreshAccessControlState();
@@ -247,24 +248,24 @@ async function updateAccessControlConfig(nextConfig: any): Promise<void> {
 }
 
 async function handleToggleAccessControlEnabled(): Promise<void> {
-  if (!isAccessControlAvailable.value || (!e2eeHasKeySlots.value && !AccessControlConfig.value.enabled)) return;
+  if (!isAccessControlAvailable.value || (!e2eeHasKeySlots.value && !accessControlConfig.value.enabled)) return;
   await updateAccessControlConfig({
-    ...AccessControlConfig.value,
-    enabled: !AccessControlConfig.value.enabled,
+    ...accessControlConfig.value,
+    enabled: !accessControlConfig.value.enabled,
   });
 }
 
 async function handleLockOnStartupChange(): Promise<void> {
   await updateAccessControlConfig({
-    ...AccessControlConfig.value,
-    lockOnStartup: !AccessControlConfig.value.lockOnStartup,
+    ...accessControlConfig.value,
+    lockOnStartup: !accessControlConfig.value.lockOnStartup,
   });
 }
 
 async function handleAutoLockTimeoutChange(event: Event): Promise<void> {
   const timeoutValue = Number((event.target as HTMLSelectElement).value) as AccessControlTimeout;
   await updateAccessControlConfig({
-    ...AccessControlConfig.value,
+    ...accessControlConfig.value,
     autoLockTimeoutMinutes: timeoutValue,
   });
 }

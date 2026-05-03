@@ -1,7 +1,7 @@
 {
   "about.author": "著者: ",
   "about.chromium": "Chromium",
-  "about.copyrights": "Copyright © 2026 NoteWizard Team. All rights reserved.",
+  "about.copyrights": "Copyright © 2026 Snaptium Team. All rights reserved.",
   "about.description": "プライバシー重視のMarkdownノートアプリ。カスタムAIサービスを統合し、データを常に安全に管理できます。",
   "about.electron": "Electron",
   "about.license": "ライセンス: ",
@@ -239,7 +239,7 @@
   "menu.help.changelog": "更新履歴",
   "menu.help.devTools": "開発者ツール",
   "menu.help.feedback": "フィードバックを送信",
-  "menu.help.privacyPolicy": "プライバシーポリシー",
+  "menu.help.privacy": "プライバシーポリシー",
   "menu.help.termsOfService": "利用規約",
   "menu.help.tutorial": "チュートリアル",
   "menu.help.update": "更新チェック",

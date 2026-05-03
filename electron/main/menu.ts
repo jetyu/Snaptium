@@ -129,11 +129,11 @@ function getWindowMenu(): MenuItemConstructorOptions {
       { role: 'zoom' },
       ...(isMac
         ? [
-            { type: 'separator' as const },
-            { role: 'front' as const },
-            { type: 'separator' as const },
-            { role: 'window' as const },
-          ]
+          { type: 'separator' as const },
+          { role: 'front' as const },
+          { type: 'separator' as const },
+          { role: 'window' as const },
+        ]
         : [{ role: 'close' as const, label: $t('menu.window.close') }]),
     ],
   };
@@ -150,6 +150,33 @@ function getHelpMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
           await shell.openExternal('https://snaptium.com');
         },
       },
+      {
+        label: $t('menu.help.docs'),
+        click: async () => {
+          await shell.openExternal('https://snaptium.com/docs');
+        },
+      }, {
+        label: $t('menu.help.changelog'),
+        click: async () => {
+          await shell.openExternal('https://snaptium.com/changelog');
+        },
+      },
+      {
+        label: $t('menu.help.support'),
+        click: async () => {
+          await shell.openExternal('https://snaptium.com/support');
+        },
+      }, { type: 'separator' }, {
+        label: $t('menu.help.privacy'),
+        click: async () => {
+          await shell.openExternal('https://snaptium.com/privacy');
+        },
+      }, {
+        label: $t('menu.help.termsOfService'),
+        click: async () => {
+          await shell.openExternal('https://snaptium.com/tos');
+        },
+      }, { type: 'separator' },
       {
         label: $t('menu.help.update'),
         click: () => mainWindow.webContents.send('menu:check-for-updates'),

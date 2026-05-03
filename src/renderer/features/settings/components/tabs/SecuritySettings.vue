@@ -76,7 +76,7 @@
         <div v-if="isUnlockFlowView" class="settings-grid security-unlock-layout">
           <E2eeUnlockModule :mode="unlockModuleMode" :password="unlockPassword" :recovery-key="recoveryKeyInput"
             :disabled="formSubmitting" @update:password="unlockPassword = $event"
-            @update:recoveryKey="recoveryKeyInput = $event" @switch-mode="openView" @submit="handleSubmit" />
+            @update:recovery-key="recoveryKeyInput = $event" @switch-mode="openView" @submit="handleSubmit" />
         </div>
 
         <section v-else class="setting-card vertical-layout security-form-card">
@@ -193,7 +193,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { systemDialog } from '@renderer/features/settings/services/system-dialog.service';

@@ -339,6 +339,9 @@ declare global {
         changePassword: (
           payload: { oldPassword: string; newPassword: string }
         ) => Promise<{ success: true; recoveryKey: string } | E2eeErrorResult>;
+        resetPassword: (
+          payload: { recoveryKey: string; newPassword: string }
+        ) => Promise<{ success: true; recoveryKey: string } | E2eeErrorResult>;
         exportRecoveryKey: (
           recoveryKey: string
         ) => Promise<{ success: true; canceled: boolean; filePath?: string } | E2eeErrorResult>;

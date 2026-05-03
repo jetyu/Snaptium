@@ -11,7 +11,7 @@ import { DEFAULT_SYNC_SETTINGS, SYNC_INTERVALS, SYNC_PROVIDERS } from '../../sha
 import { getErrorCode, getErrorMessage } from '../../shared/utils/error.utils.js';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { UPDATER_CONSTANTS } from '../constants/updater.constants.js';
-import { ACCESS_CONTROL_TIMEOUT_OPTIONS, type AccessControlTimeout } from '../../shared/e2ee.constants.js';
+import { type AccessControlTimeout } from '../../shared/e2ee.constants.js';
 import { loggerService } from './logger.service.js';
 import { previewPolicyService } from './preview-policy.service.js';
 

@@ -1,7 +1,7 @@
 {
   "about.author": "Author: ",
   "about.chromium": "Chromium",
-  "about.copyrights": "Copyright © 2026 NoteWizard Team. All rights reserved.",
+  "about.copyrights": "Copyright © 2026 Snaptium Team. All rights reserved.",
   "about.description": "A privacy-focused Markdown note-taking app with integrated custom AI services, keeping your data safe and under control.",
   "about.electron": "Electron",
   "about.license": "License: ",
@@ -239,7 +239,7 @@
   "menu.help.changelog": "Changelog",
   "menu.help.devTools": "Developer Tools",
   "menu.help.feedback": "Send Feedback",
-  "menu.help.privacyPolicy": "Privacy Policy",
+  "menu.help.privacy": "Privacy Policy",
   "menu.help.termsOfService": "Terms of Service",
   "menu.help.tutorial": "Tutorial",
   "menu.help.update": "Check for Updates",

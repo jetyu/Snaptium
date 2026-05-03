@@ -494,6 +494,9 @@ export const electronApi = {
     changePassword: (payload: { oldPassword: string; newPassword: string }): Promise<E2eeChangePasswordResult> => {
       return electronApi.e2ee.getApi().changePassword(payload);
     },
+    resetPassword: (payload: { recoveryKey: string; newPassword: string }): Promise<E2eeChangePasswordResult> => {
+      return electronApi.e2ee.getApi().resetPassword(payload);
+    },
     exportRecoveryKey: (recoveryKey: string): Promise<E2eeExportRecoveryKeyResult> => {
       return electronApi.e2ee.getApi().exportRecoveryKey(recoveryKey);
     },

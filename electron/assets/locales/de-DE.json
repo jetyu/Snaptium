@@ -1,7 +1,7 @@
 {
   "about.author": "Autor: ",
   "about.chromium": "Chromium",
-  "about.copyrights": "Copyright © 2026 NoteWizard Team. Alle Rechte vorbehalten.",
+  "about.copyrights": "Copyright © 2026 Snaptium Team. Alle Rechte vorbehalten.",
   "about.description": "Eine datenschutzorientierte Markdown-Notiz-App mit integrierten benutzerdefinierten KI-Diensten, die Ihre Daten sicher und unter Kontrolle hält.",
   "about.electron": "Electron",
   "about.license": "Lizenz: ",
@@ -239,7 +239,7 @@
   "menu.help.changelog": "Änderungsprotokoll",
   "menu.help.devTools": "Entwicklertools",
   "menu.help.feedback": "Feedback senden",
-  "menu.help.privacyPolicy": "Datenschutzrichtlinie",
+  "menu.help.privacy": "Datenschutzrichtlinie",
   "menu.help.termsOfService": "Nutzungsbedingungen",
   "menu.help.tutorial": "Tutorial",
   "menu.help.update": "Nach Updates suchen",

@@ -1,7 +1,7 @@
 {
   "about.author": "Autor: ",
   "about.chromium": "Chromium",
-  "about.copyrights": "Copyright © 2026 NoteWizard Team. Todos os direitos reservados.",
+  "about.copyrights": "Copyright © 2026 Snaptium Team. Todos os direitos reservados.",
   "about.description": "Uma aplicação de notas em Markdown focada na privacidade com serviços de IA personalizados integrados, mantendo os seus dados seguros e sob controlo.",
   "about.electron": "Electron",
   "about.license": "Licença: ",
@@ -239,7 +239,7 @@
   "menu.help.changelog": "Registo de Alterações",
   "menu.help.devTools": "Ferramentas de Programador",
   "menu.help.feedback": "Enviar Feedback",
-  "menu.help.privacyPolicy": "Política de Privacidade",
+  "menu.help.privacy": "Política de Privacidade",
   "menu.help.termsOfService": "Termos de Serviço",
   "menu.help.tutorial": "Tutorial",
   "menu.help.update": "Verificar Atualizações",

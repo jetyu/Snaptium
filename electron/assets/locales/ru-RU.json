@@ -1,7 +1,7 @@
 {
   "about.author": "Автор: ",
   "about.chromium": "Chromium",
-  "about.copyrights": "Copyright © 2026 NoteWizard Team. Все права защищены.",
+  "about.copyrights": "Copyright © 2026 Snaptium Team. Все права защищены.",
   "about.description": "Приложение для заметок Markdown с упором на конфиденциальность и интегрированными пользовательскими сервисами ИИ, обеспечивающее безопасность и контроль ваших данных.",
   "about.electron": "Electron",
   "about.license": "Лицензия: ",
@@ -239,7 +239,7 @@
   "menu.help.changelog": "История изменений",
   "menu.help.devTools": "Инструменты разработчика",
   "menu.help.feedback": "Отправить отзыв",
-  "menu.help.privacyPolicy": "Политика конфиденциальности",
+  "menu.help.privacy": "Политика конфиденциальности",
   "menu.help.termsOfService": "Условия использования",
   "menu.help.tutorial": "Учебник",
   "menu.help.update": "Проверить обновления",
