@@ -38,6 +38,8 @@ export const WORKSPACE_CONSTANTS = {
     SHOW_IN_FOLDER: 'contextMenu.showInFolder',
     PROPERTIES: 'contextMenu.properties',
     HISTORY: 'contextMenu.history',
+    STAR: 'contextMenu.star',
+    UNSTAR: 'contextMenu.unstar',
   },
   ACTIONS: {
     CREATE_NOTE: 'create-note',
@@ -50,6 +52,7 @@ export const WORKSPACE_CONSTANTS = {
     SHOW_IN_FOLDER: 'show-in-folder',
     PROPERTIES: 'properties',
     HISTORY: 'history',
+    TOGGLE_STAR: 'toggle-star',
     NOOP: 'noop',
   },
   MENU_ITEM_TYPE: {

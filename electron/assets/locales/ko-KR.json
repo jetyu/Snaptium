@@ -450,7 +450,7 @@
   "text.startupDefaultView": "选择应用启动时默认进入的界面",
   "text.syncAutoOnSave": "笔记保存后自动触发云同步",
   "text.syncInterval": "数据同步的时间间隔",
-  "text.syncRemoteData": "提供跨设备数据同步，支持 WebDAV 协议及 S3 对象存储服务",
+  "text.syncRemoteData": "提供端到端加密的跨设备数据同步，支持 WebDAV 与 S3 兼容对象存储服务",
   "text.syncTarget": "云同步方式",
   "text.themeMode": "选择应用界面主题，支持跟随系统、浅色、深色主题",
   "text.trashAutoClear": "自动删除在回收站中天数超过设定期限的笔记",

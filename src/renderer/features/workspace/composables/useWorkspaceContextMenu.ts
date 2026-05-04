@@ -27,6 +27,7 @@ interface UseWorkspaceContextMenuOptions {
   beginRenamingNote: (note: Note) => void;
   beginRenamingNotebook: (notebook: Notebook) => void;
   toggleNodeLock: (id: string, locked: boolean) => Promise<void>;
+  toggleNodeStar: (id: string, type: 'note' | 'notebook', starred: boolean) => Promise<void>;
   openHistory: (id: string) => void;
 }
 
@@ -95,6 +96,13 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
           await options.toggleNodeLock(context.note.id, !context.note.locked);
         } else if (context.notebook) {
           await options.toggleNodeLock(context.notebook.id, !context.notebook.locked);
+        }
+        break;
+      case WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_STAR:
+        if (context.note) {
+          await options.toggleNodeStar(context.note.id, 'note', !context.note.starred);
+        } else if (context.notebook) {
+          await options.toggleNodeStar(context.notebook.id, 'notebook', !context.notebook.starred);
         }
         break;
       case WORKSPACE_CONSTANTS.ACTIONS.PROPERTIES:

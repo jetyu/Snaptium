@@ -95,6 +95,8 @@ export const IPC_CHANNELS = {
   VFS_GET_HISTORY_CONTENT: 'vfs:get-history-content',
   VFS_MOVE_NODE: 'vfs:move-node',
   VFS_RECOVER_VERSION: 'vfs:recover-version',
+  VFS_TOGGLE_NODE_STAR: 'vfs:toggle-node-star',
+  VFS_GET_STARRED_NODES: 'vfs:get-starred-nodes',
   WORKSPACE_SHOW_CONTEXT_MENU: 'workspace:show-context-menu',
   EDITOR_SHOW_CONTEXT_MENU: 'editor:show-context-menu',
   EDITOR_READ_CLIPBOARD: 'editor:read-clipboard',

@@ -101,7 +101,6 @@ interface AppSettings {
   };
   workbench: {
     visibleModuleIds: string[];
-    favoriteNoteIds: string[];
     recentNotes: unknown[];
     recentQuestions: unknown[];
   };
@@ -336,7 +335,6 @@ export const settingsService = {
       },
       workbench: {
         visibleModuleIds: [...DEFAULT_WORKBENCH_VISIBLE_MODULES],
-        favoriteNoteIds: [],
         recentNotes: [],
         recentQuestions: [],
       },

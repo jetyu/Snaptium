@@ -483,5 +483,30 @@ export const useWorkspaceStore = defineStore('workspace', {
       await this.recoverVersion(filename);
       return true;
     },
+
+    async toggleNodeStar(id: string, type: 'note' | 'notebook', starred: boolean) {
+      try {
+        let node: Note | Notebook | undefined;
+        if (type === 'note') {
+          node = this.notes.find((candidate) => candidate.id === id);
+        } else {
+          node = this.notebooks.find((candidate) => candidate.id === id);
+        }
+
+        if (!node) {
+          logger.warn(`Cannot star node ${id}: not found.`);
+          return;
+        }
+
+        const result = await workspaceService.toggleNodeStar(id, starred);
+        node.starred = result.starred;
+        node.starredAt = result.starredAt;
+
+        logger.info(`${starred ? 'Starred' : 'Unstarred'} ${type}: ${id}`);
+      } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        logger.error(`Failed to toggle star for node ${id}: ${message}`);
+      }
+    },
   },
 });

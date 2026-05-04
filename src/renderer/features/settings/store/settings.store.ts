@@ -130,11 +130,6 @@ export interface AppSettings {
   maxHistoryVersions: number;
   trashAutoClearDays: number;
   snapshotInterval: number;
-  lastSppxExportAt: number | null;
-  lastSppxExportPath: string;
-  lastSppxImportAt: number | null;
-  lastMarkdownExportDir: string;
-  lastMarkdownImportDir: string;
   appShell: AppShellSettings;
   workbench: WorkbenchSettings;
   // ... future properties
@@ -193,14 +188,9 @@ function createDefaultConfig(): AppSettings {
     maxHistoryVersions: 50,
     trashAutoClearDays: 30,
     snapshotInterval: 15,
-    lastSppxExportAt: null,
-    lastSppxExportPath: '',
-    lastSppxImportAt: null,
-    lastMarkdownExportDir: '',
-    lastMarkdownImportDir: '',
     appShell: {
       activeMainView: APP_SHELL_DEFAULT_MAIN_VIEW,
-      customSidebarModules: ['search', 'settings', 'trash'],
+      customSidebarModules: ['favorites', 'search', 'settings', 'trash'],
       maxCustomSidebarModules: APP_SHELL_MAX_CUSTOM_MODULES,
     },
     workbench: createDefaultWorkbenchSettings(),

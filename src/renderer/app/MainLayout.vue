@@ -4,6 +4,7 @@
       @select-main-view="setActiveMainView" @open-module="openModule" @manage-sidebar="openSidebarManager" />
 
     <WorkbenchView v-if="activeMainView === 'workbench'" />
+    <MyFavoritesView v-else-if="activeMainView === 'favorites'" />
     <WorkspaceView v-else />
   </div>
 
@@ -34,6 +35,7 @@ import { useSidebarManager } from './composables/useSidebarManager';
 import AppSidebar from './components/AppSidebar.vue';
 import WorkbenchView from './views/WorkbenchView.vue';
 import WorkspaceView from './views/WorkspaceView.vue';
+import MyFavoritesView from '@renderer/features/favorites/components/MyFavoritesView.vue';
 
 const mainLayoutLogger = createLogger('MainLayout');
 const appShellStore = useAppShellStore();
@@ -61,6 +63,9 @@ function isSearchResult(result: SearchSelectResult): result is SearchResult {
 
 async function openModule(moduleId: AppShellModuleId) {
   switch (moduleId) {
+    case 'favorites':
+      await setActiveMainView('favorites');
+      return;
     case 'search':
       openGlobalSearch();
       return;
@@ -103,3 +108,4 @@ onMounted(() => {
   });
 });
 </script>
+

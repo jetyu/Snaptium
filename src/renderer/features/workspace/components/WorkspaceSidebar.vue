@@ -70,13 +70,19 @@
             <span class="workspace-row__title">{{
               entry.kind === "notebook" ? entry.item.name : entry.item.title
             }}</span>
+            <div class="workspace-row__actions" v-show="!isEditing(entry)">
+              <StarButton 
+                :model-value="entry.item.starred" 
+                @update:model-value="toggleNodeStar(entry.id, entry.kind, $event)" 
+              />
+            </div>
           </template>
         </div>
       </li>
     </ul>
 
     <div v-else class="sidebar-empty">
-      <p>{{ $t("createFirstNoteOrNotebook") }}</p>
+      <p>{{ $t("workspace.nodesList.emptyState") }}</p>
       <div class="empty-actions">
         <button class="btn-create-first" @click="createNote()">
           {{ $t("contextMenu.newNote") }}
@@ -109,6 +115,7 @@ import { workspaceService, type Note, type Notebook } from "../services/workspac
 import { showNativeWorkspaceContextMenu, type WorkspaceMenuItem, type WorkspaceMoveTarget } from "../services/workspaceContextMenu.service";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
 import { Plus, Right, FileLockOne, Notes, NotebookOne, Refresh, DoubleRight, DoubleDown } from '@icon-park/vue-next';
+import StarButton from "../../favorites/components/StarButton.vue";
 
 type WorkspaceNodeKind = "note" | "notebook";
 type MovableEntry = { id: string; kind: WorkspaceNodeKind; parentId: string | null };
@@ -153,6 +160,7 @@ const {
   renameNote,
   renameNotebook,
   toggleNodeLock,
+  toggleNodeStar,
   openHistoryDialog,
 } = useWorkspace();
 
@@ -1042,6 +1050,7 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     beginRenamingNote,
     beginRenamingNotebook,
     toggleNodeLock,
+    toggleNodeStar,
     openHistory: openHistoryDialog,
   });
 
@@ -1293,6 +1302,23 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  flex: 1;
+}
+
+.workspace-row__actions {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.14s ease;
+}
+
+.workspace-row:hover .workspace-row__actions,
+.workspace-row:focus-within .workspace-row__actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 
 .workspace-row.active .workspace-row__title,

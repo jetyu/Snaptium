@@ -27,7 +27,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
   const workbench = computed(() => sanitizeWorkbenchSettings(config.value.workbench));
   const visibleModuleIds = computed(() => workbench.value.visibleModuleIds);
-  const favoriteNoteIds = computed(() => workbench.value.favoriteNoteIds);
   const recentNotes = computed(() => workbench.value.recentNotes);
   const recentQuestions = computed(() => workbench.value.recentQuestions);
 
@@ -48,19 +47,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
       : [...visibleModuleIds.value, moduleId];
 
     await saveWorkbench({ visibleModuleIds: nextVisibleModules });
-  }
-
-  async function toggleFavorite(noteId: string) {
-    const normalizedNoteId = noteId.trim();
-    if (!normalizedNoteId) {
-      return;
-    }
-
-    const nextFavoriteIds = favoriteNoteIds.value.includes(normalizedNoteId)
-      ? favoriteNoteIds.value.filter((id) => id !== normalizedNoteId)
-      : [normalizedNoteId, ...favoriteNoteIds.value].slice(0, WORKBENCH_LIMITS.FAVORITES);
-
-    await saveWorkbench({ favoriteNoteIds: nextFavoriteIds });
   }
 
   async function recordOpenedNote(noteId: string, openedAt = Date.now()) {
@@ -115,7 +101,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     const validNoteIdSet = new Set(validNoteIds.map((noteId) => noteId.trim()).filter(Boolean));
     const nextSettings = sanitizeWorkbenchSettings({
       ...workbench.value,
-      favoriteNoteIds: favoriteNoteIds.value.filter((noteId) => validNoteIdSet.has(noteId)),
       recentNotes: recentNotes.value.filter((entry) => validNoteIdSet.has(entry.noteId)),
       recentQuestions: recentQuestions.value.map((entry) => {
         return {
@@ -137,11 +122,9 @@ export const useWorkbenchStore = defineStore('workbench', () => {
   return {
     workbench,
     visibleModuleIds,
-    favoriteNoteIds,
     recentNotes,
     recentQuestions,
     toggleModule,
-    toggleFavorite,
     recordOpenedNote,
     recordQuestion,
     cleanupNoteReferences,

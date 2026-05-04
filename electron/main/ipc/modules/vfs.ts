@@ -35,6 +35,8 @@ export function registerVfsIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.VFS_GET_HISTORY_CONTENT);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_MOVE_NODE);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_RECOVER_VERSION);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_TOGGLE_NODE_STAR);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_GET_STARRED_NODES);
 
   ipcMain.handle(IPC_CHANNELS.VFS_INIT, (_event, rootPath) => {
     const schema = z.string().optional();
@@ -177,6 +179,19 @@ export function registerVfsIpcHandlers() {
     const data = schema.parse(payload);
     return vfsService.recoverVersion(data.nodeId, data.filename);
   });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_TOGGLE_NODE_STAR, (_event, payload = {}) => {
+    const schema = z.object({
+      nodeId: uuidSchema,
+      starred: z.boolean(),
+    });
+    const data = schema.parse(payload);
+    return vfsService.toggleNodeStar(data.nodeId, data.starred);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_GET_STARRED_NODES, () =>
+    vfsService.getStarredNodes()
+  );
 
   logger.debug('VFS IPC handlers registered');
 }

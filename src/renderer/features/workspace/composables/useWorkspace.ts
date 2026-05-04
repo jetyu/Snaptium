@@ -31,6 +31,7 @@ export function useWorkspace() {
     renameNotebook: store.renameNotebook,
     updateActiveContent: store.updateActiveContent,
     toggleNodeLock: store.toggleNodeLock,
+    toggleNodeStar: store.toggleNodeStar,
     forceFlushAutoSave: store.forceFlushAutoSave,
     openHistoryDialog: store.openHistoryDialog,
   };

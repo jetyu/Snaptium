@@ -114,7 +114,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Close, ApplicationOne, Plus, Minus, Search, SettingTwo, Delete, Info, NotebookOne, SettingConfig } from '@icon-park/vue-next';
+import { Close, ApplicationOne, Plus, Minus, Search, SettingTwo, Delete, Info, NotebookOne, SettingConfig, Star } from '@icon-park/vue-next';
 import { useI18n } from 'vue-i18n';
 import type { AppShellMainViewId, AppShellModuleId } from '../constants/appShell.constants';
 import { useSidebarManager } from '../composables/useSidebarManager';
@@ -141,9 +141,11 @@ const previewPlaceholderCount = computed(() => {
 const mainViewIconMap: Record<AppShellMainViewId, typeof NotebookOne> = {
   workbench: ApplicationOne,
   workspace: NotebookOne,
+  favorites: Star,
 };
 
 const moduleIconMap: Record<AppShellModuleId, typeof Search> = {
+  favorites: Star,
   search: Search,
   settings: SettingTwo,
   trash: Delete,

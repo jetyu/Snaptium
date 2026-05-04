@@ -9,7 +9,7 @@
         <div class="actions">
           <button class="action-button icon-text" @click="createNote(activeNotebookId)">
             <Plus theme="outline" :size="15" />
-            {{ $t("notebookDashboardActionsNewNote") }}
+            {{ $t("workspace.dashboard.newNoteInThisNotebook") }}
           </button>
         </div>
       </header>
@@ -17,13 +17,13 @@
       <section class="stats-grid">
         <div class="stat-card">
           <span class="stat-label">{{
-            $t("notebookDashboardStatsTotalNotes")
+            $t("workspace.dashboard.totalNotes")
           }}</span>
           <span class="stat-value">{{ notebookNotes.length }}</span>
         </div>
         <div class="stat-card">
           <span class="stat-label">{{
-            $t("notebookDashboardStatsTotalSubNotebooks")
+            $t("workspace.dashboard.subNotebooks")
           }}</span>
           <span class="stat-value">{{ subNotebooks.length }}</span>
         </div>
@@ -43,7 +43,7 @@
       </section>
 
       <section class="notes-section">
-        <h2>{{ $t("notebookDashboardNotesList") }}</h2>
+        <h2>{{ $t("workspace.dashboard.notesList") }}</h2>
         <div v-if="notebookNotes.length > 0" class="notes-list">
           <div v-for="note in notebookNotes" :key="note.id" class="note-card icon-text" @click="selectNote(note.id)">
             <Notes theme="outline" :size="16" />
@@ -54,7 +54,7 @@
           </div>
         </div>
         <div v-else class="empty-notes">
-          <p>{{ $t("notebookDashboardNoNotes") }}</p>
+          <p>{{ $t("workspace.dashboard.noNotes") }}</p>
         </div>
       </section>
     </div>

@@ -1,4 +1,4 @@
-﻿export { };
+export { };
 
 interface WorkspaceNodePayload {
   id: string;
@@ -11,6 +11,8 @@ interface WorkspaceNodePayload {
   updatedAt: number;
   trashed?: boolean;
   locked?: boolean;
+  starred?: boolean;
+  starredAt?: number;
 }
 
 interface WorkspaceRootPayload {
@@ -229,6 +231,8 @@ declare global {
         getHistory: (contentId: string) => Promise<HistoryVersion[]>;
         getHistoryContent: (payload: { contentId: string; filename: string }) => Promise<string>;
         recoverVersion: (payload: { nodeId: string; filename: string }) => Promise<boolean>;
+        toggleNodeStar: (payload: { nodeId: string; starred: boolean }) => Promise<WorkspaceNodePayload>;
+        getStarredNodes: () => Promise<WorkspaceNodePayload[]>;
       };
 
       search?: {

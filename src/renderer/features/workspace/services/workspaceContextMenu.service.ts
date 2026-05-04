@@ -52,7 +52,9 @@ export function createWorkspaceContextMenuLabels(t: Translate) {
     [WORKSPACE_CONSTANTS.MENU.MOVE_TO_ROOT]: t(WORKSPACE_CONSTANTS.MENU.MOVE_TO_ROOT),
     [WORKSPACE_CONSTANTS.MENU.SHOW_IN_FOLDER]: t(WORKSPACE_CONSTANTS.MENU.SHOW_IN_FOLDER),
     [WORKSPACE_CONSTANTS.MENU.PROPERTIES]: t(WORKSPACE_CONSTANTS.MENU.PROPERTIES),
-    [WORKSPACE_CONSTANTS.MENU.HISTORY]: t(WORKSPACE_CONSTANTS.MENU.HISTORY)
+    [WORKSPACE_CONSTANTS.MENU.HISTORY]: t(WORKSPACE_CONSTANTS.MENU.HISTORY),
+    [WORKSPACE_CONSTANTS.MENU.STAR]: t(WORKSPACE_CONSTANTS.MENU.STAR),
+    [WORKSPACE_CONSTANTS.MENU.UNSTAR]: t(WORKSPACE_CONSTANTS.MENU.UNSTAR)
   };
 }
 
@@ -71,6 +73,7 @@ export function getRootWorkspaceMenu(): WorkspaceMenuItem[] {
 
 export function getNoteContextMenu(note: Note, moveTargets: WorkspaceMoveTarget[] = []): WorkspaceMenuItem[] {
   return [
+    { action: WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_STAR, labelKey: note.starred ? WORKSPACE_CONSTANTS.MENU.UNSTAR : WORKSPACE_CONSTANTS.MENU.STAR },
     { action: WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_LOCK, labelKey: note.locked ? WORKSPACE_CONSTANTS.MENU.UNLOCK : WORKSPACE_CONSTANTS.MENU.LOCK },
     { action: WORKSPACE_CONSTANTS.ACTIONS.RENAME, labelKey: WORKSPACE_CONSTANTS.MENU.RENAME },
     ...(moveTargets.length > 0
@@ -90,8 +93,9 @@ export function getNoteContextMenu(note: Note, moveTargets: WorkspaceMoveTarget[
   ];
 }
 
-export function getNotebookContextMenu(_notebook: Notebook, moveTargets: WorkspaceMoveTarget[] = []): WorkspaceMenuItem[] {
+export function getNotebookContextMenu(notebook: Notebook, moveTargets: WorkspaceMoveTarget[] = []): WorkspaceMenuItem[] {
   return [
+    { action: WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_STAR, labelKey: notebook.starred ? WORKSPACE_CONSTANTS.MENU.UNSTAR : WORKSPACE_CONSTANTS.MENU.STAR },
     { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTE },
     { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTEBOOK, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK },
     ...(moveTargets.length > 0

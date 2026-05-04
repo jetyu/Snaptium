@@ -94,17 +94,23 @@ const unusedKeys = allKeys.filter(k => !usedKeys.includes(k));
 if (unusedKeys.length > 0) {
   console.log(`[INFO] Found ${unusedKeys.length} unused keys. Pruning zh-CN.json...`);
   const finalZhCN = {};
-  usedKeys.forEach(k => {
+  usedKeys.sort().forEach(k => {
     finalZhCN[k] = zhCN[k];
   });
   fs.writeFileSync(referenceFile, JSON.stringify(finalZhCN, null, 2) + '\n');
 } else {
+  // Ensure zh-CN is sorted even if no pruning needed
+  const sortedZhCN = {};
+  Object.keys(zhCN).sort().forEach(k => {
+    sortedZhCN[k] = zhCN[k];
+  });
+  fs.writeFileSync(referenceFile, JSON.stringify(sortedZhCN, null, 2) + '\n');
   console.log('[INFO] No unused keys found in zh-CN.json.');
 }
 
 // --- Phase 2: Synchronization ---
 
-const referenceKeys = usedKeys;
+const referenceKeys = usedKeys.sort();
 const referenceObj = JSON.parse(fs.readFileSync(referenceFile, 'utf8'));
 
 const localeFiles = fs.readdirSync(localesDir)

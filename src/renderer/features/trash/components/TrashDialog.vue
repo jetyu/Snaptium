@@ -32,15 +32,15 @@
             </div>
             <div v-else-if="trashedNodes.length === 0" class="empty-state">
               <Delete theme="outline" :size="48" class="empty-icon" />
-              <p>{{ $t('trash.emptyState') || 'No items in trash' }}</p>
+              <p>{{ $t('trash.emptyState') }}</p>
             </div>
             <div v-else class="trash-list-wrapper">
               <table class="trash-table">
                 <thead>
                   <tr>
-                    <th>{{ $t('trash.name') || 'Name' }}</th>
-                    <th>{{ $t('trash.deletedAt') || 'Deleted At' }}</th>
-                    <th class="actions-col">{{ $t('trash.actions') || 'Actions' }}</th>
+                    <th>{{ $t('trash.name') }}</th>
+                    <th>{{ $t('trash.deletedAt')  }}</th>
+                    <th class="actions-col">{{ $t('trash.actions') }}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -51,8 +51,7 @@
                         <NotebookOne v-else theme="outline" :size="14" />
                         <span class="name-text">{{ node.name }}</span>
                         <span v-if="node.childCount > 0" class="child-count">
-                          ({{ $t('trash.containsItems', { count: node.childCount }) || `Contains ${node.childCount}
-                          items` }})
+                          ({{ $t('trash.containsItems', { count: node.childCount })}})
                         </span>
                       </div>
                     </td>

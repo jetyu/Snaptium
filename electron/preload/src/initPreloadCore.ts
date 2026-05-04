@@ -50,6 +50,9 @@ const electronAPI = Object.freeze({
     getHistoryContent: (payload: { contentId: string; filename: string }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_GET_HISTORY_CONTENT, payload),
     recoverVersion: (payload: { nodeId: string; filename: string }) => ipcRenderer.invoke(IPC_CHANNELS.VFS_RECOVER_VERSION, payload),
+    toggleNodeStar: (payload: { nodeId: string; starred: boolean }) =>
+      ipcRenderer.invoke(IPC_CHANNELS.VFS_TOGGLE_NODE_STAR, payload),
+    getStarredNodes: () => ipcRenderer.invoke(IPC_CHANNELS.VFS_GET_STARRED_NODES),
   }),
   search: Object.freeze({
     searchNotes: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.SEARCH_NOTES, query),

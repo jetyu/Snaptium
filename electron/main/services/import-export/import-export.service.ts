@@ -20,18 +20,6 @@ async function saveSettingsPartial(
 export const importExportService = {
   async exportSppxPackage() {
     const result = await sppxExportService.exportPackage();
-    if (!result?.success || result.cancelled) {
-      return result;
-    }
-
-    await saveSettingsPartial((config: AppSettings) => ({
-      ...config,
-      lastSppxExportAt: result.exportedAt,
-      lastSppxExportPath: result.filePath,
-    })).catch((error) => {
-      logger.warn(`Failed to persist SPPX export history: ${getErrorMessage(error)}`);
-    });
-
     return result;
   },
 
@@ -43,7 +31,6 @@ export const importExportService = {
 
     await saveSettingsPartial((config: AppSettings) => ({
       ...config,
-      lastSppxImportAt: result.importedAt,
       rag: {
         ...config.rag,
         lastIndexedAt: null,
@@ -53,41 +40,17 @@ export const importExportService = {
         lastSyncedAt: null,
       },
     })).catch((error) => {
-      logger.warn(`Failed to persist SPPX import history: ${getErrorMessage(error)}`);
+      logger.warn(`Failed to reset post-import sync/index metadata: ${getErrorMessage(error)}`);
     });
 
     return result;
   },
 
   async exportMarkdownBatch() {
-    const result = await markdownExportService.exportMarkdown();
-    if (!result?.success || result.cancelled || !result.directoryPath) {
-      return result;
-    }
-
-    await saveSettingsPartial((config: AppSettings) => ({
-      ...config,
-      lastMarkdownExportDir: result.directoryPath,
-    })).catch((error) => {
-      logger.warn(`Failed to persist markdown export history: ${getErrorMessage(error)}`);
-    });
-
-    return result;
+    return await markdownExportService.exportMarkdown();
   },
 
   async importMarkdownBatch() {
-    const result = await markdownImportService.importMarkdown();
-    if (!result?.success || result.cancelled || !result.directoryPath) {
-      return result;
-    }
-
-    await saveSettingsPartial((config: AppSettings) => ({
-      ...config,
-      lastMarkdownImportDir: result.directoryPath,
-    })).catch((error) => {
-      logger.warn(`Failed to persist markdown import history: ${getErrorMessage(error)}`);
-    });
-
-    return result;
+    return await markdownImportService.importMarkdown();
   },
 };

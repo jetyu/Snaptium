@@ -24,7 +24,6 @@ export interface WorkbenchQuestionEntry {
 
 export interface WorkbenchSettings {
   visibleModuleIds: WorkbenchModuleId[];
-  favoriteNoteIds: string[];
   recentNotes: WorkbenchRecentNoteEntry[];
   recentQuestions: WorkbenchQuestionEntry[];
 }
@@ -36,7 +35,6 @@ export interface WorkbenchModuleDefinition {
 }
 
 export const WORKBENCH_LIMITS = {
-  FAVORITES: 12,
   QUESTIONS: 8,
   RECENT_NOTES: 8,
   RELATED_NOTES: 3,
@@ -101,17 +99,6 @@ export function sanitizeWorkbenchModuleIds(value: unknown): WorkbenchModuleId[] 
   return uniqueIds.length > 0 ? uniqueIds : [...DEFAULT_WORKBENCH_VISIBLE_MODULES];
 }
 
-function sanitizeFavoriteNoteIds(value: unknown): string[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value
-    .map((noteId) => String(noteId ?? '').trim())
-    .filter((noteId, index, items) => noteId.length > 0 && items.indexOf(noteId) === index)
-    .slice(0, WORKBENCH_LIMITS.FAVORITES);
-}
-
 function sanitizeRecentNotes(value: unknown): WorkbenchRecentNoteEntry[] {
   if (!Array.isArray(value)) {
     return [];
@@ -164,7 +151,6 @@ function sanitizeRecentQuestions(value: unknown): WorkbenchQuestionEntry[] {
 export function createDefaultWorkbenchSettings(): WorkbenchSettings {
   return {
     visibleModuleIds: [...DEFAULT_WORKBENCH_VISIBLE_MODULES],
-    favoriteNoteIds: [],
     recentNotes: [],
     recentQuestions: [],
   };
@@ -178,7 +164,6 @@ export function sanitizeWorkbenchSettings(value?: Partial<WorkbenchSettings> | n
 
   return {
     visibleModuleIds: sanitizeWorkbenchModuleIds(value.visibleModuleIds),
-    favoriteNoteIds: sanitizeFavoriteNoteIds(value.favoriteNoteIds),
     recentNotes: sanitizeRecentNotes(value.recentNotes),
     recentQuestions: sanitizeRecentQuestions(value.recentQuestions),
   };

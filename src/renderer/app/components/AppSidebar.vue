@@ -10,6 +10,7 @@
 
     <div class="app-shell-sidebar__stack app-shell-sidebar__stack--grow">
       <button v-for="module in customModules" :key="module.id" type="button" class="app-shell-sidebar__button"
+        :class="{ 'is-active': isModuleActive(module) }"
         :title="t(module.labelKey)" :aria-label="t(module.labelKey)" @click="$emit('open-module', module.id)">
         <component :is="getModuleIcon(module.id)" theme="outline" :size="18" />
       </button>
@@ -34,10 +35,11 @@ import {
   Delete,
   Info,
   SettingConfig,
+  Star,
 } from '@icon-park/vue-next';
 import type { AppShellMainViewId, AppShellModuleDefinition, AppShellMainViewDefinition, AppShellModuleId } from '../constants/appShell.constants';
 
-defineProps<{
+const props = defineProps<{
   activeMainView: AppShellMainViewId;
   mainViews: AppShellMainViewDefinition[];
   customModules: AppShellModuleDefinition[];
@@ -54,9 +56,11 @@ const { t } = useI18n();
 const mainViewIconMap = computed(() => ({
   workbench: ApplicationOne,
   workspace: NotebookOne,
+  favorites: Star,
 }));
 
 const moduleIconMap = computed(() => ({
+  favorites: Star,
   search: Search,
   settings: SettingTwo,
   trash: Delete,
@@ -69,6 +73,10 @@ function getMainViewIcon(viewId: AppShellMainViewId) {
 
 function getModuleIcon(moduleId: AppShellModuleId) {
   return moduleIconMap.value[moduleId] ?? NotebookOne;
+}
+
+function isModuleActive(module: AppShellModuleDefinition) {
+  return module.presentation === 'view' && module.viewId === props.activeMainView;
 }
 </script>
 

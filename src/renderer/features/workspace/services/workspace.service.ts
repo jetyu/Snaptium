@@ -11,6 +11,8 @@ export interface Note {
     createdAt: number;
     updatedAt: number;
     locked?: boolean;
+    starred?: boolean;
+    starredAt?: number;
 }
 
 export interface Notebook {
@@ -21,6 +23,8 @@ export interface Notebook {
     createdAt: number;
     updatedAt: number;
     locked?: boolean;
+    starred?: boolean;
+    starredAt?: number;
 }
 
 interface WorkspaceNode {
@@ -34,6 +38,8 @@ interface WorkspaceNode {
     updatedAt: number;
     trashed?: boolean;
     locked?: boolean;
+    starred?: boolean;
+    starredAt?: number;
 }
 
 interface WorkspaceData {
@@ -50,6 +56,30 @@ interface ToggleNodeLockResult {
     locked: boolean;
     updatedAt: number;
 }
+
+export interface StarredNote {
+    kind: 'note';
+    id: string;
+    title: string;
+    parentId: string | null;
+    createdAt: number;
+    updatedAt: number;
+    locked: boolean;
+    starredAt: number;
+}
+
+export interface StarredNotebook {
+    kind: 'notebook';
+    id: string;
+    name: string;
+    parentId: string | null;
+    createdAt: number;
+    updatedAt: number;
+    locked: boolean;
+    starredAt: number;
+}
+
+export type StarredNode = StarredNote | StarredNotebook;
 
 let currentWorkspaceRoot: string | null = null;
 
@@ -129,6 +159,8 @@ function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
         createdAt: node.createdAt,
         updatedAt: node.updatedAt,
         locked: node.locked ?? false,
+        starred: Boolean(node.starred),
+        starredAt: node.starredAt as number | undefined,
     };
 }
 
@@ -145,7 +177,50 @@ function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
         createdAt: node.createdAt,
         updatedAt: node.updatedAt,
         locked: node.locked ?? false,
+        starred: Boolean(node.starred),
+        starredAt: node.starredAt as number | undefined,
     };
+}
+
+function normalizeStarredAt(timestamp: unknown, fallback: number): number {
+    const normalized = Number(timestamp);
+    if (Number.isFinite(normalized) && normalized > 0) {
+        return normalized;
+    }
+
+    return fallback;
+}
+
+function mapNodeToStarredNode(node: WorkspaceNode): StarredNode | null {
+    const starredAt = normalizeStarredAt(node.starredAt, node.updatedAt);
+
+    if (node.type === 'file') {
+        return {
+            kind: 'note',
+            id: node.id,
+            title: normalizeNoteTitle(node.name),
+            parentId: node.parentId ?? null,
+            createdAt: node.createdAt,
+            updatedAt: node.updatedAt,
+            locked: node.locked ?? false,
+            starredAt,
+        };
+    }
+
+    if (node.type === 'folder') {
+        return {
+            kind: 'notebook',
+            id: node.id,
+            name: normalizeNotebookName(node.name),
+            parentId: node.parentId ?? null,
+            createdAt: node.createdAt,
+            updatedAt: node.updatedAt,
+            locked: node.locked ?? false,
+            starredAt,
+        };
+    }
+
+    return null;
 }
 
 export const workspaceService = {
@@ -395,6 +470,38 @@ export const workspaceService = {
         }
 
         return success;
+    },
+
+    async toggleNodeStar(nodeId: string, starred: boolean): Promise<{ starred: boolean; starredAt: number | undefined }> {
+        ensureVfsAvailable();
+
+        const updatedNode = await electronApi.vfs.toggleNodeStar({
+            nodeId: normalizeNodeId(nodeId),
+            starred,
+        });
+        notifyVfsChanged();
+
+        return {
+            starred: Boolean(updatedNode.starred),
+            starredAt: updatedNode.starredAt,
+        };
+    },
+
+    async getStarredNodes(): Promise<StarredNode[]> {
+        if (!isVfsAvailable()) {
+            return [];
+        }
+
+        const nodes = await electronApi.vfs.getStarredNodes();
+        return (nodes as WorkspaceNode[])
+            .map((node) => mapNodeToStarredNode(node))
+            .filter((node): node is StarredNode => node !== null)
+            .sort((left, right) => {
+                if (left.starredAt !== right.starredAt) {
+                    return right.starredAt - left.starredAt;
+                }
+                return right.updatedAt - left.updatedAt;
+            });
     },
 
     async confirmRecoverVersion(): Promise<boolean> {

@@ -1,4 +1,4 @@
-﻿export interface OpenFileResult {
+export interface OpenFileResult {
   filePath: string;
   content: string;
 }
@@ -215,6 +215,8 @@ export interface WorkspaceNodePayload {
   updatedAt: number;
   trashed?: boolean;
   locked?: boolean;
+  starred?: boolean;
+  starredAt?: number;
 }
 
 export interface WorkspaceRootPayload {
@@ -699,6 +701,14 @@ export const electronApi = {
 
     recoverVersion: (payload: { nodeId: string; filename: string }): Promise<boolean> => {
       return electronApi.vfs.getApi().recoverVersion(payload);
+    },
+
+    toggleNodeStar: (payload: { nodeId: string; starred: boolean }): Promise<WorkspaceNodePayload> => {
+      return electronApi.vfs.getApi().toggleNodeStar(payload);
+    },
+
+    getStarredNodes: (): Promise<WorkspaceNodePayload[]> => {
+      return electronApi.vfs.getApi().getStarredNodes();
     },
   },
 

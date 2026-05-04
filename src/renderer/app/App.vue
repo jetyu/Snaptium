@@ -28,10 +28,12 @@ import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.
 import { HistoryDialog } from '@renderer/features/workspace';
 import { useSyncLifecycle } from '@renderer/features/sync';
 import { AccessControlOverlay } from '@renderer/features/security';
+import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
 
 const settingsStore = useSettingsStore();
 const shortcutsStore = useShortcutsStore();
 const workspaceStore = useWorkspaceStore();
+const favoritesStore = useFavoritesStore();
 const { initializeRAG, setupAutoIndexOnSave } = useRAGInitialization();
 const { initializeSync, setupAutoSync } = useSyncLifecycle();
 
@@ -45,6 +47,7 @@ onMounted(async () => {
   
   // 等待工作区初始化完成
   await workspaceStore.initializeWorkspace();
+  await favoritesStore.initialize(true);
 
   await initializeSync();
   

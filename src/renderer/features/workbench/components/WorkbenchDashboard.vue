@@ -203,6 +203,7 @@ import { useSearch } from '@renderer/features/search';
 import { useWorkspace, type Note } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useWorkbenchStore } from '@renderer/features/workbench';
+import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
 import { useRAGConfig, useRAGSearch } from '@renderer/features/rag';
 import {
   WORKBENCH_LIMITS,
@@ -243,9 +244,10 @@ const { openGlobalSearch } = useSearch();
 const { notes, createNote, selectNote } = useWorkspace();
 const appShellStore = useAppShellStore();
 const workbenchStore = useWorkbenchStore();
+const favoritesStore = useFavoritesStore();
 const { search: ragSearch } = useRAGSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
-const { visibleModuleIds, favoriteNoteIds, recentNotes, recentQuestions } = storeToRefs(workbenchStore);
+const { visibleModuleIds, recentNotes, recentQuestions } = storeToRefs(workbenchStore);
 
 const hasNotes = computed(() => notes.value.length > 0);
 const noteMap = computed(() => {
@@ -266,10 +268,7 @@ const recentOpenedNotesPreview = computed(() => {
   return recentOpenedNotes.value.slice(0, WORKBENCH_DISPLAY_LIMITS.RECENT_NOTES);
 });
 const favoriteNotes = computed(() => {
-  return favoriteNoteIds.value
-    .map((noteId) => noteMap.value.get(noteId))
-    .filter((note): note is Note => Boolean(note))
-    .sort((a, b) => b.updatedAt - a.updatedAt);
+  return favoritesStore.sortedStarredNotes;
 });
 const favoriteNotesPreview = computed(() => {
   return favoriteNotes.value.slice(0, WORKBENCH_DISPLAY_LIMITS.FAVORITES);
@@ -434,11 +433,11 @@ function formatRelativeTime(timestamp: number) {
 }
 
 function isFavorite(noteId: string) {
-  return favoriteNoteIds.value.includes(noteId);
+  return favoritesStore.isStarredNote(noteId);
 }
 
 async function handleToggleFavorite(noteId: string) {
-  await workbenchStore.toggleFavorite(noteId);
+  await favoritesStore.toggleStar(noteId, 'note', !isFavorite(noteId));
 }
 
 async function handleToggleModule(moduleId: WorkbenchModuleId) {
@@ -562,6 +561,7 @@ watch(
 );
 
 onMounted(() => {
+  void favoritesStore.initialize();
   document.addEventListener('pointerdown', handleDocumentPointerDown);
 });
 

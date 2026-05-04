@@ -822,7 +822,7 @@ export const vfsService = {
       cancelId: 0,
       noLink: true,
       title: $t('label.trash'),
-      message: $t('trash.emptyConfirm'),
+      message: $t('trash.emptyAllConfirm'),
     });
 
     return response === 1;
@@ -858,6 +858,26 @@ export const vfsService = {
     });
 
     return response === 1;
+  },
+
+  async toggleNodeStar(nodeId: string, starred: boolean): Promise<WorkspaceNode> {
+    const root = await this.ensureInitialized();
+    const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);
+    const node = workspaceState.nodes.get(safeNodeId);
+    if (!node || node.trashed) throw new Error(`Node not found: ${safeNodeId}`);
+
+    node.starred = Boolean(starred);
+    node.starredAt = starred ? Date.now() : undefined;
+    workspaceState.nodes.set(node.id, node);
+    await persistAllNodes(root);
+    logger.debug(`${starred ? 'Starred' : 'Unstarred'} ${node.type} ${node.id}`);
+    return node;
+  },
+
+  getStarredNodes(): WorkspaceNode[] {
+    return Array.from(workspaceState.nodes.values())
+      .filter((node) => node.starred && !node.trashed)
+      .sort((a, b) => (Number(b.starredAt ?? 0)) - (Number(a.starredAt ?? 0)));
   },
 
   async autoClearTrash(root: string): Promise<void> {

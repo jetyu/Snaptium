@@ -11,7 +11,7 @@
         </div>
       </div>
       <div v-else-if="activeNotebookId" class="col-header">
-        <span class="col-title">{{ $t("notebookDashboardTitle") }}</span>
+        <span class="col-title">{{ $t("workspace.dashboard.title") }}</span>
       </div>
 
       <div v-if="activeNote" class="editor-wrapper">

@@ -1,12 +1,12 @@
 export const APP_SHELL_MAX_CUSTOM_MODULES = 4;
 
-export const APP_SHELL_MAIN_VIEW_IDS = ['workbench', 'workspace'] as const;
+export const APP_SHELL_MAIN_VIEW_IDS = ['workbench', 'workspace', 'favorites'] as const;
 
 export type AppShellMainViewId = (typeof APP_SHELL_MAIN_VIEW_IDS)[number];
 
-export type AppShellModuleId = 'search' | 'settings' | 'trash' | 'about';
+export type AppShellModuleId = 'favorites' | 'search' | 'settings' | 'trash' | 'about';
 
-export type AppShellModulePresentation = 'dialog';
+export type AppShellModulePresentation = 'dialog' | 'view';
 
 export interface AppShellMainViewDefinition {
   id: AppShellMainViewId;
@@ -17,6 +17,7 @@ export interface AppShellModuleDefinition {
   id: AppShellModuleId;
   labelKey: string;
   presentation: AppShellModulePresentation;
+  viewId?: AppShellMainViewId;
   settingsTab?: string;
 }
 
@@ -45,6 +46,12 @@ export const APP_SHELL_MAIN_VIEWS: AppShellMainViewDefinition[] = [
 ];
 
 export const APP_SHELL_CUSTOM_MODULES: AppShellModuleDefinition[] = [
+  {
+    id: 'favorites',
+    labelKey: 'appShell.mainView.favorites.label',
+    presentation: 'view',
+    viewId: 'favorites',
+  },
   {
     id: 'search',
     labelKey: 'search.searchNote',
