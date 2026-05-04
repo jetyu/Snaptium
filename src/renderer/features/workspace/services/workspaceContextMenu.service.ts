@@ -6,11 +6,12 @@ import { createLogger } from '@renderer/features/logger';
 export type WorkspaceContextAction = string;
 
 export interface WorkspaceMenuItem {
-  action?: WorkspaceContextAction;
+  action?: WorkspaceContextAction | null;
   labelKey?: string;
   label?: string;
-  type?: 'normal' | 'separator';
+  type?: 'normal' | 'separator' | 'submenu';
   enabled?: boolean;
+  submenu?: WorkspaceMenuItem[];
 }
 
 export interface WorkspaceMoveTarget {
@@ -21,16 +22,21 @@ export interface WorkspaceMoveTarget {
 const logger = createLogger('Workspace Context Menu');
 type Translate = (key: string, named?: Record<string, unknown>) => string;
 
+function toPayloadItem(item: WorkspaceMenuItem): WorkspaceMenuItem {
+  return {
+    action: item.action ?? null,
+    labelKey: item.labelKey,
+    label: item.label,
+    type: item.type ?? WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.NORMAL,
+    enabled: item.enabled,
+    submenu: Array.isArray(item.submenu) ? item.submenu.map(toPayloadItem) : undefined,
+  };
+}
+
 export async function showNativeWorkspaceContextMenu(t: Translate, items: WorkspaceMenuItem[]): Promise<WorkspaceContextAction | null> {
   const result = await electronApi.workspace.showContextMenu({
     labels: createWorkspaceContextMenuLabels(t),
-    items: items.map((item) => ({
-      action: item.action ?? WORKSPACE_CONSTANTS.ACTIONS.NOOP,
-      labelKey: item.labelKey,
-      label: item.label,
-      type: item.type ?? 'normal',
-      enabled: item.enabled,
-    })),
+    items: items.map(toPayloadItem),
   });
 
   if (result === null) {
@@ -65,6 +71,21 @@ export function getCreateButtonMenu(): WorkspaceMenuItem[] {
   ];
 }
 
+export function createMoveToSubmenu(moveTargets: WorkspaceMoveTarget[]): WorkspaceMenuItem | null {
+  if (moveTargets.length === 0) {
+    return null;
+  }
+
+  return {
+    type: WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SUBMENU,
+    labelKey: WORKSPACE_CONSTANTS.MENU.MOVE_TO,
+    submenu: moveTargets.map((target) => ({
+      action: target.action,
+      label: target.label,
+    })),
+  };
+}
+
 export function getRootWorkspaceMenu(): WorkspaceMenuItem[] {
   return [
     ...getCreateButtonMenu()
@@ -72,17 +93,15 @@ export function getRootWorkspaceMenu(): WorkspaceMenuItem[] {
 }
 
 export function getNoteContextMenu(note: Note, moveTargets: WorkspaceMoveTarget[] = []): WorkspaceMenuItem[] {
+  const moveToSubmenu = createMoveToSubmenu(moveTargets);
   return [
     { action: WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_STAR, labelKey: note.starred ? WORKSPACE_CONSTANTS.MENU.UNSTAR : WORKSPACE_CONSTANTS.MENU.STAR },
     { action: WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_LOCK, labelKey: note.locked ? WORKSPACE_CONSTANTS.MENU.UNLOCK : WORKSPACE_CONSTANTS.MENU.LOCK },
     { action: WORKSPACE_CONSTANTS.ACTIONS.RENAME, labelKey: WORKSPACE_CONSTANTS.MENU.RENAME },
-    ...(moveTargets.length > 0
+    ...(moveToSubmenu
       ? [
         { type: WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SEPARATOR },
-        ...moveTargets.map((target) => ({
-          action: target.action,
-          label: target.label,
-        })),
+        moveToSubmenu,
       ]
       : []),
     { type: WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SEPARATOR },
@@ -94,17 +113,15 @@ export function getNoteContextMenu(note: Note, moveTargets: WorkspaceMoveTarget[
 }
 
 export function getNotebookContextMenu(notebook: Notebook, moveTargets: WorkspaceMoveTarget[] = []): WorkspaceMenuItem[] {
+  const moveToSubmenu = createMoveToSubmenu(moveTargets);
   return [
     { action: WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_STAR, labelKey: notebook.starred ? WORKSPACE_CONSTANTS.MENU.UNSTAR : WORKSPACE_CONSTANTS.MENU.STAR },
     { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTE },
     { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTEBOOK, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK },
-    ...(moveTargets.length > 0
+    ...(moveToSubmenu
       ? [
         { type: WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SEPARATOR },
-        ...moveTargets.map((target) => ({
-          action: target.action,
-          label: target.label,
-        })),
+        moveToSubmenu,
       ]
       : []),
     { type: WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SEPARATOR },

@@ -5,14 +5,15 @@ import { loggerService } from '../../services/logger.service.js';
 const logger = loggerService.createLogger('Electron:Workspace Menu IPC');
 
 type MenuAction = string | null;
-type MenuItemType = 'normal' | 'separator';
+type MenuItemType = 'normal' | 'separator' | 'submenu';
 
 interface WorkspaceContextMenuItemPayload {
-  action?: string;
+  action?: string | null;
   labelKey?: string;
   label?: string;
   type?: MenuItemType;
   enabled?: boolean;
+  submenu?: WorkspaceContextMenuItemPayload[];
 }
 
 interface WorkspaceContextMenuPayload {
@@ -36,19 +37,30 @@ function resolveLabel(item: WorkspaceContextMenuItemPayload, labels: Record<stri
   return '';
 }
 
-function buildTemplate(
-  payload: WorkspaceContextMenuPayload = {},
+function buildMenuItems(
+  items: WorkspaceContextMenuItemPayload[],
+  labels: Record<string, string>,
   resolve: (action: MenuAction) => void,
 ): MenuItemConstructorOptions[] {
-  const labels = payload.labels ?? {};
-  const items = payload.items ?? [];
-
-  return items.map((item): MenuItemConstructorOptions => {
+  return items.map((item) => {
     if (item.type === 'separator') {
       return { type: 'separator' };
     }
 
-    const action = typeof item.action === 'string' ? item.action : null;
+    if (item.type === 'submenu') {
+      const submenuItems = Array.isArray(item.submenu) ? item.submenu : [];
+      return {
+        id: typeof item.action === 'string' ? item.action : undefined,
+        label: resolveLabel(item, labels),
+        enabled: item.enabled !== false && submenuItems.length > 0,
+        submenu: buildMenuItems(submenuItems, labels, resolve),
+      } as MenuItemConstructorOptions;
+    }
+
+    const action = typeof item.action === 'string' && item.action.trim().length > 0
+      ? item.action
+      : null;
+
     return {
       id: action ?? undefined,
       label: resolveLabel(item, labels),
@@ -56,6 +68,15 @@ function buildTemplate(
       click: action ? () => resolve(action) : undefined,
     };
   });
+}
+
+function buildTemplate(
+  payload: WorkspaceContextMenuPayload = {},
+  resolve: (action: MenuAction) => void,
+): MenuItemConstructorOptions[] {
+  const labels = payload.labels ?? {};
+  const items = payload.items ?? [];
+  return buildMenuItems(items, labels, resolve);
 }
 
 export function registerWorkspaceMenuIpcHandlers(mainWindow: BrowserWindow): void {

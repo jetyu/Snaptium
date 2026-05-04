@@ -112,7 +112,12 @@ import { useWorkbenchStore } from "../../workbench/store/workbench.store";
 import { useWorkspaceStore } from "../store/workspace.store";
 import { useAppShellStore } from "../../../app/store/appShell.store";
 import { workspaceService, type Note, type Notebook } from "../services/workspace.service";
-import { showNativeWorkspaceContextMenu, type WorkspaceMenuItem, type WorkspaceMoveTarget } from "../services/workspaceContextMenu.service";
+import {
+  createMoveToSubmenu,
+  showNativeWorkspaceContextMenu,
+  type WorkspaceMenuItem,
+  type WorkspaceMoveTarget,
+} from "../services/workspaceContextMenu.service";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
 import { Plus, Right, FileLockOne, Notes, NotebookOne, Refresh, DoubleRight, DoubleDown } from '@icon-park/vue-next';
 import StarButton from "../../favorites/components/StarButton.vue";
@@ -452,13 +457,11 @@ function getSelectionMenuItems(): WorkspaceMenuItem[] {
     selectedRootEntries.value.map((entry) => createMovableEntry(entry.id, entry.kind, entry.parentId)),
     new Set(selectedIds.value),
   );
+  const moveToSubmenu = createMoveToSubmenu(moveTargets);
 
   return [
-    ...moveTargets.map((target) => ({
-      action: target.action,
-      label: target.label,
-    })),
-    ...(moveTargets.length > 0 ? [{ type: WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SEPARATOR as 'separator' }] : []),
+    ...(moveToSubmenu ? [moveToSubmenu] : []),
+    ...(moveToSubmenu ? [{ type: WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SEPARATOR as 'separator' }] : []),
     {
       action: WORKSPACE_CONSTANTS.ACTIONS.DELETE_SELECTION,
       label: t("contextMenu.deleteSelected"),

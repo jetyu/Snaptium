@@ -178,11 +178,12 @@ export interface UpdaterErrorPayload {
 }
 
 export interface WorkspaceContextMenuItemPayload {
-  action: string;
+  action?: string | null;
   labelKey?: string;
   label?: string;
-  type?: 'normal' | 'separator';
+  type?: 'normal' | 'separator' | 'submenu';
   enabled?: boolean;
+  submenu?: WorkspaceContextMenuItemPayload[];
 }
 
 export interface WorkspaceContextMenuPayload {

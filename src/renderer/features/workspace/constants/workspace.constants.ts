@@ -58,6 +58,7 @@ export const WORKSPACE_CONSTANTS = {
   MENU_ITEM_TYPE: {
     NORMAL: 'normal',
     SEPARATOR: 'separator',
+    SUBMENU: 'submenu',
   },
 } as const;
 
