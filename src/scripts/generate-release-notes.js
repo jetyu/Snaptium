@@ -74,11 +74,11 @@ function removeBlock(template, startMarker, endMarker) {
 }
 
 function replaceTitle(template, isPreRelease) {
-  const titleRegex = /^### NoteWizard.*$/m;
+  const titleRegex = /^### Snaptium.*$/m;
 
   const newTitle = isPreRelease
-    ? '### NoteWizard Pre-Release Notes'
-    : '### NoteWizard Release Notes';
+    ? '### Snaptium Pre-Release Notes'
+    : '### Snaptium Release Notes';
 
   if (!titleRegex.test(template)) {
     throw new Error('Missing expected title line.');
