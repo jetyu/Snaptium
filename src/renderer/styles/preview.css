@@ -302,6 +302,21 @@
   margin-left: 0.35rem;
 }
 
+/* ===== KaTeX Math Styles ===== */
+.preview .katex-display {
+  margin: 1.2rem 0;
+  padding: 0.5rem 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.preview .katex {
+  font-size: 1.1em;
+  line-height: 1.2;
+  text-indent: 0;
+}
+
 .preview img,
 .preview picture {
   max-width: 100%;

@@ -14,9 +14,7 @@ const EDGE_HITBOX_PX = 10;
 const SIDEBAR_DEFAULT_WIDTH = 260;
 const SIDEBAR_MIN_WIDTH = 220;
 const SIDEBAR_MAX_WIDTH = 420;
-const SINGLE_CONTENT_MIN_WIDTH = 320;
-// The editor must keep enough space for the full formatting toolbar.
-const EDITOR_MIN_WIDTH = 440;
+const EDITOR_MIN_WIDTH = 460;
 const PREVIEW_DEFAULT_WIDTH = 420;
 const PREVIEW_MIN_WIDTH = 260;
 const PREVIEW_MAX_WIDTH = 760;
@@ -46,14 +44,14 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
   function getSidebarMaxWidth(containerWidth: number) {
     const remainingMinWidth = options.canResizePreviewRef.value
       ? EDITOR_MIN_WIDTH + PREVIEW_MIN_WIDTH
-      : SINGLE_CONTENT_MIN_WIDTH;
+      : EDITOR_MIN_WIDTH;
 
     return Math.min(SIDEBAR_MAX_WIDTH, containerWidth - remainingMinWidth);
   }
 
   function getPreviewMaxWidth(containerWidth: number) {
-    const availableWidth = containerWidth - sidebarWidth.value;
-    return Math.min(PREVIEW_MAX_WIDTH, availableWidth - EDITOR_MIN_WIDTH);
+    const remainingMinWidth = SIDEBAR_MIN_WIDTH + EDITOR_MIN_WIDTH;
+    return Math.min(PREVIEW_MAX_WIDTH, containerWidth - remainingMinWidth);
   }
 
   function clampPreviewWidthToFit(containerWidth: number) {
@@ -61,10 +59,20 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
       return;
     }
 
+    const maxP = containerWidth - sidebarWidth.value - EDITOR_MIN_WIDTH;
     previewWidth.value = clampValue(
       previewWidth.value,
       PREVIEW_MIN_WIDTH,
-      getPreviewMaxWidth(containerWidth),
+      Math.min(PREVIEW_MAX_WIDTH, maxP),
+    );
+  }
+
+  function clampSidebarWidthToFit(containerWidth: number) {
+    const maxS = containerWidth - previewWidth.value - EDITOR_MIN_WIDTH;
+    sidebarWidth.value = clampValue(
+      sidebarWidth.value,
+      SIDEBAR_MIN_WIDTH,
+      Math.min(SIDEBAR_MAX_WIDTH, maxS),
     );
   }
 
@@ -80,7 +88,14 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
       getSidebarMaxWidth(containerWidth),
     );
 
-    clampPreviewWidthToFit(containerWidth);
+    const availableForPreview = containerWidth - sidebarWidth.value - EDITOR_MIN_WIDTH;
+    if (options.canResizePreviewRef.value) {
+      previewWidth.value = clampValue(
+        previewWidth.value,
+        PREVIEW_MIN_WIDTH,
+        Math.min(PREVIEW_MAX_WIDTH, availableForPreview),
+      );
+    }
   }
 
   function updateSidebarWidth(clientX: number) {
@@ -89,14 +104,22 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
       return;
     }
 
-    sidebarWidth.value = clampValue(
+    const containerWidth = containerRect.width;
+    const newS = clampValue(
       clientX - containerRect.left,
       SIDEBAR_MIN_WIDTH,
-      getSidebarMaxWidth(containerRect.width),
+      getSidebarMaxWidth(containerWidth),
     );
 
-    // Keep the center editor from collapsing when the sidebar grows.
-    clampPreviewWidthToFit(containerRect.width);
+    sidebarWidth.value = newS;
+
+    // Push logic: if sidebar + current preview + editor_min > total, shrink preview
+    if (options.canResizePreviewRef.value) {
+      const maxP = containerWidth - newS - EDITOR_MIN_WIDTH;
+      if (previewWidth.value > maxP) {
+        previewWidth.value = clampValue(maxP, PREVIEW_MIN_WIDTH, PREVIEW_MAX_WIDTH);
+      }
+    }
   }
 
   function updatePreviewWidth(clientX: number) {
@@ -109,11 +132,20 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
       return;
     }
 
-    previewWidth.value = clampValue(
+    const containerWidth = containerRect.width;
+    const newP = clampValue(
       containerRect.right - clientX,
       PREVIEW_MIN_WIDTH,
-      getPreviewMaxWidth(containerRect.width),
+      getPreviewMaxWidth(containerWidth),
     );
+
+    previewWidth.value = newP;
+
+    // Push logic: if preview + current sidebar + editor_min > total, shrink sidebar
+    const maxS = containerWidth - newP - EDITOR_MIN_WIDTH;
+    if (sidebarWidth.value > maxS) {
+      sidebarWidth.value = clampValue(maxS, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH);
+    }
   }
 
   function resolveHandle(clientX: number) {
@@ -122,33 +154,27 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
       return null;
     }
 
-    const candidates: Array<{ handle: ResizeHandle; distance: number }> = [];
     const sidebarRect = options.sidebarRef.value?.getBoundingClientRect();
     if (options.hasTrailingContentRef.value && sidebarRect) {
-      const sidebarDistance = Math.abs(clientX - sidebarRect.right);
-      if (sidebarDistance <= EDGE_HITBOX_PX) {
-        candidates.push({
-          handle: 'sidebar',
-          distance: sidebarDistance,
-        });
+      // Hitbox: 0px to the left (on the border), 10px to the right.
+      const diff = clientX - sidebarRect.right;
+      if (diff >= 0 && diff <= 10) {
+        return 'sidebar';
       }
     }
 
     if (options.canResizePreviewRef.value) {
       const editorRect = options.editorRef.value?.getBoundingClientRect();
       if (editorRect) {
-        const previewDistance = Math.abs(clientX - editorRect.right);
-        if (previewDistance <= EDGE_HITBOX_PX) {
-          candidates.push({
-            handle: 'preview',
-            distance: previewDistance,
-          });
+        // Hitbox: 0px to the left, 10px to the right.
+        const diff = clientX - editorRect.right;
+        if (diff >= 0 && diff <= 10) {
+          return 'preview';
         }
       }
     }
 
-    candidates.sort((left, right) => left.distance - right.distance);
-    return candidates[0]?.handle ?? null;
+    return null;
   }
 
   function applyGlobalResizeState() {
@@ -205,17 +231,14 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
     hoverHandle.value = null;
   }
 
-  function handlePointerDown(event: PointerEvent) {
+  function startResize(handle: ResizeHandle, event: PointerEvent) {
     if (!event.isPrimary || event.button !== 0) {
       return;
     }
 
-    const handle = resolveHandle(event.clientX);
-    if (!handle) {
-      return;
-    }
-
     event.preventDefault();
+    event.stopPropagation();
+
     hoverHandle.value = handle;
     activeHandle.value = handle;
     applyGlobalResizeState();
@@ -229,6 +252,27 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
     window.addEventListener('pointermove', handleWindowPointerMove);
     window.addEventListener('pointerup', handleWindowPointerUp);
     window.addEventListener('pointercancel', handleWindowPointerUp);
+  }
+
+  function handleSidebarPointerDown(event: PointerEvent) {
+    startResize('sidebar', event);
+  }
+
+  function handlePreviewPointerDown(event: PointerEvent) {
+    startResize('preview', event);
+  }
+
+  function handlePointerDown(event: PointerEvent) {
+    if (!event.isPrimary || event.button !== 0) {
+      return;
+    }
+
+    const handle = resolveHandle(event.clientX);
+    if (!handle) {
+      return;
+    }
+
+    startResize(handle, event);
   }
 
   const workspaceViewClass = computed<Record<string, boolean>>(() => {
@@ -253,7 +297,7 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
   const editorPaneStyle = computed<CSSProperties>(() => {
     return {
       flex: '1 1 auto',
-      minWidth: '0',
+      minWidth: `${EDITOR_MIN_WIDTH}px`,
     };
   });
 
@@ -311,5 +355,7 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
     handlePointerMove,
     handlePointerLeave,
     handlePointerDown,
+    handleSidebarPointerDown,
+    handlePreviewPointerDown,
   };
 }

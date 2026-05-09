@@ -45,3 +45,15 @@ declare module 'markdown-it-deflist' {
   const plugin: (md: MarkdownIt) => void;
   export default plugin;
 }
+
+declare module 'markdown-it-katex' {
+  import type MarkdownIt from 'markdown-it';
+
+  interface MarkdownItKatexOptions {
+    throwOnError?: boolean;
+    errorColor?: string;
+  }
+
+  const plugin: (md: MarkdownIt, options?: MarkdownItKatexOptions) => void;
+  export default plugin;
+}

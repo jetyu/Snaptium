@@ -5,7 +5,12 @@
       <WorkspaceSidebar />
     </div>
 
-    <section v-if="!activeNote?.locked" ref="editorSectionRef" class="editor-col panel" :style="editorPaneStyle">
+    <div v-if="hasTrailingContent" class="resizer resizer--sidebar"
+      :class="{ 'resizer--active': workspaceViewClass['workspace-view--sidebar-highlighted'] }"
+      @pointerdown="handleSidebarPointerDown">
+    </div>
+
+    <section v-if="hasEditorPane" ref="editorSectionRef" class="editor-col panel" :style="editorPaneStyle">
       <div v-if="activeNote" class="col-header">
         <div class="header-left">
           <span class="col-title">{{ $t("common.editor") }}</span>
@@ -31,8 +36,12 @@
       </div>
     </section>
 
-    <section v-if="activeNote || !activeNotebookId" ref="previewSectionRef" class="preview-col panel"
-      :style="previewPaneStyle">
+    <div v-if="canResizePreview" class="resizer resizer--preview"
+      :class="{ 'resizer--active': workspaceViewClass['workspace-view--preview-highlighted'] }"
+      @pointerdown="handlePreviewPointerDown">
+    </div>
+
+    <section v-if="hasPreviewPane" ref="previewSectionRef" class="preview-col panel" :style="previewPaneStyle">
       <div class="col-header">
         <span class="col-title">{{ $t("common.preview") }}</span>
       </div>
@@ -116,6 +125,8 @@ const {
   handlePointerMove,
   handlePointerLeave,
   handlePointerDown,
+  handleSidebarPointerDown,
+  handlePreviewPointerDown,
 } = useWorkspacePaneResize({
   rootRef: workspaceViewRef,
   sidebarRef: sidebarPaneRef,
@@ -395,5 +406,25 @@ watch(
   flex: 1;
   min-height: 0;
   overflow: hidden;
+}
+
+.resizer {
+  position: relative;
+  width: 4px;
+  margin: 0 -2px;
+  z-index: 100;
+  cursor: col-resize;
+  transition: background-color 0.2s;
+  flex-shrink: 0;
+}
+
+/* Hitbox expansion */
+.resizer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: -10px;
 }
 </style>

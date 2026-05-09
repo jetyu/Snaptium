@@ -34,24 +34,47 @@
   --danger: #f85a5e;
 }
 
-/* ===== Scrollbar Style ===== */
+/* ===== VS Code Style Scrollbars ===== */
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--panel-border);
-  border: 2px solid var(--bg);
-  border-radius: 5px;
+  background: rgba(121, 121, 121, 0);
+  /* Hidden by default */
+  border: 1px solid transparent;
+  background-clip: padding-box;
 }
 
+/* Show scrollbar thumb on container hover */
+*:hover> ::-webkit-scrollbar-thumb,
+*:hover::-webkit-scrollbar-thumb,
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background-color: rgba(121, 121, 121, 0.4);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: rgba(121, 121, 121, 0.6) !important;
+}
+
+/* Dark Theme Adjustments */
+[data-theme='dark'] ::-webkit-scrollbar-thumb {
+  background-color: rgba(204, 204, 204, 0);
+}
+
+[data-theme='dark'] *:hover> ::-webkit-scrollbar-thumb,
+[data-theme='dark'] *:hover::-webkit-scrollbar-thumb,
+[data-theme='dark'] ::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(204, 204, 204, 0.2);
+}
+
+[data-theme='dark'] ::-webkit-scrollbar-thumb:active {
+  background-color: rgba(204, 204, 204, 0.4) !important;
 }
 
 /* ===== Reset ===== */

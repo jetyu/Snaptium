@@ -2,6 +2,7 @@ import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
 import markdownItDeflist from 'markdown-it-deflist';
 import markdownItFootnote from 'markdown-it-footnote';
+import markdownItKatex from 'markdown-it-katex';
 import markdownItMark from 'markdown-it-mark';
 import markdownItSub from 'markdown-it-sub';
 import markdownItSup from 'markdown-it-sup';
@@ -207,6 +208,10 @@ function getHtmlWhitelistOptions(allowInlineSvg: boolean) {
     'table', 'thead', 'tbody', 'tr', 'th', 'td',
     'button', 'input', 'label',
     'img', 'picture', 'source',
+    // MathML tags for KaTeX support
+    'math', 'semantics', 'annotation', 'mtext', 'mspace', 'ms', 'mn', 'mi', 'mo', 'mfrac', 'msup', 'msub', 'msubsup',
+    'mmultiscripts', 'munder', 'mover', 'munderover', 'mtable', 'mtr', 'mtd', 'maction', 'menclose', 'merror',
+    'mfenced', 'mphantom', 'mroot', 'msqrt', 'mstyle',
   ];
 
   const allowedAttrs = [
@@ -214,6 +219,8 @@ function getHtmlWhitelistOptions(allowInlineSvg: boolean) {
     'alt', 'title', 'width', 'height', 'class', 'id', 'role', 'focusable', 'aria-hidden', 'aria-label',
     'checked', 'disabled', 'for',
     'data-source-line', 'data-heading-id',
+    'style', // Required for KaTeX positioning
+    'encoding', 'display', // MathML attributes
   ];
 
   if (allowInlineSvg) {
@@ -288,6 +295,7 @@ function createMarkdownIt(allowHtml: boolean, renderOptions: MarkdownRenderOptio
   markdownIt.use(markdownItSub);
   markdownIt.use(markdownItSup);
   markdownIt.use(markdownItDeflist);
+  markdownIt.use(markdownItKatex);
 
   const defaultValidateLink = markdownIt.validateLink.bind(markdownIt);
   markdownIt.validateLink = (url: string) => {
