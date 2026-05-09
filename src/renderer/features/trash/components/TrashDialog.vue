@@ -39,7 +39,7 @@
                 <thead>
                   <tr>
                     <th>{{ $t('trash.name') }}</th>
-                    <th>{{ $t('trash.deletedAt')  }}</th>
+                    <th>{{ $t('trash.deletedAt') }}</th>
                     <th class="actions-col">{{ $t('trash.actions') }}</th>
                   </tr>
                 </thead>
@@ -51,7 +51,7 @@
                         <NotebookOne v-else theme="outline" :size="14" />
                         <span class="name-text">{{ node.name }}</span>
                         <span v-if="node.childCount > 0" class="child-count">
-                          ({{ $t('trash.containsItems', { count: node.childCount })}})
+                          ({{ $t('trash.containsItems', { count: node.childCount }) }})
                         </span>
                       </div>
                     </td>
