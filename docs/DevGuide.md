@@ -1,4 +1,4 @@
-# NoteWizard 开发规约（DevGuide）
+# Snaptium 开发规约（DevGuide）
 
 > 目标：本指南用于团队持续开发，统一解释项目目录职责、架构协作方式，以及新增功能的标准落位规范。
 
@@ -140,7 +140,7 @@ i18n
 
 # 二、整体架构总览
 
-NoteWizard 采用：
+Snaptium 采用：
 
 * Electron
 * Vue 3
@@ -291,7 +291,7 @@ View / Component
 # 六、项目目录结构
 
 ```text
-NoteWizard
+Snaptium
 │
 ├─ electron
 │  ├─ main
@@ -649,7 +649,7 @@ en-US.json
 
 ```json
 {
-  "appName": "NoteWizard",
+  "appName": "Snaptium",
   "workspace": "Workspace",
   "outline": "Outline",
   "collapsePanel": "Collapse Panel",
