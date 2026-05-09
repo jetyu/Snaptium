@@ -1,10 +1,17 @@
 import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
+import markdownItDeflist from 'markdown-it-deflist';
+import markdownItFootnote from 'markdown-it-footnote';
+import markdownItMark from 'markdown-it-mark';
+import markdownItSub from 'markdown-it-sub';
+import markdownItSup from 'markdown-it-sup';
+import markdownItTaskLists from 'markdown-it-task-lists';
 import {
   DEFAULT_TRUSTED_REMOTE_IMAGE_HOSTS,
   isTrustedRemoteImageUrl,
   normalizeTrustedRemoteImageHosts,
 } from '@shared/preview-security.constants';
+import { highlightMarkdownCode } from './markdownHighlight';
 
 export interface MarkdownHeading {
   id: string;
@@ -24,6 +31,7 @@ export interface MarkdownRenderOptions {
   remoteImageMode?: 'blocked' | 'trusted' | 'all';
   trustedRemoteImageHosts?: string[];
   blockedImageLabel?: string;
+  copyCodeButtonLabel?: string;
   contentId?: string | null;
   workspaceRoot?: string | null;
 }
@@ -31,6 +39,12 @@ export interface MarkdownRenderOptions {
 interface MarkdownCompileEnv {
   headings: MarkdownHeading[];
   slugCounts: Map<string, number>;
+}
+
+interface MarkdownCodeBlockToken {
+  content: string;
+  info: string;
+  map?: [number, number] | null;
 }
 
 const DATABASE_FOLDER = 'Database';
@@ -189,13 +203,16 @@ function getHtmlWhitelistOptions(allowInlineSvg: boolean) {
     'blockquote', 'p', 'a', 'ul', 'ol', 'li',
     'b', 'i', 'strong', 'em', 'strike', 'code', 'pre', 'u', 'mark', 'sub', 'sup', 'small', 'kbd',
     'hr', 'br', 'div', 'span', 'section', 'article', 'header', 'footer', 'figure', 'figcaption',
+    'dl', 'dt', 'dd',
     'table', 'thead', 'tbody', 'tr', 'th', 'td',
+    'button', 'input', 'label',
     'img', 'picture', 'source',
   ];
 
   const allowedAttrs = [
     'href', 'name', 'target', 'rel', 'src', 'srcset', 'sizes', 'type', 'media',
-    'alt', 'title', 'width', 'height', 'class', 'id', 'role', 'focusable', 'aria-hidden',
+    'alt', 'title', 'width', 'height', 'class', 'id', 'role', 'focusable', 'aria-hidden', 'aria-label',
+    'checked', 'disabled', 'for',
     'data-source-line', 'data-heading-id',
   ];
 
@@ -219,13 +236,58 @@ function getHtmlWhitelistOptions(allowInlineSvg: boolean) {
   };
 }
 
-function createMarkdownIt(allowHtml: boolean) {
+function escapeAttributeValue(markdownIt: MarkdownIt, value: string) {
+  return markdownIt.utils.escapeHtml(value);
+}
+
+function renderCodeBlock(
+  markdownIt: MarkdownIt,
+  token: MarkdownCodeBlockToken,
+  rawLanguage: string,
+  copyCodeButtonLabel?: string,
+) {
+  const sourceLine = token.map?.[0] != null ? token.map[0] + 1 : null;
+  const wrapperAttrHtml = sourceLine ? ` data-source-line="${sourceLine}"` : '';
+  const { html, language, languageLabel } = highlightMarkdownCode(token.content, rawLanguage);
+  const codeClasses = ['hljs'];
+
+  if (language) {
+    codeClasses.push(`language-${language}`);
+  }
+
+  const languageBadgeHtml = languageLabel
+    ? `<span class="preview-code-block__language">${escapeAttributeValue(markdownIt, languageLabel)}</span>`
+    : '';
+
+  const copyButtonHtml = copyCodeButtonLabel
+    ? `<button type="button" class="preview-code-block__copy" data-copy-code data-copy-label="${escapeAttributeValue(markdownIt, copyCodeButtonLabel)}" aria-label="${escapeAttributeValue(markdownIt, copyCodeButtonLabel)}">${escapeAttributeValue(markdownIt, copyCodeButtonLabel)}</button>`
+    : '';
+
+  const toolbarHtml = languageBadgeHtml || copyButtonHtml
+    ? `<div class="preview-code-block__toolbar">${languageBadgeHtml}${copyButtonHtml}</div>`
+    : '';
+
+  return `<div class="preview-code-block"${wrapperAttrHtml}>${toolbarHtml}<pre><code class="${codeClasses.join(' ')}">${html}</code></pre></div>\n`;
+}
+
+function createMarkdownIt(allowHtml: boolean, renderOptions: MarkdownRenderOptions) {
   const markdownIt = new MarkdownIt({
     html: allowHtml,
     linkify: true,
     typographer: true,
     breaks: true,
   });
+
+  markdownIt.use(markdownItFootnote);
+  markdownIt.use(markdownItTaskLists, {
+    enabled: false,
+    label: true,
+    labelAfter: true,
+  });
+  markdownIt.use(markdownItMark);
+  markdownIt.use(markdownItSub);
+  markdownIt.use(markdownItSup);
+  markdownIt.use(markdownItDeflist);
 
   const defaultValidateLink = markdownIt.validateLink.bind(markdownIt);
   markdownIt.validateLink = (url: string) => {
@@ -280,10 +342,13 @@ function createMarkdownIt(allowHtml: boolean) {
     'bullet_list_open',
     'ordered_list_open',
     'list_item_open',
-    'table_open',
-    'thead_open',
-    'tbody_open',
-    'tr_open',
+      'table_open',
+      'dl_open',
+      'dt_open',
+      'dd_open',
+      'thead_open',
+      'tbody_open',
+      'tr_open',
   ];
 
   for (const tokenType of sourceMappedTokenTypes) {
@@ -302,44 +367,16 @@ function createMarkdownIt(allowHtml: boolean) {
     return `<hr${self.renderAttrs(token)}>\n`;
   };
 
-  markdownIt.renderer.rules.code_block = (tokens, idx, _options, _env, self) => {
+  markdownIt.renderer.rules.code_block = (tokens, idx) => {
     const token = tokens[idx];
-    applySourceLineAttr(token);
-    return `<pre${self.renderAttrs(token)}><code>${markdownIt.utils.escapeHtml(token.content)}</code></pre>\n`;
+    return renderCodeBlock(markdownIt, token, '', renderOptions.copyCodeButtonLabel);
   };
 
-  markdownIt.renderer.rules.fence = (tokens, idx, options, _env, self) => {
+  markdownIt.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx];
     const info = token.info ? markdownIt.utils.unescapeAll(token.info).trim() : '';
-    let langName = '';
-    let langAttrs = '';
-
-    if (info) {
-      const segments = info.split(/(\s+)/g);
-      langName = segments[0];
-      langAttrs = segments.slice(2).join('');
-    }
-
-    const highlighted = options.highlight
-      ? options.highlight(token.content, langName, langAttrs) || markdownIt.utils.escapeHtml(token.content)
-      : markdownIt.utils.escapeHtml(token.content);
-
-    applySourceLineAttr(token);
-
-    const codeAttrs = token.attrs ? [...token.attrs] : [];
-    if (langName) {
-      const classIndex = codeAttrs.findIndex(([name]) => name === 'class');
-      if (classIndex >= 0) {
-        codeAttrs[classIndex] = [codeAttrs[classIndex][0], `${codeAttrs[classIndex][1]} ${options.langPrefix}${langName}`];
-      } else {
-        codeAttrs.push(['class', `${options.langPrefix}${langName}`]);
-      }
-    }
-
-    const codeAttrHtml = codeAttrs
-      .map(([name, value]) => ` ${markdownIt.utils.escapeHtml(name)}="${markdownIt.utils.escapeHtml(value)}"`)
-      .join('');
-    return `<pre${self.renderAttrs(token)}><code${codeAttrHtml}>${highlighted}</code></pre>\n`;
+    const languageName = info ? info.split(/\s+/, 1)[0] : '';
+    return renderCodeBlock(markdownIt, token, languageName, renderOptions.copyCodeButtonLabel);
   };
 
   return markdownIt;
@@ -352,7 +389,7 @@ export function compileMarkdown(markdown: string, options: MarkdownRenderOptions
     headings: [],
     slugCounts: new Map<string, number>(),
   };
-  const parser = createMarkdownIt(allowHtml);
+  const parser = createMarkdownIt(allowHtml, options);
   const html = parser.render(markdown, env);
   const sanitizedHtml = DOMPurify.sanitize(html, getHtmlWhitelistOptions(allowInlineSvg));
 

@@ -1,16 +1,21 @@
-### [2.0.0] - 2026-04-19
-We are pleased to announce the official release of snaptium v2.0. NoteWizard has been fully upgraded to snaptium. It has been rebuilt on a new architecture to deliver a more modern product experience and capability system. NoteWizard 1.x will continue to receive security updates for no less than 6 months, ensuring stability and data safety for existing users.
+### [2.0.0] - 2026-05-10
+We are excited to announce that NoteWizard has been fully upgraded to Snaptium. Rebuilt upon an entirely new architecture, it delivers a more modern product experience and a comprehensive suite of capabilities.
 #### New
-- Added a Workspace module for unified management of notes, tasks, knowledge, and core features.
-- Introduced Workspaces to support multi-scenario organization and clearer knowledge structuring.
-- Added cloud sync capability with support for cross-device synchronization, WebDAV, and S3-compatible object storage services, improving multi-device collaboration.
-- Introduced AI-powered writing features, including continuation, rewriting, polishing, summarization, and writing assistance.
-- Added knowledge base capability with local retrieval, semantic search, and context-enhanced Q&A.
-- Introduced multi-model configuration management, supporting independent setup of chat models, embedding models, and knowledge base models.
+- Added a Workbench module, enabling unified management of notes, related note recommendations, and recent activity.
+- Added an Access Control module, supporting authentication upon startup.
+- Added End-to-End Encrypted Cloud Sync functionality, enabling cross-device data synchronization with support for WebDAV and S3 object storage services.
+- Added a Knowledge Base, supporting local knowledge retrieval, semantic recall, and context-enhanced Q&A.
+- Added AI Service Configuration Management, supporting the configuration of multiple AI models.
+- Added support for more Markdown rendering syntax.
+- Added Version History management functionality.
+- Added Keyboard Shortcut management functionality.
+- Added Custom Editor Settings.
 #### Improved
-- Refactored the editor core architecture to improve Markdown editing experience and rendering performance.
-- Optimized overall system performance, including startup time, responsiveness, and stability.
-- Enhanced logging system with multi-level log output and improved debugging capabilities.
+- Optimized the Workspace to facilitate clearer management of knowledge structures.
+- Rebuilt the underlying Editor architecture to enhance the Markdown editing experience and rendering performance.
+- Rebuilt the Intelligent Writing capabilities to support content continuation, refinement, rewriting, summarization, and AI-assisted creation.
+- Optimized overall performance, improving startup speed, responsiveness, and system stability.
+- Optimized the Logging module to support multi-level log output and enhanced troubleshooting capabilities.
 
 ### [1.2.0] - 2026-03-27
 #### New

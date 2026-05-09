@@ -33,8 +33,7 @@
               <div v-if="isLoadingContent" class="loading-state">
                 <div class="spinner"></div>
               </div>
-              <div v-else-if="selectedContentHtml" class="preview-content markdown-body" v-html="selectedContentHtml">
-              </div>
+              <PreviewPane v-else-if="selectedContentHtml" :html="selectedContentHtml" />
               <div v-else class="empty-preview">
                 <p>{{ $t('history.previewPlaceholder') }}</p>
               </div>
@@ -59,6 +58,7 @@ import { useWorkspaceStore } from '../store/workspace.store';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { workspaceService } from '../services/workspace.service';
 import { useSettingsStore } from '@renderer/features/settings';
+import { PreviewPane } from '@renderer/features/preview';
 import { useI18n } from 'vue-i18n';
 import { Close } from '@icon-park/vue-next';
 
@@ -90,6 +90,7 @@ const selectedContentHtml = computed(() => {
     remoteImageMode: settingsStore.config.previewAppearance.remoteImageMode,
     trustedRemoteImageHosts: settingsStore.config.previewAppearance.trustedRemoteImageHosts,
     blockedImageLabel: t('preview.remoteImageBlocked'),
+    copyCodeButtonLabel: t('preview.copyCode'),
     contentId: workspaceStore.activeNote?.contentId ?? null,
     workspaceRoot: workspaceService.getCurrentWorkspaceRoot(),
   });
@@ -247,15 +248,10 @@ watch(() => workspaceStore.isHistoryDialogOpen, async (newVal) => {
 
 .history-preview {
   flex: 1;
-  padding: 20px;
-  overflow-y: auto;
+  display: flex;
+  min-width: 0;
+  overflow: hidden;
   background: var(--panel, #ffffff);
-}
-
-.preview-content {
-  color: var(--text, #1f2937);
-  font-size: 0.95rem;
-  line-height: 1.6;
 }
 
 .empty-preview,

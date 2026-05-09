@@ -137,6 +137,7 @@ const compiledPreview = computed(() => {
     remoteImageMode: config.value.previewAppearance.remoteImageMode,
     trustedRemoteImageHosts: config.value.previewAppearance.trustedRemoteImageHosts,
     blockedImageLabel: t('preview.remoteImageBlocked'),
+    copyCodeButtonLabel: t('preview.copyCode'),
     contentId: activeNote.value.contentId,
     workspaceRoot: workspaceService.getCurrentWorkspaceRoot(),
   });
