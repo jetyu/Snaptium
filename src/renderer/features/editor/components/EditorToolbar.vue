@@ -72,11 +72,16 @@ const getIconComponent = (iconName: string) => iconMap[iconName] || H1;
   gap: 0;
   flex-shrink: 0;
   min-height: 36px;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
 }
 
 .toolbar-group-wrapper {
   display: flex;
   align-items: center;
+  flex: 0 0 auto;
 }
 
 .toolbar-group {

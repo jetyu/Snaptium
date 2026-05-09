@@ -169,12 +169,12 @@ function getHelpMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
       }, { type: 'separator' }, {
         label: $t('menu.help.privacy'),
         click: async () => {
-          await shell.openExternal('https://snaptium.com/privacy');
+          await shell.openExternal('https://snaptium.com/legal/privacy');
         },
       }, {
         label: $t('menu.help.termsOfService'),
         click: async () => {
-          await shell.openExternal('https://snaptium.com/tos');
+          await shell.openExternal('https://snaptium.com/legal/terms');
         },
       }, { type: 'separator' },
       {

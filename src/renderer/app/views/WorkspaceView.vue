@@ -1,8 +1,11 @@
 <template>
-  <div class="workspace-view">
-    <WorkspaceSidebar />
+  <div ref="workspaceViewRef" class="workspace-view" :class="workspaceViewClass" @pointermove="handlePointerMove"
+    @pointerleave="handlePointerLeave" @pointerdown="handlePointerDown">
+    <div ref="sidebarPaneRef" class="workspace-pane workspace-pane--sidebar" :style="sidebarPaneStyle">
+      <WorkspaceSidebar />
+    </div>
 
-    <section v-if="!activeNote?.locked" class="editor-col panel">
+    <section v-if="!activeNote?.locked" ref="editorSectionRef" class="editor-col panel" :style="editorPaneStyle">
       <div v-if="activeNote" class="col-header">
         <div class="header-left">
           <span class="col-title">{{ $t("common.editor") }}</span>
@@ -16,12 +19,8 @@
 
       <div v-if="activeNote" class="editor-wrapper">
         <EditorToolbar :editor-view="editorView" />
-        <EditorPane
-          ref="editorPaneRef"
-          :model-value="activeNote.content"
-          @update:model-value="updateActiveContent"
-          @selection-change="handleSelectionChange"
-        />
+        <EditorPane ref="editorPaneRef" :model-value="activeNote.content" @update:model-value="updateActiveContent"
+          @selection-change="handleSelectionChange" />
         <EditorStatus :cursor-position="cursorPosition" :selected-text="selectedText" />
       </div>
       <div v-else-if="activeNotebookId" class="editor-wrapper">
@@ -32,20 +31,14 @@
       </div>
     </section>
 
-    <section
-      v-if="activeNote || !activeNotebookId"
-      class="preview-col panel"
-    >
+    <section v-if="activeNote || !activeNotebookId" ref="previewSectionRef" class="preview-col panel"
+      :style="previewPaneStyle">
       <div class="col-header">
         <span class="col-title">{{ $t("common.preview") }}</span>
       </div>
 
       <div class="preview-body">
-        <PreviewPane
-          v-if="activeNote"
-          ref="previewPaneRef"
-          :html="compiledPreview.html"
-        />
+        <PreviewPane v-if="activeNote" ref="previewPaneRef" :html="compiledPreview.html" />
 
         <div v-else class="col-empty">
           <p>
@@ -71,7 +64,7 @@ import { EditorPane } from '@renderer/features/editor';
 import EditorToolbar from '@renderer/features/editor/components/EditorToolbar.vue';
 import EditorStatus from '@renderer/features/editor/components/EditorStatus.vue';
 import { PreviewPane } from '@renderer/features/preview';
-import { useWorkspace, workspaceService } from '@renderer/features/workspace';
+import { useWorkspace, useWorkspacePaneResize, workspaceService } from '@renderer/features/workspace';
 import { useSettingsStore } from '@renderer/features/settings';
 import { storeToRefs } from 'pinia';
 import { useI18n } from 'vue-i18n';
@@ -101,11 +94,35 @@ const { t } = useI18n();
 const settingsStore = useSettingsStore();
 const { config } = storeToRefs(settingsStore);
 
+const workspaceViewRef = ref<HTMLElement | null>(null);
+const sidebarPaneRef = ref<HTMLElement | null>(null);
+const editorSectionRef = ref<HTMLElement | null>(null);
+const previewSectionRef = ref<HTMLElement | null>(null);
 const editorPaneRef = ref<EditorPaneExposed | null>(null);
 const previewPaneRef = ref<PreviewPaneExposed | null>(null);
 const cursorPosition = ref<{ line: number; column: number } | null>(null);
 const selectedText = ref('');
 const activeSourceLine = ref(1);
+const hasPreviewPane = computed(() => Boolean(activeNote.value || !activeNotebookId.value));
+const hasEditorPane = computed(() => !activeNote.value?.locked);
+const hasTrailingContent = computed(() => hasEditorPane.value || hasPreviewPane.value);
+const canResizePreview = computed(() => hasEditorPane.value && hasPreviewPane.value);
+
+const {
+  workspaceViewClass,
+  sidebarPaneStyle,
+  editorPaneStyle,
+  previewPaneStyle,
+  handlePointerMove,
+  handlePointerLeave,
+  handlePointerDown,
+} = useWorkspacePaneResize({
+  rootRef: workspaceViewRef,
+  sidebarRef: sidebarPaneRef,
+  editorRef: editorSectionRef,
+  hasTrailingContentRef: hasTrailingContent,
+  canResizePreviewRef: canResizePreview,
+});
 
 const compiledPreview = computed(() => {
   if (!activeNote.value) {
@@ -335,6 +352,27 @@ watch(
   flex: 1;
   height: 100vh;
   overflow: hidden;
+}
+
+.workspace-view--resize-ready,
+.workspace-view--resizing {
+  cursor: col-resize;
+}
+
+.workspace-pane {
+  min-width: 0;
+  display: flex;
+}
+
+.workspace-pane--sidebar :deep(.sidebar) {
+  width: 100%;
+  min-width: 0;
+  max-width: none;
+  height: 100%;
+}
+
+.workspace-view--preview-highlighted .editor-col {
+  border-right-color: color-mix(in srgb, var(--accent) 40%, var(--panel-border));
 }
 
 .header-left {
