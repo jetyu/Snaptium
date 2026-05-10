@@ -1,6 +1,5 @@
 export const WORKBENCH_MODULE_IDS = [
   'recentNotes',
-  'favorites',
   'recentActivity',
   'recentQuestions',
   'smartRecommendation',
@@ -53,11 +52,6 @@ export const WORKBENCH_MODULE_DEFINITIONS: WorkbenchModuleDefinition[] = [
     layoutClass: 'workbench-card--list',
   },
   {
-    id: 'favorites',
-    labelKey: 'workbench.module.favorites',
-    layoutClass: 'workbench-card--list',
-  },
-  {
     id: 'recentActivity',
     labelKey: 'workbench.module.recentActivity',
     layoutClass: 'workbench-card--list',
@@ -77,7 +71,6 @@ export const WORKBENCH_MODULE_DEFINITIONS: WorkbenchModuleDefinition[] = [
 export const DEFAULT_WORKBENCH_VISIBLE_MODULES: WorkbenchModuleId[] = [
   'smartRecommendation',
   'recentNotes',
-  'favorites',
   'recentActivity',
   'recentQuestions',
   'relatedNotes',

@@ -70,10 +70,6 @@
               <button type="button" class="note-action-pill" @click="openNoteInWorkspace(featuredNote.id)">
                 {{ t('workbench.action.continueWriting') }}
               </button>
-              <button type="button" class="note-icon-button" :class="{ 'is-active': isFavorite(featuredNote.id) }"
-                :aria-label="t('workbench.module.favorites')" @click.stop="handleToggleFavorite(featuredNote.id)">
-                <Star :theme="isFavorite(featuredNote.id) ? 'filled' : 'outline'" :size="16" />
-              </button>
             </div>
           </div>
 
@@ -91,35 +87,11 @@
                 <span class="note-list-row__title" :title="entry.note.title">{{ entry.note.title }}</span>
                 <span class="note-list-row__meta">{{ formatRelativeTime(entry.openedAt) }}</span>
               </div>
-              <button type="button" class="note-icon-button" :class="{ 'is-active': isFavorite(entry.note.id) }"
-                :aria-label="t('workbench.module.favorites')" @click.stop="handleToggleFavorite(entry.note.id)">
-                <Star :theme="isFavorite(entry.note.id) ? 'filled' : 'outline'" :size="16" />
-              </button>
             </div>
           </div>
 
           <div v-else class="module-empty">
             {{ t('workbench.empty.noRecentNotes') }}
-          </div>
-        </div>
-
-        <div v-else-if="module.id === 'favorites'" class="workbench-card__body">
-          <div v-if="favoriteNotesPreview.length > 0" class="note-list-card">
-            <div v-for="note in favoriteNotesPreview" :key="note.id" class="note-list-row" role="button" tabindex="0"
-              @click="openNoteInWorkspace(note.id)" @keydown.enter.prevent="openNoteInWorkspace(note.id)">
-              <div class="note-list-row__copy">
-                <span class="note-list-row__title" :title="note.title">{{ note.title }}</span>
-                <span class="note-list-row__meta">{{ formatRelativeTime(note.updatedAt) }}</span>
-              </div>
-              <button type="button" class="note-icon-button is-active" :aria-label="t('workbench.module.favorites')"
-                @click.stop="handleToggleFavorite(note.id)">
-                <Star theme="filled" :size="16" />
-              </button>
-            </div>
-          </div>
-
-          <div v-else class="module-empty">
-            {{ t('workbench.empty.noFavorites') }}
           </div>
         </div>
 
@@ -164,10 +136,6 @@
                 <span class="note-list-row__title" :title="note.title">{{ note.title }}</span>
                 <span class="note-list-row__meta">{{ formatRelativeTime(note.updatedAt) }}</span>
               </div>
-              <button type="button" class="note-icon-button" :class="{ 'is-active': isFavorite(note.id) }"
-                :aria-label="t('workbench.module.favorites')" @click.stop="handleToggleFavorite(note.id)">
-                <Star :theme="isFavorite(note.id) ? 'filled' : 'outline'" :size="16" />
-              </button>
             </div>
           </div>
 
@@ -195,7 +163,7 @@
 
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { Right, Tool, Star } from '@icon-park/vue-next';
+import { Right, Tool } from '@icon-park/vue-next';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import WorkbenchConfig from './WorkbenchConfig.vue';
@@ -203,7 +171,6 @@ import { useSearch } from '@renderer/features/search';
 import { useWorkspace, type Note } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useWorkbenchStore } from '@renderer/features/workbench';
-import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
 import { useRAGConfig, useRAGSearch } from '@renderer/features/rag';
 import {
   WORKBENCH_LIMITS,
@@ -227,7 +194,6 @@ interface ActivityEntry {
 }
 
 const WORKBENCH_DISPLAY_LIMITS = {
-  FAVORITES: 4,
   RECENT_NOTES: 4,
   RELATED_NOTES: 3,
   RECENT_ACTIVITY: 4,
@@ -244,7 +210,6 @@ const { openGlobalSearch } = useSearch();
 const { notes, createNote, selectNote } = useWorkspace();
 const appShellStore = useAppShellStore();
 const workbenchStore = useWorkbenchStore();
-const favoritesStore = useFavoritesStore();
 const { search: ragSearch } = useRAGSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
 const { visibleModuleIds, recentNotes, recentQuestions } = storeToRefs(workbenchStore);
@@ -266,12 +231,6 @@ const recentOpenedNotes = computed<RecentOpenedNoteEntry[]>(() => {
 });
 const recentOpenedNotesPreview = computed(() => {
   return recentOpenedNotes.value.slice(0, WORKBENCH_DISPLAY_LIMITS.RECENT_NOTES);
-});
-const favoriteNotes = computed(() => {
-  return favoritesStore.sortedStarredNotes;
-});
-const favoriteNotesPreview = computed(() => {
-  return favoriteNotes.value.slice(0, WORKBENCH_DISPLAY_LIMITS.FAVORITES);
 });
 const recentQuestionEntries = computed(() => recentQuestions.value);
 const recentQuestionEntriesPreview = computed(() => {
@@ -432,14 +391,6 @@ function formatRelativeTime(timestamp: number) {
   return t('workbench.time.daysAgo', { count: Math.floor(diffSeconds / 86400) });
 }
 
-function isFavorite(noteId: string) {
-  return favoritesStore.isStarredNote(noteId);
-}
-
-async function handleToggleFavorite(noteId: string) {
-  await favoritesStore.toggleStar(noteId, 'note', !isFavorite(noteId));
-}
-
 async function handleToggleModule(moduleId: WorkbenchModuleId) {
   await workbenchStore.toggleModule(moduleId);
 }
@@ -561,7 +512,6 @@ watch(
 );
 
 onMounted(() => {
-  void favoritesStore.initialize();
   document.addEventListener('pointerdown', handleDocumentPointerDown);
 });
 
