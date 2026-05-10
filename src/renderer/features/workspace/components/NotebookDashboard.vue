@@ -35,7 +35,7 @@
           <div v-for="nb in subNotebooks" :key="nb.id" class="notebook-card icon-text" @click="selectNotebook(nb.id)">
             <NotebookOne theme="outline" :size="16" />
             <div class="notebook-info">
-              <span class="notebook-name">{{ nb.name }}</span>
+              <span class="notebook-name" :title="nb.name">{{ nb.name }}</span>
               <span class="notebook-meta">{{ formatDate(nb.updatedAt, locale) }}</span>
             </div>
           </div>
@@ -48,7 +48,7 @@
           <div v-for="note in notebookNotes" :key="note.id" class="note-card icon-text" @click="selectNote(note.id)">
             <Notes theme="outline" :size="16" />
             <div class="note-info">
-              <span class="note-title">{{ note.title }}</span>
+              <span class="note-title" :title="note.title">{{ note.title }}</span>
               <span class="note-date">{{ formatDate(note.updatedAt, locale) }}</span>
             </div>
           </div>

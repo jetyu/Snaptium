@@ -88,7 +88,7 @@
               tabindex="0" @click="openNoteInWorkspace(entry.note.id)"
               @keydown.enter.prevent="openNoteInWorkspace(entry.note.id)">
               <div class="note-list-row__copy">
-                <span class="note-list-row__title">{{ entry.note.title }}</span>
+                <span class="note-list-row__title" :title="entry.note.title">{{ entry.note.title }}</span>
                 <span class="note-list-row__meta">{{ formatRelativeTime(entry.openedAt) }}</span>
               </div>
               <button type="button" class="note-icon-button" :class="{ 'is-active': isFavorite(entry.note.id) }"
@@ -108,7 +108,7 @@
             <div v-for="note in favoriteNotesPreview" :key="note.id" class="note-list-row" role="button" tabindex="0"
               @click="openNoteInWorkspace(note.id)" @keydown.enter.prevent="openNoteInWorkspace(note.id)">
               <div class="note-list-row__copy">
-                <span class="note-list-row__title">{{ note.title }}</span>
+                <span class="note-list-row__title" :title="note.title">{{ note.title }}</span>
                 <span class="note-list-row__meta">{{ formatRelativeTime(note.updatedAt) }}</span>
               </div>
               <button type="button" class="note-icon-button is-active" :aria-label="t('workbench.module.favorites')"
@@ -161,7 +161,7 @@
             <div v-for="note in relatedNotesPreview" :key="note.id" class="note-list-row" role="button" tabindex="0"
               @click="openNoteInWorkspace(note.id)" @keydown.enter.prevent="openNoteInWorkspace(note.id)">
               <div class="note-list-row__copy">
-                <span class="note-list-row__title">{{ note.title }}</span>
+                <span class="note-list-row__title" :title="note.title">{{ note.title }}</span>
                 <span class="note-list-row__meta">{{ formatRelativeTime(note.updatedAt) }}</span>
               </div>
               <button type="button" class="note-icon-button" :class="{ 'is-active': isFavorite(note.id) }"

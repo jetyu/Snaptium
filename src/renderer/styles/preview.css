@@ -12,9 +12,12 @@
   flex: 1;
   padding: 1.25rem 1.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
   line-height: 1.75;
   font-size: 0.95rem;
   background-color: var(--panel);
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .preview:focus {
@@ -225,9 +228,12 @@
 }
 
 .preview table {
+  display: block;
   width: 100%;
   border-collapse: collapse;
   margin: 1rem 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .preview th,
@@ -236,6 +242,7 @@
   border: 1px solid var(--panel-border);
   text-align: left;
   vertical-align: top;
+  min-width: 100px;
 }
 
 .preview thead th {

@@ -67,7 +67,7 @@
             @click.stop @keydown.enter.prevent="commitRename" @keydown.esc.prevent="cancelRename"
             @blur="commitRename" />
           <template v-else>
-            <span class="workspace-row__title">{{
+            <span class="workspace-row__title" :title="entry.kind === 'notebook' ? entry.item.name : entry.item.title">{{
               entry.kind === "notebook" ? entry.item.name : entry.item.title
             }}</span>
             <div class="workspace-row__actions" v-show="!isEditing(entry)">
