@@ -85,11 +85,12 @@ function getUniqueHeadingId(env: MarkdownCompileEnv, baseSlug: string) {
 }
 
 function applySourceLineAttr(token: { map?: [number, number] | null; attrSet: (name: string, value: string) => void }) {
-  if (!token.map?.length) {
+  if (!token.map || token.map.length < 2) {
     return;
   }
 
-  token.attrSet('data-source-line', String(token.map[0] + 1));
+  token.attrSet('data-source-start', String(token.map[0] + 1));
+  token.attrSet('data-source-end', String(token.map[1] + 1));
 }
 
 function normalizeFileSystemPath(value: string) {
@@ -218,7 +219,7 @@ function getHtmlWhitelistOptions(allowInlineSvg: boolean) {
     'href', 'name', 'target', 'rel', 'src', 'srcset', 'sizes', 'type', 'media',
     'alt', 'title', 'width', 'height', 'class', 'id', 'role', 'focusable', 'aria-hidden', 'aria-label',
     'checked', 'disabled', 'for',
-    'data-source-line', 'data-heading-id',
+    'data-source-start', 'data-source-end', 'data-heading-id',
     'style', // Required for KaTeX positioning
     'encoding', 'display', // MathML attributes
   ];
@@ -253,8 +254,10 @@ function renderCodeBlock(
   rawLanguage: string,
   copyCodeButtonLabel?: string,
 ) {
-  const sourceLine = token.map?.[0] != null ? token.map[0] + 1 : null;
-  const wrapperAttrHtml = sourceLine ? ` data-source-line="${sourceLine}"` : '';
+  let wrapperAttrHtml = '';
+  if (token.map && token.map.length >= 2) {
+    wrapperAttrHtml = ` data-source-start="${token.map[0] + 1}" data-source-end="${token.map[1] + 1}"`;
+  }
   const { html, language, languageLabel } = highlightMarkdownCode(token.content, rawLanguage);
   const codeClasses = ['hljs'];
 

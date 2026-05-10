@@ -47,7 +47,8 @@
       </div>
 
       <div class="preview-body">
-        <PreviewPane v-if="activeNote" ref="previewPaneRef" :html="compiledPreview.html" />
+        <PreviewPane v-if="activeNote" ref="previewPaneRef" :html="compiledPreview.html"
+          @sync-to-source="handleSyncToSource" />
 
         <div v-else class="col-empty">
           <p>
@@ -82,7 +83,7 @@ interface EditorPaneExposed {
   getEditorApi: () => {
     view: EditorView;
     jumpToLine: (lineNumber: number, searchText?: string) => void;
-    scrollToLine: (lineNumber: number, options?: { y?: 'start' | 'center'; focus?: boolean }) => void;
+    scrollToLine: (lineNumber: number, options?: { y?: 'start' | 'center'; relativeOffset?: number; focus?: boolean }) => void;
   } | undefined;
 }
 
@@ -91,7 +92,7 @@ type PreviewScrollBehavior = 'auto' | 'smooth' | 'instant';
 interface PreviewPaneExposed {
   getScrollContainer: () => HTMLElement | null;
   getSourceLineAtScrollTop: (scrollTop?: number) => number | null;
-  scrollToSourceLine: (lineNumber: number, behavior?: PreviewScrollBehavior) => void;
+  scrollToSourceLine: (lineNumber: number, behavior?: PreviewScrollBehavior, relativeOffset?: number) => void;
 }
 
 const {
@@ -112,6 +113,23 @@ const previewPaneRef = ref<PreviewPaneExposed | null>(null);
 const cursorPosition = ref<{ line: number; column: number } | null>(null);
 const selectedText = ref('');
 const activeSourceLine = ref(1);
+
+function handleSyncToSource(payload: { line: number; relativeOffset: number }) {
+  const editorApi = editorPaneRef.value?.getEditorApi();
+  if (!editorApi || activeNote.value?.locked) {
+    return;
+  }
+
+  setIgnorePreviewScroll();
+  setIgnoreEditorScroll();
+  activeSourceLine.value = payload.line;
+  
+  // Use relative offset to sync editor so it doesn't jump
+  editorApi.scrollToLine(payload.line, { 
+    relativeOffset: payload.relativeOffset,
+    focus: true 
+  });
+}
 const hasPreviewPane = computed(() => Boolean(activeNote.value || !activeNotebookId.value));
 const hasEditorPane = computed(() => !activeNote.value?.locked);
 const hasTrailingContent = computed(() => hasEditorPane.value || hasPreviewPane.value);
@@ -170,7 +188,26 @@ let previewScrollFrame = 0;
 function handleSelectionChange(selection: { line: number; column: number; selectedText: string }) {
   cursorPosition.value = { line: selection.line, column: selection.column };
   selectedText.value = selection.selectedText;
-  activeSourceLine.value = selection.line;
+  
+  if (activeSourceLine.value !== selection.line) {
+    activeSourceLine.value = selection.line;
+    
+    // Only scroll preview if the selection change originated from the editor (not from preview click or search)
+    if (!ignorePreviewScroll) {
+      const view = editorPaneRef.value?.getEditorApi()?.view;
+      if (!view) return;
+
+      setIgnorePreviewScroll();
+      setIgnoreEditorScroll();
+
+      // Calculate relative vertical position of the cursor in the editor viewport
+      const lineBlock = view.lineBlockAt(view.state.doc.line(selection.line).from);
+      const containerRect = view.scrollDOM.getBoundingClientRect();
+      const relativeOffset = (lineBlock.top + view.documentTop - containerRect.top) / view.scrollDOM.clientHeight;
+
+      previewPaneRef.value?.scrollToSourceLine(selection.line, 'smooth', relativeOffset);
+    }
+  }
 }
 
 function setIgnoreEditorScroll() {
@@ -180,7 +217,7 @@ function setIgnoreEditorScroll() {
   }
   releaseEditorIgnoreTimer = setTimeout(() => {
     ignoreEditorScroll = false;
-  }, 150);
+  }, 1000);
 }
 
 function setIgnorePreviewScroll() {
@@ -190,7 +227,7 @@ function setIgnorePreviewScroll() {
   }
   releasePreviewIgnoreTimer = setTimeout(() => {
     ignorePreviewScroll = false;
-  }, 150);
+  }, 1000);
 }
 
 function cleanupScrollListeners() {
@@ -248,6 +285,7 @@ function handleEditorScroll() {
       return;
     }
 
+    // When scrolling editor, tell preview to follow but ignore its feedback
     setIgnorePreviewScroll();
     previewPane.scrollToSourceLine(line);
   });
@@ -280,6 +318,7 @@ function handlePreviewScroll() {
       return;
     }
 
+    // When scrolling preview, tell editor to follow but ignore its feedback
     setIgnoreEditorScroll();
     editorApi.scrollToLine(line, { y: 'start' });
   });

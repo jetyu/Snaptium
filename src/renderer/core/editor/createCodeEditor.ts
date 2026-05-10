@@ -120,7 +120,7 @@ export function createCodeEditor({
 
       view.dispatch({
         selection: { anchor: pos, head: pos },
-        effects: EditorView.scrollIntoView(pos, { y: 'center' }),
+        effects: EditorView.scrollIntoView(pos, { y: 'center', yMargin: 20 }),
       });
 
       view.focus();
@@ -166,14 +166,25 @@ export function createCodeEditor({
         });
       }
     },
-    scrollToLine(lineNumber: number, options?: { y?: 'start' | 'center'; focus?: boolean }) {
+    scrollToLine(lineNumber: number, options?: { y?: 'start' | 'center'; relativeOffset?: number; focus?: boolean }) {
       const safeLineNumber = Math.max(1, Math.min(lineNumber, view.state.doc.lines));
       const line = view.state.doc.line(safeLineNumber);
-      const y = options?.y ?? 'start';
-
-      view.dispatch({
-        effects: EditorView.scrollIntoView(line.from, { y }),
-      });
+      
+      if (options?.relativeOffset !== undefined) {
+        // Calculate exact scroll position to match relative offset
+        const lineBlock = view.lineBlockAt(line.from);
+        const containerHeight = view.scrollDOM.clientHeight;
+        const targetTop = lineBlock.top - (containerHeight * options.relativeOffset);
+        
+        view.scrollDOM.scrollTo({
+          top: Math.max(0, targetTop),
+          behavior: 'smooth'
+        });
+      } else {
+        view.dispatch({
+          effects: EditorView.scrollIntoView(line.from, { y: options?.y ?? 'start' }),
+        });
+      }
 
       if (options?.focus) {
         view.focus();
