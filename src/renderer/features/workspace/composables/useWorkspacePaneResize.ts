@@ -177,10 +177,23 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
     return null;
   }
 
+  function resolveResizeCursor() {
+    const root = options.rootRef.value;
+    if (!root) {
+      return 'col-resize';
+    }
+
+    const configuredCursor = getComputedStyle(root)
+      .getPropertyValue('--workspace-resize-cursor')
+      .trim();
+
+    return configuredCursor || 'col-resize';
+  }
+
   function applyGlobalResizeState() {
     previousBodyCursor.value = document.body.style.cursor;
     previousBodyUserSelect.value = document.body.style.userSelect;
-    document.body.style.cursor = 'col-resize';
+    document.body.style.cursor = resolveResizeCursor();
     document.body.style.userSelect = 'none';
   }
 

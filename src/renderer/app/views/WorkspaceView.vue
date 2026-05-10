@@ -403,11 +403,12 @@ watch(
   flex: 1;
   height: 100vh;
   overflow: hidden;
+  --workspace-resize-cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 20 20'%3E%3Cg fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 3v14'/%3E%3Cpath d='M7 7L3 10l4 3'/%3E%3Cpath d='M13 7l4 3-4 3'/%3E%3C/g%3E%3Cg fill='none' stroke='%23fff' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M10 3v14'/%3E%3Cpath d='M7 7L3 10l4 3'/%3E%3Cpath d='M13 7l4 3-4 3'/%3E%3C/g%3E%3C/svg%3E") 10 10, col-resize;
 }
 
 .workspace-view--resize-ready,
 .workspace-view--resizing {
-  cursor: col-resize;
+  cursor: var(--workspace-resize-cursor);
 }
 
 .workspace-pane {
@@ -452,7 +453,7 @@ watch(
   width: 4px;
   margin: 0 -2px;
   z-index: 100;
-  cursor: col-resize;
+  cursor: var(--workspace-resize-cursor);
   transition: background-color 0.2s;
   flex-shrink: 0;
 }
