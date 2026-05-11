@@ -100,8 +100,6 @@ interface AppSettings {
     maxCustomSidebarModules: number;
   };
   workbench: {
-    visibleModuleIds: string[];
-    recentNotes: unknown[];
     recentQuestions: unknown[];
   };
   accessControl: AccessControlConfig;
@@ -122,17 +120,6 @@ type SettingsInput = Partial<AppSettings> & {
 
 const logger = loggerService.createLogger('Electron:Settings Service');
 const LOG_AUTO_CLEAR_DAY_OPTIONS: ReadonlySet<number> = new Set<number>([0, 10, 20]);
-const DEFAULT_WORKBENCH_VISIBLE_MODULES = [
-  'smartRecommendation',
-  'recentNotes',
-  'favorites',
-  'dataStats',
-  'recentActivity',
-  'recentQuestions',
-  'relatedNotes',
-  'behaviorFeedback',
-];
-
 function interpolateMessage(template: string, replacements: Record<string, string> = {}): string {
   return Object.entries(replacements).reduce((message, [key, value]) => {
     return message.replaceAll(`{${key}}`, String(value));
@@ -334,8 +321,6 @@ export const settingsService = {
         maxCustomSidebarModules: 4,
       },
       workbench: {
-        visibleModuleIds: [...DEFAULT_WORKBENCH_VISIBLE_MODULES],
-        recentNotes: [],
         recentQuestions: [],
       },
       accessControl: {

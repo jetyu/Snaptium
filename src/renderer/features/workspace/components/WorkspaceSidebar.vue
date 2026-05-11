@@ -108,7 +108,6 @@ import SyncHoverCard from "../../sync/components/SyncHoverCard.vue";
 import { useSyncPresentation } from "../../sync/composables/useSyncPresentation";
 import { useSyncStore } from "../../sync/store/sync.store";
 import { useSettingsStore } from "../../settings/store/settings.store";
-import { useWorkbenchStore } from "../../workbench/store/workbench.store";
 import { useWorkspaceStore } from "../store/workspace.store";
 import { useAppShellStore } from "../../../app/store/appShell.store";
 import { workspaceService, type Note, type Notebook } from "../services/workspace.service";
@@ -172,7 +171,6 @@ const {
 const { t } = useI18n();
 const syncStore = useSyncStore();
 const settingsStore = useSettingsStore();
-const workbenchStore = useWorkbenchStore();
 const workspaceStore = useWorkspaceStore();
 const appShellStore = useAppShellStore();
 const { statusLabel, statusToneClass, summaryItems, formattedLastSynced } = useSyncPresentation();
@@ -571,7 +569,6 @@ async function handleEntrySelect(entry: WorkspaceTreeEntry) {
 
   if (entry.kind === 'note') {
     selectNote(entry.id);
-    await workbenchStore.recordOpenedNote(entry.id);
   } else {
     selectNotebook(entry.id);
   }

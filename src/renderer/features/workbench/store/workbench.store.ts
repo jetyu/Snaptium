@@ -6,7 +6,6 @@ import { useSettingsStore } from '@renderer/features/settings';
 import {
   WORKBENCH_LIMITS,
   sanitizeWorkbenchSettings,
-  type WorkbenchModuleId,
   type WorkbenchQuestionEntry,
   type WorkbenchSettings,
 } from '../constants/workbench.constants';
@@ -26,8 +25,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
   const { config } = storeToRefs(settingsStore);
 
   const workbench = computed(() => sanitizeWorkbenchSettings(config.value.workbench));
-  const visibleModuleIds = computed(() => workbench.value.visibleModuleIds);
-  const recentNotes = computed(() => workbench.value.recentNotes);
   const recentQuestions = computed(() => workbench.value.recentQuestions);
 
   async function saveWorkbench(nextValue: Partial<WorkbenchSettings>) {
@@ -39,28 +36,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     await settingsStore.saveSettings({
       workbench: nextSettings,
     });
-  }
-
-  async function toggleModule(moduleId: WorkbenchModuleId) {
-    const nextVisibleModules = visibleModuleIds.value.includes(moduleId)
-      ? visibleModuleIds.value.filter((id) => id !== moduleId)
-      : [...visibleModuleIds.value, moduleId];
-
-    await saveWorkbench({ visibleModuleIds: nextVisibleModules });
-  }
-
-  async function recordOpenedNote(noteId: string, openedAt = Date.now()) {
-    const normalizedNoteId = noteId.trim();
-    if (!normalizedNoteId) {
-      return;
-    }
-
-    const nextRecentNotes = [
-      { noteId: normalizedNoteId, openedAt },
-      ...recentNotes.value.filter((entry) => entry.noteId !== normalizedNoteId),
-    ].slice(0, WORKBENCH_LIMITS.RECENT_NOTES);
-
-    await saveWorkbench({ recentNotes: nextRecentNotes });
   }
 
   async function recordQuestion(payload: {
@@ -101,7 +76,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     const validNoteIdSet = new Set(validNoteIds.map((noteId) => noteId.trim()).filter(Boolean));
     const nextSettings = sanitizeWorkbenchSettings({
       ...workbench.value,
-      recentNotes: recentNotes.value.filter((entry) => validNoteIdSet.has(entry.noteId)),
       recentQuestions: recentQuestions.value.map((entry) => {
         return {
           ...entry,
@@ -121,11 +95,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
   return {
     workbench,
-    visibleModuleIds,
-    recentNotes,
     recentQuestions,
-    toggleModule,
-    recordOpenedNote,
     recordQuestion,
     cleanupNoteReferences,
   };

@@ -88,14 +88,7 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
       getSidebarMaxWidth(containerWidth),
     );
 
-    const availableForPreview = containerWidth - sidebarWidth.value - EDITOR_MIN_WIDTH;
-    if (options.canResizePreviewRef.value) {
-      previewWidth.value = clampValue(
-        previewWidth.value,
-        PREVIEW_MIN_WIDTH,
-        Math.min(PREVIEW_MAX_WIDTH, availableForPreview),
-      );
-    }
+    clampPreviewWidthToFit(containerWidth);
   }
 
   function updateSidebarWidth(clientX: number) {
@@ -114,12 +107,7 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
     sidebarWidth.value = newS;
 
     // Push logic: if sidebar + current preview + editor_min > total, shrink preview
-    if (options.canResizePreviewRef.value) {
-      const maxP = containerWidth - newS - EDITOR_MIN_WIDTH;
-      if (previewWidth.value > maxP) {
-        previewWidth.value = clampValue(maxP, PREVIEW_MIN_WIDTH, PREVIEW_MAX_WIDTH);
-      }
-    }
+    clampPreviewWidthToFit(containerWidth);
   }
 
   function updatePreviewWidth(clientX: number) {
@@ -142,10 +130,7 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
     previewWidth.value = newP;
 
     // Push logic: if preview + current sidebar + editor_min > total, shrink sidebar
-    const maxS = containerWidth - newP - EDITOR_MIN_WIDTH;
-    if (sidebarWidth.value > maxS) {
-      sidebarWidth.value = clampValue(maxS, SIDEBAR_MIN_WIDTH, SIDEBAR_MAX_WIDTH);
-    }
+    clampSidebarWidthToFit(containerWidth);
   }
 
   function resolveHandle(clientX: number) {
@@ -156,9 +141,9 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
 
     const sidebarRect = options.sidebarRef.value?.getBoundingClientRect();
     if (options.hasTrailingContentRef.value && sidebarRect) {
-      // Hitbox: 0px to the left (on the border), 10px to the right.
+      // Hitbox: 0px to the left (on the border), EDGE_HITBOX_PX to the right.
       const diff = clientX - sidebarRect.right;
-      if (diff >= 0 && diff <= 10) {
+      if (diff >= 0 && diff <= EDGE_HITBOX_PX) {
         return 'sidebar';
       }
     }
@@ -166,9 +151,9 @@ export function useWorkspacePaneResize(options: UseWorkspacePaneResizeOptions) {
     if (options.canResizePreviewRef.value) {
       const editorRect = options.editorRef.value?.getBoundingClientRect();
       if (editorRect) {
-        // Hitbox: 0px to the left, 10px to the right.
+        // Hitbox: 0px to the left, EDGE_HITBOX_PX to the right.
         const diff = clientX - editorRect.right;
-        if (diff >= 0 && diff <= 10) {
+        if (diff >= 0 && diff <= EDGE_HITBOX_PX) {
           return 'preview';
         }
       }

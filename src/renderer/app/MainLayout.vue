@@ -21,7 +21,6 @@ import { onMounted } from 'vue';
 import { storeToRefs } from 'pinia';
 import { SearchDialog, useSearch } from '@renderer/features/search';
 import { useWorkspace } from '@renderer/features/workspace';
-import { useWorkbenchStore } from '@renderer/features/workbench';
 import { createLogger } from '@renderer/features/logger';
 import { useSettings } from '@renderer/features/settings/composables/useSettings';
 import { useTrash } from '@renderer/features/trash';
@@ -48,7 +47,6 @@ const { openAbout } = useAbout();
 const { openSidebarManager } = useSidebarManager();
 const { isGlobalSearchOpen, globalSearchInitialQuery, openGlobalSearch, closeGlobalSearch } = useSearch();
 const { selectNote, forceFlushAutoSave } = useWorkspace();
-const workbenchStore = useWorkbenchStore();
 
 type SearchSelectResult = SearchResult | RagSearchResult;
 type SearchSelectMatch = SearchMatch;
@@ -91,7 +89,6 @@ async function handleSearchSelect(result: SearchSelectResult, match?: SearchSele
 
   await setActiveMainView('workspace');
   selectNote(noteId);
-  await workbenchStore.recordOpenedNote(noteId);
 
   setTimeout(() => {
     const title = isSearchResult(result) ? result.title : result.noteTitle;

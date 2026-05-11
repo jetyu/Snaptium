@@ -34,7 +34,6 @@
     "src/**/*.ts",
     "src/**/*.d.ts",
     "src/**/*.tsx",
-    "src/**/*.vue",
     "vitest.config.ts"
   ]
 }

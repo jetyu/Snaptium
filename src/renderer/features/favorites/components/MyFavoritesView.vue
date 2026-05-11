@@ -74,7 +74,6 @@ import { computed, onMounted, ref } from 'vue';
 import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
-import { useWorkbenchStore } from '@renderer/features/workbench/store/workbench.store';
 import { NotebookOne, Notes, FileLockOne, Star } from '@icon-park/vue-next';
 import { useI18n } from 'vue-i18n';
 import { formatDate as formatTime } from '@renderer/core/utils/date.utils';
@@ -85,7 +84,6 @@ type SortOrder = 'asc' | 'desc';
 const favoritesStore = useFavoritesStore();
 const workspaceStore = useWorkspaceStore();
 const appShellStore = useAppShellStore();
-const workbenchStore = useWorkbenchStore();
 const { t, locale } = useI18n();
 
 onMounted(() => {
@@ -168,7 +166,6 @@ const allFavorites = computed(() => {
 async function jumpToWorkspace(id: string, type: 'note' | 'notebook') {
   if (type === 'note') {
     workspaceStore.selectNote(id);
-    await workbenchStore.recordOpenedNote(id);
   } else {
     workspaceStore.selectNotebook(id);
   }
