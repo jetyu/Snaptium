@@ -1,33 +1,5 @@
 <template>
   <div class="workbench-dashboard">
-    <header class="workbench-topbar">
-      <div class="topbar-brand">{{ t('common.appName') }}</div>
-
-      <button type="button" class="topbar-search" @click="triggerSearch">
-        <SearchIcon theme="outline" :size="16" />
-        <span class="topbar-search__text">{{ t('search.placeholder') }}</span>
-        <kbd class="topbar-search__shortcut">Ctrl K</kbd>
-      </button>
-
-      <div class="topbar-actions">
-        <button
-          type="button"
-          class="topbar-icon-button"
-          :aria-label="t('label.themeMode')"
-          :title="t('label.themeMode')"
-          @click="openGeneralSettings"
-        >
-          <Sun theme="outline" :size="18" />
-        </button>
-        <button type="button" class="topbar-icon-button" :aria-label="t('workbench.title')" :title="t('workbench.title')">
-          <BellRing theme="outline" :size="18" />
-        </button>
-        <button type="button" class="topbar-avatar" :aria-label="t('common.appName')" :title="t('common.appName')">
-          <User theme="outline" :size="16" />
-        </button>
-      </div>
-    </header>
-
     <div class="workbench-layout">
       <main class="workbench-main">
         <section class="hero-card">
@@ -81,14 +53,8 @@
           </header>
 
           <div v-if="recentActivityPreview.length > 0" class="feed-list">
-            <button
-              v-for="entry in recentActivityPreview"
-              :key="entry.id"
-              type="button"
-              class="feed-row"
-              :title="getActivityTooltip(entry)"
-              @click="handleActivityClick(entry)"
-            >
+            <button v-for="entry in recentActivityPreview" :key="entry.id" type="button" class="feed-row"
+              :title="getActivityTooltip(entry)" @click="handleActivityClick(entry)">
               <span class="feed-row__icon">
                 <Edit v-if="entry.kind === 'saved'" theme="outline" :size="14" />
                 <Brain v-else theme="outline" :size="14" />
@@ -124,15 +90,11 @@
             </article>
 
             <div class="smart-list">
-              <button
-                v-for="item in smartRecommendationsPreview"
-                :key="item.note.id"
-                type="button"
-                class="feed-row"
-                :title="item.note.title"
-                @click="openNoteInWorkspace(item.note.id)"
-              >
-                <span class="feed-row__icon"><LinkOne theme="outline" :size="14" /></span>
+              <button v-for="item in smartRecommendationsPreview" :key="item.note.id" type="button" class="feed-row"
+                :title="item.note.title" @click="openNoteInWorkspace(item.note.id)">
+                <span class="feed-row__icon">
+                  <LinkOne theme="outline" :size="14" />
+                </span>
                 <span class="feed-row__main">
                   <span class="feed-row__title">{{ item.note.title }}</span>
                   <span class="feed-row__subtitle">{{ t(item.reasonKey) }}</span>
@@ -152,15 +114,11 @@
           </header>
 
           <div v-if="recentQuestionEntriesPreview.length > 0" class="feed-list">
-            <button
-              v-for="question in recentQuestionEntriesPreview"
-              :key="question.id"
-              type="button"
-              class="feed-row"
-              :title="question.query"
-              @click="openGlobalSearch(question.query)"
-            >
-              <span class="feed-row__icon"><SearchIcon theme="outline" :size="14" /></span>
+            <button v-for="question in recentQuestionEntriesPreview" :key="question.id" type="button" class="feed-row"
+              :title="question.query" @click="openGlobalSearch(question.query)">
+              <span class="feed-row__icon">
+                <SearchIcon theme="outline" :size="14" />
+              </span>
               <span class="feed-row__main">
                 <span class="feed-row__title">{{ question.query }}</span>
                 <span class="feed-row__subtitle">{{ question.answer || t('workbench.empty.noAnswer') }}</span>
@@ -169,15 +127,11 @@
             </button>
           </div>
           <div v-else-if="todoFallbackEntries.length > 0" class="feed-list">
-            <button
-              v-for="entry in todoFallbackEntries"
-              :key="entry.id"
-              type="button"
-              class="feed-row"
-              :title="entry.snippet"
-              @click="openNoteInWorkspace(entry.noteId)"
-            >
-              <span class="feed-row__icon"><Notes theme="outline" :size="14" /></span>
+            <button v-for="entry in todoFallbackEntries" :key="entry.id" type="button" class="feed-row"
+              :title="entry.snippet" @click="openNoteInWorkspace(entry.noteId)">
+              <span class="feed-row__icon">
+                <Notes theme="outline" :size="14" />
+              </span>
               <span class="feed-row__main">
                 <span class="feed-row__title">{{ entry.snippet }}</span>
                 <span class="feed-row__subtitle">{{ entry.noteTitle }}</span>
@@ -266,16 +220,14 @@ import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import {
   Search as SearchIcon,
-  Sun,
-  BellRing,
-  User,
   Edit,
   Plus,
   Brain,
   Magic,
   LinkOne,
   Notes,
-  TagOne,
+  Star,
+  ApplicationTwo,
   DataServer,
   DatabaseSearch,
   ChartHistogram,
@@ -351,7 +303,7 @@ const HEADING_REGEX = /^#{1,6}\s+/gm;
 const { t } = useI18n();
 const { openGlobalSearch } = useSearch();
 const { openSettings } = useSettings();
-const { notes, createNote, selectNote } = useWorkspace();
+const { notes, notebooks, createNote, selectNote } = useWorkspace();
 const appShellStore = useAppShellStore();
 const workbenchStore = useWorkbenchStore();
 const settingsStore = useSettingsStore();
@@ -425,6 +377,12 @@ const recentActivity = computed<ActivityEntry[]>(() => {
 
 const recentActivityPreview = computed<ActivityEntry[]>(() => recentActivity.value);
 
+const starredCount = computed<number>(() => {
+  const sNotes = notes.value.filter((note) => note.starred).length;
+  const sNotebooks = notebooks.value.filter((nb) => nb.starred).length;
+  return sNotes + sNotebooks;
+});
+
 const uniqueTagsCount = computed<number>(() => {
   const tags = new Set<string>();
   notes.value.forEach((note) => {
@@ -490,18 +448,25 @@ const questionsThisWeek = computed<number>(() => recentQuestionEntries.value.fil
 const overviewMetrics = computed<OverviewMetric[]>(() => {
   return [
     {
+      id: 'workspace',
+      label: t('workbench.module.dataStatsTitle'),
+      value: formatNumber(behaviorFeedback.value.totalCharacters),
+      trend: t('workbench.behavior.totalCharacters'),
+      icon: ApplicationTwo,
+    },
+    {
       id: 'documents',
       label: t('workbench.stats.noteCount'),
       value: formatNumber(notes.value.length),
       trend: `${formatNumber(notesUpdatedThisWeek.value)} ${t('workbench.stats.activeLast7Days')}`,
-      icon: DataServer,
+      icon: Notes,
     },
     {
-      id: 'tags',
+      id: 'favorites',
       label: t('workbench.module.favorites'),
-      value: formatNumber(uniqueTagsCount.value),
-      trend: `${formatNumber(uniqueTagsCount.value)} #`,
-      icon: TagOne,
+      value: formatNumber(starredCount.value),
+      trend: t('workbench.stats.favoriteCount'),
+      icon: Star,
     },
     {
       id: 'knowledge',
@@ -624,12 +589,12 @@ const todayStatItems = computed<TodayStatItem[]>(() => {
 const greetingText = computed<string>(() => {
   const hour = new Date().getHours();
   if (hour < 12) {
-    return `${t('workbench.greeting.morning')}, ${t('common.appName')}`;
+    return `${t('workbench.greeting.morning')}`;
   }
   if (hour < 18) {
-    return `${t('workbench.greeting.afternoon')}, ${t('common.appName')}`;
+    return `${t('workbench.greeting.afternoon')}`;
   }
-  return `${t('workbench.greeting.evening')}, ${t('common.appName')}`;
+  return `${t('workbench.greeting.evening')}`;
 });
 
 function normalizeTodoSnippet(value: string): string {
@@ -1034,38 +999,51 @@ watch(
 
 .overview-grid {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 10px;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 4px;
 }
 
 .overview-card {
   min-width: 0;
   display: grid;
-  gap: 7px;
-  padding: 12px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 88%, white);
-  border-radius: 14px;
+  gap: 4px;
+  padding: 10px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 84%, white);
+  border-radius: 12px;
   background: color-mix(in srgb, var(--panel) 94%, white);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+}
+
+.overview-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--panel-border));
+  background: color-mix(in srgb, var(--accent) 4%, var(--panel));
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.04);
 }
 
 .overview-card__head {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   color: var(--text-muted);
-  font-size: 0.81rem;
+  font-size: 0.78rem;
   white-space: nowrap;
 }
 
 .overview-card strong {
-  font-size: 2rem;
-  line-height: 1;
+  font-size: 1.45rem;
+  line-height: 1.1;
   color: var(--text);
+  letter-spacing: -0.01em;
 }
 
 .overview-card__trend {
-  font-size: 0.8rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .panel {
@@ -1403,10 +1381,8 @@ watch(
   font-size: 0.84rem;
 }
 
-@media (max-width: 1380px) {
-  .overview-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
+@media (max-width: 1080px) {
+  /* .overview-grid removed to keep 1 row */
 }
 
 @media (max-width: 1180px) {
@@ -1442,9 +1418,7 @@ watch(
     justify-content: flex-end;
   }
 
-  .overview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  /* .overview-grid removed to keep 1 row */
 
   .smart-grid {
     grid-template-columns: 1fr;
@@ -1460,9 +1434,7 @@ watch(
 }
 
 @media (max-width: 580px) {
-  .overview-grid {
-    grid-template-columns: 1fr;
-  }
+  /* .overview-grid removed to keep 1 row */
 
   .feed-row {
     min-height: 42px;

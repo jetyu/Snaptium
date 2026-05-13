@@ -404,7 +404,7 @@
   "workbench.module.behaviorFeedback": "行为反馈",
   "workbench.module.behaviorFeedbackTitle": "写作反馈",
   "workbench.module.dataStats": "数据统计",
-  "workbench.module.dataStatsTitle": "当前工作区规模",
+  "workbench.module.dataStatsTitle": "概览",
   "workbench.module.favorites": "收藏",
   "workbench.module.favoritesTitle": "长期重要内容",
   "workbench.module.recentActivity": "最近活动",
