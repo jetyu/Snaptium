@@ -1,8 +1,6 @@
 <template>
   <div class="workbench-view">
-    <section class="workbench-col panel">
-      <WorkbenchDashboard />
-    </section>
+    <WorkbenchDashboard />
   </div>
 </template>
 
@@ -12,19 +10,10 @@ import WorkbenchDashboard from '@renderer/features/workbench/components/Workbenc
 
 <style scoped>
 .workbench-view {
-  display: flex;
-  min-width: 0;
-  flex: 1;
   height: 100vh;
-  overflow: hidden;
-}
-
-.workbench-col {
-  flex: 1;
   min-width: 0;
-  min-height: 0;
-  display: flex;
+  flex: 1;
   overflow: hidden;
-  background: var(--bg);
+  display: flex;
 }
 </style>

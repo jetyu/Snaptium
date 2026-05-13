@@ -673,5 +673,5 @@
   "workspace.dashboard.subNotebooks": "Nombre de sous-carnets",
   "workspace.dashboard.title": "Aperçu du carnet",
   "workspace.dashboard.totalNotes": "Nombre total de notes",
-  "workspace.nodesList.emptyState": "Créer une note ou un carnet",
+  "workspace.nodesList.emptyState": "Créer une note ou un carnet"
 }
