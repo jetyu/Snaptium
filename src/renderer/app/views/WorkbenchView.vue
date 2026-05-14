@@ -10,7 +10,8 @@ import WorkbenchDashboard from '@renderer/features/workbench/components/Workbenc
 
 <style scoped>
 .workbench-view {
-  height: 100vh;
+  height: 100%;
+  min-height: 0;
   min-width: 0;
   flex: 1;
   overflow: hidden;

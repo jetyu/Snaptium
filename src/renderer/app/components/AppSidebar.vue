@@ -85,7 +85,7 @@ function isModuleActive(module: AppShellModuleDefinition) {
   width: 56px;
   min-width: 56px;
   max-width: 56px;
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   gap: 12px;

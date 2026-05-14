@@ -41,6 +41,8 @@ export function createMainWindow({ isDev, appPath }: CreateMainWindowOptions): B
     show: false,
     title: $t('common.appName'),
     icon: path.join(appPath, 'electron/assets/logo/app-logo.ico'),
+    frame: false,
+    titleBarStyle: 'hidden',
     webPreferences: {
       preload: path.join(appPath, '.electron-build/electron/preload/index.js'),
       devTools: isDev,

@@ -1,19 +1,18 @@
 <template>
-  <div class="app-layout">
-    <AppSidebar :active-main-view="activeMainView" :main-views="mainViews" :custom-modules="enabledCustomModules"
-      @select-main-view="setActiveMainView" @open-module="openModule" @manage-sidebar="openSidebarManager" />
+  <div class="main-shell">
+    <AppWindowFrame />
+    <div class="app-layout">
+      <AppSidebar :active-main-view="activeMainView" :main-views="mainViews" :custom-modules="enabledCustomModules"
+        @select-main-view="setActiveMainView" @open-module="openModule" @manage-sidebar="openSidebarManager" />
 
-    <WorkbenchView v-if="activeMainView === 'workbench'" />
-    <MyFavoritesView v-else-if="activeMainView === 'favorites'" />
-    <WorkspaceView v-else />
+      <WorkbenchView v-if="activeMainView === 'workbench'" />
+      <MyFavoritesView v-else-if="activeMainView === 'favorites'" />
+      <WorkspaceView v-else />
+    </div>
   </div>
 
-  <SearchDialog
-    :is-open="isGlobalSearchOpen"
-    :initial-query="globalSearchInitialQuery"
-    @close="closeGlobalSearch"
-    @select="handleSearchSelect"
-  />
+  <SearchDialog :is-open="isGlobalSearchOpen" :initial-query="globalSearchInitialQuery" @close="closeGlobalSearch"
+    @select="handleSearchSelect" />
 </template>
 
 <script setup lang="ts">
@@ -32,6 +31,7 @@ import type { AppShellModuleId } from './constants/appShell.constants';
 import { useAppShellStore } from './store/appShell.store';
 import { useSidebarManager } from './composables/useSidebarManager';
 import AppSidebar from './components/AppSidebar.vue';
+import AppWindowFrame from './components/AppWindowFrame.vue';
 import WorkbenchView from './views/WorkbenchView.vue';
 import WorkspaceView from './views/WorkspaceView.vue';
 import MyFavoritesView from '@renderer/features/favorites/components/MyFavoritesView.vue';
@@ -106,3 +106,15 @@ onMounted(() => {
 });
 </script>
 
+<style scoped>
+.main-shell {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+
+.app-layout {
+  min-height: 0;
+}
+</style>

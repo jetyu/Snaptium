@@ -178,7 +178,8 @@ async function jumpToWorkspace(id: string, type: 'note' | 'notebook') {
   flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
+  min-height: 0;
   background: var(--panel);
   overflow: hidden;
 }

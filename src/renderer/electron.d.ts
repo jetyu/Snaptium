@@ -61,6 +61,10 @@ interface AppEnvVersion {
   v8: string;
 }
 
+interface WindowStatePayload {
+  isMaximized: boolean;
+}
+
 interface AiSourceConfig {
   aiEndpoint: string;
   aiApiKey: string;
@@ -207,6 +211,15 @@ declare global {
         getVersion: () => Promise<string>;
         getEnvVersion: () => Promise<AppEnvVersion>;
         getName: () => Promise<string>;
+      };
+
+      window?: {
+        minimize: () => Promise<void>;
+        maximize: () => Promise<void>;
+        unmaximize: () => Promise<void>;
+        close: () => Promise<void>;
+        isMaximized: () => Promise<boolean>;
+        onStateChanged: (callback: (data: WindowStatePayload) => void) => () => void;
       };
 
       vfs?: {

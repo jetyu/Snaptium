@@ -158,6 +158,10 @@ export interface AppEnvVersion {
   v8: string;
 }
 
+export interface WindowStatePayload {
+  isMaximized: boolean;
+}
+
 export interface UpdaterUpdateInfoPayload {
   version: string;
   releaseDate?: string;
@@ -385,6 +389,33 @@ export const electronApi = {
     getVersion: () => electronApi.app.getApi().getVersion(),
     getName: () => electronApi.app.getApi().getName(),
     getEnvVersion: () => electronApi.app.getApi().getEnvVersion(),
+  },
+
+  window: {
+    isAvailable: (): boolean => !!window.electronAPI?.window,
+    getApi: () => {
+      const api = ensureElectronApi().window;
+      if (!api) throw new Error('Window bridge is unavailable');
+      return api;
+    },
+    minimize: (): Promise<void> => {
+      return electronApi.window.getApi().minimize();
+    },
+    maximize: (): Promise<void> => {
+      return electronApi.window.getApi().maximize();
+    },
+    unmaximize: (): Promise<void> => {
+      return electronApi.window.getApi().unmaximize();
+    },
+    close: (): Promise<void> => {
+      return electronApi.window.getApi().close();
+    },
+    isMaximized: (): Promise<boolean> => {
+      return electronApi.window.getApi().isMaximized();
+    },
+    onStateChanged: (callback: (data: WindowStatePayload) => void): (() => void) => {
+      return electronApi.window.getApi().onStateChanged(callback);
+    },
   },
 
   settings: {

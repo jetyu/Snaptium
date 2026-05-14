@@ -116,6 +116,12 @@ export const IPC_CHANNELS = {
   ACCESS_CONTROL_UNLOCK: 'access-control:unlock',
   ACCESS_CONTROL_IS_LOCKED: 'access-control:is-locked',
   ACCESS_CONTROL_STATE_CHANGED: 'access-control:state-changed',
+  WINDOW_MINIMIZE: 'window:minimize',
+  WINDOW_MAXIMIZE: 'window:maximize',
+  WINDOW_UNMAXIMIZE: 'window:unmaximize',
+  WINDOW_CLOSE: 'window:close',
+  WINDOW_IS_MAXIMIZED: 'window:is-maximized',
+  WINDOW_STATE_CHANGED: 'window:state-changed',
 } as const satisfies Record<string, string>;
 
 export type IpcChannel = (typeof IPC_CHANNELS)[keyof typeof IPC_CHANNELS];

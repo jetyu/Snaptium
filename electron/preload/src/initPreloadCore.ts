@@ -20,6 +20,18 @@ const electronAPI = Object.freeze({
     getEnvVersion: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_ENV_VERSION),
     getName: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_NAME),
   }),
+  window: Object.freeze({
+    minimize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MINIMIZE),
+    maximize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MAXIMIZE),
+    unmaximize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_UNMAXIMIZE),
+    close: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_CLOSE),
+    isMaximized: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_IS_MAXIMIZED),
+    onStateChanged: (callback: DataCallback<{ isMaximized: boolean }>) => {
+      const subscription = (_event: Electron.IpcRendererEvent, data: { isMaximized: boolean }) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.WINDOW_STATE_CHANGED, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.WINDOW_STATE_CHANGED, subscription);
+    },
+  }),
   vfs: Object.freeze({
     initWorkspace: (rootPath?: string) => ipcRenderer.invoke(IPC_CHANNELS.VFS_INIT, rootPath),
     createFile: (payload: { parentId: string | null; name: string; content?: string }) =>
