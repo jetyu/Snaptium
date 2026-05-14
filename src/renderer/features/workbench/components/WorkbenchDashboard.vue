@@ -9,8 +9,8 @@
 
             <div class="hero-meta">
               <span>{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
-              <span>{{ t('workbench.label.todayWriting') }} {{ formatNumber(behaviorFeedback.todayCharacters) }}</span>
               <span>{{ t('workbench.label.streak') }} {{ formatNumber(behaviorFeedback.streakDays) }}</span>
+              <span>{{ t('workbench.stats.activeLast7Days') }} {{ formatNumber(activeDaysLast7) }}/7</span>
             </div>
 
             <div class="hero-actions">
@@ -41,33 +41,68 @@
                 <component :is="metric.icon" theme="outline" :size="15" />
                 <span>{{ metric.label }}</span>
               </div>
-              <strong>{{ metric.value }}</strong>
-              <span class="overview-card__trend">{{ metric.trend }}</span>
+              <p class="overview-card__content">{{ metric.value }}</p>
             </article>
           </div>
         </section>
 
-        <section class="panel">
-          <header class="panel__header">
-            <h2>{{ t('workbench.module.recentActivity') }}</h2>
-          </header>
+        <div class="panel-row panel-row--recent">
+          <section class="panel panel--half">
+            <header class="panel__header">
+              <h2>{{ t('workbench.module.recentActivity') }}</h2>
+            </header>
 
-          <div v-if="recentActivityPreview.length > 0" class="feed-list feed-list--interactive">
-            <button v-for="entry in recentActivityPreview" :key="entry.id" type="button" class="feed-row"
-              :title="getActivityTooltip(entry)" @click="handleActivityClick(entry)">
-              <span class="feed-row__icon">
-                <Edit v-if="entry.kind === 'saved'" theme="outline" :size="14" />
-                <Brain v-else theme="outline" :size="14" />
-              </span>
-              <span class="feed-row__main">
-                <span class="feed-row__title">{{ getActivityTitle(entry) }}</span>
-                <span class="feed-row__subtitle">{{ getActivityReason(entry) }}</span>
-              </span>
-              <span class="feed-row__time">{{ formatRelativeTime(entry.timestamp) }}</span>
-            </button>
-          </div>
-          <div v-else class="module-empty">{{ t('workbench.empty.noActivity') }}</div>
-        </section>
+            <div v-if="recentActivityPreview.length > 0" class="feed-list feed-list--interactive">
+              <button v-for="entry in recentActivityPreview" :key="entry.id" type="button" class="feed-row"
+                :title="getActivityTooltip(entry)" @click="handleActivityClick(entry)">
+                <span class="feed-row__icon">
+                  <Edit v-if="entry.kind === 'saved'" theme="outline" :size="14" />
+                  <Brain v-else theme="outline" :size="14" />
+                </span>
+                <span class="feed-row__main">
+                  <span class="feed-row__title">{{ getActivityTitle(entry) }}</span>
+                  <span class="feed-row__subtitle">{{ getActivityReason(entry) }}</span>
+                </span>
+                <span class="feed-row__time">{{ formatRelativeTime(entry.timestamp) }}</span>
+              </button>
+            </div>
+            <div v-else class="module-empty">{{ t('workbench.empty.noActivity') }}</div>
+          </section>
+
+          <section class="panel panel--half">
+            <header class="panel__header">
+              <h2>{{ t('workbench.module.recentQuestions') }}</h2>
+            </header>
+
+            <div v-if="recentQuestionEntriesPreview.length > 0" class="feed-list feed-list--interactive">
+              <button v-for="question in recentQuestionEntriesPreview" :key="question.id" type="button" class="feed-row"
+                :title="question.query" @click="openGlobalSearch(question.query)">
+                <span class="feed-row__icon">
+                  <SearchIcon theme="outline" :size="14" />
+                </span>
+                <span class="feed-row__main">
+                  <span class="feed-row__title">{{ question.query }}</span>
+                  <span class="feed-row__subtitle">{{ question.answer || t('workbench.empty.noAnswer') }}</span>
+                </span>
+                <span class="feed-row__time">{{ formatRelativeTime(question.askedAt) }}</span>
+              </button>
+            </div>
+            <div v-else-if="todoFallbackEntries.length > 0" class="feed-list feed-list--interactive">
+              <button v-for="entry in todoFallbackEntries" :key="entry.id" type="button" class="feed-row"
+                :title="entry.snippet" @click="openNoteInWorkspace(entry.noteId)">
+                <span class="feed-row__icon">
+                  <Notes theme="outline" :size="14" />
+                </span>
+                <span class="feed-row__main">
+                  <span class="feed-row__title">{{ entry.snippet }}</span>
+                  <span class="feed-row__subtitle">{{ entry.noteTitle }}</span>
+                </span>
+                <span class="feed-row__time">{{ formatRelativeTime(entry.updatedAt) }}</span>
+              </button>
+            </div>
+            <div v-else class="module-empty">{{ t('workbench.empty.noQuestions') }}</div>
+          </section>
+        </div>
 
         <section class="panel">
           <header class="panel__header">
@@ -108,39 +143,6 @@
           </div>
         </section>
 
-        <section class="panel">
-          <header class="panel__header">
-            <h2>{{ t('workbench.module.recentQuestions') }}</h2>
-          </header>
-
-          <div v-if="recentQuestionEntriesPreview.length > 0" class="feed-list feed-list--interactive">
-            <button v-for="question in recentQuestionEntriesPreview" :key="question.id" type="button" class="feed-row"
-              :title="question.query" @click="openGlobalSearch(question.query)">
-              <span class="feed-row__icon">
-                <SearchIcon theme="outline" :size="14" />
-              </span>
-              <span class="feed-row__main">
-                <span class="feed-row__title">{{ question.query }}</span>
-                <span class="feed-row__subtitle">{{ question.answer || t('workbench.empty.noAnswer') }}</span>
-              </span>
-              <span class="feed-row__time">{{ formatRelativeTime(question.askedAt) }}</span>
-            </button>
-          </div>
-          <div v-else-if="todoFallbackEntries.length > 0" class="feed-list feed-list--interactive">
-            <button v-for="entry in todoFallbackEntries" :key="entry.id" type="button" class="feed-row"
-              :title="entry.snippet" @click="openNoteInWorkspace(entry.noteId)">
-              <span class="feed-row__icon">
-                <Notes theme="outline" :size="14" />
-              </span>
-              <span class="feed-row__main">
-                <span class="feed-row__title">{{ entry.snippet }}</span>
-                <span class="feed-row__subtitle">{{ entry.noteTitle }}</span>
-              </span>
-              <span class="feed-row__time">{{ formatRelativeTime(entry.updatedAt) }}</span>
-            </button>
-          </div>
-          <div v-else class="module-empty">{{ t('workbench.empty.noQuestions') }}</div>
-        </section>
       </main>
 
       <aside class="workbench-side">
@@ -293,7 +295,6 @@ interface OverviewMetric {
   id: string;
   label: string;
   value: string;
-  trend: string;
   icon: Component;
 }
 
@@ -456,51 +457,52 @@ const knowledgeHeatEntries = computed<HeatEntry[]>(() => {
 
 const weekStart = computed<number>(() => getDayStartTimestamp(Date.now()) - (6 * DAY_MS));
 const notesUpdatedThisWeek = computed<number>(() => notes.value.filter((note) => note.updatedAt >= weekStart.value).length);
-const questionsThisWeek = computed<number>(() => recentQuestionEntries.value.filter((entry) => entry.askedAt >= weekStart.value).length);
+const activeDaysLast7 = computed<number>(() => {
+  const dayKeys = new Set(
+    notes.value
+      .filter((note) => note.updatedAt >= weekStart.value)
+      .map((note) => getLocalDateKey(note.updatedAt)),
+  );
+  return dayKeys.size;
+});
 
 const overviewMetrics = computed<OverviewMetric[]>(() => {
   return [
     {
-      id: 'workspace',
-      label: t('workbench.module.dataStatsTitle'),
+      id: 'total-writing',
+      label: t('workbench.behavior.totalCharacters'),
       value: formatNumber(behaviorFeedback.value.totalCharacters),
-      trend: t('workbench.behavior.totalCharacters'),
       icon: ApplicationTwo,
+    },
+    {
+      id: 'streak',
+      label: t('workbench.behavior.streakDays'),
+      value: formatNumber(behaviorFeedback.value.streakDays),
+      icon: ChartHistogram,
     },
     {
       id: 'documents',
       label: t('workbench.stats.noteCount'),
       value: formatNumber(notes.value.length),
-      trend: `${formatNumber(notesUpdatedThisWeek.value)} ${t('workbench.stats.activeLast7Days')}`,
       icon: Notes,
     },
     {
       id: 'favorites',
       label: t('workbench.module.favorites'),
       value: formatNumber(starredCount.value),
-      trend: t('workbench.stats.favoriteCount'),
       icon: Star,
     },
     {
       id: 'knowledge',
       label: t('search.semanticSearch'),
       value: formatNumber(knowledgePointCount.value),
-      trend: `${formatNumber(knowledgePointCount.value)}+`,
       icon: DatabaseSearch,
     },
     {
-      id: 'questions',
-      label: t('workbench.module.recentQuestions'),
-      value: formatNumber(recentQuestionEntries.value.length),
-      trend: `${formatNumber(questionsThisWeek.value)} ${t('workbench.stats.activeLast7Days')}`,
-      icon: Brain,
-    },
-    {
-      id: 'writing',
+      id: 'weekly-writing',
       label: t('workbench.behavior.sevenDayCharacters'),
       value: formatNumber(behaviorFeedback.value.sevenDayCharacters),
-      trend: `${formatNumber(behaviorFeedback.value.todayCharacters)} ${t('workbench.behavior.todayCharacters')}`,
-      icon: ChartHistogram,
+      icon: ApplicationTwo,
     },
   ];
 });
@@ -547,15 +549,19 @@ const previousWeekWords = computed<number>(() => {
     .reduce((total, note) => total + getCharacterCount(note.content), 0);
 });
 
-const growthLabel = computed<string>(() => {
+const weeklyGrowthPercentText = computed<string>(() => {
   const prev = previousWeekWords.value;
   const current = thisWeekWords.value;
   if (prev <= 0) {
-    return `${t('workbench.stats.activeLast7Days')} +100%`;
+    return current > 0 ? '+100%' : '0%';
   }
   const delta = Math.round(((current - prev) / prev) * 100);
   const sign = delta >= 0 ? '+' : '';
-  return `${t('workbench.stats.activeLast7Days')} ${sign}${delta}%`;
+  return `${sign}${delta}%`;
+});
+
+const growthLabel = computed<string>(() => {
+  return `${t('workbench.stats.activeLast7Days')} ${weeklyGrowthPercentText.value}`;
 });
 
 const recentEditedTime = computed<string>(() => {
@@ -615,14 +621,15 @@ const showAISetupAction = computed<boolean>(() => {
 const todayStatItems = computed<TodayStatItem[]>(() => {
   const todayStart = getDayStartTimestamp(Date.now());
   const todayQuestionCount = recentQuestionEntries.value.filter((entry) => entry.askedAt >= todayStart).length;
-  const todayNewNoteCount = notes.value.filter((note) => note.updatedAt >= todayStart).length;
-  const todaySmartCount = smartRecommendationsPreview.value.length;
+  const todayUpdatedNoteCount = notes.value.filter((note) => note.updatedAt >= todayStart).length;
+  const todayStarredCount = notes.value.filter((note) => note.starred && (note.starredAt ?? 0) >= todayStart).length
+    + notebooks.value.filter((notebook) => notebook.starred && (notebook.starredAt ?? 0) >= todayStart).length;
 
   return [
     { label: t('workbench.behavior.todayCharacters'), value: formatNumber(behaviorFeedback.value.todayCharacters) },
+    { label: t('workbench.stats.noteCount'), value: formatNumber(todayUpdatedNoteCount) },
     { label: t('workbench.module.recentQuestions'), value: formatNumber(todayQuestionCount) },
-    { label: t('workbench.stats.noteCount'), value: formatNumber(todayNewNoteCount) },
-    { label: t('workbench.module.smartRecommendation'), value: formatNumber(todaySmartCount) },
+    { label: t('workbench.module.favorites'), value: formatNumber(todayStarredCount) },
   ];
 });
 
@@ -1071,18 +1078,20 @@ watch(
 .overview-grid {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 10px;
+  gap: 7px;
 }
 
 .overview-card {
   min-width: 0;
-  min-height: 118px;
+  min-height: 0;
   display: grid;
-  align-content: start;
-  gap: 10px;
-  padding: 16px 16px 14px;
+  grid-template-rows: auto auto;
+  align-content: center;
+  justify-items: start;
+  gap: 4px;
+  padding: 10px 11px;
   border: 1px solid var(--workbench-border);
-  border-radius: 16px;
+  border-radius: 11px;
   background: var(--workbench-card);
   box-shadow: var(--workbench-shadow-soft);
   cursor: default;
@@ -1093,9 +1102,9 @@ watch(
 .overview-card__head {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
+  gap: 5px;
   color: var(--workbench-blue);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   font-weight: 720;
   white-space: nowrap;
 }
@@ -1107,20 +1116,15 @@ watch(
   text-overflow: ellipsis;
 }
 
-.overview-card strong {
+.overview-card__content {
+  margin: 0;
   color: var(--workbench-ink);
-  font-size: clamp(1.55rem, 1.8vw, 1.95rem);
-  font-weight: 780;
-  letter-spacing: -0.055em;
-  line-height: 0.95;
-}
-
-.overview-card__trend {
+  font-size: 0.9rem;
+  font-weight: 680;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
   min-width: 0;
   overflow: hidden;
-  color: var(--workbench-muted);
-  font-size: 0.78rem;
-  font-weight: 570;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1133,6 +1137,20 @@ watch(
   background: var(--workbench-panel);
   box-shadow: var(--workbench-shadow-soft);
   backdrop-filter: blur(18px);
+}
+
+.panel-row {
+  display: grid;
+  gap: 12px;
+}
+
+.panel-row--recent {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.panel--half {
+  min-height: 0;
 }
 
 .panel__header {
@@ -1628,12 +1646,11 @@ watch(
   }
 
   .overview-card {
-    min-height: 108px;
-    padding: 14px 14px 13px;
+    padding: 9px 10px;
   }
 
-  .overview-card strong {
-    font-size: clamp(1.42rem, 1.7vw, 1.78rem);
+  .overview-card__content {
+    font-size: 0.86rem;
   }
 }
 
@@ -1677,6 +1694,10 @@ watch(
   }
 
   .smart-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .panel-row--recent {
     grid-template-columns: 1fr;
   }
 

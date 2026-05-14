@@ -1,5 +1,5 @@
 <template>
-  <div class="main-shell">
+  <div class="main-shell" :class="{ 'main-shell--maximized': isWindowMaximized }">
     <AppWindowFrame />
     <div class="app-layout">
       <AppSidebar :active-main-view="activeMainView" :main-views="mainViews" :custom-modules="enabledCustomModules"
@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
 import { SearchDialog, useSearch } from '@renderer/features/search';
 import { useWorkspace } from '@renderer/features/workspace';
@@ -35,6 +35,7 @@ import AppWindowFrame from './components/AppWindowFrame.vue';
 import WorkbenchView from './views/WorkbenchView.vue';
 import WorkspaceView from './views/WorkspaceView.vue';
 import MyFavoritesView from '@renderer/features/favorites/components/MyFavoritesView.vue';
+import { electronApi } from '@renderer/core/bridge/electronApi';
 
 const mainLayoutLogger = createLogger('MainLayout');
 const appShellStore = useAppShellStore();
@@ -47,6 +48,8 @@ const { openAbout } = useAbout();
 const { openSidebarManager } = useSidebarManager();
 const { isGlobalSearchOpen, globalSearchInitialQuery, openGlobalSearch, closeGlobalSearch } = useSearch();
 const { selectNote, forceFlushAutoSave } = useWorkspace();
+const isWindowMaximized = ref(false);
+let removeWindowStateListener: (() => void) | null = null;
 
 type SearchSelectResult = SearchResult | RagSearchResult;
 type SearchSelectMatch = SearchMatch;
@@ -57,6 +60,13 @@ function isRagSearchResult(result: SearchSelectResult): result is RagSearchResul
 
 function isSearchResult(result: SearchSelectResult): result is SearchResult {
   return 'id' in result;
+}
+
+async function syncWindowState(): Promise<void> {
+  if (!electronApi.window.isAvailable()) {
+    return;
+  }
+  isWindowMaximized.value = await electronApi.window.isMaximized();
 }
 
 async function openModule(moduleId: AppShellModuleId) {
@@ -97,24 +107,81 @@ async function handleSearchSelect(result: SearchSelectResult, match?: SearchSele
   }, 100);
 }
 
-onMounted(() => {
-  window.addEventListener('beforeunload', () => {
-    forceFlushAutoSave().catch((err) => {
-      mainLayoutLogger.error(`Failed to save before unload: ${getErrorMessage(err)}`);
-    });
+function handleBeforeUnload(): void {
+  forceFlushAutoSave().catch((err) => {
+    mainLayoutLogger.error(`Failed to save before unload: ${getErrorMessage(err)}`);
   });
+}
+
+onMounted(async () => {
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  await syncWindowState();
+
+  if (electronApi.window.isAvailable()) {
+    removeWindowStateListener = electronApi.window.onStateChanged((payload) => {
+      isWindowMaximized.value = payload.isMaximized;
+    });
+  }
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', handleBeforeUnload);
+  removeWindowStateListener?.();
+  removeWindowStateListener = null;
 });
 </script>
 
 <style scoped>
 .main-shell {
+  --shell-radius: 8px;
+  --shell-border: color-mix(in srgb, var(--panel-border) 78%, transparent);
+  position: relative;
   width: 100vw;
   height: 100vh;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-radius: var(--shell-radius);
+  border: 1px solid var(--shell-border);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, #ffffff 72%, transparent),
+    inset 0 -1px 0 color-mix(in srgb, var(--panel-border) 46%, transparent),
+    0 0 0 1px color-mix(in srgb, var(--panel-border) 34%, transparent),
+    0 14px 30px rgba(15, 23, 42, 0.2);
+  transition: border-radius 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+[data-theme='dark'] .main-shell {
+  --shell-border: color-mix(in srgb, var(--panel-border) 84%, transparent);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05),
+    0 18px 34px rgba(0, 0, 0, 0.44);
+}
+
+.main-shell::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+  background: none;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--panel-border) 44%, transparent);
+}
+
+.main-shell.main-shell--maximized {
+  border-radius: 0;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.main-shell.main-shell--maximized::before {
+  box-shadow: none;
 }
 
 .app-layout {
+  overflow: hidden;
   min-height: 0;
 }
 </style>

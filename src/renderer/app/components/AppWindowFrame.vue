@@ -104,6 +104,10 @@ onBeforeUnmount(() => {
 <style scoped>
 .app-window-frame {
   --window-frame-height: 40px;
+  --window-control-hover-bg: color-mix(in srgb, var(--text) 8%, transparent);
+  --window-control-hover-border: color-mix(in srgb, var(--text-muted) 24%, transparent);
+  --window-control-active-bg: color-mix(in srgb, var(--text) 13%, transparent);
+  --window-control-active-border: color-mix(in srgb, var(--text-muted) 28%, transparent);
   position: relative;
   z-index: 50;
   display: grid;
@@ -115,14 +119,19 @@ onBeforeUnmount(() => {
   border-bottom: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, white), color-mix(in srgb, var(--panel) 98%, transparent)),
-    radial-gradient(140% 180% at 16% -30%, rgba(66, 133, 255, 0.16), transparent 58%);
+    radial-gradient(140% 180% at 16% -30%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 58%);
   backdrop-filter: blur(20px) saturate(130%);
+  transition: padding 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
 }
 
 [data-theme='dark'] .app-window-frame {
+  --window-control-hover-bg: color-mix(in srgb, #ffffff 10%, transparent);
+  --window-control-hover-border: color-mix(in srgb, #ffffff 20%, transparent);
+  --window-control-active-bg: color-mix(in srgb, #ffffff 16%, transparent);
+  --window-control-active-border: color-mix(in srgb, #ffffff 24%, transparent);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, black), color-mix(in srgb, var(--panel) 98%, transparent)),
-    radial-gradient(140% 180% at 16% -30%, rgba(80, 140, 255, 0.2), transparent 58%);
+    radial-gradient(140% 180% at 16% -30%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 58%);
 }
 
 .app-window-frame__drag-region {
@@ -158,14 +167,15 @@ onBeforeUnmount(() => {
   font-size: 0.78rem;
   font-weight: 650;
   letter-spacing: 0.05em;
-  text-transform: uppercase;
+
 }
 
 .app-window-frame__controls {
   -webkit-app-region: no-drag;
   display: inline-flex;
   align-items: stretch;
-  gap: 4px;
+  gap: 2px;
+  padding-right: 2px;
 }
 
 .app-window-frame__control-btn {
@@ -173,30 +183,78 @@ onBeforeUnmount(() => {
   height: 32px;
   margin-top: 4px;
   border: 1px solid transparent;
-  border-radius: 9px;
+  border-radius: 8px;
   background: transparent;
-  color: color-mix(in srgb, var(--text-muted) 88%, var(--text));
+  color: color-mix(in srgb, var(--text-muted) 90%, var(--text));
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+  transition:
+    background-color 0.14s ease,
+    border-color 0.14s ease,
+    color 0.14s ease,
+    transform 0.12s ease,
+    box-shadow 0.14s ease;
+  outline: none;
+  box-shadow: inset 0 0 0 1px transparent;
 }
 
 .app-window-frame__control-btn:hover {
-  background: color-mix(in srgb, var(--accent) 8%, var(--panel-hover));
-  border-color: color-mix(in srgb, var(--accent) 18%, var(--panel-border));
+  background: var(--window-control-hover-bg);
+  border-color: var(--window-control-hover-border);
   color: var(--text);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 44%, transparent);
+}
+
+.app-window-frame__control-btn:active {
+  background: var(--window-control-active-bg);
+  border-color: var(--window-control-active-border);
+  transform: scale(0.96);
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.16);
+}
+
+.app-window-frame__control-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 34%, transparent);
+  box-shadow:
+    0 0 0 2px color-mix(in srgb, var(--accent) 26%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #ffffff 42%, transparent);
 }
 
 .app-window-frame__control-btn.is-close:hover {
-  background: rgba(226, 53, 75, 0.14);
-  border-color: rgba(226, 53, 75, 0.3);
-  color: #d93045;
+  background: #e81123;
+  border-color: #e81123;
+  color: #fff;
+  box-shadow: none;
+}
+
+.app-window-frame__control-btn.is-close:active {
+  background: #c50f1f;
+  border-color: #c50f1f;
+  color: #fff;
+  transform: scale(0.97);
+}
+
+[data-theme='dark'] .app-window-frame__control-btn:hover {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+[data-theme='dark'] .app-window-frame__control-btn:active {
+  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.34);
 }
 
 .app-window-frame.is-maximized {
-  padding-left: 8px;
-  padding-right: 4px;
+  padding-left: 6px;
+  padding-right: 2px;
+  border-bottom-color: color-mix(in srgb, var(--panel-border) 76%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, white), color-mix(in srgb, var(--panel) 98%, transparent)),
+    radial-gradient(140% 180% at 16% -30%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 58%);
+}
+
+[data-theme='dark'] .app-window-frame.is-maximized {
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, black), color-mix(in srgb, var(--panel) 98%, transparent)),
+    radial-gradient(140% 180% at 16% -30%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 58%);
 }
 </style>
