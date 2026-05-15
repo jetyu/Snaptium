@@ -26,7 +26,7 @@ export interface WorkbenchModuleDefinition {
 
 export const WORKBENCH_LIMITS = {
   QUESTIONS: 8,
-  RECENT_ACTIVITY: 6,
+  RECENT_ACTIVITY: 4,
 } as const;
 
 export const WORKBENCH_MODULE_DEFINITIONS: WorkbenchModuleDefinition[] = [

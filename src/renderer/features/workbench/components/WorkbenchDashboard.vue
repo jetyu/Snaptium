@@ -10,7 +10,6 @@
             <div class="hero-meta">
               <span>{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
               <span>{{ t('workbench.label.streak') }} {{ formatNumber(behaviorFeedback.streakDays) }}</span>
-              <span>{{ t('workbench.stats.activeLast7Days') }} {{ formatNumber(activeDaysLast7) }}/7</span>
             </div>
 
             <div class="hero-actions">
@@ -312,7 +311,7 @@ interface HeatEntry {
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const WORKBENCH_DISPLAY_LIMITS = {
-  RECENT_ACTIVITY: 6,
+  RECENT_ACTIVITY: 4,
   RECENT_QUESTIONS: 4,
   SMART_RECOMMENDATIONS: 4,
 } as const;
