@@ -2,8 +2,11 @@
   <header class="app-window-frame" :class="{ 'is-maximized': isMaximized }" @dblclick="handleDoubleClickTitle">
     <div class="app-window-frame__drag-region">
       <div class="app-window-frame__brand">
-        <div class="app-window-frame__brand-dot" aria-hidden="true"></div>
+        <img src="@assets/logo/app-logo-32.png" class="app-window-frame__logo" :alt="appTitle" />
         <span class="app-window-frame__title">{{ appTitle }}</span>
+      </div>
+      <div class="app-window-frame__menu-container no-drag">
+        <AppMenuBar />
       </div>
     </div>
 
@@ -31,6 +34,7 @@ import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Close, Minus, Square, Copy } from '@icon-park/vue-next';
 import { electronApi } from '@renderer/core/bridge/electronApi';
+import AppMenuBar from './AppMenuBar.vue';
 
 const { t } = useI18n();
 const appTitle = ref<string>(t('common.appName'));
@@ -146,16 +150,17 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  gap: 8px;
+  gap: 10px;
+  padding-right: 12px;
+  margin-right: 4px;
+  border-right: 1px solid color-mix(in srgb, var(--panel-border) 40%, transparent);
 }
 
-.app-window-frame__brand-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: linear-gradient(150deg, #58b0ff 0%, #3d7cff 100%);
-  box-shadow: 0 0 0 3px rgba(61, 124, 255, 0.12);
-  flex-shrink: 0;
+.app-window-frame__logo {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
 }
 
 .app-window-frame__title {
@@ -163,11 +168,28 @@ onBeforeUnmount(() => {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: color-mix(in srgb, var(--text) 90%, var(--text-muted));
-  font-size: 0.78rem;
-  font-weight: 650;
-  letter-spacing: 0.05em;
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  background: linear-gradient(135deg, var(--text) 70%, color-mix(in srgb, var(--text) 70%, var(--accent)));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  opacity: 0.95;
+  transition: opacity 0.2s ease;
+}
 
+.app-window-frame__title:hover {
+  opacity: 1;
+}
+
+.app-window-frame__menu-container {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  flex: 1;
+  gap: 4px;
 }
 
 .app-window-frame__controls {

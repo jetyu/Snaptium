@@ -7,29 +7,75 @@ import {
 } from 'electron';
 import { $t, i18n } from './utils/i18n.js';
 import { IPC_CHANNELS } from './constants/ipc.constants.js';
+import { MENU_CONFIG, type MenuAction, type MenuItemConfig } from '../shared/menu.config.js';
 
 function isMacPlatform(): boolean {
   return process.platform === IPC_CHANNELS.PLATFORM_DARWIN_KERNEL;
 }
 
-function getMenuTemplate(mainWindow: BrowserWindow): MenuItemConstructorOptions[] {
-  const template: MenuItemConstructorOptions[] = [];
-  if (isMacPlatform()) {
-    template.push(getAppMenu());
+function mapConfigToMenuItem(
+  config: MenuItemConfig,
+  mainWindow: BrowserWindow,
+): MenuItemConstructorOptions {
+  const item: MenuItemConstructorOptions = {
+    label: config.labelKey ? $t(config.labelKey) : undefined,
+    accelerator: config.accelerator,
+    type: config.type,
+    role: config.role as any,
+  };
+
+  if (config.id && !config.role) {
+    item.click = () => handleMenuAction(config.id!, mainWindow);
   }
 
-  template.push(
-    getFileMenu(mainWindow),
-    getEditMenu(mainWindow),
-    getViewMenu(),
-    getWindowMenu(),
-    getHelpMenu(mainWindow),
-  );
+  if (config.submenu) {
+    item.submenu = config.submenu.map((sub) => mapConfigToMenuItem(sub, mainWindow));
+  }
 
-  return template;
+  return item;
 }
 
-function getAppMenu(): MenuItemConstructorOptions {
+function handleMenuAction(action: MenuAction, mainWindow: BrowserWindow) {
+  switch (action) {
+    case 'preferences':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_PREFERENCES);
+      break;
+    case 'find':
+      mainWindow.webContents.send('menu:find');
+      break;
+    case 'update':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_CHECK_FOR_UPDATES);
+      break;
+    case 'about':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_ABOUT);
+      break;
+    case 'website':
+      shell.openExternal('https://snaptium.com');
+      break;
+    case 'docs':
+      shell.openExternal('https://snaptium.com/docs');
+      break;
+    case 'changelog':
+      shell.openExternal('https://snaptium.com/changelog');
+      break;
+    case 'support':
+      shell.openExternal('https://snaptium.com/support');
+      break;
+    case 'privacy':
+      shell.openExternal('https://snaptium.com/legal/privacy');
+      break;
+    case 'terms':
+      shell.openExternal('https://snaptium.com/legal/terms');
+      break;
+    case 'feedback':
+      shell.openExternal('https://github.com/jetyu/NoteWizard/issues');
+      break;
+    default:
+      break;
+  }
+}
+
+function getAppMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
   return {
     label: app.name,
     submenu: [
@@ -46,162 +92,24 @@ function getAppMenu(): MenuItemConstructorOptions {
   };
 }
 
-function getFileMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
-  const isMac = isMacPlatform();
-  return {
-    label: $t('menu.file'),
-    submenu: [
-      {
-        label: $t('menu.file.preferences'),
-        accelerator: isMac ? 'Cmd+,' : 'Ctrl+,',
-        click: () => mainWindow.webContents.send('menu:open-preferences'),
-      },
-      { type: 'separator' },
-      isMac ? { role: 'close' } : { role: 'quit', label: $t('menu.file.quit') },
-    ],
-  };
-}
-
-function getEditMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
-  const isMac = isMacPlatform();
-  const macSpeechMenu: MenuItemConstructorOptions[] = [
-    { role: 'pasteAndMatchStyle' },
-    { role: 'delete' },
-    { role: 'selectAll', label: $t('contextMenu.selectAll') },
-    { type: 'separator' },
-    {
-      label: 'Speech',
-      submenu: [
-        { role: 'startSpeaking' },
-        { role: 'stopSpeaking' },
-      ],
-    },
-  ];
-  const defaultMenu: MenuItemConstructorOptions[] = [
-    { role: 'delete' },
-    { type: 'separator' },
-    { role: 'selectAll' },
-  ];
-
-  return {
-    label: $t('menu.edit'),
-    submenu: [
-      { role: 'undo', label: $t('menu.edit.undo') },
-      { role: 'redo', label: $t('menu.edit.redo') },
-      { type: 'separator' },
-      { role: 'cut', label: $t('menu.edit.cut') },
-      { role: 'copy', label: $t('menu.edit.copy') },
-      { role: 'paste', label: $t('menu.edit.paste') },
-      ...(isMac ? macSpeechMenu : defaultMenu),
-      { type: 'separator' },
-      {
-        label: $t('menu.edit.find'),
-        accelerator: 'CmdOrCtrl+F',
-        click: () => mainWindow.webContents.send('menu:find'),
-      },
-    ],
-  };
-}
-
-function getViewMenu(): MenuItemConstructorOptions {
-  return {
-    label: $t('menu.view'),
-    submenu: [
-      { role: 'reload' },
-      { role: 'forceReload' },
-      { role: 'toggleDevTools', label: $t('menu.help.devTools') },
-      { type: 'separator' },
-      { role: 'resetZoom', label: $t('menu.view.resetZoom') },
-      { role: 'zoomIn', label: $t('menu.view.zoomIn') },
-      { role: 'zoomOut', label: $t('menu.view.zoomOut') },
-      { type: 'separator' },
-      { role: 'togglefullscreen', label: $t('menu.view.fullScreen') },
-    ],
-  };
-}
-
-function getWindowMenu(): MenuItemConstructorOptions {
-  const isMac = isMacPlatform();
-  return {
-    label: $t('menu.window'),
-    submenu: [
-      { role: 'minimize', label: $t('menu.window.minimize') },
-      { role: 'zoom' },
-      ...(isMac
-        ? [
-          { type: 'separator' as const },
-          { role: 'front' as const },
-          { type: 'separator' as const },
-          { role: 'window' as const },
-        ]
-        : [{ role: 'close' as const, label: $t('menu.window.close') }]),
-    ],
-  };
-}
-
-function getHelpMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
-  return {
-    role: 'help',
-    label: $t('menu.help'),
-    submenu: [
-      {
-        label: $t('menu.help.website'),
-        click: async () => {
-          await shell.openExternal('https://snaptium.com');
-        },
-      },
-      {
-        label: $t('menu.help.docs'),
-        click: async () => {
-          await shell.openExternal('https://snaptium.com/docs');
-        },
-      }, {
-        label: $t('menu.help.changelog'),
-        click: async () => {
-          await shell.openExternal('https://snaptium.com/changelog');
-        },
-      },
-      {
-        label: $t('menu.help.support'),
-        click: async () => {
-          await shell.openExternal('https://snaptium.com/support');
-        },
-      }, { type: 'separator' }, {
-        label: $t('menu.help.privacy'),
-        click: async () => {
-          await shell.openExternal('https://snaptium.com/legal/privacy');
-        },
-      }, {
-        label: $t('menu.help.termsOfService'),
-        click: async () => {
-          await shell.openExternal('https://snaptium.com/legal/terms');
-        },
-      }, { type: 'separator' },
-      {
-        label: $t('menu.help.update'),
-        click: () => mainWindow.webContents.send('menu:check-for-updates'),
-      },
-      {
-        label: $t('menu.help.feedback'),
-        click: async () => {
-          await shell.openExternal('https://github.com/jetyu/NoteWizard/issues');
-        },
-      },
-      { type: 'separator' },
-      {
-        label: $t('menu.help.about'),
-        click: () => mainWindow.webContents.send('menu:open-about'),
-      },
-    ],
-  };
-}
-
 export function setupAppMenu(mainWindow: BrowserWindow, locale?: string): void {
   if (locale) {
     i18n.loadTranslations(locale);
   }
 
-  const template = getMenuTemplate(mainWindow);
+  const template: MenuItemConstructorOptions[] = [];
+
+  if (isMacPlatform()) {
+    template.push(getAppMenu(mainWindow));
+  }
+
+  MENU_CONFIG.forEach((category) => {
+    template.push({
+      label: $t(category.labelKey),
+      submenu: category.items.map((item) => mapConfigToMenuItem(item, mainWindow)),
+    });
+  });
+
   const menu = Menu.buildFromTemplate(template);
   Menu.setApplicationMenu(menu);
 }

@@ -11,7 +11,10 @@ export function secureWebContents(win: BrowserWindow, isDev: boolean): void {
   const webContents = win.webContents;
 
   webContents.setWindowOpenHandler(({ url }: { url: string }) => {
-    const allowedDomains = ['https://github.com'];
+    const allowedDomains = [
+      'https://github.com',
+      'https://snaptium.com'
+    ];
 
     if (allowedDomains.some((domain) => url.startsWith(domain))) {
       shell.openExternal(url);
