@@ -8,6 +8,9 @@
       <div class="app-window-frame__menu-container no-drag">
         <AppMenuBar />
       </div>
+      <div class="app-window-frame__search-container no-drag">
+        <AppTitleBarSearch />
+      </div>
     </div>
 
     <div class="app-window-frame__controls no-drag">
@@ -35,6 +38,7 @@ import { useI18n } from 'vue-i18n';
 import { Close, Minus, Square, Copy } from '@icon-park/vue-next';
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import AppMenuBar from './AppMenuBar.vue';
+import AppTitleBarSearch from './AppTitleBarSearch.vue';
 
 const { t } = useI18n();
 const appTitle = ref<string>(t('common.appName'));
@@ -188,8 +192,18 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   height: 100%;
+  padding-left: 4px;
+  -webkit-app-region: no-drag;
+}
+
+.app-window-frame__search-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 1;
-  gap: 4px;
+  height: 100%;
+  padding: 0 20px;
+  -webkit-app-region: no-drag;
 }
 
 .app-window-frame__controls {
