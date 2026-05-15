@@ -9,7 +9,6 @@
 
             <div class="hero-meta">
               <span>{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
-              <span>{{ t('workbench.label.streak') }} {{ formatNumber(behaviorFeedback.streakDays) }}</span>
             </div>
 
             <div class="hero-actions">
@@ -497,12 +496,6 @@ const overviewMetrics = computed<OverviewMetric[]>(() => {
       value: formatNumber(knowledgePointCount.value),
       icon: DatabaseSearch,
     },
-    {
-      id: 'weekly-writing',
-      label: t('workbench.behavior.sevenDayCharacters'),
-      value: formatNumber(behaviorFeedback.value.sevenDayCharacters),
-      icon: ApplicationTwo,
-    },
   ];
 });
 
@@ -849,11 +842,11 @@ watch(
 }
 
 .workbench-layout {
-  width: min(100%, 1600px);
+  width: min(100%, 2560px);
   margin: 0 auto;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) clamp(292px, 23vw, 360px);
-  gap: clamp(16px, 1.4vw, 22px);
+  grid-template-columns: minmax(0, 1fr) clamp(300px, 20vw, 420px);
+  gap: clamp(16px, 2vw, 32px);
   align-items: start;
   min-height: 0;
 }
@@ -865,7 +858,7 @@ watch(
 }
 
 .hero-card {
-  min-height: clamp(172px, 13.6vw, 206px);
+  min-height: clamp(180px, 16vw, 320px);
   display: grid;
   grid-template-columns: minmax(300px, 0.86fr) minmax(320px, 1fr);
   gap: 16px;
@@ -1078,8 +1071,8 @@ watch(
 
 .overview-grid {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 7px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: clamp(8px, 1.2vw, 20px);
 }
 
 .overview-card {
@@ -1643,8 +1636,8 @@ watch(
   }
 
   .overview-grid {
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: 8px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .overview-card {
