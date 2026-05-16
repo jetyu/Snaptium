@@ -65,6 +65,25 @@ interface WindowStatePayload {
   isMaximized: boolean;
 }
 
+interface WallpaperRequestPayload {
+  switchSource?: boolean;
+  currentSource?: WallpaperResult['source'];
+}
+
+interface WallpaperResult {
+  success: boolean;
+  dataUrl: string | null;
+  source: 'bing' | 'picsum' | 'cache' | 'fallback';
+  title: string;
+  description: string;
+  author: string;
+  originUrl: string;
+  date: string;
+  cached: boolean;
+  refreshedAt: number;
+  error?: string;
+}
+
 interface AiSourceConfig {
   aiEndpoint: string;
   aiApiKey: string;
@@ -255,6 +274,7 @@ declare global {
 
       workspace?: {
         showContextMenu: (payload: WorkspaceContextMenuPayload) => Promise<string | null>;
+        getDailyWallpaper: (payload?: WallpaperRequestPayload) => Promise<WallpaperResult>;
       };
 
       editor?: {

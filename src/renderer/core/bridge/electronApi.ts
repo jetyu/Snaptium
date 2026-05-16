@@ -162,6 +162,25 @@ export interface WindowStatePayload {
   isMaximized: boolean;
 }
 
+export interface WallpaperRequestPayload {
+  switchSource?: boolean;
+  currentSource?: WallpaperResult['source'];
+}
+
+export interface WallpaperResult {
+  success: boolean;
+  dataUrl: string | null;
+  source: 'bing' | 'picsum' | 'cache' | 'fallback';
+  title: string;
+  description: string;
+  author: string;
+  originUrl: string;
+  date: string;
+  cached: boolean;
+  refreshedAt: number;
+  error?: string;
+}
+
 export interface UpdaterUpdateInfoPayload {
   version: string;
   releaseDate?: string;
@@ -616,6 +635,9 @@ export const electronApi = {
     },
     showContextMenu: (payload: WorkspaceContextMenuPayload): Promise<string | null> => {
       return electronApi.workspace.getApi().showContextMenu(payload);
+    },
+    getDailyWallpaper: (payload: WallpaperRequestPayload = {}): Promise<WallpaperResult> => {
+      return electronApi.workspace.getApi().getDailyWallpaper(payload);
     },
   },
 

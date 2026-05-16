@@ -15,6 +15,7 @@ import { registerUpdaterHandlers } from './modules/updater.js';
 import { registerImportExportIpcHandlers } from './modules/import-export.js';
 import { registerE2eeHandlers } from './modules/e2ee.js';
 import { registerWindowIpcHandlers } from './modules/window.js';
+import { registerWallpaperIpcHandlers } from './modules/wallpaper.js';
 import type { BrowserWindow } from 'electron';
 
 export function registerIpcHandlers(mainWindow: BrowserWindow): void {
@@ -35,4 +36,5 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   registerImportExportIpcHandlers();
   registerE2eeHandlers();
   registerWindowIpcHandlers(mainWindow);
+  registerWallpaperIpcHandlers();
 }

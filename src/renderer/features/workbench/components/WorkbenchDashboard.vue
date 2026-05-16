@@ -23,13 +23,17 @@
             </div>
           </div>
 
-          <div class="hero-art" aria-hidden="true">
-            <img src="@assets/images/default-hero.png" alt="Hero Art" style="width: 100%; height: 100%; object-fit: cover;" />
+          <div class="hero-art">
+            <img class="hero-art__image" :src="wallpaperSrc" :alt="wallpaperAlt" @error="handleWallpaperImageError" />
+            <button type="button" class="hero-art__source-button" :disabled="wallpaperLoading"
+              aria-label="切换图片源" @click="switchWallpaperSource">
+              <Picture theme="outline" :size="15" />
+            </button>
+            <div v-if="wallpaperInfoText" class="hero-art__info">{{ wallpaperInfoText }}</div>
           </div>
         </section>
 
         <section class="overview-section">
-          <h2>{{ t('workbench.module.dataStatsTitle') }}</h2>
           <div class="overview-grid">
             <article v-for="metric in overviewMetrics" :key="metric.id" class="overview-card">
               <div class="overview-card__head">
@@ -201,13 +205,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watch, type Component } from 'vue';
+import { computed, onMounted, ref, watch, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
+import defaultHeroUrl from '@assets/images/default-hero.png';
 import {
   Search as SearchIcon,
   Edit,
   Plus,
+  Picture,
   Brain,
   Magic,
   LinkOne,
@@ -224,6 +230,7 @@ import { useSearch } from '@renderer/features/search';
 import { useWorkspace, type Note } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useWorkbenchStore } from '@renderer/features/workbench';
+import { electronApi, type WallpaperResult } from '@renderer/core/bridge/electronApi';
 import { useLocalSmartRecommendations } from '../composables/useLocalSmartRecommendations';
 import { WORKBENCH_LIMITS, type WorkbenchQuestionEntry } from '../constants/workbench.constants';
 
@@ -289,6 +296,9 @@ const { notes, notebooks, createNote, selectNote } = useWorkspace();
 const appShellStore = useAppShellStore();
 const workbenchStore = useWorkbenchStore();
 const { recentQuestions } = storeToRefs(workbenchStore);
+const wallpaper = ref<WallpaperResult | null>(null);
+const wallpaperLoading = ref<boolean>(false);
+const wallpaperSrc = ref<string>(defaultHeroUrl);
 
 const hasNotes = computed<boolean>(() => notes.value.length > 0);
 const noteMap = computed<Map<string, Note>>(() => new Map(notes.value.map((note) => [note.id, note])));
@@ -540,6 +550,68 @@ const greetingText = computed<string>(() => {
   return `${t('workbench.greeting.evening')}`;
 });
 
+const wallpaperAlt = computed<string>(() => wallpaper.value?.title || '');
+
+const wallpaperInfoText = computed<string>(() => {
+  const currentWallpaper = wallpaper.value;
+  if (!currentWallpaper?.success) {
+    return '';
+  }
+
+  const source = getWallpaperSourceLabel(currentWallpaper.source);
+  const title = currentWallpaper.title || currentWallpaper.description;
+  return [title, source]
+    .filter((item) => item.trim().length > 0)
+    .join(' · ');
+});
+
+async function loadWallpaper(switchSource = false): Promise<void> {
+  if (wallpaperLoading.value) {
+    return;
+  }
+
+  wallpaperLoading.value = true;
+  try {
+    const result = await electronApi.workspace.getDailyWallpaper({
+      switchSource,
+      currentSource: wallpaper.value?.source,
+    });
+    wallpaper.value = result;
+    if (result.success && result.dataUrl) {
+      wallpaperSrc.value = result.dataUrl;
+    } else {
+      wallpaperSrc.value = defaultHeroUrl;
+    }
+  } catch {
+    wallpaperSrc.value = defaultHeroUrl;
+  } finally {
+    wallpaperLoading.value = false;
+  }
+}
+
+function switchWallpaperSource(): void {
+  void loadWallpaper(true);
+}
+
+function handleWallpaperImageError(): void {
+  if (wallpaperSrc.value !== defaultHeroUrl) {
+    wallpaperSrc.value = defaultHeroUrl;
+  }
+}
+
+function getWallpaperSourceLabel(source: WallpaperResult['source']): string {
+  if (source === 'bing') {
+    return 'Bing';
+  }
+  if (source === 'picsum') {
+    return 'Picsum';
+  }
+  if (source === 'cache') {
+    return 'Cache';
+  }
+  return '';
+}
+
 function normalizeTodoSnippet(value: string): string {
   return value.replace(/\s+/g, ' ').trim().slice(0, 72);
 }
@@ -686,6 +758,10 @@ async function handleActivityClick(entry: ActivityEntry): Promise<void> {
     await openNoteInWorkspace(entry.note.id);
   }
 }
+
+onMounted(() => {
+  void loadWallpaper();
+});
 
 watch(
   () => notes.value.map((note) => note.id).sort().join('|'),
@@ -880,12 +956,80 @@ watch(
   opacity: 0.9;
 }
 
+.hero-art__image {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.hero-art__source-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  border-radius: 9px;
+  background: rgba(14, 18, 29, 0.48);
+  color: #ffffff;
+  opacity: 0;
+  transform: translateY(-4px);
+  cursor: pointer;
+  backdrop-filter: blur(12px);
+  transition: opacity 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
+}
+
+.hero-art:hover .hero-art__source-button,
+.hero-art:focus-within .hero-art__source-button {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.hero-art__source-button:disabled {
+  cursor: default;
+}
+
+.hero-art:hover .hero-art__source-button:disabled,
+.hero-art:focus-within .hero-art__source-button:disabled {
+  opacity: 0.72;
+}
+
+.hero-art__source-button:not(:disabled):hover {
+  background: rgba(14, 18, 29, 0.62);
+}
+
+.hero-art__info {
+  position: absolute;
+  max-width: calc(100% - 24px);
+  bottom: 12px;
+  left: 12px;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 650;
+  opacity: 0;
+  overflow: hidden;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+  text-overflow: ellipsis;
+  transform: translateY(4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+  white-space: nowrap;
+}
+
+.hero-art:hover .hero-art__info,
+.hero-art:focus-within .hero-art__info {
+  opacity: 1;
+  transform: translateY(0);
+}
+
 .overview-section {
   display: grid;
   gap: 12px;
 }
 
-.overview-section h2,
 .panel__header h2 {
   margin: 0;
   color: var(--workbench-ink);
@@ -1492,6 +1636,7 @@ watch(
     margin: 0;
     border-radius: 16px;
   }
+
 }
 
 @media (max-width: 900px) {

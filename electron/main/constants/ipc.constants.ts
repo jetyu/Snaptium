@@ -4,6 +4,7 @@ export const IPC_CHANNELS = {
   AI_SOURCE_TEST_CONNECTION: 'ai-source:test-connection',
   APP_GET_ENV_VERSION: 'app:get-env-version',
   APP_GET_NAME: 'app:get-name',
+  APP_GET_WALLPAPER: 'app:get-wallpaper',
   APP_GET_VERSION: 'app:get-version',
   ELECTRON_ACTIVATE: 'activate',
   ELECTRON_API: 'electronAPI',
