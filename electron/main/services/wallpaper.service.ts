@@ -130,10 +130,6 @@ function isWallpaperMetadataFile(fileName: string): boolean {
     || /^\d{4}-\d{2}-\d{2}\.json$/.test(fileName);
 }
 
-function isWallpaperMetadataFileForDate(fileName: string, dateKey: string): boolean {
-  return fileName === `${dateKey}.json` || fileName.startsWith(`${dateKey}-`);
-}
-
 async function readJson(url: string): Promise<unknown> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
@@ -218,6 +214,32 @@ function parseBingImageItem(data: unknown): BingImageItem | null {
   return firstImage && typeof firstImage === 'object' ? firstImage as BingImageItem : null;
 }
 
+function normalizeBingOriginUrl(value: string, fallbackUrl: string): string {
+  const normalizedValue = value.trim();
+  if (!normalizedValue) {
+    return fallbackUrl;
+  }
+
+  if (normalizedValue.startsWith('http://') || normalizedValue.startsWith('https://')) {
+    return normalizedValue;
+  }
+
+  try {
+    return new URL(normalizedValue, BING_BASE_URL).toString();
+  } catch {
+    return fallbackUrl;
+  }
+}
+
+function isTrustedBingOriginUrl(value: string): boolean {
+  try {
+    const parsedUrl = new URL(value);
+    return parsedUrl.protocol === 'https:' && (parsedUrl.hostname === 'www.bing.com' || parsedUrl.hostname === 'bing.com');
+  } catch {
+    return false;
+  }
+}
+
 async function getBingCandidate(): Promise<WallpaperCandidate> {
   const data = await readJson(BING_ARCHIVE_URL);
   const image = parseBingImageItem(data);
@@ -231,6 +253,7 @@ async function getBingCandidate(): Promise<WallpaperCandidate> {
   const originPath = normalizeText(image.copyrightlink);
   const title = normalizeText(image.title, 'Bing Daily Wallpaper');
   const description = normalizeText(image.copyright, title);
+  const originUrl = normalizeBingOriginUrl(originPath, imageUrl);
 
   return {
     source: 'bing',
@@ -238,7 +261,7 @@ async function getBingCandidate(): Promise<WallpaperCandidate> {
     title,
     description,
     author: 'Bing',
-    originUrl: originPath ? `${BING_BASE_URL}${originPath}` : imageUrl,
+    originUrl,
   };
 }
 
@@ -258,9 +281,9 @@ function normalizeBingImageSize(imageUrl: string): string {
 async function getPicsumCandidate(dateKey = getTodayKey()): Promise<WallpaperCandidate> {
   return {
     source: 'picsum',
-    imageUrl: `https://picsum.photos/seed/${dateKey}/${WALLPAPER_WIDTH}/${WALLPAPER_HEIGHT}`,
+    imageUrl: `https://picsum.photos/${WALLPAPER_WIDTH}/${WALLPAPER_HEIGHT}?random=${dateKey}-${Date.now()}`,
     title: `Picsum ${dateKey}`,
-    description: 'Daily seeded image from Picsum Photos',
+    description: 'Random image from Picsum Photos',
     author: 'Picsum Photos',
     originUrl: 'https://picsum.photos',
   };
@@ -276,6 +299,13 @@ async function readCachedWallpaper(metadataPath: string): Promise<WallpaperResul
 
     const imagePath = path.join(getCacheDirectory(), parsedMetadata.fileName);
     const buffer = await fs.readFile(imagePath);
+    const originUrl = parsedMetadata.source === 'bing'
+      ? normalizeBingOriginUrl(parsedMetadata.originUrl, parsedMetadata.originUrl)
+      : parsedMetadata.originUrl;
+
+    if (parsedMetadata.source === 'bing' && !isTrustedBingOriginUrl(originUrl)) {
+      return null;
+    }
 
     return {
       success: true,
@@ -284,7 +314,7 @@ async function readCachedWallpaper(metadataPath: string): Promise<WallpaperResul
       title: parsedMetadata.title,
       description: parsedMetadata.description,
       author: parsedMetadata.author,
-      originUrl: parsedMetadata.originUrl,
+      originUrl,
       date: parsedMetadata.date,
       cached: true,
       refreshedAt: parsedMetadata.refreshedAt,
@@ -296,26 +326,6 @@ async function readCachedWallpaper(metadataPath: string): Promise<WallpaperResul
 
 async function loadCachedWallpaper(dateKey: string, source: WallpaperCandidate['source']): Promise<WallpaperResult | null> {
   return readCachedWallpaper(getMetadataPath(dateKey, source));
-}
-
-async function findLatestCachedWallpaperForDate(dateKey: string): Promise<WallpaperResult | null> {
-  try {
-    const entries = await fs.readdir(getCacheDirectory());
-    const metadataFiles = entries
-      .filter((entry) => isWallpaperMetadataFileForDate(entry, dateKey) && isWallpaperMetadataFile(entry));
-    let latestCached: WallpaperResult | null = null;
-
-    for (const metadataFile of metadataFiles) {
-      const cached = await readCachedWallpaper(path.join(getCacheDirectory(), metadataFile));
-      if (cached) {
-        latestCached = !latestCached || cached.refreshedAt > latestCached.refreshedAt ? cached : latestCached;
-      }
-    }
-
-    return latestCached;
-  } catch {
-    return null;
-  }
 }
 
 async function findLatestCachedWallpaper(): Promise<WallpaperResult | null> {
@@ -410,7 +420,7 @@ export const wallpaperService = {
     const dateKey = getTodayKey();
 
     if (!options.switchSource) {
-      const cached = await findLatestCachedWallpaperForDate(dateKey);
+      const cached = await loadCachedWallpaper(dateKey, 'bing');
       if (cached) {
         return cached;
       }

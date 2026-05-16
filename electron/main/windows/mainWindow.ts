@@ -11,12 +11,15 @@ export function secureWebContents(win: BrowserWindow, isDev: boolean): void {
   const webContents = win.webContents;
 
   webContents.setWindowOpenHandler(({ url }: { url: string }) => {
-    const allowedDomains = [
-      'https://github.com',
-      'https://snaptium.com'
-    ];
+    const allowedHosts = new Set([
+      'github.com',
+      'snaptium.com',
+      'www.bing.com',
+      'bing.com',
+      'picsum.photos'
+    ]);
 
-    if (allowedDomains.some((domain) => url.startsWith(domain))) {
+    if (isAllowedExternalUrl(url, allowedHosts)) {
       shell.openExternal(url);
     }
     return { action: 'deny' };
@@ -33,6 +36,15 @@ export function secureWebContents(win: BrowserWindow, isDev: boolean): void {
       event.preventDefault();
     }
   });
+}
+
+function isAllowedExternalUrl(url: string, allowedHosts: Set<string>): boolean {
+  try {
+    const parsedUrl = new URL(url);
+    return parsedUrl.protocol === 'https:' && allowedHosts.has(parsedUrl.hostname);
+  } catch {
+    return false;
+  }
 }
 
 export function createMainWindow({ isDev, appPath }: CreateMainWindowOptions): BrowserWindow {

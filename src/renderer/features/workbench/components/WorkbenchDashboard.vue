@@ -29,7 +29,16 @@
               aria-label="切换图片源" @click="switchWallpaperSource">
               <Picture theme="outline" :size="15" />
             </button>
-            <div v-if="wallpaperInfoText" class="hero-art__info">{{ wallpaperInfoText }}</div>
+            <div v-if="wallpaperTitleText || wallpaperMetaText || wallpaperSourceUrl" class="hero-art__info">
+              <div v-if="wallpaperTitleText" class="hero-art__info-title">{{ wallpaperTitleText }}</div>
+              <div v-if="wallpaperMetaText || wallpaperSourceUrl" class="hero-art__info-meta">
+                <span v-if="wallpaperMetaText">{{ wallpaperMetaText }}</span>
+                <a v-if="wallpaperSourceUrl" :href="wallpaperSourceUrl" target="_blank"
+                  rel="noopener noreferrer nofollow">
+                  {{ wallpaperSourceText }}
+                </a>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -552,6 +561,35 @@ const greetingText = computed<string>(() => {
 
 const wallpaperAlt = computed<string>(() => wallpaper.value?.title || '');
 
+const currentWallpaper = computed<WallpaperResult | null>(() => {
+  return wallpaper.value?.success ? wallpaper.value : null;
+});
+
+const wallpaperTitleText = computed<string>(() => {
+  const current = currentWallpaper.value;
+  return current?.title || current?.description || '';
+});
+
+const wallpaperMetaText = computed<string>(() => {
+  const current = currentWallpaper.value;
+  if (!current) {
+    return '';
+  }
+
+  const description = current.description === current.title ? '' : current.description;
+  return description;
+});
+
+const wallpaperSourceText = computed<string>(() => {
+  const current = currentWallpaper.value;
+  return current ? getWallpaperSourceLabel(current.source) : '';
+});
+
+const wallpaperSourceUrl = computed<string>(() => {
+  const current = currentWallpaper.value;
+  return current?.originUrl || '';
+});
+
 const wallpaperInfoText = computed<string>(() => {
   const currentWallpaper = wallpaper.value;
   if (!currentWallpaper?.success) {
@@ -1011,12 +1049,47 @@ watch(
   font-size: 0.72rem;
   font-weight: 650;
   opacity: 0;
-  overflow: hidden;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
-  text-overflow: ellipsis;
   transform: translateY(4px);
   transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.hero-art__info-title,
+.hero-art__info-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.hero-art__info-title {
+  font-weight: 720;
+}
+
+.hero-art__info-meta {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 2px;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.68rem;
+  font-weight: 560;
+}
+
+.hero-art__info-meta span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hero-art__info-meta a {
+  flex-shrink: 0;
+  color: #ffffff;
+  text-decoration: none;
+}
+
+.hero-art__info-meta a:hover {
+  text-decoration: underline;
 }
 
 .hero-art:hover .hero-art__info,
