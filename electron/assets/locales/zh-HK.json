@@ -397,7 +397,7 @@
   "workbench.empty.noContent": "暂无内容预览",
   "workbench.empty.noData": "暂无数据",
   "workbench.empty.noFavorites": "从最近笔记或相关推荐中加星后，会固定显示在这里",
-  "workbench.empty.noNotesBody": "创建第一篇笔记后，工作台会开始形成你的写作入口",
+  "workbench.empty.noNotesBody": "创建笔记后，工作台会开始形成你的写作入口",
   "workbench.empty.noNotesTitle": "还没有笔记",
   "workbench.empty.noQuestions": "启用 RAG 后进行语义搜索，这里会记录最近问答",
   "workbench.featured.fallback": "回到最近的一篇笔记，继续把草稿推进下去",
