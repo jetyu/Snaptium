@@ -164,15 +164,17 @@ onBeforeUnmount(() => {
 <style scoped>
 .app-search {
   position: relative;
-  width: 420px;
-  max-width: 800px;
+  width: 38%;
+  min-width: 320px;
+  max-width: 600px;
   margin: 0 auto;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   -webkit-app-region: no-drag;
 }
 
 .app-search.is-active {
-  width: 640px;
+  width: 60%;
+  max-width: 900px;
 }
 
 .app-search__input-wrapper {
