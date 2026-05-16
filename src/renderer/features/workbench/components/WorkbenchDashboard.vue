@@ -24,10 +24,7 @@
           </div>
 
           <div class="hero-art" aria-hidden="true">
-            <div class="hero-art__sun"></div>
-            <div class="hero-art__ridge hero-art__ridge--a"></div>
-            <div class="hero-art__ridge hero-art__ridge--b"></div>
-            <div class="hero-art__ridge hero-art__ridge--c"></div>
+            <img src="@assets/images/default-hero.png" alt="Hero Art" style="width: 100%; height: 100%; object-fit: cover;" />
           </div>
         </section>
 
@@ -978,81 +975,6 @@ watch(
   overflow: hidden;
   border-radius: 0 20px 20px 0;
   opacity: 0.9;
-  background:
-    radial-gradient(circle at 56% 35%, rgba(255, 255, 255, 0.7) 0 32px, rgba(255, 255, 255, 0.2) 33px 60px, transparent 61px),
-    linear-gradient(180deg, rgba(225, 216, 255, 0.84) 0%, rgba(210, 218, 255, 0.78) 53%, rgba(186, 203, 246, 0.72) 100%);
-}
-
-.hero-art::before,
-.hero-art::after {
-  content: "";
-  position: absolute;
-  pointer-events: none;
-}
-
-.hero-art::before {
-  inset: 0;
-  background:
-    radial-gradient(12px 6px at 18% 22%, rgba(92, 98, 184, 0.46), transparent 62%),
-    radial-gradient(10px 5px at 26% 18%, rgba(92, 98, 184, 0.34), transparent 62%),
-    radial-gradient(14px 7px at 70% 34%, rgba(92, 98, 184, 0.28), transparent 62%),
-    linear-gradient(160deg, transparent 0 46%, rgba(255, 255, 255, 0.3) 46.4% 47.1%, transparent 47.5%),
-    linear-gradient(180deg, transparent 0 73%, rgba(255, 255, 255, 0.3) 73.2%, rgba(121, 138, 214, 0.13) 74%, transparent 100%);
-  opacity: 0.74;
-}
-
-.hero-art::after {
-  right: 10%;
-  bottom: 17%;
-  width: 96px;
-  height: 104px;
-  background:
-    linear-gradient(180deg, rgba(42, 66, 132, 0.86), rgba(31, 51, 112, 0.84)) 4% 47% / 22px 77px no-repeat,
-    linear-gradient(180deg, rgba(42, 66, 132, 0.92), rgba(31, 51, 112, 0.88)) 37% 31% / 27px 102px no-repeat,
-    linear-gradient(180deg, rgba(42, 66, 132, 0.78), rgba(31, 51, 112, 0.76)) 73% 41% / 22px 86px no-repeat;
-  clip-path: polygon(44% 0, 56% 21%, 51% 21%, 64% 43%, 57% 43%, 72% 67%, 55% 67%, 55% 100%, 45% 100%, 45% 67%, 28% 67%, 43% 43%, 36% 43%, 49% 21%, 44% 21%);
-  filter: drop-shadow(40px 14px 0 rgba(30, 50, 112, 0.48)) drop-shadow(-42px 20px 0 rgba(30, 50, 112, 0.36));
-  opacity: 0.76;
-}
-
-.hero-art__sun {
-  position: absolute;
-  top: 31%;
-  right: 28%;
-  width: 52px;
-  aspect-ratio: 1;
-  border-radius: 999px;
-  background: radial-gradient(circle at 42% 38%, #ffffff 0%, rgba(255, 255, 255, 0.97) 44%, rgba(255, 255, 255, 0.28) 70%, transparent 100%);
-  box-shadow: 0 0 30px rgba(255, 255, 255, 0.58);
-  opacity: 0.84;
-}
-
-.hero-art__ridge {
-  position: absolute;
-  left: -6%;
-  width: 112%;
-  pointer-events: none;
-}
-
-.hero-art__ridge--a {
-  bottom: 34%;
-  height: 44%;
-  clip-path: polygon(0 72%, 12% 58%, 24% 70%, 38% 38%, 52% 62%, 64% 30%, 78% 58%, 92% 32%, 100% 52%, 100% 100%, 0 100%);
-  background: linear-gradient(180deg, rgba(209, 202, 250, 0.9), rgba(178, 184, 239, 0.72));
-}
-
-.hero-art__ridge--b {
-  bottom: 18%;
-  height: 42%;
-  clip-path: polygon(0 58%, 13% 37%, 27% 56%, 41% 28%, 55% 58%, 72% 33%, 86% 54%, 100% 24%, 100% 100%, 0 100%);
-  background: linear-gradient(180deg, rgba(151, 162, 229, 0.8), rgba(120, 136, 214, 0.76));
-}
-
-.hero-art__ridge--c {
-  bottom: -2%;
-  height: 38%;
-  clip-path: polygon(0 42%, 12% 30%, 26% 46%, 42% 20%, 58% 44%, 76% 24%, 92% 42%, 100% 30%, 100% 100%, 0 100%);
-  background: linear-gradient(180deg, rgba(103, 121, 202, 0.84), rgba(76, 96, 179, 0.9));
 }
 
 .overview-section {
