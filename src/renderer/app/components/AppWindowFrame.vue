@@ -5,10 +5,10 @@
         <img src="@assets/logo/app-logo-32.png" class="app-window-frame__logo" :alt="appTitle" />
         <span class="app-window-frame__title">{{ appTitle }}</span>
       </div>
-      <div class="app-window-frame__menu-container no-drag">
+      <div class="app-window-frame__menu-container">
         <AppMenuBar />
       </div>
-      <div class="app-window-frame__search-container no-drag">
+      <div class="app-window-frame__search-container">
         <AppTitleBarSearch />
       </div>
     </div>
@@ -154,17 +154,17 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  gap: 10px;
-  padding-right: 12px;
-  margin-right: 4px;
+  gap: 12px;
+  padding-right: 16px;
+  margin-right: 8px;
   border-right: 1px solid color-mix(in srgb, var(--panel-border) 40%, transparent);
 }
 
 .app-window-frame__logo {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.12));
 }
 
 .app-window-frame__title {
@@ -173,15 +173,11 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text);
-  font-size: 0.84rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
-  background: linear-gradient(135deg, var(--text) 70%, color-mix(in srgb, var(--text) 70%, var(--accent)));
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 0.94rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
   opacity: 0.95;
-  transition: opacity 0.2s ease;
+  transition: all 0.25s ease;
 }
 
 .app-window-frame__title:hover {
@@ -193,7 +189,6 @@ onBeforeUnmount(() => {
   align-items: center;
   height: 100%;
   padding-left: 4px;
-  -webkit-app-region: no-drag;
 }
 
 .app-window-frame__search-container {
@@ -203,7 +198,6 @@ onBeforeUnmount(() => {
   flex: 1;
   height: 100%;
   padding: 0 20px;
-  -webkit-app-region: no-drag;
 }
 
 .app-window-frame__controls {

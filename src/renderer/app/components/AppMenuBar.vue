@@ -174,7 +174,6 @@ onBeforeUnmount(() => {
   align-items: center;
   height: 100%;
   padding: 0 4px;
-  -webkit-app-region: no-drag;
 }
 
 .app-menu-bar__item {
@@ -197,6 +196,7 @@ onBeforeUnmount(() => {
   transition: all 0.2s ease;
   white-space: nowrap;
   letter-spacing: 0.01em;
+  -webkit-app-region: no-drag;
 }
 
 .app-menu-bar__button:hover,

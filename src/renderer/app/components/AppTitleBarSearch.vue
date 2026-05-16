@@ -169,7 +169,6 @@ onBeforeUnmount(() => {
   max-width: 600px;
   margin: 0 auto;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  -webkit-app-region: no-drag;
 }
 
 .app-search.is-active {
@@ -186,6 +185,7 @@ onBeforeUnmount(() => {
   border-radius: 8px;
   padding: 0 8px;
   transition: all 0.2s ease;
+  -webkit-app-region: no-drag;
 }
 
 [data-theme='dark'] .app-search__input-wrapper {
