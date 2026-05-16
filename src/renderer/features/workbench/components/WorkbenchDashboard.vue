@@ -141,44 +141,6 @@
       </main>
 
       <aside class="workbench-side">
-        <section class="side-card side-card--ai">
-          <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--ai">
-                <Magic theme="outline" :size="14" />
-              </span>
-              {{ t('pref.pane.aiAssistant') }}
-            </h3>
-            <span class="state-pill" :class="{ 'is-active': aiEnabled }">
-              {{ aiEnabled ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
-            </span>
-          </header>
-          <p class="side-card__muted">{{ aiStatusText }}</p>
-          <button v-if="showAISetupAction" type="button" class="side-card__action side-card__action--subtle"
-            @click="openAIAssistantSettings">
-            {{ t('workbench.sidebar.aiModel') }}
-          </button>
-        </section>
-
-        <section class="side-card side-card--sync">
-          <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--sync">
-                <DataServer theme="outline" :size="14" />
-              </span>
-              {{ t('label.syncStatus') }}
-            </h3>
-            <span class="state-pill" :class="statusToneClass">{{ syncStatusText }}</span>
-          </header>
-          <p v-if="formattedLastSynced" class="side-card__muted">{{ formattedLastSynced }}</p>
-          <ul class="side-list">
-            <li v-for="item in syncSummaryItems" :key="item">
-              <CheckOne theme="outline" :size="12" class="side-list__icon" />
-              <span>{{ item }}</span>
-            </li>
-          </ul>
-        </section>
-
         <section class="side-card side-card--stats">
           <header class="side-card__header">
             <h3>
@@ -250,8 +212,6 @@ import {
   Magic,
   LinkOne,
   Notes,
-  DataServer,
-  CheckOne,
   Dot,
   RadarChart,
   ConnectionPoint,
@@ -264,9 +224,6 @@ import { useSearch } from '@renderer/features/search';
 import { useWorkspace, type Note } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useWorkbenchStore } from '@renderer/features/workbench';
-import { useSettingsStore } from '@renderer/features/settings/store/settings.store';
-import { useSettings } from '@renderer/features/settings';
-import { useSyncPresentation, useSyncStore } from '@renderer/features/sync';
 import { useLocalSmartRecommendations } from '../composables/useLocalSmartRecommendations';
 import { WORKBENCH_LIMITS, type WorkbenchQuestionEntry } from '../constants/workbench.constants';
 
@@ -328,14 +285,10 @@ const HEADING_REGEX = /^#{1,6}\s+/gm;
 
 const { t } = useI18n();
 const { openGlobalSearch } = useSearch();
-const { openSettings } = useSettings();
 const { notes, notebooks, createNote, selectNote } = useWorkspace();
 const appShellStore = useAppShellStore();
 const workbenchStore = useWorkbenchStore();
-const settingsStore = useSettingsStore();
-const syncStore = useSyncStore();
 const { recentQuestions } = storeToRefs(workbenchStore);
-const { statusLabel, statusToneClass, summaryItems, formattedLastSynced } = useSyncPresentation();
 
 const hasNotes = computed<boolean>(() => notes.value.length > 0);
 const noteMap = computed<Map<string, Note>>(() => new Map(notes.value.map((note) => [note.id, note])));
@@ -561,52 +514,6 @@ const recentEditedTime = computed<string>(() => {
   return formatRelativeTime(targetNote.updatedAt);
 });
 
-const aiEnabled = computed<boolean>(() => {
-  return settingsStore.config.aiAssistant.enabled && settingsStore.config.aiAssistant.sourceId.trim().length > 0;
-});
-
-const syncStatusText = computed<string>(() => {
-  const label = statusLabel.value;
-  if (label.startsWith('syncStatus.')) {
-    if (syncStore.isSyncing) {
-      return t('button.syncing');
-    }
-    return t('syncStatus.idle');
-  }
-  return label;
-});
-
-const syncSummaryItems = computed<string[]>(() => {
-  return summaryItems.value.slice(0, 3);
-});
-
-const aiStatusText = computed<string>(() => {
-  if (!settingsStore.config.aiAssistant.enabled) {
-    return t('text.noAISourcesFound');
-  }
-
-  const sourceId = settingsStore.config.aiAssistant.sourceId.trim();
-  if (!sourceId) {
-    return t('text.noAISourcesFound');
-  }
-
-  const source = settingsStore.config.aiSources.find((item) => item.id === sourceId);
-  const sourceName = source?.name.trim() ?? '';
-  const modelName = settingsStore.config.aiAssistant.model.trim() || source?.aiModel.trim() || '';
-
-  if (sourceName || modelName) {
-    const fallbackText = t('workbench.empty.noData');
-    const safeSourceName = sourceName || fallbackText;
-    const safeModelName = modelName || fallbackText;
-    return `${t('workbench.sidebar.aiModel')}：${safeSourceName} ${t('label.aiModel')}：${safeModelName}`;
-  }
-  return t('text.noAISourcesFound');
-});
-
-const showAISetupAction = computed<boolean>(() => {
-  return !aiEnabled.value;
-});
-
 const todayStatItems = computed<TodayStatItem[]>(() => {
   const todayStart = getDayStartTimestamp(Date.now());
   const todayQuestionCount = recentQuestionEntries.value.filter((entry) => entry.askedAt >= todayStart).length;
@@ -714,10 +621,6 @@ async function handlePrimaryAction(): Promise<void> {
   if (primaryNote) {
     await openNoteInWorkspace(primaryNote.id);
   }
-}
-
-function openAIAssistantSettings(): void {
-  openSettings('ai-sources');
 }
 
 function getCharacterCount(content: string): number {
@@ -1330,7 +1233,6 @@ watch(
   color: color-mix(in srgb, var(--workbench-blue) 90%, #1e3a8a);
 }
 
-.side-card__title-icon--sync,
 .side-card__title-icon--stats,
 .side-card__title-icon--growth,
 .side-card__title-icon--heat {
