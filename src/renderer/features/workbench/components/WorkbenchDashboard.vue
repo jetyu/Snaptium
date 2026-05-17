@@ -233,6 +233,33 @@
           <p class="side-card__muted">{{ growthLabel }}</p>
         </section>
 
+        <section class="side-card side-card--tags">
+          <header class="side-card__header">
+            <h3>
+              <span class="side-card__title-icon side-card__title-icon--tags">
+                <TagOne theme="outline" :size="14" />
+              </span>
+              {{ t('workbench.sidebar.activeTags') }}
+            </h3>
+            <button type="button" class="side-card__link" @click="openTagsView">
+              {{ t('workbench.action.viewAllTags') }}
+            </button>
+          </header>
+
+          <div v-if="activeTagEntries.length > 0" class="active-tag-list">
+            <button v-for="entry in activeTagEntries" :key="entry.name" type="button" class="active-tag-row"
+              :title="entry.name" @click="openTagsView">
+              <span class="active-tag-row__main">
+                <span class="active-tag-row__name">#{{ entry.name }}</span>
+                <span class="active-tag-row__meta">
+                  {{ t('workbench.tags.noteCount', { count: entry.count }) }}
+                </span>
+              </span>
+            </button>
+          </div>
+          <div v-else class="side-card__empty">{{ t('workbench.empty.noActiveTags') }}</div>
+        </section>
+
         <section class="side-card side-card--topic">
           <header class="side-card__header">
             <h3>
@@ -288,6 +315,7 @@ import {
   Fire,
   FolderFocus,
   BookmarkOne,
+  TagOne,
 } from '@icon-park/vue-next';
 import { useSearch } from '@renderer/features/search';
 import { useWorkspace, type Note } from '@renderer/features/workspace';
@@ -334,12 +362,18 @@ interface TodayStatItem {
   value: string;
 }
 
+interface ActiveTagEntry {
+  name: string;
+  count: number;
+}
+
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const WORKBENCH_DISPLAY_LIMITS = {
   RECENT_ACTIVITY: 4,
   RECENT_QUESTIONS: 4,
   SMART_RECOMMENDATIONS: 4,
+  ACTIVE_TAGS: 10,
 } as const;
 
 const TODO_TASK_REGEX = /^[-*+]\s+\[\s\]\s+(.+)$/;
@@ -350,7 +384,7 @@ const HEADING_REGEX = /^#{1,6}\s+/gm;
 
 const { t } = useI18n();
 const { openGlobalSearch } = useSearch();
-const { notes, notebooks, createNote, selectNote } = useWorkspace();
+const { notes, notebooks, allTags, createNote, selectNote } = useWorkspace();
 const appShellStore = useAppShellStore();
 const workbenchStore = useWorkbenchStore();
 const { recentQuestions, recommendationFeedback } = storeToRefs(workbenchStore);
@@ -486,6 +520,24 @@ const topTopicLabels = computed<string[]>(() => {
     return clusterLabels;
   }
   return ['Notes', 'Focus', 'Review'];
+});
+
+const activeTagEntries = computed<ActiveTagEntry[]>(() => {
+  return [...allTags.value]
+    .sort((left, right) => {
+      if (right.updatedAt !== left.updatedAt) {
+        return right.updatedAt - left.updatedAt;
+      }
+      if (right.count !== left.count) {
+        return right.count - left.count;
+      }
+      return left.name.localeCompare(right.name);
+    })
+    .slice(0, WORKBENCH_DISPLAY_LIMITS.ACTIVE_TAGS)
+    .map((tag) => ({
+      name: tag.name,
+      count: tag.count,
+    }));
 });
 
 const overviewMetrics = computed<OverviewMetric[]>(() => {
@@ -798,6 +850,10 @@ async function createFirstNote(): Promise<void> {
 async function openNoteInWorkspace(noteId: string): Promise<void> {
   selectNote(noteId);
   await appShellStore.setActiveMainView('workspace');
+}
+
+async function openTagsView(): Promise<void> {
+  await appShellStore.setActiveMainView('tags');
 }
 
 async function openSmartRecommendation(item: LocalSmartRecommendationItem): Promise<void> {
@@ -1801,6 +1857,7 @@ watch(
 
 .side-card__title-icon--stats,
 .side-card__title-icon--growth,
+.side-card__title-icon--tags,
 .side-card__title-icon--topic {
   background: color-mix(in srgb, var(--workbench-blue) 14%, transparent);
   color: color-mix(in srgb, var(--workbench-blue) 90%, #1e3a8a);
@@ -1867,6 +1924,22 @@ watch(
   color: color-mix(in srgb, var(--workbench-blue) 88%, #1e3a8a);
   font-size: 0.8rem;
   font-weight: 700;
+}
+
+.side-card__link {
+  flex-shrink: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: color-mix(in srgb, var(--workbench-blue) 86%, var(--workbench-ink));
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 760;
+}
+
+.side-card__link:hover {
+  color: var(--workbench-blue);
 }
 
 .side-list {
@@ -1955,6 +2028,62 @@ watch(
   stroke-linejoin: round;
   stroke-width: 3.6;
   filter: drop-shadow(0 8px 14px rgba(61, 124, 255, 0.24));
+}
+
+.active-tag-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.active-tag-row {
+  width: 100%;
+  min-width: 0;
+  min-height: 43px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+  padding: 7px 9px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--workbench-ink);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition: background-color 0.18s ease, border-color 0.18s ease;
+}
+
+.active-tag-row:hover {
+  border-color: color-mix(in srgb, var(--workbench-blue) 20%, var(--workbench-border));
+  background: rgba(61, 124, 255, 0.05);
+}
+
+.active-tag-row__main {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.active-tag-row__name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--workbench-ink);
+  font-size: 0.82rem;
+  font-weight: 780;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.active-tag-row__meta {
+  display: flex;
+  min-width: 0;
+  gap: 6px;
+  color: var(--workbench-muted);
+  font-size: 0.68rem;
+  font-weight: 650;
+  white-space: nowrap;
 }
 
 .topic-list {
@@ -2099,6 +2228,10 @@ watch(
     grid-column: 1 / -1;
   }
 
+  .side-card--tags {
+    grid-column: 1 / -1;
+  }
+
   .side-card--topic .topic-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2148,6 +2281,10 @@ watch(
   }
 
   .side-card--topic {
+    grid-column: auto;
+  }
+
+  .side-card--tags {
     grid-column: auto;
   }
 
@@ -2441,6 +2578,26 @@ watch(
     padding: 12px 10px 10px;
   }
 
+  .active-tag-list {
+    gap: 5px;
+  }
+
+  .active-tag-row {
+    min-height: 34px;
+    gap: 3px;
+    padding: 5px 7px;
+    border-radius: 10px;
+  }
+
+  .active-tag-row__name {
+    font-size: 0.74rem;
+  }
+
+  .active-tag-row__meta {
+    gap: 5px;
+    font-size: 0.62rem;
+  }
+
   .topic-list {
     gap: 5px;
   }
@@ -2496,6 +2653,10 @@ watch(
 }
 
 @media (max-width: 620px) {
+  .active-tag-list {
+    grid-template-columns: 1fr;
+  }
+
   .hero-card {
     padding: 15px;
   }
