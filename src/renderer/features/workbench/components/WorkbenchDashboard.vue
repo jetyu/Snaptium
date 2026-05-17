@@ -377,10 +377,14 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const WORKBENCH_DISPLAY_LIMITS = {
   RECENT_ACTIVITY: 5,
   RECENT_QUESTIONS: 5,
-  SMART_RECOMMENDATIONS: 4,
+  SMART_RECOMMENDATIONS: 5,
   ACTIVE_TAGS: 10,
   DAILY_QUOTES: 30,
 } as const;
+const SMART_RECOMMENDATION_LANE_LIMIT = Math.max(
+  0,
+  WORKBENCH_DISPLAY_LIMITS.SMART_RECOMMENDATIONS - 1,
+);
 
 const TODO_TASK_REGEX = /^[-*+]\s+\[\s\]\s+(.+)$/;
 const TODO_MARKER_REGEX = /(?:^|\s)(?:TODO|TBD|FIXME)\b:?\s*(.+)?$/i;
@@ -432,12 +436,12 @@ const smartRecommendationLaneItems = computed<LocalSmartRecommendationItem[]>(()
     lanes.push(item);
     usedReasonTypes.add(item.reasonType);
 
-    if (lanes.length >= 3) {
+    if (lanes.length >= SMART_RECOMMENDATION_LANE_LIMIT) {
       break;
     }
   }
 
-  if (lanes.length >= 3) {
+  if (lanes.length >= SMART_RECOMMENDATION_LANE_LIMIT) {
     return lanes;
   }
 
@@ -447,7 +451,7 @@ const smartRecommendationLaneItems = computed<LocalSmartRecommendationItem[]>(()
     }
 
     lanes.push(item);
-    if (lanes.length >= 3) {
+    if (lanes.length >= SMART_RECOMMENDATION_LANE_LIMIT) {
       break;
     }
   }
@@ -1616,6 +1620,7 @@ watch(
   min-width: 0;
   display: grid;
   gap: 10px;
+  margin-top: -6px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -1635,6 +1640,7 @@ watch(
 .smart-focus__head {
   gap: 8px;
   justify-content: space-between;
+  margin-top: -6px;
 }
 
 .smart-focus__head .smart-feedback {

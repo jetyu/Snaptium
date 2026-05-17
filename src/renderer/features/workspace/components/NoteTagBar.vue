@@ -189,7 +189,7 @@ onBeforeUnmount(() => {
 }
 
 .note-tag-bar__pill {
-  max-width: 150px;
+  max-width: 120px;
   height: 22px;
   display: inline-flex;
   align-items: center;
@@ -199,7 +199,7 @@ onBeforeUnmount(() => {
   border-radius: 7px;
   background: color-mix(in srgb, var(--accent) 7%, var(--panel));
   color: var(--text-muted);
-  font-size: 0.74rem;
+  font-size: 0.65rem;
 }
 
 .note-tag-bar__pill-text {
