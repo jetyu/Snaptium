@@ -622,6 +622,8 @@
   "workbench.action.configure": "Configurar Módulos de Recursos",
   "workbench.action.continueWriting": "Continuar Escrevendo",
   "workbench.action.nextWallpaper": "Mostrar papel de parede anterior do Bing",
+  "workbench.action.snoozeRecommendation": "Ignorar",
+  "workbench.action.dismissRecommendation": "Não recomendar",
   "workbench.activity.questioned": "Iniciou uma P&R semântica",
   "workbench.activity.saved": "Salvou e avançou no progresso da escrita",
   "workbench.behavior.sevenDayCharacters": "Contagem de Escrita em 7 Dias",

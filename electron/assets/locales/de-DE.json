@@ -622,6 +622,8 @@
   "workbench.action.configure": "Funktionsmodule konfigurieren",
   "workbench.action.continueWriting": "Schreiben fortsetzen",
   "workbench.action.nextWallpaper": "Vorheriges Bing-Wallpaper anzeigen",
+  "workbench.action.snoozeRecommendation": "Ignorieren",
+  "workbench.action.dismissRecommendation": "Nicht mehr empfehlen",
   "workbench.activity.questioned": "Eine semantische Q&A initiiert",
   "workbench.activity.saved": "Gespeichert und Schreibfortschritt vorangetrieben",
   "workbench.behavior.sevenDayCharacters": "Zeichenanzahl (letzte 7 Tage)",

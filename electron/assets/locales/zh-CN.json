@@ -624,6 +624,8 @@
   "workbench.action.continueWriting": "继续写",
   "workbench.action.nextWallpaper": "更换上一张 Bing 壁纸",
   "workbench.action.newDocument": "新建文档",
+  "workbench.action.snoozeRecommendation": "忽略",
+  "workbench.action.dismissRecommendation": "不再推荐",
   "workbench.activity.questioned": "发起了一次语义问答",
   "workbench.activity.saved": "已保存并推进写作进度",
   "workbench.behavior.sevenDayCharacters": "近 7 天写作字数",

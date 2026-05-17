@@ -112,42 +112,86 @@
           </section>
         </div>
 
-        <section class="panel">
+        <section class="panel panel--smart">
           <header class="panel__header">
             <h2>{{ t('workbench.module.smartRecommendation') }}</h2>
             <span class="panel-badge">{{ t('workbench.tag.aiEnhanced') }}</span>
           </header>
 
-          <div class="smart-grid">
-            <article class="smart-insight">
-              <div class="smart-insight__icon">
-                <Magic theme="outline" :size="18" />
-              </div>
-              <p>{{ t('workbench.insight.connection') }}</p>
-              <div class="topic-chips">
-                <span v-for="topic in topTopicLabels" :key="topic">{{ topic }}</span>
-              </div>
-              <button type="button" class="smart-insight__action" @click="handlePrimaryAction">
-                {{ t('workbench.action.continueWriting') }}
+          <div v-if="primarySmartRecommendation" class="smart-grid">
+            <article class="smart-focus" :title="primarySmartRecommendation.note.title">
+              <span class="smart-focus__head">
+                <button type="button" class="smart-focus__open"
+                  @click="openSmartRecommendation(primarySmartRecommendation)">
+                  <span class="smart-focus__icon">
+                    <component :is="getSmartReasonIcon(primarySmartRecommendation.reasonType)" theme="outline"
+                      :size="18" />
+                  </span>
+                  <span class="smart-focus__reason">{{ t(primarySmartRecommendation.reasonKey) }}</span>
+                  <span class="smart-focus__score">{{ formatSmartScore(primarySmartRecommendation.score) }}</span>
+                </button>
+                <span class="smart-feedback">
+                  <button type="button" class="smart-feedback__button"
+                    @click="openSmartRecommendation(primarySmartRecommendation)">
+                    {{ t('workbench.action.continueWriting') }}
+                  </button>
+                  <button type="button" class="smart-feedback__button"
+                    @click="handleRecommendationFeedback(primarySmartRecommendation, 'snoozed')">
+                    {{ t('workbench.action.snoozeRecommendation') }}
+                  </button>
+                  <button type="button" class="smart-feedback__button smart-feedback__button--muted"
+                    @click="handleRecommendationFeedback(primarySmartRecommendation, 'dismissed')">
+                    {{ t('workbench.action.dismissRecommendation') }}
+                  </button>
+                </span>
+              </span>
+              <button type="button" class="smart-focus__body" @click="openSmartRecommendation(primarySmartRecommendation)">
+                <span class="smart-focus__title">{{ primarySmartRecommendation.note.title }}</span>
+                <span class="smart-focus__preview">{{ getSmartNotePreview(primarySmartRecommendation.note) }}</span>
+                <span class="smart-focus__meta">
+                  <span>{{ formatRelativeTime(primarySmartRecommendation.note.updatedAt) }}</span>
+                  <span v-for="topic in topTopicLabels.slice(0, 3)" :key="topic">{{ topic }}</span>
+                </span>
               </button>
             </article>
 
-            <div class="smart-list">
-              <button v-for="item in smartRecommendationsPreview" :key="item.note.id" type="button" class="feed-row"
-                :title="item.note.title" @click="openNoteInWorkspace(item.note.id)">
-                <span class="feed-row__icon">
-                  <LinkOne theme="outline" :size="14" />
+            <div class="smart-lanes">
+              <article v-for="item in smartRecommendationLaneItems" :key="item.note.id" class="smart-lane"
+                :title="item.note.title">
+                <button type="button" class="smart-lane__open" @click="openSmartRecommendation(item)">
+                  <span class="smart-lane__icon">
+                    <component :is="getSmartReasonIcon(item.reasonType)" theme="outline" :size="14" />
+                  </span>
+                  <span class="smart-lane__main">
+                    <span class="smart-lane__reason">{{ t(item.reasonKey) }}</span>
+                    <span class="smart-lane__title">{{ item.note.title }}</span>
+                  </span>
+                  <span class="smart-lane__meta">
+                    <span>{{ formatSmartScore(item.score) }}</span>
+                    <span>{{ formatRelativeTime(item.note.updatedAt) }}</span>
+                  </span>
+                </button>
+                <span class="smart-lane__actions">
+                  <button type="button" class="smart-feedback__button smart-feedback__button--compact"
+                    @click="openSmartRecommendation(item)">
+                    {{ t('workbench.action.continueWriting') }}
+                  </button>
+                  <button type="button" class="smart-feedback__button smart-feedback__button--compact"
+                    @click="handleRecommendationFeedback(item, 'snoozed')">
+                    {{ t('workbench.action.snoozeRecommendation') }}
+                  </button>
+                  <button type="button"
+                    class="smart-feedback__button smart-feedback__button--compact smart-feedback__button--muted"
+                    @click="handleRecommendationFeedback(item, 'dismissed')">
+                    {{ t('workbench.action.dismissRecommendation') }}
+                  </button>
                 </span>
-                <span class="feed-row__main">
-                  <span class="feed-row__title">{{ item.note.title }}</span>
-                  <span class="feed-row__subtitle">{{ t(item.reasonKey) }}</span>
-                </span>
-                <span class="feed-row__time">{{ formatRelativeTime(item.note.updatedAt) }}</span>
-              </button>
-              <div v-if="smartRecommendationsPreview.length === 0" class="module-empty">
-                {{ t('workbench.empty.noNotesBody') }}
-              </div>
+              </article>
             </div>
+          </div>
+
+          <div v-else class="module-empty">
+            {{ t('workbench.empty.noNotesBody') }}
           </div>
         </section>
 
@@ -224,7 +268,6 @@ import {
   Plus,
   Picture,
   Brain,
-  Magic,
   LinkOne,
   Notes,
   Dot,
@@ -234,14 +277,26 @@ import {
   ApplicationTwo,
   DatabaseSearch,
   ChartHistogram,
+  Time,
+  Fire,
+  FolderFocus,
+  BookmarkOne,
 } from '@icon-park/vue-next';
 import { useSearch } from '@renderer/features/search';
 import { useWorkspace, type Note } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useWorkbenchStore } from '@renderer/features/workbench';
 import { electronApi, type WallpaperResult } from '@renderer/core/bridge/electronApi';
-import { useLocalSmartRecommendations } from '../composables/useLocalSmartRecommendations';
-import { WORKBENCH_LIMITS, type WorkbenchQuestionEntry } from '../constants/workbench.constants';
+import {
+  useLocalSmartRecommendations,
+  type LocalRecommendationReasonType,
+  type LocalSmartRecommendationItem,
+} from '../composables/useLocalSmartRecommendations';
+import {
+  WORKBENCH_LIMITS,
+  type WorkbenchQuestionEntry,
+  type WorkbenchRecommendationFeedbackAction,
+} from '../constants/workbench.constants';
 
 interface ActivityEntry {
   id: string;
@@ -304,7 +359,7 @@ const { openGlobalSearch } = useSearch();
 const { notes, notebooks, createNote, selectNote } = useWorkspace();
 const appShellStore = useAppShellStore();
 const workbenchStore = useWorkbenchStore();
-const { recentQuestions } = storeToRefs(workbenchStore);
+const { recentQuestions, recommendationFeedback } = storeToRefs(workbenchStore);
 const wallpaper = ref<WallpaperResult | null>(null);
 const wallpaperLoading = ref<boolean>(false);
 const wallpaperSrc = ref<string>(defaultHeroUrl);
@@ -319,9 +374,48 @@ const recentQuestionEntriesPreview = computed<WorkbenchQuestionEntry[]>(() => {
 
 const { smartRecommendations } = useLocalSmartRecommendations({
   notes: sortedNotesByUpdated,
+  feedback: recommendationFeedback,
+  limit: WORKBENCH_DISPLAY_LIMITS.SMART_RECOMMENDATIONS,
 });
-const smartRecommendationsPreview = computed(() => {
+const smartRecommendationsPreview = computed<LocalSmartRecommendationItem[]>(() => {
   return smartRecommendations.value.slice(0, WORKBENCH_DISPLAY_LIMITS.SMART_RECOMMENDATIONS);
+});
+const primarySmartRecommendation = computed<LocalSmartRecommendationItem | null>(() => {
+  return smartRecommendations.value[0] ?? null;
+});
+const smartRecommendationLaneItems = computed<LocalSmartRecommendationItem[]>(() => {
+  const lanes: LocalSmartRecommendationItem[] = [];
+  const usedReasonTypes = new Set<LocalRecommendationReasonType>();
+
+  for (const item of smartRecommendations.value.slice(1)) {
+    if (usedReasonTypes.has(item.reasonType)) {
+      continue;
+    }
+
+    lanes.push(item);
+    usedReasonTypes.add(item.reasonType);
+
+    if (lanes.length >= 3) {
+      break;
+    }
+  }
+
+  if (lanes.length >= 3) {
+    return lanes;
+  }
+
+  for (const item of smartRecommendations.value.slice(1)) {
+    if (lanes.some((lane) => lane.note.id === item.note.id)) {
+      continue;
+    }
+
+    lanes.push(item);
+    if (lanes.length >= 3) {
+      break;
+    }
+  }
+
+  return lanes;
 });
 
 const behaviorFeedback = computed(() => {
@@ -627,6 +721,42 @@ function getWallpaperSourceLabel(source: WallpaperResult['source']): string {
   return '';
 }
 
+function getSmartReasonIcon(reasonType: LocalRecommendationReasonType): Component {
+  if (reasonType === 'draft_signal') {
+    return Edit;
+  }
+  if (reasonType === 'semantic_related') {
+    return LinkOne;
+  }
+  if (reasonType === 'long_gap') {
+    return Time;
+  }
+  if (reasonType === 'recent_focus') {
+    return Fire;
+  }
+  if (reasonType === 'same_notebook') {
+    return FolderFocus;
+  }
+  return BookmarkOne;
+}
+
+function formatSmartScore(score: number): string {
+  return `${Math.max(1, Math.min(99, Math.round(score * 100)))}%`;
+}
+
+function getSmartNotePreview(note: Note): string {
+  const text = note.content
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/`[^`]*`/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')
+    .replace(/\[[^\]]+\]\([^)]+\)/g, ' ')
+    .replace(/^#{1,6}\s+/gm, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  return text || t('workbench.empty.noContent');
+}
+
 function normalizeTodoSnippet(value: string): string {
   return value.replace(/\s+/g, ' ').trim().slice(0, 72);
 }
@@ -698,13 +828,39 @@ async function openNoteInWorkspace(noteId: string): Promise<void> {
   await appShellStore.setActiveMainView('workspace');
 }
 
+async function openSmartRecommendation(item: LocalSmartRecommendationItem): Promise<void> {
+  await workbenchStore.recordRecommendationFeedback({
+    noteId: item.note.id,
+    reasonType: item.reasonType,
+    action: 'opened',
+  });
+  await openNoteInWorkspace(item.note.id);
+}
+
+async function handleRecommendationFeedback(
+  item: LocalSmartRecommendationItem,
+  action: Extract<WorkbenchRecommendationFeedbackAction, 'snoozed' | 'dismissed'>,
+): Promise<void> {
+  await workbenchStore.recordRecommendationFeedback({
+    noteId: item.note.id,
+    reasonType: item.reasonType,
+    action,
+  });
+}
+
 async function handlePrimaryAction(): Promise<void> {
   if (!hasNotes.value) {
     await createFirstNote();
     return;
   }
 
-  const primaryNote = smartRecommendationsPreview.value[0]?.note ?? sortedNotesByUpdated.value[0] ?? null;
+  const primaryRecommendation = smartRecommendationsPreview.value[0] ?? null;
+  if (primaryRecommendation) {
+    await openSmartRecommendation(primaryRecommendation);
+    return;
+  }
+
+  const primaryNote = sortedNotesByUpdated.value[0] ?? null;
   if (primaryNote) {
     await openNoteInWorkspace(primaryNote.id);
   }
@@ -1188,8 +1344,7 @@ watch(
   font-weight: 760;
 }
 
-.feed-list,
-.smart-list {
+.feed-list {
   display: grid;
 }
 
@@ -1274,54 +1429,6 @@ watch(
   white-space: nowrap;
 }
 
-.smart-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(240px, 0.75fr);
-  margin-top: 6px;
-  border-top: 1px solid var(--workbench-border);
-}
-
-.smart-insight {
-  min-height: 166px;
-  display: grid;
-  align-content: center;
-  gap: 12px;
-  padding: 22px 28px;
-  background:
-    radial-gradient(circle at 12% 50%, rgba(61, 124, 255, 0.17), transparent 22%),
-    radial-gradient(circle at 58% 80%, rgba(61, 124, 255, 0.12), transparent 28%),
-    linear-gradient(120deg, rgba(255, 255, 255, 0.7) 0%, rgba(244, 242, 255, 0.82) 68%, rgba(235, 239, 255, 0.72) 100%);
-}
-
-:global([data-theme='dark']) .smart-insight {
-  background:
-    radial-gradient(circle at 12% 50%, rgba(61, 124, 255, 0.2), transparent 24%),
-    radial-gradient(circle at 58% 80%, rgba(61, 124, 255, 0.12), transparent 30%),
-    linear-gradient(120deg, rgba(32, 36, 50, 0.82) 0%, rgba(39, 35, 60, 0.84) 100%);
-}
-
-.smart-insight__icon {
-  width: 40px;
-  height: 40px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: 1px solid color-mix(in srgb, var(--workbench-blue) 18%, transparent);
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.62);
-  color: var(--workbench-blue);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
-}
-
-.smart-insight p {
-  max-width: 440px;
-  margin: 0;
-  color: color-mix(in srgb, var(--workbench-ink) 70%, var(--workbench-muted));
-  font-size: 0.86rem;
-  font-weight: 620;
-  line-height: 1.62;
-}
-
 .topic-chips {
   display: flex;
   flex-wrap: wrap;
@@ -1345,35 +1452,327 @@ watch(
   color: #9cc1ff;
 }
 
-.smart-insight__action {
-  justify-self: start;
-  min-width: 124px;
-  height: 36px;
-  padding: 0 16px;
+.panel--smart .module-empty {
+  margin-top: 8px;
+}
+
+.smart-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.06fr) minmax(280px, 0.94fr);
+  gap: 12px;
+  padding: 8px 18px 18px;
+}
+
+.smart-focus {
+  min-width: 0;
+  min-height: 166px;
+  display: grid;
+  gap: 10px;
+  padding: 18px;
+  border: 1px solid color-mix(in srgb, var(--workbench-blue) 18%, var(--workbench-border));
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(244, 248, 255, 0.7)),
+    color-mix(in srgb, var(--workbench-blue) 6%, var(--workbench-card));
+  color: var(--workbench-ink);
+  text-align: left;
+  font: inherit;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+:global([data-theme='dark']) .smart-focus {
+  background:
+    linear-gradient(135deg, rgba(36, 42, 58, 0.86), rgba(30, 35, 49, 0.72)),
+    color-mix(in srgb, var(--workbench-blue) 9%, var(--workbench-card));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.smart-focus:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--workbench-blue) 32%, var(--workbench-border));
+  box-shadow: 0 12px 28px rgba(61, 124, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.smart-focus__open {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
   border: 0;
-  border-radius: 10px;
-  background: linear-gradient(150deg, #56a2ff 0%, #3d7cff 100%);
-  color: #ffffff;
-  box-shadow: 0 15px 25px rgba(61, 124, 255, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  background: transparent;
+  color: inherit;
+  text-align: left;
   cursor: pointer;
   font: inherit;
+}
+
+.smart-focus__body {
+  min-width: 0;
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.smart-focus__head,
+.smart-focus__meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.smart-focus__head {
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.smart-focus__head .smart-feedback {
+  margin-left: auto;
+}
+
+.smart-focus__icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--workbench-blue) 12%, transparent);
+  color: var(--workbench-blue);
+}
+
+.smart-focus__reason {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--workbench-blue);
+  font-size: 0.75rem;
+  font-weight: 780;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smart-focus__score {
+  margin-left: auto;
+  color: color-mix(in srgb, var(--workbench-ink) 62%, var(--workbench-muted));
+  font-size: 0.72rem;
   font-weight: 760;
 }
 
-.smart-list {
-  padding: 16px 18px;
-  border-left: 1px solid var(--workbench-border);
-  background: rgba(255, 255, 255, 0.34);
+.smart-focus__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--workbench-ink);
+  font-size: 1rem;
+  font-weight: 780;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.smart-list .feed-row {
-  min-height: 48px;
+.smart-focus__preview {
+  min-height: 38px;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--workbench-ink) 60%, var(--workbench-muted));
+  display: -webkit-box;
+  font-size: 0.8rem;
+  font-weight: 560;
+  line-height: 1.55;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.smart-focus__meta {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.smart-focus__meta span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 23px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 720;
+}
+
+.smart-focus__meta span {
+  background: rgba(61, 124, 255, 0.08);
+  color: color-mix(in srgb, var(--workbench-ink) 64%, var(--workbench-muted));
+}
+
+.smart-feedback {
+  display: flex;
+  flex-shrink: 0;
+  gap: 6px;
+  align-items: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+
+.smart-focus:hover .smart-feedback,
+.smart-focus:focus-within .smart-feedback,
+.smart-lane:hover .smart-lane__actions,
+.smart-lane:focus-within .smart-lane__actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.smart-feedback__button {
+  min-height: 25px;
+  padding: 0 9px;
+  border: 1px solid color-mix(in srgb, var(--workbench-blue) 18%, var(--workbench-border));
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+  color: color-mix(in srgb, var(--workbench-blue) 78%, var(--workbench-ink));
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 720;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.smart-feedback__button:hover {
+  border-color: color-mix(in srgb, var(--workbench-blue) 32%, var(--workbench-border));
+  background: rgba(61, 124, 255, 0.09);
+}
+
+.smart-feedback__button--muted {
+  border-color: color-mix(in srgb, var(--workbench-muted) 24%, var(--workbench-border));
+  color: color-mix(in srgb, var(--workbench-ink) 58%, var(--workbench-muted));
+}
+
+.smart-feedback__button--compact {
+  min-height: 23px;
+  padding: 0 7px;
+  font-size: 0.68rem;
+}
+
+.smart-lanes {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.smart-lane {
+  position: relative;
+  min-width: 0;
+  min-height: 50px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
   gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--workbench-border);
+  border-radius: 13px;
+  background: rgba(255, 255, 255, 0.46);
+  color: var(--workbench-ink);
+  text-align: left;
+  font: inherit;
+  transition: transform 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
 }
 
-.smart-list .feed-row__icon {
-  width: 27px;
-  height: 27px;
+:global([data-theme='dark']) .smart-lane {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.smart-lane:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--workbench-blue) 24%, var(--workbench-border));
+  background: rgba(61, 124, 255, 0.06);
+}
+
+.smart-lane__open {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+
+.smart-lane__icon {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--workbench-blue) 10%, transparent);
+  color: var(--workbench-blue);
+}
+
+.smart-lane__main {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.smart-lane__reason {
+  color: var(--workbench-blue);
+  font-size: 0.72rem;
+  font-weight: 760;
+}
+
+.smart-lane__title {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--workbench-ink);
+  font-size: 0.84rem;
+  font-weight: 730;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.smart-lane__meta {
+  display: grid;
+  justify-items: end;
+  gap: 2px;
+  color: var(--workbench-muted);
+  font-size: 0.7rem;
+  font-weight: 680;
+  white-space: nowrap;
+  transition: opacity 0.18s ease;
+}
+
+.smart-lane__actions {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(4px);
+  transition: opacity 0.18s ease;
+}
+
+.smart-lane:hover .smart-lane__meta,
+.smart-lane:focus-within .smart-lane__meta {
+  opacity: 0;
+}
+
+.smart-lane:hover .smart-lane__actions,
+.smart-lane:focus-within .smart-lane__actions {
+  transform: translateY(-50%) translateX(0);
 }
 
 .workbench-side {
@@ -1717,11 +2116,6 @@ watch(
     grid-template-columns: 1fr;
   }
 
-  .smart-list {
-    border-top: 1px solid var(--workbench-border);
-    border-left: 0;
-  }
-
   .workbench-side {
     grid-template-columns: 1fr;
   }
@@ -1784,7 +2178,7 @@ watch(
 
   .panel__header,
   .feed-list,
-  .smart-list {
+  .smart-grid {
     padding-right: 16px;
     padding-left: 16px;
   }

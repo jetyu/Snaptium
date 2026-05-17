@@ -622,6 +622,8 @@
   "workbench.action.configure": "İşlev Modüllerini Yapılandır",
   "workbench.action.continueWriting": "Yazmaya Devam Et",
   "workbench.action.nextWallpaper": "Onceki Bing duvar kagidini goster",
+  "workbench.action.snoozeRecommendation": "Yoksay",
+  "workbench.action.dismissRecommendation": "Bir daha onerme",
   "workbench.activity.questioned": "bir anlamsal soru sordu",
   "workbench.activity.saved": "kaydedildi ve yazma ilerlemesi kaydedildi",
   "workbench.behavior.sevenDayCharacters": "Son 7 Günlük Yazma Miktarı",

@@ -1,5 +1,6 @@
-import { computed, type ComputedRef } from 'vue';
+import { computed, type Ref } from 'vue';
 import type { Note } from '@renderer/features/workspace';
+import type { WorkbenchRecommendationFeedbackEntry } from '../constants/workbench.constants';
 
 export type LocalRecommendationReasonType =
   | 'recent_focus'
@@ -17,7 +18,8 @@ export interface LocalSmartRecommendationItem {
 }
 
 interface UseLocalSmartRecommendationsParams {
-  notes: ComputedRef<Note[]>;
+  notes: Readonly<Ref<Note[]>>;
+  feedback?: Readonly<Ref<WorkbenchRecommendationFeedbackEntry[]>>;
   limit?: number;
 }
 
@@ -35,6 +37,10 @@ interface NoteProfile {
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
 const DEFAULT_LIMIT = 4;
+const RECOMMENDATION_CANDIDATE_MULTIPLIER = 3;
+const RECOMMENDATION_FEEDBACK_DECAY_MS = 14 * DAY_IN_MS;
+const RECOMMENDATION_SNOOZE_MS = 2 * DAY_IN_MS;
+const RECOMMENDATION_DISMISS_MS = RECOMMENDATION_FEEDBACK_DECAY_MS;
 const LONG_GAP_DAYS = 45;
 const RECENT_WINDOW_DAYS = 14;
 const MAX_KEYWORDS_PER_NOTE = 120;
@@ -70,6 +76,15 @@ const STOP_WORDS = new Set([
   '进行',
   '关于',
 ]);
+
+const REASON_KEY_MAP = {
+  recent_focus: 'workbench.recommendation.reason.recentFocus',
+  semantic_related: 'workbench.recommendation.reason.semanticRelated',
+  long_gap: 'workbench.recommendation.reason.longGap',
+  draft_signal: 'workbench.recommendation.reason.draftSignal',
+  same_notebook: 'workbench.recommendation.reason.sameNotebook',
+  review: 'workbench.recommendation.reason.review',
+} as const satisfies Record<LocalRecommendationReasonType, string>;
 
 function getDaysSince(timestamp: number): number {
   return Math.max(0, Math.floor((Date.now() - timestamp) / DAY_IN_MS));
@@ -317,6 +332,14 @@ function getFreshnessScore(daysSinceUpdate: number): number {
   return Math.max(0, 1 - daysSinceUpdate / RECENT_WINDOW_DAYS);
 }
 
+function clampRecommendationScore(score: number): number {
+  return Math.max(0, Math.min(1, score));
+}
+
+function getFeedbackAgeRatio(lastAt: number, now: number): number {
+  return clampRecommendationScore(1 - ((now - lastAt) / RECOMMENDATION_FEEDBACK_DECAY_MS));
+}
+
 function getReasonType(profile: NoteProfile): LocalRecommendationReasonType {
   if (profile.draftScore >= 0.65) {
     return 'draft_signal';
@@ -342,16 +365,7 @@ function getReasonType(profile: NoteProfile): LocalRecommendationReasonType {
 }
 
 function getReasonKey(reasonType: LocalRecommendationReasonType): string {
-  const reasonKeyMap: Record<LocalRecommendationReasonType, string> = {
-    recent_focus: 'workbench.recommendation.reason.recentFocus',
-    semantic_related: 'workbench.recommendation.reason.semanticRelated',
-    long_gap: 'workbench.recommendation.reason.longGap',
-    draft_signal: 'workbench.recommendation.reason.draftSignal',
-    same_notebook: 'workbench.recommendation.reason.sameNotebook',
-    review: 'workbench.recommendation.reason.review',
-  };
-
-  return reasonKeyMap[reasonType];
+  return REASON_KEY_MAP[reasonType];
 }
 
 function calculateProfileScore(profile: NoteProfile): number {
@@ -445,6 +459,94 @@ function buildProfiles(notes: Note[]): NoteProfile[] {
   });
 }
 
+function buildRecommendationFeedbackMap(
+  feedback: WorkbenchRecommendationFeedbackEntry[],
+): Map<string, WorkbenchRecommendationFeedbackEntry[]> {
+  const feedbackMap = new Map<string, WorkbenchRecommendationFeedbackEntry[]>();
+
+  for (const entry of feedback) {
+    const entries = feedbackMap.get(entry.noteId) ?? [];
+    entries.push(entry);
+    feedbackMap.set(entry.noteId, entries);
+  }
+
+  return feedbackMap;
+}
+
+function getRecommendationFeedbackAdjustment(
+  item: LocalSmartRecommendationItem,
+  feedbackMap: Map<string, WorkbenchRecommendationFeedbackEntry[]>,
+  now: number,
+): number {
+  const feedbackEntries = feedbackMap.get(item.note.id) ?? [];
+
+  return feedbackEntries.reduce((adjustment, entry) => {
+    const ageRatio = getFeedbackAgeRatio(entry.lastAt, now);
+    const countWeight = Math.min(entry.count, 4) * 0.04;
+
+    if (entry.action === 'dismissed') {
+      return adjustment - (0.34 + countWeight) * ageRatio;
+    }
+
+    if (entry.action === 'snoozed') {
+      return adjustment - (0.22 + countWeight) * ageRatio;
+    }
+
+    if (entry.action === 'opened') {
+      return adjustment + (0.08 + countWeight) * ageRatio;
+    }
+
+    return adjustment;
+  }, 0);
+}
+
+function isRecommendationFeedbackHidden(
+  item: LocalSmartRecommendationItem,
+  feedbackMap: Map<string, WorkbenchRecommendationFeedbackEntry[]>,
+  now: number,
+): boolean {
+  const feedbackEntries = feedbackMap.get(item.note.id) ?? [];
+
+  return feedbackEntries.some((entry) => {
+    if (entry.action === 'snoozed') {
+      return now - entry.lastAt < RECOMMENDATION_SNOOZE_MS;
+    }
+
+    if (entry.action === 'dismissed') {
+      return now - entry.lastAt < RECOMMENDATION_DISMISS_MS;
+    }
+
+    return false;
+  });
+}
+
+function applyRecommendationFeedback(
+  items: LocalSmartRecommendationItem[],
+  feedback: WorkbenchRecommendationFeedbackEntry[],
+): LocalSmartRecommendationItem[] {
+  if (items.length === 0 || feedback.length === 0) {
+    return items;
+  }
+
+  const now = Date.now();
+  const feedbackMap = buildRecommendationFeedbackMap(feedback);
+  const scoredItems = items
+    .map((item) => ({
+      ...item,
+      score: clampRecommendationScore(item.score + getRecommendationFeedbackAdjustment(item, feedbackMap, now)),
+    }))
+    .sort((left, right) => {
+      if (right.score !== left.score) {
+        return right.score - left.score;
+      }
+
+      return right.note.updatedAt - left.note.updatedAt;
+    });
+
+  const activeItems = scoredItems.filter((item) => !isRecommendationFeedbackHidden(item, feedbackMap, now));
+  return activeItems.length > 0 ? activeItems : scoredItems;
+}
+
 export function useLocalSmartRecommendations(params: UseLocalSmartRecommendationsParams) {
   const smartRecommendations = computed<LocalSmartRecommendationItem[]>(() => {
     const notes = params.notes.value;
@@ -452,7 +554,12 @@ export function useLocalSmartRecommendations(params: UseLocalSmartRecommendation
       return [];
     }
 
-    const limit = params.limit ?? DEFAULT_LIMIT;
+    const limit = Math.max(0, Math.min(params.limit ?? DEFAULT_LIMIT, notes.length));
+    if (limit === 0) {
+      return [];
+    }
+
+    const candidateLimit = Math.min(notes.length, limit * RECOMMENDATION_CANDIDATE_MULTIPLIER);
     const profiles = buildProfiles(notes)
       .sort((left, right) => {
         if (right.score !== left.score) {
@@ -462,7 +569,7 @@ export function useLocalSmartRecommendations(params: UseLocalSmartRecommendation
         return right.note.updatedAt - left.note.updatedAt;
       });
 
-    return applyDiversity(profiles, Math.min(limit, notes.length)).map((profile) => {
+    const recommendationItems = applyDiversity(profiles, candidateLimit).map((profile) => {
       const reasonType = getReasonType(profile);
       return {
         note: profile.note,
@@ -471,6 +578,8 @@ export function useLocalSmartRecommendations(params: UseLocalSmartRecommendation
         score: profile.score,
       };
     });
+
+    return applyRecommendationFeedback(recommendationItems, params.feedback?.value ?? []).slice(0, limit);
   });
 
   return {

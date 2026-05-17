@@ -623,6 +623,8 @@
   "workbench.action.continueWriting": "Continue Writing",
   "workbench.action.nextWallpaper": "Show previous Bing wallpaper",
   "workbench.action.newDocument": "New Document",
+  "workbench.action.snoozeRecommendation": "Ignore",
+  "workbench.action.dismissRecommendation": "Do not recommend",
   "workbench.activity.questioned": "Initiated a semantic Q&A",
   "workbench.activity.saved": "Saved and advanced writing progress",
   "workbench.behavior.sevenDayCharacters": "7-Day Writing Count",
