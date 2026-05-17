@@ -65,6 +65,8 @@ const REQUEST_TIMEOUT_MS = 8000;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const WALLPAPER_WIDTH = 897;
 const WALLPAPER_HEIGHT = 408;
+const BING_UHD_WIDTH = 3840;
+const BING_UHD_HEIGHT = 2160;
 const BING_BASE_URL = 'https://www.bing.com';
 const BING_ARCHIVE_LIMIT = 10;
 const DEFAULT_DESCRIPTION = 'Daily wallpaper';
@@ -146,7 +148,7 @@ function isWallpaperMetadataFile(fileName: string): boolean {
 
 function getBingArchiveUrl(archiveIndex: number): string {
   const normalizedArchiveIndex = normalizeArchiveIndex(archiveIndex);
-  return `${BING_BASE_URL}/HPImageArchive.aspx?format=js&idx=${normalizedArchiveIndex}&n=1&mkt=zh-CN`;
+  return `${BING_BASE_URL}/HPImageArchive.aspx?format=js&idx=${normalizedArchiveIndex}&n=1&mkt=zh-CN&uhd=1&uhdwidth=${BING_UHD_WIDTH}&uhdheight=${BING_UHD_HEIGHT}`;
 }
 
 async function readJson(url: string): Promise<unknown> {
@@ -233,24 +235,51 @@ function parseBingImageItem(data: unknown): BingImageItem | null {
   return firstImage && typeof firstImage === 'object' ? firstImage as BingImageItem : null;
 }
 
-function isTrustedBingImageUrl(value: string): boolean {
+function isTrustedBingOriginUrl(value: string): boolean {
   try {
     const parsedUrl = new URL(value);
+    const imageId = parsedUrl.searchParams.get('id') ?? '';
     return parsedUrl.protocol === 'https:'
       && (parsedUrl.hostname === 'www.bing.com' || parsedUrl.hostname === 'bing.com')
-      && parsedUrl.pathname === '/th';
+      && parsedUrl.pathname === '/th'
+      && imageId.endsWith('_UHD.jpg')
+      && !parsedUrl.searchParams.has('w')
+      && !parsedUrl.searchParams.has('h')
+      && !parsedUrl.searchParams.has('c');
   } catch {
     return false;
   }
 }
 
-function normalizeBingImageSize(imageUrl: string): string {
+function createAbsoluteBingImageUrl(imageUrl: string): string {
+  return imageUrl.startsWith('http') ? imageUrl : `${BING_BASE_URL}${imageUrl}`;
+}
+
+function normalizeBingPreviewImageUrl(imageUrl: string): string {
   try {
     const parsedUrl = new URL(imageUrl);
     parsedUrl.searchParams.set('w', String(WALLPAPER_WIDTH));
     parsedUrl.searchParams.set('h', String(WALLPAPER_HEIGHT));
     parsedUrl.searchParams.set('rs', '1');
     parsedUrl.searchParams.set('c', '4');
+    return parsedUrl.toString();
+  } catch {
+    return imageUrl;
+  }
+}
+
+function normalizeBingOriginUrl(imageUrl: string): string {
+  try {
+    const parsedUrl = new URL(imageUrl);
+    const imageId = parsedUrl.searchParams.get('id');
+    if (imageId) {
+      parsedUrl.searchParams.set('id', imageId.replace(/_\d+x\d+\.jpg$/i, '_UHD.jpg'));
+    }
+    parsedUrl.searchParams.delete('w');
+    parsedUrl.searchParams.delete('h');
+    parsedUrl.searchParams.delete('rs');
+    parsedUrl.searchParams.delete('c');
+    parsedUrl.searchParams.delete('rf');
     return parsedUrl.toString();
   } catch {
     return imageUrl;
@@ -267,7 +296,9 @@ async function getBingCandidate(archiveIndex: number): Promise<WallpaperCandidat
     throw new Error('Bing response did not include an image URL');
   }
 
-  const imageUrl = normalizeBingImageSize(rawUrl.startsWith('http') ? rawUrl : `${BING_BASE_URL}${rawUrl}`);
+  const rawImageUrl = createAbsoluteBingImageUrl(rawUrl);
+  const imageUrl = normalizeBingPreviewImageUrl(rawImageUrl);
+  const originUrl = normalizeBingOriginUrl(rawImageUrl);
   const title = normalizeText(image.title, 'Bing Daily Wallpaper');
   const description = normalizeText(image.copyright, title);
 
@@ -278,7 +309,7 @@ async function getBingCandidate(archiveIndex: number): Promise<WallpaperCandidat
     title,
     description,
     author: 'Bing',
-    originUrl: imageUrl,
+    originUrl,
   };
 }
 
@@ -294,7 +325,7 @@ async function readCachedWallpaper(metadataPath: string): Promise<WallpaperResul
     const buffer = await fs.readFile(imagePath);
     const originUrl = parsedMetadata.originUrl;
 
-    if (!isTrustedBingImageUrl(originUrl)) {
+    if (!isTrustedBingOriginUrl(originUrl)) {
       return null;
     }
 
