@@ -4,19 +4,20 @@
       <main class="workbench-main">
         <section class="hero-card">
           <div class="hero-copy">
-            <h1>{{ greetingText }}</h1>
-            <p>{{ t('workbench.hero.focus') }}</p>
+            <p class="hero-kicker">{{ greetingText }}</p>
+            <h1>{{ heroLeadText }}</h1>
 
-            <div class="hero-meta">
+            <div v-if="hasNotes" class="hero-meta">
               <span>{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
             </div>
 
             <div class="hero-actions">
               <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
-                <Edit theme="outline" :size="14" />
-                <span>{{ t('workbench.action.continueWriting') }}</span>
+                <Edit v-if="hasNotes" theme="outline" :size="14" />
+                <Plus v-else theme="outline" :size="14" />
+                <span>{{ hasNotes ? t('workbench.action.continueWriting') : t('workbench.action.newDocument') }}</span>
               </button>
-              <button type="button" class="hero-action" @click="createFirstNote">
+              <button v-if="hasNotes" type="button" class="hero-action" @click="createFirstNote">
                 <Plus theme="outline" :size="14" />
                 <span>{{ t('workbench.action.newDocument') }}</span>
               </button>
@@ -145,7 +146,8 @@
                   </button>
                 </span>
               </span>
-              <button type="button" class="smart-focus__body" @click="openSmartRecommendation(primarySmartRecommendation)">
+              <button type="button" class="smart-focus__body"
+                @click="openSmartRecommendation(primarySmartRecommendation)">
                 <span class="smart-focus__title">{{ primarySmartRecommendation.note.title }}</span>
                 <span class="smart-focus__preview">{{ getSmartNotePreview(primarySmartRecommendation.note) }}</span>
                 <span class="smart-focus__meta">
@@ -465,12 +467,7 @@ const behaviorFeedback = computed(() => {
   return {
     totalCharacters: notes.value.reduce((total, note) => total + getCharacterCount(note.content), 0),
     totalNotes: notes.value.length,
-    sevenDayCharacters: notes.value
-      .filter((note) => note.updatedAt >= sevenDayThreshold)
-      .reduce((total, note) => total + getCharacterCount(note.content), 0),
-    todayCharacters: notes.value
-      .filter((note) => note.updatedAt >= todayStart)
-      .reduce((total, note) => total + getCharacterCount(note.content), 0),
+    activeLast7Days: notes.value.filter((note) => note.updatedAt >= sevenDayThreshold).length,
     streakDays,
   };
 });
@@ -520,6 +517,22 @@ const topTopicLabels = computed<string[]>(() => {
     return clusterLabels;
   }
   return ['Notes', 'Focus', 'Review'];
+});
+
+const heroNote = computed<Note | null>(() => sortedNotesByUpdated.value[0] ?? null);
+
+const heroLeadText = computed<string>(() => {
+  const note = heroNote.value;
+  if (!note) {
+    return t('workbench.hero.firstNoteLead');
+  }
+
+  return t('workbench.hero.continueNote', { title: note.title });
+});
+
+const todayUpdatedNoteCount = computed<number>(() => {
+  const todayStart = getDayStartTimestamp(Date.now());
+  return notes.value.filter((note) => note.updatedAt >= todayStart).length;
 });
 
 const activeTagEntries = computed<ActiveTagEntry[]>(() => {
@@ -575,7 +588,7 @@ const overviewMetrics = computed<OverviewMetric[]>(() => {
   ];
 });
 
-const dailyWordsSeries = computed<number[]>(() => {
+const dailyUpdatedNoteSeries = computed<number[]>(() => {
   const todayStart = getDayStartTimestamp(Date.now());
   const buckets = new Array<number>(7).fill(0);
 
@@ -585,14 +598,14 @@ const dailyWordsSeries = computed<number[]>(() => {
       return;
     }
     const bucketIndex = 6 - diffDays;
-    buckets[bucketIndex] += getCharacterCount(note.content);
+    buckets[bucketIndex] += 1;
   });
 
   return buckets;
 });
 
 const growthPolyline = computed<string>(() => {
-  const points = dailyWordsSeries.value;
+  const points = dailyUpdatedNoteSeries.value;
   if (points.length === 0) {
     return '0,100 100,100';
   }
@@ -606,20 +619,18 @@ const growthPolyline = computed<string>(() => {
     .join(' ');
 });
 
-const thisWeekWords = computed<number>(() => dailyWordsSeries.value.reduce((total, value) => total + value, 0));
-const previousWeekWords = computed<number>(() => {
+const thisWeekUpdatedNoteCount = computed<number>(() => dailyUpdatedNoteSeries.value.reduce((total, value) => total + value, 0));
+const previousWeekUpdatedNoteCount = computed<number>(() => {
   const todayStart = getDayStartTimestamp(Date.now());
   const prevWeekStart = todayStart - (13 * DAY_MS);
   const prevWeekEnd = todayStart - (6 * DAY_MS);
 
-  return notes.value
-    .filter((note) => note.updatedAt >= prevWeekStart && note.updatedAt < prevWeekEnd)
-    .reduce((total, note) => total + getCharacterCount(note.content), 0);
+  return notes.value.filter((note) => note.updatedAt >= prevWeekStart && note.updatedAt < prevWeekEnd).length;
 });
 
 const weeklyGrowthPercentText = computed<string>(() => {
-  const prev = previousWeekWords.value;
-  const current = thisWeekWords.value;
+  const prev = previousWeekUpdatedNoteCount.value;
+  const current = thisWeekUpdatedNoteCount.value;
   if (prev <= 0) {
     return current > 0 ? '+100%' : '0%';
   }
@@ -643,13 +654,12 @@ const recentEditedTime = computed<string>(() => {
 const todayStatItems = computed<TodayStatItem[]>(() => {
   const todayStart = getDayStartTimestamp(Date.now());
   const todayQuestionCount = recentQuestionEntries.value.filter((entry) => entry.askedAt >= todayStart).length;
-  const todayUpdatedNoteCount = notes.value.filter((note) => note.updatedAt >= todayStart).length;
   const todayStarredCount = notes.value.filter((note) => note.starred && (note.starredAt ?? 0) >= todayStart).length
     + notebooks.value.filter((notebook) => notebook.starred && (notebook.starredAt ?? 0) >= todayStart).length;
 
   return [
-    { label: t('workbench.behavior.todayCharacters'), value: formatNumber(behaviorFeedback.value.todayCharacters) },
-    { label: t('workbench.stats.noteCount'), value: formatNumber(todayUpdatedNoteCount) },
+    { label: t('workbench.stats.todayUpdatedNotes'), value: formatNumber(todayUpdatedNoteCount.value) },
+    { label: t('workbench.stats.activeLast7Days'), value: formatNumber(behaviorFeedback.value.activeLast7Days) },
     { label: t('workbench.module.recentQuestions'), value: formatNumber(todayQuestionCount) },
     { label: t('workbench.module.favorites'), value: formatNumber(todayStarredCount) },
   ];
@@ -1063,21 +1073,26 @@ watch(
 }
 
 .hero-copy h1 {
+  max-width: 380px;
   margin: 0;
   color: var(--workbench-ink);
+  display: -webkit-box;
+  overflow: hidden;
   font-size: clamp(1.34rem, 1.18vw, 1.6rem);
   font-weight: 740;
   letter-spacing: -0.03em;
   line-height: 1.08;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
-.hero-copy p {
-  max-width: 340px;
-  margin: -2px 0 0;
+.hero-kicker {
+  margin: 0;
   color: color-mix(in srgb, var(--workbench-ink) 62%, var(--workbench-muted));
-  font-size: 0.84rem;
-  font-weight: 540;
-  line-height: 1.45;
+  font-size: 21rem;
+  font-weight: 720;
+  line-height: 1.2;
 }
 
 .hero-meta {
@@ -1093,23 +1108,6 @@ watch(
   display: inline-flex;
   align-items: center;
   min-height: 20px;
-}
-
-.hero-meta span+span::before {
-  content: "";
-  width: 3px;
-  height: 3px;
-  margin-right: 10px;
-  border-radius: 999px;
-  background: rgba(126, 136, 166, 0.42);
-}
-
-.hero-meta span:nth-child(2) {
-  padding: 0 8px;
-  border: 1px solid rgba(255, 255, 255, 0.66);
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.42);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.74);
 }
 
 .hero-actions {
@@ -2321,9 +2319,8 @@ watch(
     font-size: clamp(1.12rem, 0.96vw, 1.34rem);
   }
 
-  .hero-copy p {
+  .hero-kicker {
     font-size: 0.74rem;
-    line-height: 1.32;
   }
 
   .hero-meta {
