@@ -1564,6 +1564,10 @@ watch(
   margin-top: 8px;
 }
 
+.panel--smart .panel__header {
+  padding: 14px 18px 2px;
+}
+
 .smart-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.06fr) minmax(280px, 0.94fr);
@@ -1571,12 +1575,17 @@ watch(
   padding: 8px 18px 18px;
 }
 
+.panel--smart .smart-grid {
+  padding-top: 2px;
+  padding-bottom: 16px;
+}
+
 .smart-focus {
   min-width: 0;
   min-height: 166px;
   display: grid;
-  gap: 10px;
-  padding: 18px;
+  gap: 8px;
+  padding: 10px 18px 14px;
   border: 1px solid color-mix(in srgb, var(--workbench-blue) 18%, var(--workbench-border));
   border-radius: 14px;
   background:
@@ -2467,6 +2476,10 @@ watch(
     padding: 10px 14px 4px;
   }
 
+  .panel--smart .panel__header {
+    padding: 8px 14px 2px;
+  }
+
   .panel__header h2 {
     font-size: 0.94rem;
   }
@@ -2512,10 +2525,15 @@ watch(
     padding: 6px 14px 12px;
   }
 
+  .panel--smart .smart-grid {
+    padding-top: 2px;
+    padding-bottom: 10px;
+  }
+
   .smart-focus {
     min-height: 132px;
-    gap: 7px;
-    padding: 13px;
+    gap: 6px;
+    padding: 8px 13px 10px;
     border-radius: 12px;
   }
 
@@ -2768,6 +2786,16 @@ watch(
   .smart-grid {
     padding-right: 16px;
     padding-left: 16px;
+  }
+
+  .panel--smart .panel__header {
+    padding-top: 12px;
+    padding-bottom: 2px;
+  }
+
+  .panel--smart .smart-grid {
+    padding-top: 2px;
+    padding-bottom: 12px;
   }
 
   .feed-row {
