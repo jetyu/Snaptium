@@ -53,6 +53,7 @@ export function registerSyncHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.SYNC_TEST_CONNECTION);
   ipcMain.removeHandler(IPC_CHANNELS.SYNC_RUN);
   ipcMain.removeHandler(IPC_CHANNELS.SYNC_GET_STATUS);
+  ipcMain.removeHandler(IPC_CHANNELS.SYNC_RESTORE_REMOTE_KEY_SLOTS);
 
   ipcMain.handle(IPC_CHANNELS.SYNC_TEST_CONNECTION, async (_event, config = {}) => {
     try {
@@ -77,5 +78,13 @@ export function registerSyncHandlers() {
 
   ipcMain.handle(IPC_CHANNELS.SYNC_GET_STATUS, async () => {
     return await syncService.getStatus();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.SYNC_RESTORE_REMOTE_KEY_SLOTS, async (_event, config = {}) => {
+    try {
+      return await syncService.restoreRemoteKeySlots(syncConfigSchema.parse(config));
+    } catch (error) {
+      return serializeSyncError(error);
+    }
   });
 }

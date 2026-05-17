@@ -55,6 +55,13 @@ export interface SyncTestConnectionResult {
   message?: string;
 }
 
+export interface SyncRestoreRemoteKeySlotsResult {
+  success: boolean;
+  restored?: boolean;
+  code?: string;
+  message?: string;
+}
+
 export interface SyncRunPayload {
   config: JsonObject;
   trigger: 'manual' | 'timer' | 'save';
@@ -518,6 +525,9 @@ export const electronApi = {
     },
     getStatus: (): Promise<SyncStatusResult> => {
       return electronApi.sync.getApi().getStatus();
+    },
+    restoreRemoteKeySlots: (config: JsonObject): Promise<SyncRestoreRemoteKeySlotsResult> => {
+      return electronApi.sync.getApi().restoreRemoteKeySlots(config);
     },
   },
 

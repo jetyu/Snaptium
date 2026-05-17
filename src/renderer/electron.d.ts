@@ -368,6 +368,12 @@ declare global {
           lastError: SyncErrorInfo | null;
           recoveredPendingSession: boolean;
         }>;
+        restoreRemoteKeySlots: (config: JsonObject) => Promise<{
+          success: boolean;
+          restored?: boolean;
+          code?: string;
+          message?: string;
+        }>;
       };
 
       e2ee?: {

@@ -257,6 +257,7 @@ function resolveE2eeErrorMessage(code: string, fallbackMessage: string): string 
     SETUP_FAILED: 'e2ee.error.setupFailed',
     DEK_NOT_UNLOCKED: 'e2ee.error.dekNotUnlocked',
     MASTER_PASSWORD_REQUIRED: 'e2ee.error.masterPasswordRequired',
+    KEY_SLOTS_RESTORED: 'sync.notice.keySlotsRestored',
   };
 
   const key = keyByCode[code];
@@ -272,6 +273,12 @@ async function ensureE2eeReadyForSync(): Promise<boolean> {
     const status = await securityService.getStatus();
 
     if (!status.hasKeySlots) {
+      const restoreResult = await syncService.restoreRemoteKeySlots(settingsStore.config.sync);
+      if (restoreResult.restored) {
+        await showSyncDialog(t('sync.notice.keySlotsRestored'));
+        return false;
+      }
+
       await showSyncDialog(t('e2ee.error.masterPasswordRequired'));
       return false;
     }

@@ -93,6 +93,33 @@ function isValidKeySlots(value: unknown): value is KeySlotsFile {
   return true;
 }
 
+function normalizeKeySlots(value: unknown): KeySlots {
+  if (!isValidKeySlots(value)) {
+    logger.warn('Key slots payload has invalid structure or unsupported version');
+    throw createE2eeError(E2EE_ERROR_CODES.KEY_SLOTS_CORRUPTED, 'Invalid key slots payload');
+  }
+
+  return {
+    version: value.version,
+    passwordSlot: {
+      salt: value.passwordSlot.salt,
+      wrappedDEK: {
+        ciphertext: value.passwordSlot.wrappedDEK.ciphertext,
+        iv: value.passwordSlot.wrappedDEK.iv,
+        authTag: value.passwordSlot.wrappedDEK.authTag,
+      },
+    },
+    recoverySlot: {
+      wrappedDEK: {
+        ciphertext: value.recoverySlot.wrappedDEK.ciphertext,
+        iv: value.recoverySlot.wrappedDEK.iv,
+        authTag: value.recoverySlot.wrappedDEK.authTag,
+      },
+    },
+    createdAt: value.createdAt,
+  };
+}
+
 // ─── State ──────────────────────────────────────────────────────────────────
 
 /**
@@ -112,30 +139,7 @@ export const keyManagerService = {
       const content = await fs.readFile(filePath, 'utf8');
       const parsed: unknown = JSON.parse(content);
 
-      if (!isValidKeySlots(parsed)) {
-        logger.warn('Key slots file exists but has invalid structure or unsupported version');
-        throw createE2eeError(E2EE_ERROR_CODES.KEY_SLOTS_CORRUPTED, 'Failed to load key slots');
-      }
-
-      return {
-        version: parsed.version,
-        passwordSlot: {
-          salt: parsed.passwordSlot.salt,
-          wrappedDEK: {
-            ciphertext: parsed.passwordSlot.wrappedDEK.ciphertext,
-            iv: parsed.passwordSlot.wrappedDEK.iv,
-            authTag: parsed.passwordSlot.wrappedDEK.authTag,
-          },
-        },
-        recoverySlot: {
-          wrappedDEK: {
-            ciphertext: parsed.recoverySlot.wrappedDEK.ciphertext,
-            iv: parsed.recoverySlot.wrappedDEK.iv,
-            authTag: parsed.recoverySlot.wrappedDEK.authTag,
-          },
-        },
-        createdAt: parsed.createdAt,
-      };
+      return normalizeKeySlots(parsed);
     } catch (error: unknown) {
       const nodeError = error as NodeJS.ErrnoException;
       if (nodeError.code === 'ENOENT') {
@@ -159,6 +163,13 @@ export const keyManagerService = {
   async hasKeySlots(): Promise<boolean> {
     const slots = await this.loadKeySlots();
     return slots !== null;
+  },
+
+  async restoreKeySlots(rawSlots: unknown): Promise<void> {
+    const slots = normalizeKeySlots(rawSlots);
+    await this.saveKeySlots(slots);
+    this.lock();
+    logger.info('Key slots restored successfully');
   },
 
   // ── First-time Setup ───────────────────────────────────────────────────

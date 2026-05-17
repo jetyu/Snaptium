@@ -32,6 +32,7 @@ export type SyncTrigger = (typeof SYNC_TRIGGERS)[keyof typeof SYNC_TRIGGERS];
 
 export const SYNC_ERROR_CODES = Object.freeze({
   CANCELLED: 'CANCELLED',
+  KEY_SLOTS_RESTORED: 'KEY_SLOTS_RESTORED',
   MANIFEST_INVALID: 'MANIFEST_INVALID',
   NOT_CONFIGURED: 'NOT_CONFIGURED',
   PROVIDER_CONNECTION_FAILED: 'PROVIDER_CONNECTION_FAILED',
@@ -48,6 +49,7 @@ export type SyncErrorCode = (typeof SYNC_ERROR_CODES)[keyof typeof SYNC_ERROR_CO
 
 export const SYNC_REMOTE_METADATA = Object.freeze({
   DIRECTORY: '.snaptium-sync',
+  KEY_SLOTS_FILE: 'key-slots.json',
   LOCK_FILE: 'lock.json',
   MANIFEST_FILE: 'manifest.json',
 } as const);

@@ -644,7 +644,7 @@ const weeklyGrowthPercentText = computed<string>(() => {
 });
 
 const growthLabel = computed<string>(() => {
-  return `${t('workbench.stats.activeLast7Days')} ${weeklyGrowthPercentText.value}`;
+  return `${t('workbench.stats.weeklyGrowth')} ${weeklyGrowthPercentText.value}`;
 });
 
 const recentEditedTime = computed<string>(() => {
@@ -663,9 +663,8 @@ const todayStatItems = computed<TodayStatItem[]>(() => {
 
   return [
     { label: t('workbench.stats.todayUpdatedNotes'), value: formatNumber(todayUpdatedNoteCount.value) },
-    { label: t('workbench.stats.activeLast7Days'), value: formatNumber(behaviorFeedback.value.activeLast7Days) },
-    { label: t('workbench.module.recentQuestions'), value: formatNumber(todayQuestionCount) },
-    { label: t('workbench.module.favorites'), value: formatNumber(todayStarredCount) },
+    { label: t('workbench.stats.todayQuestions'), value: formatNumber(todayQuestionCount) },
+    { label: t('workbench.stats.todayFavorites'), value: formatNumber(todayStarredCount) },
   ];
 });
 
@@ -1459,11 +1458,11 @@ watch(
 
 .feed-row {
   width: 100%;
-  min-height: 58px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 8px 6px;
+  padding: 10px 6px;
   border: 0;
   border-bottom: 1px solid var(--workbench-border);
   border-radius: 0;

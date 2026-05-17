@@ -3,6 +3,7 @@ import {
   electronApi,
   type JsonObject,
   type SyncErrorInfo,
+  type SyncRestoreRemoteKeySlotsResult,
   type SyncRunResult as BridgeSyncRunResult,
   type SyncStatusResult as BridgeSyncStatusResult,
   type SyncSummary,
@@ -25,6 +26,11 @@ export interface SyncStatusSnapshot {
   lastSummary: SyncSummary | null;
   lastError: SyncErrorInfo | null;
   recoveredPendingSession: boolean;
+}
+
+export interface SyncRestoreKeySlotsResult {
+  success: boolean;
+  restored: boolean;
 }
 
 function createDefaultConfig(): SyncSettings {
@@ -55,6 +61,7 @@ function resolveFallbackErrorMessage(code: string): string {
   const t = i18n.global.t.bind(i18n.global);
   const fallbackMessages: Record<string, string> = {
     CANCELLED: t('sync.error.cancelled'),
+    KEY_SLOTS_RESTORED: t('sync.notice.keySlotsRestored'),
     NOT_CONFIGURED: t('sync.error.notConfigured'),
     PENDING_SESSION_RECOVERED: t('sync.notice.pendingRecovered'),
     PROVIDER_CONNECTION_FAILED: t('sync.error.connectionFailed'),
@@ -209,6 +216,20 @@ export const syncService = {
   async testConnection(syncConfig: SyncSettings): Promise<SyncTestConnectionResult> {
     ensureSyncApi();
     return await electronApi.sync.testConnection(toBridgeConfig(syncConfig));
+  },
+
+  async restoreRemoteKeySlots(syncConfig: SyncSettings): Promise<SyncRestoreKeySlotsResult> {
+    ensureSyncApi();
+    const result: SyncRestoreRemoteKeySlotsResult = await electronApi.sync.restoreRemoteKeySlots(toBridgeConfig(syncConfig));
+    if (!result.success) {
+      const code = result.code ?? 'UNKNOWN';
+      throw createSyncRunError(code, result.message ?? resolveFallbackErrorMessage(code));
+    }
+
+    return {
+      success: true,
+      restored: Boolean(result.restored),
+    };
   },
 
   async run(syncConfig: SyncSettings, trigger: SyncTrigger): Promise<SyncRunResult> {

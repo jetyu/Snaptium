@@ -14,6 +14,8 @@ import { UPDATER_CONSTANTS } from '../constants/updater.constants.js';
 import { type AccessControlTimeout } from '../../shared/e2ee.constants.js';
 import { loggerService } from './logger.service.js';
 import { previewPolicyService } from './preview-policy.service.js';
+import { keyManagerService } from './key-manager.service.js';
+import type { KeySlots } from './crypto.service.js';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type RemoteImageMode = 'blocked' | 'trusted' | 'all';
@@ -105,6 +107,17 @@ interface AppSettings {
   accessControl: AccessControlConfig;
 }
 
+interface SnaptiumConfigPackage {
+  type: 'snaptiumconfig';
+  version: number;
+  exportedAt: number;
+  app: string;
+  settings: SettingsInput;
+  e2ee?: {
+    keySlots?: KeySlots;
+  };
+}
+
 type SyncConfigInput = Partial<SyncConfig> & {
   webdav?: Partial<SyncWebDavConfig>;
   ossS3?: Partial<SyncOssS3Config>;
@@ -120,6 +133,9 @@ type SettingsInput = Partial<AppSettings> & {
 
 const logger = loggerService.createLogger('Electron:Settings Service');
 const LOG_AUTO_CLEAR_DAY_OPTIONS: ReadonlySet<number> = new Set<number>([0, 10, 20]);
+const SNAPTIUM_CONFIG_PACKAGE_TYPE = 'snaptiumconfig' as const;
+const SNAPTIUM_CONFIG_PACKAGE_VERSION = 1;
+const SNAPTIUM_CONFIG_EXTENSION = 'snaptiumconfig' as const;
 function interpolateMessage(template: string, replacements: Record<string, string> = {}): string {
   return Object.entries(replacements).reduce((message, [key, value]) => {
     return message.replaceAll(`{${key}}`, String(value));
@@ -250,6 +266,18 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
       ...(incomingConfig.accessControl || {}),
     },
   };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isSnaptiumConfigPackage(value: unknown): value is SnaptiumConfigPackage {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return value.type === SNAPTIUM_CONFIG_PACKAGE_TYPE && isRecord(value.settings);
 }
 
 export const settingsService = {
@@ -483,15 +511,17 @@ export const settingsService = {
   },
 
   /**
-   * Export settings to a JSON file
+   * Export settings and E2EE key slots to a Snaptium recovery package.
    */
   async exportConfig(): Promise<boolean> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 
     const result = await dialog.showSaveDialog(focusedWindow, {
       title: $t('pref.setting.backupFileName'),
-      defaultPath: path.join(app.getPath('desktop'), $t('pref.setting.backupFileName') + '.json'),
-      filters: [{ name: 'JSON', extensions: ['json'] }]
+      defaultPath: path.join(app.getPath('desktop'), `${$t('pref.setting.backupFileName')}.${SNAPTIUM_CONFIG_EXTENSION}`),
+      filters: [
+        { name: 'Snaptium Config', extensions: [SNAPTIUM_CONFIG_EXTENSION] },
+      ],
     });
 
     if (result.canceled || !result.filePath) {
@@ -499,8 +529,18 @@ export const settingsService = {
     }
 
     try {
-      const currentFilePath = this.getSettingsPath();
-      await fs.copyFile(currentFilePath, result.filePath);
+      const settings = await this.loadConfig();
+      const keySlots = await keyManagerService.loadKeySlots();
+      const configPackage: SnaptiumConfigPackage = {
+        type: SNAPTIUM_CONFIG_PACKAGE_TYPE,
+        version: SNAPTIUM_CONFIG_PACKAGE_VERSION,
+        exportedAt: Date.now(),
+        app: app.getName(),
+        settings,
+        e2ee: keySlots ? { keySlots } : undefined,
+      };
+
+      await fs.writeFile(result.filePath, JSON.stringify(configPackage, null, 2), 'utf-8');
       return true;
     } catch (error) {
       logger.error('Failed to export settings', { error: getErrorMessage(error) });
@@ -538,7 +578,7 @@ export const settingsService = {
   },
 
   /**
-   * Import settings from a JSON file and restart the application
+   * Import settings from a Snaptium recovery package.
    */
   async importConfig(): Promise<boolean> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
@@ -546,7 +586,9 @@ export const settingsService = {
     const result = await dialog.showOpenDialog(focusedWindow, {
       title: $t('pref.setting.backupFileName'),
       properties: ['openFile'],
-      filters: [{ name: 'JSON', extensions: ['json'] }]
+      filters: [
+        { name: 'Snaptium Config', extensions: [SNAPTIUM_CONFIG_EXTENSION] },
+      ],
     });
 
     if (result.canceled || result.filePaths.length === 0) {
@@ -556,12 +598,22 @@ export const settingsService = {
     try {
       const importPath = result.filePaths[0];
       const content = await fs.readFile(importPath, 'utf-8');
+      const parsed: unknown = JSON.parse(content);
+      if (!isSnaptiumConfigPackage(parsed)) {
+        throw new Error('Invalid Snaptium config package');
+      }
 
-      // Basic validation
-      JSON.parse(content);
+      const nextConfig = normalizeLoggingConfig(mergeConfigWithDefaults(this.getDefaultConfig(), parsed.settings));
 
       const targetFilePath = this.getSettingsPath();
-      await fs.copyFile(importPath, targetFilePath);
+      await fs.mkdir(path.dirname(targetFilePath), { recursive: true });
+      await fs.writeFile(targetFilePath, JSON.stringify(nextConfig, null, 2), 'utf-8');
+
+      if (parsed.e2ee?.keySlots) {
+        await keyManagerService.restoreKeySlots(parsed.e2ee.keySlots);
+      }
+
+      previewPolicyService.updateConfig(nextConfig);
 
       return true;
     } catch (error) {

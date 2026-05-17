@@ -60,6 +60,7 @@ export const IPC_CHANNELS = {
   SHORTCUTS_SAVE_KEYBINDINGS: 'shortcuts:save-keybindings',
   SHORTCUTS_VALIDATE_KEYBINDING: 'shortcuts:validate-keybinding',
   SYNC_GET_STATUS: 'sync:get-status',
+  SYNC_RESTORE_REMOTE_KEY_SLOTS: 'sync:restore-remote-key-slots',
   SYNC_RUN: 'sync:run',
   SYNC_TEST_CONNECTION: 'sync:test-connection',
   UPDATER_AVAILABLE: 'updater:available',

@@ -130,6 +130,8 @@ const electronAPI = Object.freeze({
     testConnection: (config: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.SYNC_TEST_CONNECTION, config),
     run: (payload: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.SYNC_RUN, payload),
     getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.SYNC_GET_STATUS),
+    restoreRemoteKeySlots: (config: Record<string, unknown>) =>
+      ipcRenderer.invoke(IPC_CHANNELS.SYNC_RESTORE_REMOTE_KEY_SLOTS, config),
   }),
   shortcuts: Object.freeze({
     getCommands: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS),

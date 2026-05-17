@@ -32,6 +32,7 @@ export type SyncTrigger = (typeof SYNC_TRIGGERS)[keyof typeof SYNC_TRIGGERS];
 
 export declare const SYNC_ERROR_CODES: {
   readonly CANCELLED: 'CANCELLED';
+  readonly KEY_SLOTS_RESTORED: 'KEY_SLOTS_RESTORED';
   readonly MANIFEST_INVALID: 'MANIFEST_INVALID';
   readonly NOT_CONFIGURED: 'NOT_CONFIGURED';
   readonly PROVIDER_CONNECTION_FAILED: 'PROVIDER_CONNECTION_FAILED';
@@ -46,6 +47,7 @@ export type SyncErrorCode = (typeof SYNC_ERROR_CODES)[keyof typeof SYNC_ERROR_CO
 
 export declare const SYNC_REMOTE_METADATA: {
   readonly DIRECTORY: '.snaptium-sync';
+  readonly KEY_SLOTS_FILE: 'key-slots.json';
   readonly LOCK_FILE: 'lock.json';
   readonly MANIFEST_FILE: 'manifest.json';
 };

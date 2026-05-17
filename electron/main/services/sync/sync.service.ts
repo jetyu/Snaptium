@@ -38,6 +38,7 @@ import { cryptoService } from '../crypto.service.js';
 const NODES_RELATIVE_PATH = VFS_CONSTANTS.NODES_FILE;
 const DATABASE_REMOTE_ROOT = VFS_CONSTANTS.DATABASE_FOLDER;
 const MANIFEST_REMOTE_PATH = path.posix.join(SYNC_REMOTE_METADATA.DIRECTORY, SYNC_REMOTE_METADATA.MANIFEST_FILE);
+const KEY_SLOTS_REMOTE_PATH = path.posix.join(SYNC_REMOTE_METADATA.DIRECTORY, SYNC_REMOTE_METADATA.KEY_SLOTS_FILE);
 const LOCK_REMOTE_PATH = path.posix.join(SYNC_REMOTE_METADATA.DIRECTORY, SYNC_REMOTE_METADATA.LOCK_FILE);
 
 type SyncProviderType = (typeof SYNC_PROVIDERS)[keyof typeof SYNC_PROVIDERS];
@@ -318,6 +319,26 @@ async function releaseRemoteLock(provider: SyncProviderClient): Promise<void> {
   await provider.deleteFile(LOCK_REMOTE_PATH).catch(() => undefined);
 }
 
+async function uploadKeySlotsIfAvailable(provider: SyncProviderClient): Promise<void> {
+  const keySlots = await keyManagerService.loadKeySlots();
+  if (!keySlots) {
+    return;
+  }
+
+  await provider.writeText(KEY_SLOTS_REMOTE_PATH, JSON.stringify(keySlots, null, 2));
+}
+
+async function restoreKeySlotsFromRemote(provider: SyncProviderClient): Promise<boolean> {
+  const content = await provider.readText(KEY_SLOTS_REMOTE_PATH);
+  if (!content) {
+    return false;
+  }
+
+  const parsed: unknown = JSON.parse(content);
+  await keyManagerService.restoreKeySlots(parsed);
+  return true;
+}
+
 async function confirmBootstrapAction(kind: 'pull-remote' | 'push-local'): Promise<boolean> {
   const dialogOptions = kind === 'pull-remote'
     ? {
@@ -594,6 +615,30 @@ export const syncService = {
     }
   },
 
+  async restoreRemoteKeySlots(syncConfig: SyncConfigInput): Promise<{ success: boolean; restored: boolean }> {
+    const config = normalizeSyncConfig(syncConfig);
+    if (!isConfigReady(config)) {
+      throw createSyncError(SYNC_ERROR_CODES.NOT_CONFIGURED, $t('sync.error.notConfigured'));
+    }
+
+    const provider = createProvider(config);
+    try {
+      await provider.testConnection();
+      const restored = await restoreKeySlotsFromRemote(provider);
+      return { success: true, restored };
+    } catch (error) {
+      const errorCode = getErrorCode(error);
+      if (errorCode && errorCode !== SYNC_ERROR_CODES.UNKNOWN) {
+        throw createSyncError(errorCode, getErrorMessage(error, $t('sync.error.unknown')));
+      }
+
+      throw createSyncError(
+        SYNC_ERROR_CODES.PROVIDER_CONNECTION_FAILED,
+        getErrorMessage(error, $t('sync.error.connectionFailed'))
+      );
+    }
+  },
+
   async getStatus(): Promise<{
     success: boolean;
     lastSyncedAt: number | null;
@@ -636,20 +681,6 @@ export const syncService = {
     }
 
     // ── E2EE Check ───────────────────────────────────────────────────────────
-    if (!(await keyManagerService.hasKeySlots())) {
-      throw createSyncError(
-        SYNC_ERROR_CODES.MASTER_PASSWORD_REQUIRED,
-        $t('e2ee.error.masterPasswordRequired'),
-      );
-    }
-
-    if (!keyManagerService.isUnlocked()) {
-      throw createSyncError(
-        SYNC_ERROR_CODES.E2EE_NOT_UNLOCKED,
-        $t('e2ee.error.dekNotUnlocked'),
-      );
-    }
-
     const workspaceRoot = await vfsService.ensureInitialized(undefined).catch(() => null);
     if (!workspaceRoot) {
       throw createSyncError(SYNC_ERROR_CODES.WORKSPACE_UNAVAILABLE, $t('sync.error.workspaceUnavailable'));
@@ -658,10 +689,28 @@ export const syncService = {
     const { state, recoveredPendingSession } = await syncStateService.loadWorkspaceState(workspaceRoot);
     const session = await syncStateService.beginSession(workspaceRoot, options.trigger ?? 'manual');
     const provider = createProvider(config);
+    let remoteLockAcquired = false;
 
     try {
       await provider.testConnection();
+
+      if (!(await keyManagerService.hasKeySlots())) {
+        const restored = await restoreKeySlotsFromRemote(provider);
+        throw createSyncError(
+          restored ? SYNC_ERROR_CODES.KEY_SLOTS_RESTORED : SYNC_ERROR_CODES.MASTER_PASSWORD_REQUIRED,
+          restored ? $t('sync.notice.keySlotsRestored') : $t('e2ee.error.masterPasswordRequired'),
+        );
+      }
+
+      if (!keyManagerService.isUnlocked()) {
+        throw createSyncError(
+          SYNC_ERROR_CODES.E2EE_NOT_UNLOCKED,
+          $t('e2ee.error.dekNotUnlocked'),
+        );
+      }
+
       await acquireRemoteLock(provider, session.id);
+      remoteLockAcquired = true;
 
       const [localManifest, remoteManifest] = await Promise.all([
         scanLocalDatabase(workspaceRoot),
@@ -681,6 +730,7 @@ export const syncService = {
         : '';
       const syncedAt = Date.now();
 
+      await uploadKeySlotsIfAvailable(provider);
       await syncStateService.finishSession(workspaceRoot, {
         baselineManifest: finalManifest,
         baselineNodesContent: finalNodesContent,
@@ -689,7 +739,9 @@ export const syncService = {
         lastError: null,
       });
       await persistLastSyncedAt(syncedAt);
-      await releaseRemoteLock(provider);
+      if (remoteLockAcquired) {
+        await releaseRemoteLock(provider);
+      }
 
       return {
         success: true,
@@ -705,7 +757,9 @@ export const syncService = {
           at: Date.now(),
         },
       });
-      await releaseRemoteLock(provider);
+      if (remoteLockAcquired) {
+        await releaseRemoteLock(provider);
+      }
       throw error;
     }
   },
