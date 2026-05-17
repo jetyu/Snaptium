@@ -15,8 +15,7 @@ export function secureWebContents(win: BrowserWindow, isDev: boolean): void {
       'github.com',
       'snaptium.com',
       'www.bing.com',
-      'bing.com',
-      'picsum.photos'
+      'bing.com'
     ]);
 
     if (isAllowedExternalUrl(url, allowedHosts)) {

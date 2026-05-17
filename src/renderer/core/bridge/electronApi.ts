@@ -163,14 +163,15 @@ export interface WindowStatePayload {
 }
 
 export interface WallpaperRequestPayload {
-  switchSource?: boolean;
-  currentSource?: WallpaperResult['source'];
+  nextArchive?: boolean;
+  currentArchiveIndex?: number;
 }
 
 export interface WallpaperResult {
   success: boolean;
   dataUrl: string | null;
-  source: 'bing' | 'picsum' | 'cache' | 'fallback';
+  source: 'bing' | 'cache' | 'fallback';
+  archiveIndex: number;
   title: string;
   description: string;
   author: string;

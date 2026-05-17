@@ -621,6 +621,7 @@
   "updater.viewReleaseNotes": "Visualizza il log delle modifiche",
   "workbench.action.configure": "Configura i moduli funzionali",
   "workbench.action.continueWriting": "Continua a scrivere",
+  "workbench.action.nextWallpaper": "Mostra lo sfondo Bing precedente",
   "workbench.activity.questioned": "Avviata una domanda semantica",
   "workbench.activity.saved": "Salvato e avanzamento della scrittura",
   "workbench.behavior.sevenDayCharacters": "Caratteri scritti negli ultimi 7 giorni",

@@ -26,7 +26,7 @@
           <div class="hero-art">
             <img class="hero-art__image" :src="wallpaperSrc" :alt="wallpaperAlt" @error="handleWallpaperImageError" />
             <button type="button" class="hero-art__source-button" :disabled="wallpaperLoading"
-              aria-label="切换图片源" @click="switchWallpaperSource">
+              :aria-label="t('workbench.action.nextWallpaper')" @click="loadNextWallpaper">
               <Picture theme="outline" :size="15" />
             </button>
             <div v-if="wallpaperTitleText || wallpaperMetaText || wallpaperSourceUrl" class="hero-art__info">
@@ -422,17 +422,6 @@ const knowledgeHeatEntries = computed<HeatEntry[]>(() => {
   }));
 });
 
-const weekStart = computed<number>(() => getDayStartTimestamp(Date.now()) - (6 * DAY_MS));
-const notesUpdatedThisWeek = computed<number>(() => notes.value.filter((note) => note.updatedAt >= weekStart.value).length);
-const activeDaysLast7 = computed<number>(() => {
-  const dayKeys = new Set(
-    notes.value
-      .filter((note) => note.updatedAt >= weekStart.value)
-      .map((note) => getLocalDateKey(note.updatedAt)),
-  );
-  return dayKeys.size;
-});
-
 const overviewMetrics = computed<OverviewMetric[]>(() => {
   return [
     {
@@ -590,20 +579,7 @@ const wallpaperSourceUrl = computed<string>(() => {
   return current?.originUrl || '';
 });
 
-const wallpaperInfoText = computed<string>(() => {
-  const currentWallpaper = wallpaper.value;
-  if (!currentWallpaper?.success) {
-    return '';
-  }
-
-  const source = getWallpaperSourceLabel(currentWallpaper.source);
-  const title = currentWallpaper.title || currentWallpaper.description;
-  return [title, source]
-    .filter((item) => item.trim().length > 0)
-    .join(' · ');
-});
-
-async function loadWallpaper(switchSource = false): Promise<void> {
+async function loadWallpaper(nextArchive = false): Promise<void> {
   if (wallpaperLoading.value) {
     return;
   }
@@ -611,8 +587,8 @@ async function loadWallpaper(switchSource = false): Promise<void> {
   wallpaperLoading.value = true;
   try {
     const result = await electronApi.workspace.getDailyWallpaper({
-      switchSource,
-      currentSource: wallpaper.value?.source,
+      nextArchive,
+      currentArchiveIndex: wallpaper.value?.archiveIndex,
     });
     wallpaper.value = result;
     if (result.success && result.dataUrl) {
@@ -627,7 +603,7 @@ async function loadWallpaper(switchSource = false): Promise<void> {
   }
 }
 
-function switchWallpaperSource(): void {
+function loadNextWallpaper(): void {
   void loadWallpaper(true);
 }
 
@@ -640,9 +616,6 @@ function handleWallpaperImageError(): void {
 function getWallpaperSourceLabel(source: WallpaperResult['source']): string {
   if (source === 'bing') {
     return 'Bing';
-  }
-  if (source === 'picsum') {
-    return 'Picsum';
   }
   if (source === 'cache') {
     return 'Cache';

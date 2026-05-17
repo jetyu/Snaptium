@@ -71,7 +71,7 @@ const electronAPI = Object.freeze({
   }),
   workspace: Object.freeze({
     showContextMenu: (payload: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, payload),
-    getDailyWallpaper: (payload?: { switchSource?: boolean; currentSource?: string }) =>
+    getDailyWallpaper: (payload?: { nextArchive?: boolean; currentArchiveIndex?: number }) =>
       ipcRenderer.invoke(IPC_CHANNELS.APP_GET_WALLPAPER, payload),
   }),
   editor: Object.freeze({

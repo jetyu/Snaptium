@@ -622,6 +622,7 @@
   "updater.viewReleaseNotes": "查看更新日志",
   "workbench.action.configure": "配置功能模块",
   "workbench.action.continueWriting": "继续写",
+  "workbench.action.nextWallpaper": "更换上一张 Bing 壁纸",
   "workbench.action.newDocument": "新建文档",
   "workbench.activity.questioned": "发起了一次语义问答",
   "workbench.activity.saved": "已保存并推进写作进度",

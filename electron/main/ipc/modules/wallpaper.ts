@@ -5,30 +5,21 @@ import { loggerService } from '../../services/logger.service.js';
 
 const logger = loggerService.createLogger('Electron:Wallpaper IPC');
 
-function shouldSwitchSource(payload: unknown): boolean {
+function shouldLoadNextArchive(payload: unknown): boolean {
   if (!payload || typeof payload !== 'object') {
     return false;
   }
 
-  return (payload as Record<string, unknown>).switchSource === true;
+  return (payload as Record<string, unknown>).nextArchive === true;
 }
 
-function getCurrentSource(payload: unknown): WallpaperRequestOptions['currentSource'] {
+function getCurrentArchiveIndex(payload: unknown): WallpaperRequestOptions['currentArchiveIndex'] {
   if (!payload || typeof payload !== 'object') {
     return undefined;
   }
 
-  const currentSource = (payload as Record<string, unknown>).currentSource;
-  if (
-    currentSource === 'bing'
-    || currentSource === 'picsum'
-    || currentSource === 'cache'
-    || currentSource === 'fallback'
-  ) {
-    return currentSource;
-  }
-
-  return undefined;
+  const currentArchiveIndex = (payload as Record<string, unknown>).currentArchiveIndex;
+  return typeof currentArchiveIndex === 'number' ? currentArchiveIndex : undefined;
 }
 
 export function registerWallpaperIpcHandlers(): void {
@@ -36,8 +27,8 @@ export function registerWallpaperIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.APP_GET_WALLPAPER, async (_event, payload: unknown) => {
     logger.debug('Getting wallpaper');
     return wallpaperService.getDailyWallpaper({
-      switchSource: shouldSwitchSource(payload),
-      currentSource: getCurrentSource(payload),
+      nextArchive: shouldLoadNextArchive(payload),
+      currentArchiveIndex: getCurrentArchiveIndex(payload),
     });
   });
 }

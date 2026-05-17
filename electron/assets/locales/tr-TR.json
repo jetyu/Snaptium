@@ -621,6 +621,7 @@
   "updater.viewReleaseNotes": "Güncelleme günlüğünü görüntüle",
   "workbench.action.configure": "İşlev Modüllerini Yapılandır",
   "workbench.action.continueWriting": "Yazmaya Devam Et",
+  "workbench.action.nextWallpaper": "Onceki Bing duvar kagidini goster",
   "workbench.activity.questioned": "bir anlamsal soru sordu",
   "workbench.activity.saved": "kaydedildi ve yazma ilerlemesi kaydedildi",
   "workbench.behavior.sevenDayCharacters": "Son 7 Günlük Yazma Miktarı",
