@@ -571,7 +571,11 @@ const wallpaperMetaText = computed<string>(() => {
 
 const wallpaperSourceText = computed<string>(() => {
   const current = currentWallpaper.value;
-  return current ? getWallpaperSourceLabel(current.source) : '';
+  if (!current) {
+    return '';
+  }
+
+  return current.source === 'bing' ? 'Bing 4K' : getWallpaperSourceLabel(current.source);
 });
 
 const wallpaperSourceUrl = computed<string>(() => {
@@ -845,11 +849,11 @@ watch(
 }
 
 .hero-card {
-  min-height: clamp(180px, 16vw, 320px);
+  min-height: clamp(176px, 13vw, 240px);
   display: grid;
-  grid-template-columns: minmax(300px, 0.86fr) minmax(320px, 1fr);
+  grid-template-columns: minmax(292px, 0.82fr) minmax(380px, 1fr);
   gap: 16px;
-  padding: 20px 0 18px 24px;
+  padding: 18px 0 16px 22px;
   overflow: hidden;
   border: 1px solid rgba(95, 151, 232, 0.18);
   border-radius: 20px;
@@ -960,11 +964,12 @@ watch(
 
 .hero-art {
   position: relative;
-  min-height: 100%;
-  margin: -20px 0 -18px;
+  align-self: stretch;
+  min-height: 0;
+  margin: -18px 0 -16px;
   overflow: hidden;
   border-radius: 0 20px 20px 0;
-  opacity: 0.9;
+  opacity: 0.94;
 }
 
 .hero-art__image {
@@ -1680,6 +1685,7 @@ watch(
   .hero-art {
     min-height: 152px;
     margin: 0;
+    aspect-ratio: 20 / 9;
     border-radius: 16px;
   }
 
