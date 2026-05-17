@@ -4,13 +4,16 @@
       <main class="workbench-main">
         <section class="hero-card">
           <div class="hero-copy">
-            <p class="hero-kicker">{{ greetingText }}</p>
+            <em class="hero-quote">
+              <BookmarkOne theme="outline" :size="12" />
+              <strong>{{ t('workbench.hero.dailyQuote') }}</strong>
+              <span>{{ dailyQuoteText }}</span>
+            </em>
+            <p class="hero-greeting">{{ greetingText }}</p>
             <h1>{{ heroLeadText }}</h1>
-
-            <div v-if="hasNotes" class="hero-meta">
-              <span>{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
+            <div class="hero-meta">
+              <span v-if="hasNotes">{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
             </div>
-
             <div class="hero-actions">
               <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
                 <Edit v-if="hasNotes" theme="outline" :size="14" />
@@ -376,6 +379,7 @@ const WORKBENCH_DISPLAY_LIMITS = {
   RECENT_QUESTIONS: 4,
   SMART_RECOMMENDATIONS: 4,
   ACTIVE_TAGS: 10,
+  DAILY_QUOTES: 30,
 } as const;
 
 const TODO_TASK_REGEX = /^[-*+]\s+\[\s\]\s+(.+)$/;
@@ -676,6 +680,12 @@ const greetingText = computed<string>(() => {
   return `${t('workbench.greeting.evening')}`;
 });
 
+const dailyQuoteText = computed<string>(() => {
+  const key = getLocalDateKey(Date.now());
+  const index = getStableQuoteIndex(key, WORKBENCH_DISPLAY_LIMITS.DAILY_QUOTES);
+  return t(`workbench.hero.quote.${index + 1}`);
+});
+
 const wallpaperAlt = computed<string>(() => wallpaper.value?.title || '');
 
 const currentWallpaper = computed<WallpaperResult | null>(() => {
@@ -926,6 +936,14 @@ function getLocalDateKey(timestamp: number): string {
   return `${year}-${month}-${day}`;
 }
 
+function getStableQuoteIndex(seed: string, count: number): number {
+  let hash = 0;
+  for (const char of seed) {
+    hash = ((hash * 31) + char.charCodeAt(0)) >>> 0;
+  }
+  return hash % count;
+}
+
 function formatRelativeTime(timestamp: number): string {
   const diffSeconds = Math.max(0, Math.floor((Date.now() - timestamp) / 1000));
   if (diffSeconds < 300) {
@@ -1066,8 +1084,9 @@ watch(
 .hero-copy {
   min-width: 0;
   display: grid;
-  align-content: center;
+  align-content: start;
   gap: 11px;
+  padding-top: clamp(4px, 0.7vw, 12px);
   position: relative;
   z-index: 2;
 }
@@ -1087,18 +1106,19 @@ watch(
   -webkit-line-clamp: 2;
 }
 
-.hero-kicker {
+.hero-greeting {
   margin: 0;
-  color: color-mix(in srgb, var(--workbench-ink) 62%, var(--workbench-muted));
-  font-size: 21rem;
-  font-weight: 720;
-  line-height: 1.2;
+  color: color-mix(in srgb, var(--workbench-ink) 72%, var(--workbench-muted));
+  font-size: 1.04rem;
+  font-weight: 780;
+  line-height: 1.18;
 }
 
 .hero-meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px 10px;
+  align-items: center;
+  gap: 6px 8px;
   color: var(--workbench-muted);
   font-size: 0.76rem;
   font-weight: 610;
@@ -1108,6 +1128,65 @@ watch(
   display: inline-flex;
   align-items: center;
   min-height: 20px;
+}
+
+.hero-quote {
+  width: fit-content;
+  max-width: min(100%, 430px);
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 9px 4px 8px;
+  border: 1px solid color-mix(in srgb, var(--workbench-blue) 24%, var(--workbench-border));
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(61, 124, 255, 0.14), rgba(115, 167, 255, 0.08)),
+    rgba(255, 255, 255, 0.54);
+  color: color-mix(in srgb, var(--workbench-blue) 76%, var(--workbench-ink));
+  font-size: 0.76rem;
+  font-style: normal;
+  font-weight: 700;
+  line-height: 1.32;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68), 0 5px 14px rgba(61, 124, 255, 0.08);
+  min-width: 0;
+}
+
+.hero-quote :deep(.i-icon),
+.hero-quote :deep(svg) {
+  flex: 0 0 auto;
+}
+
+.hero-quote strong {
+  flex: 0 0 auto;
+  color: color-mix(in srgb, var(--workbench-blue) 84%, var(--workbench-ink));
+  font-size: 0.66rem;
+  font-weight: 820;
+}
+
+.hero-quote strong::after {
+  content: "";
+  display: inline-block;
+  width: 1px;
+  height: 10px;
+  margin-left: 6px;
+  background: color-mix(in srgb, var(--workbench-blue) 28%, transparent);
+  vertical-align: -1px;
+}
+
+.hero-quote span {
+  min-width: 0;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--workbench-ink) 62%, var(--workbench-muted));
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+:global([data-theme='dark']) .hero-quote {
+  background:
+    linear-gradient(135deg, rgba(61, 124, 255, 0.18), rgba(115, 167, 255, 0.1)),
+    rgba(255, 255, 255, 0.05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .hero-actions {
@@ -2313,14 +2392,19 @@ watch(
 
   .hero-copy {
     gap: 6px;
+    padding-top: 4px;
   }
 
   .hero-copy h1 {
     font-size: clamp(1.12rem, 0.96vw, 1.34rem);
   }
 
-  .hero-kicker {
-    font-size: 0.74rem;
+  .hero-greeting {
+    font-size: 0.88rem;
+  }
+
+  .hero-quote {
+    font-size: 0.66rem;
   }
 
   .hero-meta {
@@ -2652,6 +2736,10 @@ watch(
 @media (max-width: 620px) {
   .active-tag-list {
     grid-template-columns: 1fr;
+  }
+
+  .hero-quote {
+    max-width: 100%;
   }
 
   .hero-card {
