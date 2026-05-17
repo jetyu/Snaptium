@@ -1459,11 +1459,11 @@ watch(
 
 .feed-row {
   width: 100%;
-  min-height: 50px;
+  min-height: 58px;
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 0 6px;
+  padding: 8px 6px;
   border: 0;
   border-bottom: 1px solid var(--workbench-border);
   border-radius: 0;
@@ -1503,7 +1503,7 @@ watch(
   min-width: 0;
   display: grid;
   flex: 1;
-  gap: 3px;
+  gap: 5px;
 }
 
 .feed-row__title {
@@ -2477,9 +2477,9 @@ watch(
   }
 
   .feed-row {
-    min-height: 40px;
+    min-height: 48px;
     gap: 8px;
-    padding: 0 4px;
+    padding: 5px 4px;
   }
 
   .feed-row__icon {
@@ -2489,7 +2489,7 @@ watch(
   }
 
   .feed-row__main {
-    gap: 1px;
+    gap: 3px;
   }
 
   .feed-row__title {
@@ -2767,9 +2767,9 @@ watch(
 
   .feed-row {
     align-items: flex-start;
-    min-height: 54px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    min-height: 62px;
+    padding-top: 12px;
+    padding-bottom: 12px;
   }
 
   .feed-row__time {
