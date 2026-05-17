@@ -233,24 +233,31 @@
           <p class="side-card__muted">{{ growthLabel }}</p>
         </section>
 
-        <section class="side-card side-card--heat">
+        <section class="side-card side-card--topic">
           <header class="side-card__header">
             <h3>
-              <span class="side-card__title-icon side-card__title-icon--heat">
+              <span class="side-card__title-icon side-card__title-icon--topic">
                 <ConnectionPoint theme="outline" :size="14" />
               </span>
-              {{ t('workbench.sidebar.knowledgeHeat') }}
+              {{ t('workbench.sidebar.knowledgeTopics') }}
             </h3>
           </header>
-          <div class="heat-list">
-            <div v-for="entry in knowledgeHeatEntries" :key="entry.label" class="heat-row">
-              <span>{{ entry.label }}</span>
-              <div class="heat-row__bar">
-                <i :style="{ width: `${entry.percent}%` }"></i>
-              </div>
-              <strong>{{ formatNumber(entry.value) }}</strong>
+          <div v-if="knowledgeTopicEntries.length > 0" class="topic-list">
+            <div v-for="entry in knowledgeTopicEntries" :key="entry.id" class="topic-row" :title="entry.label">
+              <span class="topic-row__main">
+                <span class="topic-row__title">{{ entry.label }}</span>
+                <span class="topic-row__meta">
+                  {{ t('workbench.topic.noteCount', { count: entry.noteCount }) }}
+                  <span>{{ formatRelativeTime(entry.updatedAt) }}</span>
+                </span>
+              </span>
+              <span class="topic-row__heat">
+                <span class="topic-row__bar"><i :style="{ width: `${entry.percent}%` }"></i></span>
+                <strong>{{ t('workbench.topic.heat', { score: Math.round(entry.heat) }) }}</strong>
+              </span>
             </div>
           </div>
+          <div v-else class="side-card__empty">{{ t('workbench.empty.noKnowledgeTopics') }}</div>
         </section>
       </aside>
     </div>
@@ -292,6 +299,7 @@ import {
   type LocalRecommendationReasonType,
   type LocalSmartRecommendationItem,
 } from '../composables/useLocalSmartRecommendations';
+import { useKnowledgeTopicClusters } from '../composables/useKnowledgeTopicClusters';
 import {
   WORKBENCH_LIMITS,
   type WorkbenchQuestionEntry,
@@ -326,12 +334,6 @@ interface TodayStatItem {
   value: string;
 }
 
-interface HeatEntry {
-  label: string;
-  value: number;
-  percent: number;
-}
-
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 const WORKBENCH_DISPLAY_LIMITS = {
@@ -339,14 +341,6 @@ const WORKBENCH_DISPLAY_LIMITS = {
   RECENT_QUESTIONS: 4,
   SMART_RECOMMENDATIONS: 4,
 } as const;
-
-const TOPIC_PATTERNS = [
-  { label: 'RAG', pattern: /\brag\b/gi },
-  { label: 'Vector', pattern: /向量|vector|embedding|lancedb/gi },
-  { label: 'Local', pattern: /本地|local[-\s]?first|offline/gi },
-  { label: 'E2EE', pattern: /e2ee|端到端|encrypt|encryption/gi },
-  { label: 'AI', pattern: /\bai\b|智能|模型|model/gi },
-] as const;
 
 const TODO_TASK_REGEX = /^[-*+]\s+\[\s\]\s+(.+)$/;
 const TODO_MARKER_REGEX = /(?:^|\s)(?:TODO|TBD|FIXME)\b:?\s*(.+)?$/i;
@@ -376,6 +370,9 @@ const { smartRecommendations } = useLocalSmartRecommendations({
   notes: sortedNotesByUpdated,
   feedback: recommendationFeedback,
   limit: WORKBENCH_DISPLAY_LIMITS.SMART_RECOMMENDATIONS,
+});
+const { topicClusters: knowledgeTopicEntries } = useKnowledgeTopicClusters({
+  notes: sortedNotesByUpdated,
 });
 const smartRecommendationsPreview = computed<LocalSmartRecommendationItem[]>(() => {
   return smartRecommendations.value.slice(0, WORKBENCH_DISPLAY_LIMITS.SMART_RECOMMENDATIONS);
@@ -483,37 +480,12 @@ const knowledgePointCount = computed<number>(() => {
   }, 0);
 });
 
-const topicScores = computed(() => {
-  return TOPIC_PATTERNS.map((topic) => {
-    const score = notes.value.reduce((total, note) => {
-      const haystack = `${note.title}\n${note.content}`;
-      const matches = haystack.match(topic.pattern);
-      return total + (matches?.length ?? 0);
-    }, 0);
-
-    return {
-      label: topic.label,
-      value: score,
-    };
-  });
-});
-
 const topTopicLabels = computed<string[]>(() => {
-  const nonZero = topicScores.value.filter((topic) => topic.value > 0).sort((left, right) => right.value - left.value);
-  if (nonZero.length > 0) {
-    return nonZero.slice(0, 4).map((topic) => topic.label);
+  const clusterLabels = knowledgeTopicEntries.value.slice(0, 4).map((topic) => topic.label);
+  if (clusterLabels.length > 0) {
+    return clusterLabels;
   }
-  return TOPIC_PATTERNS.slice(0, 4).map((topic) => topic.label);
-});
-
-const knowledgeHeatEntries = computed<HeatEntry[]>(() => {
-  const sorted = [...topicScores.value].sort((left, right) => right.value - left.value).slice(0, 5);
-  const maxValue = Math.max(1, ...sorted.map((entry) => entry.value));
-  return sorted.map((entry) => ({
-    label: entry.label,
-    value: entry.value,
-    percent: Math.max(8, Math.round((entry.value / maxValue) * 100)),
-  }));
+  return ['Notes', 'Focus', 'Review'];
 });
 
 const overviewMetrics = computed<OverviewMetric[]>(() => {
@@ -1829,7 +1801,7 @@ watch(
 
 .side-card__title-icon--stats,
 .side-card__title-icon--growth,
-.side-card__title-icon--heat {
+.side-card__title-icon--topic {
   background: color-mix(in srgb, var(--workbench-blue) 14%, transparent);
   color: color-mix(in srgb, var(--workbench-blue) 90%, #1e3a8a);
 }
@@ -1985,48 +1957,95 @@ watch(
   filter: drop-shadow(0 8px 14px rgba(61, 124, 255, 0.24));
 }
 
-.heat-list {
+.topic-list {
   display: grid;
-  gap: 12px;
-}
-
-.heat-row {
-  display: grid;
-  grid-template-columns: 78px minmax(0, 1fr) 28px;
   gap: 9px;
-  align-items: center;
-  font-size: 0.82rem;
-  font-weight: 650;
 }
 
-.heat-row span {
+.topic-row {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 78px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 9px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--workbench-ink);
+  font: inherit;
+  text-align: left;
+}
+
+.topic-row__main {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.topic-row__title {
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-ink);
+  font-size: 0.82rem;
+  font-weight: 760;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.heat-row strong {
-  color: color-mix(in srgb, var(--workbench-ink) 70%, var(--workbench-muted));
-  font-size: 0.78rem;
-  font-weight: 760;
-  text-align: right;
+.topic-row__meta {
+  display: flex;
+  min-width: 0;
+  gap: 6px;
+  color: var(--workbench-muted);
+  font-size: 0.7rem;
+  font-weight: 640;
+  white-space: nowrap;
 }
 
-.heat-row__bar {
+.topic-row__heat {
+  min-width: 0;
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+}
+
+.topic-row__bar {
+  width: 64px;
   height: 5px;
   overflow: hidden;
   border-radius: 999px;
   background: rgba(61, 124, 255, 0.14);
 }
 
-.heat-row__bar i {
+.topic-row__bar i {
   display: block;
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, #5aa7ff 0%, #3d7cff 100%);
   box-shadow: 0 0 14px rgba(61, 124, 255, 0.24);
+}
+
+.topic-row__heat strong {
+  color: color-mix(in srgb, var(--workbench-ink) 70%, var(--workbench-muted));
+  font-size: 0.68rem;
+  font-weight: 780;
+  white-space: nowrap;
+}
+
+.side-card__empty {
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--workbench-border-strong);
+  border-radius: 12px;
+  color: var(--workbench-muted);
+  font-size: 0.78rem;
+  font-weight: 620;
+  background: rgba(255, 255, 255, 0.28);
 }
 
 .module-empty {
