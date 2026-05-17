@@ -13,6 +13,7 @@ export interface Note {
     locked?: boolean;
     starred?: boolean;
     starredAt?: number;
+    tags: string[];
 }
 
 export interface Notebook {
@@ -40,6 +41,7 @@ interface WorkspaceNode {
     locked?: boolean;
     starred?: boolean;
     starredAt?: number;
+    tags?: string[];
 }
 
 interface WorkspaceData {
@@ -136,6 +138,52 @@ function normalizeMultilineContent(content: string): string {
     return content.replace(/\r\n/g, '\n');
 }
 
+export const MAX_TAGS_PER_NOTE = 5;
+const MAX_TAG_LENGTH = 48;
+
+export function normalizeNoteTag(value: unknown): string | null {
+    if (typeof value !== 'string') {
+        return null;
+    }
+
+    const normalized = value
+        .trim()
+        .replace(/^#+/, '')
+        .replace(/\s+/g, ' ')
+        .slice(0, MAX_TAG_LENGTH);
+
+    return normalized.length > 0 ? normalized : null;
+}
+
+export function normalizeNoteTags(value: unknown): string[] {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+
+    const tags: string[] = [];
+    const seen = new Set<string>();
+
+    for (const item of value) {
+        const tag = normalizeNoteTag(item);
+        if (!tag) {
+            continue;
+        }
+
+        const key = tag.toLocaleLowerCase();
+        if (seen.has(key)) {
+            continue;
+        }
+
+        seen.add(key);
+        tags.push(tag);
+        if (tags.length >= MAX_TAGS_PER_NOTE) {
+            break;
+        }
+    }
+
+    return tags;
+}
+
 function notifyVfsChanged() {
     window.dispatchEvent(new CustomEvent('vfs-changed'));
 }
@@ -161,6 +209,7 @@ function mapNodeToNote(node: WorkspaceNode, content: string): Note | null {
         locked: node.locked ?? false,
         starred: Boolean(node.starred),
         starredAt: node.starredAt as number | undefined,
+        tags: normalizeNoteTags(node.tags),
     };
 }
 
@@ -290,6 +339,7 @@ export const workspaceService = {
             createdAt: node.createdAt,
             updatedAt: node.updatedAt,
             locked: node.locked ?? false,
+            tags: normalizeNoteTags(node.tags),
         };
     },
 
@@ -431,6 +481,21 @@ export const workspaceService = {
 
         return {
             locked: updatedNode.locked ?? locked,
+            updatedAt: updatedNode.updatedAt,
+        };
+    },
+
+    async updateNoteTags(nodeId: string, tags: string[]): Promise<{ tags: string[]; updatedAt: number }> {
+        ensureVfsAvailable();
+
+        const updatedNode = await electronApi.vfs.updateNodeTags({
+            nodeId: normalizeNodeId(nodeId),
+            tags: normalizeNoteTags(tags),
+        });
+        notifyVfsChanged();
+
+        return {
+            tags: normalizeNoteTags(updatedNode.tags),
             updatedAt: updatedNode.updatedAt,
         };
     },

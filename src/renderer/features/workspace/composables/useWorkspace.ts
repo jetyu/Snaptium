@@ -10,6 +10,7 @@ export function useWorkspace() {
   const activeNote = computed(() => store.activeNote);
   const activeNoteId = computed(() => store.activeNoteId);
   const activeNotebookId = computed(() => store.activeNotebookId);
+  const allTags = computed(() => store.allTags);
 
   return {
     notes,
@@ -18,6 +19,7 @@ export function useWorkspace() {
     activeNote,
     activeNoteId,
     activeNotebookId,
+    allTags,
     initializeWorkspace: store.initializeWorkspace,
     selectNote: store.selectNote,
     selectNotebook: store.selectNotebook,
@@ -29,6 +31,10 @@ export function useWorkspace() {
     deleteNote: store.confirmDeleteNote,
     deleteNotebook: store.confirmDeleteNotebook,
     renameNotebook: store.renameNotebook,
+    updateNoteTags: store.updateNoteTags,
+    updateActiveNoteTags: store.updateActiveNoteTags,
+    addTagToActiveNote: store.addTagToActiveNote,
+    removeTagFromActiveNote: store.removeTagFromActiveNote,
     updateActiveContent: store.updateActiveContent,
     toggleNodeLock: store.toggleNodeLock,
     toggleNodeStar: store.toggleNodeStar,

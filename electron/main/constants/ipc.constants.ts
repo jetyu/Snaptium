@@ -91,6 +91,7 @@ export const IPC_CHANNELS = {
   VFS_SAVE_IMAGE: 'vfs:save-image',
   VFS_SHOW_NOTE_IN_FOLDER: 'vfs:show-note-in-folder',
   VFS_TOGGLE_NODE_LOCK: 'vfs:toggle-node-lock',
+  VFS_UPDATE_NODE_TAGS: 'vfs:update-node-tags',
   VFS_WRITE_CONTENT: 'vfs:write-content',
   VFS_GET_HISTORY: 'vfs:get-history',
   VFS_GET_HISTORY_CONTENT: 'vfs:get-history-content',

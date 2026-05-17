@@ -7,6 +7,7 @@
 
       <WorkbenchView v-if="activeMainView === 'workbench'" />
       <MyFavoritesView v-else-if="activeMainView === 'favorites'" />
+      <TagsView v-else-if="activeMainView === 'tags'" />
       <WorkspaceView v-else />
     </div>
   </div>
@@ -34,6 +35,7 @@ import AppSidebar from './components/AppSidebar.vue';
 import AppWindowFrame from './components/AppWindowFrame.vue';
 import WorkbenchView from './views/WorkbenchView.vue';
 import WorkspaceView from './views/WorkspaceView.vue';
+import TagsView from '@renderer/features/tags/components/TagsView.vue';
 import MyFavoritesView from '@renderer/features/favorites/components/MyFavoritesView.vue';
 import { electronApi } from '@renderer/core/bridge/electronApi';
 
@@ -73,6 +75,9 @@ async function openModule(moduleId: AppShellModuleId) {
   switch (moduleId) {
     case 'favorites':
       await setActiveMainView('favorites');
+      return;
+    case 'tags':
+      await setActiveMainView('tags');
       return;
     case 'search':
       openGlobalSearch();

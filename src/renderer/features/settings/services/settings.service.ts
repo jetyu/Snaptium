@@ -9,6 +9,7 @@ import {
 } from '@renderer/core/bridge/electronApi';
 import {
   APP_SHELL_DEFAULT_MAIN_VIEW,
+  APP_SHELL_MAX_CUSTOM_MODULES,
   normalizeAppShellMainViewId,
 } from '@renderer/app/constants/appShell.constants';
 import { switchLanguage } from '@renderer/features/i18n';
@@ -58,6 +59,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
       appShell: {
         ...baseConfig.appShell,
         customSidebarModules: [...baseConfig.appShell.customSidebarModules],
+        maxCustomSidebarModules: APP_SHELL_MAX_CUSTOM_MODULES,
       },
       workbench: sanitizeWorkbenchSettings(baseConfig.workbench),
     };
@@ -109,6 +111,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
       customSidebarModules: Array.isArray(incomingConfig.appShell?.customSidebarModules)
         ? [...incomingConfig.appShell.customSidebarModules]
         : [...baseConfig.appShell.customSidebarModules],
+      maxCustomSidebarModules: APP_SHELL_MAX_CUSTOM_MODULES,
     },
     workbench: sanitizeWorkbenchSettings({
       ...baseConfig.workbench,

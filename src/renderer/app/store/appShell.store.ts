@@ -25,7 +25,7 @@ export const useAppShellStore = defineStore('app-shell', () => {
   const { config } = storeToRefs(settingsStore);
 
   const activeMainView = computed<AppShellMainViewId>(() => config.value.appShell.activeMainView);
-  const maxCustomModules = computed(() => config.value.appShell.maxCustomSidebarModules);
+  const maxCustomModules = computed(() => APP_SHELL_MAX_CUSTOM_MODULES);
   const enabledCustomModuleIds = computed<AppShellModuleId[]>(() => {
     return sanitizeCustomModules(config.value.appShell.customSidebarModules);
   });

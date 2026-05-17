@@ -31,6 +31,7 @@ interface WorkspaceNode {
   locked: boolean;
   contentId?: string;
   fileName?: string;
+  tags?: string[];
   [key: string]: unknown;
 }
 
@@ -104,6 +105,52 @@ function assertValidUUID(value: unknown, fieldName: string): string {
 function normalizeNoteName(name: unknown): string {
   const trimmedName = assertNonEmptyString(name, 'name');
   return trimmedName.endsWith(VFS_CONSTANTS.MARKDOWN_FILE_EXT) ? trimmedName.slice(0, -VFS_CONSTANTS.MARKDOWN_FILE_EXT.length) : trimmedName;
+}
+
+const MAX_TAGS_PER_NOTE = 5;
+const MAX_TAG_LENGTH = 48;
+
+function normalizeNoteTag(value: unknown): string | null {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const normalized = value
+    .trim()
+    .replace(/^#+/, '')
+    .replace(/\s+/g, ' ')
+    .slice(0, MAX_TAG_LENGTH);
+
+  return normalized.length > 0 ? normalized : null;
+}
+
+function normalizeNoteTags(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  const tags: string[] = [];
+  const seen = new Set<string>();
+
+  for (const item of value) {
+    const tag = normalizeNoteTag(item);
+    if (!tag) {
+      continue;
+    }
+
+    const key = tag.toLocaleLowerCase();
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    tags.push(tag);
+    if (tags.length >= MAX_TAGS_PER_NOTE) {
+      break;
+    }
+  }
+
+  return tags;
 }
 
 function assertNonNegativeInteger(value: unknown, fieldName: string): number {
@@ -386,7 +433,12 @@ async function loadAllNodes(root: string): Promise<Map<string, WorkspaceNode>> {
     if (!line) continue;
     try {
       const node = JSON.parse(line) as Partial<WorkspaceNode>;
-      if (node?.id) nodes.set(node.id, node as WorkspaceNode);
+      if (node?.id) {
+        nodes.set(node.id, {
+          ...node,
+          tags: normalizeNoteTags(node.tags),
+        } as WorkspaceNode);
+      }
     } catch {
       malformedLineCount += 1;
     }
@@ -506,6 +558,7 @@ export const vfsService = {
       contentId,
       trashed: false,
       locked: false,
+      tags: [],
     };
     workspaceState.nodes.set(node.id, node);
     await persistAllNodes(root);
@@ -746,6 +799,21 @@ export const vfsService = {
     workspaceState.nodes.set(node.id, node);
     await persistAllNodes(root);
     logger.debug(`${node.locked ? 'Locked' : 'Unlocked'} ${node.type} ${node.id}`);
+    return node;
+  },
+
+  async updateNodeTags(nodeId: string, tags: string[]): Promise<WorkspaceNode> {
+    const root = await this.ensureInitialized();
+    const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);
+    const node = workspaceState.nodes.get(safeNodeId);
+    if (!node || node.trashed) throw new Error(`Node not found: ${safeNodeId}`);
+    if (node.type !== VFS_CONSTANTS.NODE_TYPE_FILE) throw new Error(`Node is not a note: ${safeNodeId}`);
+
+    node.tags = normalizeNoteTags(tags);
+    node.updatedAt = Date.now();
+    workspaceState.nodes.set(node.id, node);
+    await persistAllNodes(root);
+    logger.debug(`Updated tags for note ${node.id}`);
     return node;
   },
 

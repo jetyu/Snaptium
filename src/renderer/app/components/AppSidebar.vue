@@ -36,6 +36,7 @@ import {
   Info,
   SettingConfig,
   Star,
+  TagOne,
 } from '@icon-park/vue-next';
 import type { AppShellMainViewId, AppShellModuleDefinition, AppShellMainViewDefinition, AppShellModuleId } from '../constants/appShell.constants';
 
@@ -56,11 +57,13 @@ const { t } = useI18n();
 const mainViewIconMap = computed(() => ({
   workbench: ApplicationOne,
   workspace: NotebookOne,
+  tags: TagOne,
   favorites: Star,
 }));
 
 const moduleIconMap = computed(() => ({
   favorites: Star,
+  tags: TagOne,
   search: Search,
   settings: SettingTwo,
   trash: Delete,

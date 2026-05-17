@@ -23,6 +23,7 @@
       </div>
 
       <div v-if="activeNote" class="editor-wrapper">
+        <NoteTagBar />
         <EditorToolbar :editor-view="editorView" />
         <EditorPane ref="editorPaneRef" :model-value="activeNote.content" @update:model-value="updateActiveContent"
           @selection-change="handleSelectionChange" />
@@ -70,6 +71,7 @@ import type { EditorView } from '@codemirror/view';
 import { compileMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import WorkspaceSidebar from '@renderer/features/workspace/components/WorkspaceSidebar.vue';
 import NotebookDashboard from '@renderer/features/workspace/components/NotebookDashboard.vue';
+import NoteTagBar from '@renderer/features/workspace/components/NoteTagBar.vue';
 import { EditorPane } from '@renderer/features/editor';
 import EditorToolbar from '@renderer/features/editor/components/EditorToolbar.vue';
 import EditorStatus from '@renderer/features/editor/components/EditorStatus.vue';

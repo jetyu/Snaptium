@@ -257,6 +257,7 @@ export const useSettingsStore = defineStore('settings', () => {
         customSidebarModules: Array.isArray(newConfig.appShell?.customSidebarModules)
           ? [...newConfig.appShell.customSidebarModules]
           : [...config.value.appShell.customSidebarModules],
+        maxCustomSidebarModules: APP_SHELL_MAX_CUSTOM_MODULES,
       },
       workbench: sanitizeWorkbenchSettings({
         ...config.value.workbench,

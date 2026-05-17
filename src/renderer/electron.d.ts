@@ -13,6 +13,7 @@ interface WorkspaceNodePayload {
   locked?: boolean;
   starred?: boolean;
   starredAt?: number;
+  tags?: string[];
 }
 
 interface WorkspaceRootPayload {
@@ -254,6 +255,7 @@ declare global {
         deleteNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
         moveNode: (payload: { nodeId: string; parentId: string | null; index: number }) => Promise<WorkspaceNodePayload>;
         toggleNodeLock: (payload: { nodeId: string; locked: boolean }) => Promise<WorkspaceNodePayload>;
+        updateNodeTags: (payload: { nodeId: string; tags: string[] }) => Promise<WorkspaceNodePayload>;
         getTrashedNodes: () => Promise<WorkspaceNodePayload[]>;
         restoreNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
         permanentlyDeleteNode: (nodeId: string) => Promise<boolean>;

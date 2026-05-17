@@ -242,6 +242,7 @@ export interface WorkspaceNodePayload {
   locked?: boolean;
   starred?: boolean;
   starredAt?: number;
+  tags?: string[];
 }
 
 export interface WorkspaceRootPayload {
@@ -712,6 +713,10 @@ export const electronApi = {
 
     toggleNodeLock: (payload: { nodeId: string; locked: boolean }): Promise<WorkspaceNodePayload> => {
       return electronApi.vfs.getApi().toggleNodeLock(payload);
+    },
+
+    updateNodeTags: (payload: { nodeId: string; tags: string[] }): Promise<WorkspaceNodePayload> => {
+      return electronApi.vfs.getApi().updateNodeTags(payload);
     },
 
     getTrashedNodes: (): Promise<WorkspaceNodePayload[]> => {

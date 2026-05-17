@@ -23,6 +23,7 @@ export function registerVfsIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_DELETE_NODE);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_UPDATE_NODE_TAGS);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_GET_TRASHED_NODES);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_RESTORE_NODE);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_PERMANENTLY_DELETE_NODE);
@@ -114,6 +115,15 @@ export function registerVfsIpcHandlers() {
     });
     const data = schema.parse(payload);
     return vfsService.toggleNodeLock(data.nodeId, data.locked);
+  });
+
+  ipcMain.handle(IPC_CHANNELS.VFS_UPDATE_NODE_TAGS, (_event, payload = {}) => {
+    const schema = z.object({
+      nodeId: uuidSchema,
+      tags: z.array(z.string().min(1).max(48)).max(5),
+    });
+    const data = schema.parse(payload);
+    return vfsService.updateNodeTags(data.nodeId, data.tags);
   });
   
   ipcMain.handle(IPC_CHANNELS.VFS_GET_TRASHED_NODES, () =>

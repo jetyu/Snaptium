@@ -2,11 +2,23 @@ import { defineStore } from 'pinia';
 import { createLogger } from '@renderer/features/logger';
 import type { HistoryVersion } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
-import { workspaceService, type Note, type Notebook } from '../services/workspace.service';
+import {
+  normalizeNoteTag,
+  normalizeNoteTags,
+  workspaceService,
+  type Note,
+  type Notebook,
+} from '../services/workspace.service';
 import { WORKSPACE_CONSTANTS, type SaveStatus } from '../constants/workspace.constants';
 
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
 const logger = createLogger('Workspace Store');
+
+export interface WorkspaceTagSummary {
+  name: string;
+  count: number;
+  updatedAt: number;
+}
 
 function getDescendantIds(notes: Note[], notebooks: Notebook[], parentId: string): string[] {
   const childNotes = notes.filter((note) => note.parentId === parentId).map((note) => note.id);
@@ -70,6 +82,30 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     sortedNotebooks: (state): Notebook[] =>
       [...state.notebooks].sort(compareNodeOrder),
+
+    allTags: (state): WorkspaceTagSummary[] => {
+      const tagMap = new Map<string, WorkspaceTagSummary>();
+
+      for (const note of state.notes) {
+        for (const tag of normalizeNoteTags(note.tags)) {
+          const key = tag.toLocaleLowerCase();
+          const existing = tagMap.get(key);
+
+          if (existing) {
+            existing.count += 1;
+            existing.updatedAt = Math.max(existing.updatedAt, note.updatedAt);
+          } else {
+            tagMap.set(key, {
+              name: tag,
+              count: 1,
+              updatedAt: note.updatedAt,
+            });
+          }
+        }
+      }
+
+      return [...tagMap.values()].sort((left, right) => left.name.localeCompare(right.name));
+    },
   },
 
   actions: {
@@ -206,6 +242,67 @@ export const useWorkspaceStore = defineStore('workspace', {
         const message = getErrorMessage(err);
         logger.error(`Failed to rename notebook ${id}: ${message}`);
       }
+    },
+
+    async updateNoteTags(id: string, tags: string[]): Promise<void> {
+      const note = this.notes.find((candidate) => candidate.id === id);
+      if (!note) {
+        logger.warn(`Cannot update tags for note ${id}: note not found.`);
+        return;
+      }
+
+      const normalizedTags = normalizeNoteTags(tags);
+      const currentTags = normalizeNoteTags(note.tags);
+      const isUnchanged =
+        normalizedTags.length === currentTags.length &&
+        normalizedTags.every((tag, index) => tag === currentTags[index]);
+
+      if (isUnchanged) {
+        note.tags = currentTags;
+        return;
+      }
+
+      try {
+        const result = await workspaceService.updateNoteTags(id, normalizedTags);
+        note.tags = result.tags;
+        note.updatedAt = result.updatedAt;
+        logger.info(`Updated tags for note: ${id}`);
+      } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        logger.error(`Failed to update tags for note ${id}: ${message}`);
+      }
+    },
+
+    async updateActiveNoteTags(tags: string[]): Promise<void> {
+      if (!this.activeNoteId) {
+        return;
+      }
+
+      await this.updateNoteTags(this.activeNoteId, tags);
+    },
+
+    async addTagToActiveNote(tagName: string): Promise<void> {
+      const note = this.activeNote;
+      const tag = normalizeNoteTag(tagName);
+      if (!note || !tag) {
+        return;
+      }
+
+      await this.updateNoteTags(note.id, [...normalizeNoteTags(note.tags), tag]);
+    },
+
+    async removeTagFromActiveNote(tagName: string): Promise<void> {
+      const note = this.activeNote;
+      const tag = normalizeNoteTag(tagName);
+      if (!note || !tag) {
+        return;
+      }
+
+      const tagKey = tag.toLocaleLowerCase();
+      await this.updateNoteTags(
+        note.id,
+        normalizeNoteTags(note.tags).filter((item) => item.toLocaleLowerCase() !== tagKey)
+      );
     },
 
     async updateActiveContent(content: string) {

@@ -50,6 +50,8 @@ const electronAPI = Object.freeze({
       ipcRenderer.invoke(IPC_CHANNELS.VFS_MOVE_NODE, payload),
     toggleNodeLock: (payload: { nodeId: string; locked: boolean }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK, payload),
+    updateNodeTags: (payload: { nodeId: string; tags: string[] }) =>
+      ipcRenderer.invoke(IPC_CHANNELS.VFS_UPDATE_NODE_TAGS, payload),
     getTrashedNodes: () => ipcRenderer.invoke(IPC_CHANNELS.VFS_GET_TRASHED_NODES),
     restoreNode: (nodeId: string) => ipcRenderer.invoke(IPC_CHANNELS.VFS_RESTORE_NODE, nodeId),
     permanentlyDeleteNode: (nodeId: string) => ipcRenderer.invoke(IPC_CHANNELS.VFS_PERMANENTLY_DELETE_NODE, nodeId),
