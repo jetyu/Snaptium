@@ -477,6 +477,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
 
       logger.info(`Deleted notebook and descendants: ${id} (Total items removed: ${idsToRemove.size})`);
+      window.dispatchEvent(new CustomEvent('vfs-changed'));
     },
 
     async confirmDeleteNotebook(id: string): Promise<boolean> {
