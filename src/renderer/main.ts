@@ -3,7 +3,7 @@ import { createPinia } from 'pinia';
 import App from './app/App.vue';
 import { i18n } from '@renderer/features/i18n';
 import './styles/main.css';
-import { registerRendererGlobalErrorHandlers } from '@renderer/features/error';
+import { registerRendererGlobalErrorHandlers } from '@renderer/core/error';
 import { createLogger } from '@renderer/features/logger';
 import { serializeError } from '@shared/utils/error.utils';
 import 'katex/dist/katex.min.css';
