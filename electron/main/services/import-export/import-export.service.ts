@@ -4,7 +4,7 @@ import { sppxExportService } from './sppx-export.service.js';
 import { sppxImportService } from './sppx-import.service.js';
 import { markdownExportService } from './markdown-export.service.js';
 import { markdownImportService } from './markdown-import.service.js';
-import { getErrorMessage } from '../../utils/error.utils.js';
+import { getErrorMessage } from '../../services/error.service.js';
 
 const logger = loggerService.createLogger('Main:Import Export Service');
 type AppSettings = Awaited<ReturnType<typeof settingsService.loadConfig>>;

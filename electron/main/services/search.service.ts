@@ -1,6 +1,6 @@
 import { vfsService } from './vfs.service.js';
 import { loggerService } from './logger.service.js';
-import { getErrorMessage } from '../utils/error.utils.js';
+import { getErrorMessage } from '../services/error.service.js';
 
 const logger = loggerService.createLogger('Main:Search Service');
 

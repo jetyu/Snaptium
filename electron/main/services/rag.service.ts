@@ -2,7 +2,7 @@ import { vectorStoreService } from './vector-store.service.js';
 import { generateEmbeddingsBatch } from './embedding.service.js';
 import { chunkMarkdown } from '../utils/text-chunker.js';
 import { loggerService } from './logger.service.js';
-import { getErrorMessage } from '../utils/error.utils.js';
+import { getErrorMessage } from '../services/error.service.js';
 
 const logger = loggerService.createLogger('Main:RAG Service');
 

@@ -5,7 +5,7 @@ import { loggerService } from './logger.service.js';
 import { settingsService } from './settings.service.js';
 import { trayService } from './tray.service.js';
 import { UPDATER_CONSTANTS } from '../constants/updater.constants.js';
-import { getErrorCode, getErrorMessage } from '../utils/error.utils.js';
+import { getErrorCode, getErrorMessage } from '../services/error.service.js';
 
 const logger = loggerService.createLogger('Software Updater');
 

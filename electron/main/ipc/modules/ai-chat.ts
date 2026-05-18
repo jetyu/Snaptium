@@ -4,7 +4,7 @@ import { remoteAiService } from '../../services/remote-ai.service.js';
 import { aiConfigService } from '../../services/ai-config.service.js';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
-import { getErrorMessage } from '../../utils/error.utils.js';
+import { getErrorMessage } from '../../services/error.service.js';
 
 const logger = loggerService.createLogger('Electron:AI Chat IPC');
 

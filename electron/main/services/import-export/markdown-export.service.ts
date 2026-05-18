@@ -15,7 +15,7 @@ import {
   replaceMarkdownImageDestinations,
   sanitizeFsName,
 } from './markdown.utils.js';
-import { getErrorMessage } from '../../utils/error.utils.js';
+import { getErrorMessage } from '../../services/error.service.js';
 
 const logger = loggerService.createLogger('Main:Markdown Export Service');
 

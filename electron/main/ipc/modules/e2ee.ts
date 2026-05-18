@@ -5,7 +5,7 @@ import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { ACCESS_CONTROL_TIMEOUT_OPTIONS, type AccessControlTimeout } from '../../../shared/e2ee.constants.js';
 import { keyManagerService } from '../../services/key-manager.service.js';
 import { accessControlService } from '../../services/access-control.service.js';
-import { getErrorCode, getErrorMessage } from '../../utils/error.utils.js';
+import { getErrorCode, getErrorMessage } from '../../services/error.service.js';
 
 function serializeE2eeError(error: unknown): {
   success: false;

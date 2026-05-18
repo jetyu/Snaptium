@@ -2,7 +2,7 @@ import * as lancedb from '@lancedb/lancedb';
 import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { loggerService } from './logger.service.js';
-import { getErrorMessage } from '../utils/error.utils.js';
+import { getErrorMessage } from '../services/error.service.js';
 
 const logger = loggerService.createLogger('Electron:Vector Store Service');
 

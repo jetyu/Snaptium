@@ -7,9 +7,20 @@ type JsonObject = { [key: string]: JsonValue };
 type VoidCallback = () => void;
 type DataCallback<T = unknown> = (data: T) => void;
 
+interface SaveFilePayload { filePath: string | null; content: string; }
+interface WorkspaceContextMenuItemPayload { action?: string | null; labelKey?: string; label?: string; type?: 'normal' | 'separator' | 'submenu'; enabled?: boolean; submenu?: WorkspaceContextMenuItemPayload[]; }
+interface WorkspaceContextMenuPayload { nodeId: string; nodeType?: string; isRoot?: boolean; items?: WorkspaceContextMenuItemPayload[]; }
+interface EditorContextMenuPayload { selectedText?: string; hasSelection?: boolean; canPaste?: boolean; }
+interface AiSourceTestConnectionPayload { aiEndpoint: string; aiApiKey: string; aiModel: string; }
+type SyncProviderConfigPayload = JsonObject & { provider: string };
+interface SyncRunPayload { config: JsonObject; trigger: 'manual' | 'timer' | 'save'; }
+interface ShortcutKeybindingPayload { commandId: string; key: string; when?: string | null; }
+type RagQueryPayload = JsonObject;
+type AiChatPayload = JsonObject;
+
 const electronAPI = Object.freeze({
   openFile: () => ipcRenderer.invoke(IPC_CHANNELS.OPEN_FILE),
-  saveFile: (payload: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.SAVE_FILE, payload),
+  saveFile: (payload: SaveFilePayload) => ipcRenderer.invoke(IPC_CHANNELS.SAVE_FILE, payload),
   logger: Object.freeze({
     log: (payload: { level: string; source: string; message: string; context?: JsonValue }) =>
       ipcRenderer.send(IPC_CHANNELS.LOGGER_LOG, payload),
@@ -72,12 +83,12 @@ const electronAPI = Object.freeze({
     searchNotes: (query: string) => ipcRenderer.invoke(IPC_CHANNELS.SEARCH_NOTES, query),
   }),
   workspace: Object.freeze({
-    showContextMenu: (payload: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, payload),
+    showContextMenu: (payload: WorkspaceContextMenuPayload) => ipcRenderer.invoke(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, payload),
     getDailyWallpaper: (payload?: { nextArchive?: boolean; currentArchiveIndex?: number }) =>
       ipcRenderer.invoke(IPC_CHANNELS.APP_GET_WALLPAPER, payload),
   }),
   editor: Object.freeze({
-    showContextMenu: (payload: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.EDITOR_SHOW_CONTEXT_MENU, payload),
+    showContextMenu: (payload: EditorContextMenuPayload) => ipcRenderer.invoke(IPC_CHANNELS.EDITOR_SHOW_CONTEXT_MENU, payload),
     readClipboard: () => ipcRenderer.invoke(IPC_CHANNELS.EDITOR_READ_CLIPBOARD),
     writeClipboard: (text: string) => ipcRenderer.invoke(IPC_CHANNELS.EDITOR_WRITE_CLIPBOARD, text),
   }),
@@ -124,20 +135,20 @@ const electronAPI = Object.freeze({
     importMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_MARKDOWN),
   }),
   aiSource: Object.freeze({
-    testConnection: (config: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),
+    testConnection: (config: AiSourceTestConnectionPayload) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),
   }),
   sync: Object.freeze({
-    testConnection: (config: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.SYNC_TEST_CONNECTION, config),
-    run: (payload: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.SYNC_RUN, payload),
+    testConnection: (config: SyncProviderConfigPayload) => ipcRenderer.invoke(IPC_CHANNELS.SYNC_TEST_CONNECTION, config),
+    run: (payload: SyncRunPayload) => ipcRenderer.invoke(IPC_CHANNELS.SYNC_RUN, payload),
     getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.SYNC_GET_STATUS),
-    restoreRemoteKeySlots: (config: Record<string, unknown>) =>
+    restoreRemoteKeySlots: (config: SyncProviderConfigPayload) =>
       ipcRenderer.invoke(IPC_CHANNELS.SYNC_RESTORE_REMOTE_KEY_SLOTS, config),
   }),
   shortcuts: Object.freeze({
     getCommands: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS),
     getCommandsByCategory: (category: string) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS_BY_CATEGORY, category),
     loadKeybindings: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_LOAD_KEYBINDINGS),
-    saveKeybindings: (keybindings: Array<Record<string, unknown>>) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_SAVE_KEYBINDINGS, keybindings),
+    saveKeybindings: (keybindings: ShortcutKeybindingPayload[]) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_SAVE_KEYBINDINGS, keybindings),
     addKeybinding: (payload: { commandId: string; key: string; when?: string | null }) =>
       ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_ADD_KEYBINDING, payload),
     removeKeybinding: (payload: { commandId: string; key: string }) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_REMOVE_KEYBINDING, payload),
@@ -149,20 +160,20 @@ const electronAPI = Object.freeze({
     normalizeKeybinding: (key: string) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_NORMALIZE_KEYBINDING, key),
     getKeybindingsForCommand: (commandId: string) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_KEYBINDINGS_FOR_COMMAND, commandId),
     exportKeybindings: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_EXPORT_KEYBINDINGS),
-    importKeybindings: (config: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_IMPORT_KEYBINDINGS, config),
+    importKeybindings: (config: JsonObject) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_IMPORT_KEYBINDINGS, config),
   }),
   rag: Object.freeze({
     initialize: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_INITIALIZE),
-    indexNote: (request: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_NOTE, request),
-    rebuildIndex: (request: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.RAG_REBUILD_INDEX, request),
-    searchText: (request: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.RAG_SEARCH_TEXT, request),
-    askQuestion: (payload: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.RAG_ASK_QUESTION, payload),
+    indexNote: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_NOTE, request),
+    rebuildIndex: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_REBUILD_INDEX, request),
+    searchText: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_SEARCH_TEXT, request),
+    askQuestion: (payload: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_ASK_QUESTION, payload),
     deleteNoteIndex: (noteId: string) => ipcRenderer.invoke(IPC_CHANNELS.RAG_DELETE_NOTE_INDEX, noteId),
     getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_STATUS),
   }),
   aiChat: Object.freeze({
-    generate: (payload: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT_GENERATE, payload),
-    generateCompletion: (payload: Record<string, unknown>) => ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT_GENERATE_COMPLETION, payload),
+    generate: (payload: AiChatPayload) => ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT_GENERATE, payload),
+    generateCompletion: (payload: AiChatPayload) => ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT_GENERATE_COMPLETION, payload),
   }),
   updater: Object.freeze({
     check: (silent: boolean) => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_CHECK, silent),

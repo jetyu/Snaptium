@@ -12,6 +12,7 @@ import { updaterService } from './services/updater.service.js';
 import { IPC_CHANNELS } from './constants/ipc.constants.js';
 import { vfsService } from './services/vfs.service.js';
 import { accessControlService } from './services/access-control.service.js';
+import { errorService } from './services/error.service.js';
 
 const WORKSPACE_RESOURCE_SCHEME = 'note-resource';
 
@@ -92,6 +93,8 @@ function registerPreviewSecurityPolicies(electronSession: Electron.Session): voi
   });
 }
 
+errorService.registerGlobalErrorHandlers();
+
 app.whenReady().then(async () => {
   registerWorkspaceResourceProtocol();
   const preferences = await settingsService.loadConfig();
@@ -148,4 +151,3 @@ app.on(IPC_CHANNELS.ELECTRON_BEFORE_QUIT, () => {
   trayService.destroy();
   updaterService.destroy();
 });
-

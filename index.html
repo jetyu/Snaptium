@@ -7,14 +7,17 @@
   <meta http-equiv="Content-Security-Policy" content="
   default-src 'self'; 
   script-src 'self'; 
-  style-src 'self' 'unsafe-inline'; 
-  img-src 'self' data: blob: note-resource: https: http://127.0.0.1:5173;
+  style-src 'self'; 
+  img-src 'self' data: blob: note-resource: https:;
   font-src 'self' data:;
   connect-src 'self'; 
   object-src 'none';
   base-uri 'self';
   form-action 'none';
-  frame-src 'none';" />
+  frame-src 'none';
+  frame-ancestors 'none';
+  upgrade-insecure-requests;
+  block-all-mixed-content;" />
   <title>Snaptium</title>
 </head>
 

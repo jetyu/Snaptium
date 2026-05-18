@@ -68,14 +68,21 @@ export const previewPolicyService = {
 
   buildContentSecurityPolicy({ isDev = false }: { isDev?: boolean } = {}): string {
     const imageSources = ["'self'", 'data:', 'blob:', 'note-resource:', 'https:'];
+
+    // Allow full remote image loading mode to include http origins by CSP as well,
+    // otherwise runtime policy and CSP would conflict.
+    if (currentPreviewAppearance.remoteImageMode === 'all') {
+      imageSources.push('http:');
+    }
+
     if (isDev) {
       imageSources.push(DEV_SERVER_IMAGE_ORIGIN);
     }
 
-    return [
+    const cspDirectives = [
       "default-src 'self'",
       "script-src 'self'",
-      "style-src 'self' 'unsafe-inline'",
+      "style-src 'self'",
       `img-src ${imageSources.join(' ')}`,
       "font-src 'self' data:",
       "connect-src 'self'",
@@ -83,7 +90,14 @@ export const previewPolicyService = {
       "base-uri 'self'",
       "form-action 'none'",
       "frame-src 'none'",
-    ].join('; ');
+      "frame-ancestors 'none'",
+    ];
+
+    if (currentPreviewAppearance.remoteImageMode !== 'all') {
+      cspDirectives.push('upgrade-insecure-requests', 'block-all-mixed-content');
+    }
+
+    return cspDirectives.join('; ');
   },
 
   isAllowedRemoteImageRequest(url: unknown, { isDev = false }: { isDev?: boolean } = {}): boolean {

@@ -15,7 +15,7 @@ import { writeUtf8 } from './file.service.js';
 import { loggerService } from './logger.service.js';
 import { historyService } from './history.service.js';
 import { settingsService } from './settings.service.js';
-import { getErrorMessage } from '../utils/error.utils.js';
+import { getErrorMessage } from '../services/error.service.js';
 
 const logger = loggerService.createLogger('Electron:VFS Service');
 

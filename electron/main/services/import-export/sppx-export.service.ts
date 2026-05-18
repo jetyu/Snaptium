@@ -6,7 +6,7 @@ import { VFS_CONSTANTS } from '../../constants/vfs.constants.js';
 import { loggerService } from '../logger.service.js';
 import { vfsService } from '../vfs.service.js';
 import { createZipArchiveFromDirectory } from './zip.utils.js';
-import { getErrorMessage } from '../../utils/error.utils.js';
+import { getErrorMessage } from '../../services/error.service.js';
 
 const logger = loggerService.createLogger('Main:SPPX Export Service');
 const PACKAGE_EXTENSIONS = new Set(['.nwp', '.sppx']);

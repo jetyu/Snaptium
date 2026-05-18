@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { syncService } from '../../services/sync/sync.service.js';
 import { SYNC_INTERVALS, SYNC_PROVIDERS, SYNC_TRIGGERS } from '../../../shared/sync.constants.js';
-import { getErrorCode, getErrorMessage } from '../../utils/error.utils.js';
+import { getErrorCode, getErrorMessage } from '../../services/error.service.js';
 
 const providerSchema = z.enum([SYNC_PROVIDERS.WEBDAV, SYNC_PROVIDERS.OSS_S3]);
 const intervalSchema = z.union([

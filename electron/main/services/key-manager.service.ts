@@ -10,7 +10,7 @@ import {
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { loggerService } from './logger.service.js';
 import { cryptoService, type KeySlots, type WrappedKey } from './crypto.service.js';
-import { getErrorCode, getErrorMessage } from '../utils/error.utils.js';
+import { getErrorCode, getErrorMessage } from '../services/error.service.js';
 
 const logger = loggerService.createLogger('Electron:Key Manager');
 const E2EE_ERROR_CODE_SET = new Set<E2eeErrorCode>(

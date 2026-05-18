@@ -4,7 +4,7 @@ import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { loggerService } from './logger.service.js';
 import { writeUtf8 } from './file.service.js';
 import { formatSnapshotFilename, filenameToTimestamp } from '../utils/formatTools.js';
-import { getErrorMessage } from '../utils/error.utils.js';
+import { getErrorMessage } from '../services/error.service.js';
 
 const historyLogger = loggerService.createLogger('Electron:History Service');
 
