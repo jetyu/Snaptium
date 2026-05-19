@@ -1,7 +1,12 @@
 <template>
   <div class="favorites-dashboard panel">
     <header class="dashboard-header">
-      <h1 class="dashboard-title">{{ $t('favorites.listTitle') }}</h1>
+      <div class="dashboard-title-wrap">
+        <span class="dashboard-title-icon">
+          <Star theme="outline" :size="16" />
+        </span>
+        <h1 class="dashboard-title">{{ $t('favorites.listTitle') }}</h1>
+      </div>
     </header>
 
     <div class="dashboard-content">
@@ -199,6 +204,23 @@ async function jumpToWorkspace(id: string, type: 'note' | 'notebook') {
   font-size: 1.1rem;
   font-weight: 600;
   color: var(--text);
+}
+
+.dashboard-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dashboard-title-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, #f59e0b 78%, var(--text));
+  background: color-mix(in srgb, #f59e0b 14%, var(--panel));
 }
 
 .dashboard-content {

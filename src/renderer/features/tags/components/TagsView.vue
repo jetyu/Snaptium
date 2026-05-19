@@ -2,7 +2,12 @@
   <div class="tags-view panel">
     <aside class="tags-view__sidebar">
       <header class="tags-view__header">
-        <h1 class="tags-view__title">{{ t('tags.title') }}</h1>
+        <div class="tags-view__title-wrap">
+          <span class="tags-view__title-icon">
+            <TagOne theme="outline" :size="16" />
+          </span>
+          <h1 class="tags-view__title">{{ t('tags.title') }}</h1>
+        </div>
       </header>
 
       <div class="tags-view__search">
@@ -220,6 +225,23 @@ watch(
   color: var(--text);
 }
 
+.tags-view__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tags-view__title-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--accent) 82%, var(--text));
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+}
+
 .tags-view__title-stack {
   min-width: 0;
   display: flex;
@@ -227,8 +249,8 @@ watch(
 }
 
 .tags-view__title {
-  font-size: 1rem;
-  font-weight: 650;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .tags-view__search {
