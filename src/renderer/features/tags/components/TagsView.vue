@@ -28,7 +28,7 @@
         <button type="button" class="tags-view__filter" :class="{ 'is-active': selectedFilter.kind === 'untagged' }"
           @click="selectedFilter = { kind: 'untagged' }">
           <span class="tags-view__filter-icon">
-            <TagOne theme="outline" :size="15" />
+            <TagOne theme="outline" :size="16" />
           </span>
           <span class="tags-view__filter-name">{{ t('tags.untagged') }}</span>
           <span class="tags-view__filter-count">{{ untaggedNotes.length }}</span>
@@ -52,6 +52,7 @@
     <main class="tags-view__main">
       <header class="tags-view__main-header">
         <div class="tags-view__title-stack">
+          <TagOne theme="outline" :size="16" />
           <h2 class="tags-view__heading">{{ t('tags.notesTitle', { selectedTitle: selectedTitle }) }}
           </h2>
         </div>
@@ -73,6 +74,12 @@
                   <span class="tags-view__note-date">{{ formatNoteDate(note.updatedAt) }}</span>
                 </div>
                 <p class="tags-view__note-preview">{{ getNotePreview(note.content) }}</p>
+                <div v-if="normalizeNoteTags(note.tags).length > 0" class="tags-view__note-tags">
+                  <span v-for="tag in normalizeNoteTags(note.tags)" :key="`${note.id}-${tag}`"
+                    class="tags-view__note-tag">
+                    #{{ tag }}
+                  </span>
+                </div>
               </div>
             </button>
           </div>
@@ -245,7 +252,9 @@ watch(
 .tags-view__title-stack {
   min-width: 0;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
 }
 
 .tags-view__title {
@@ -412,7 +421,7 @@ watch(
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  color: var(--text-muted);
+  color: color-mix(in srgb, #3b82f6 78%, var(--text));
 }
 
 .tags-view__note-body {
@@ -453,6 +462,27 @@ watch(
   -webkit-box-orient: vertical;
   font-size: 0.82rem;
   line-height: 1.45;
+}
+
+.tags-view__note-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.tags-view__note-tag {
+  max-width: 180px;
+  padding: 2px 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 78%, transparent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  line-height: 1.3;
 }
 
 .tags-view__empty,
