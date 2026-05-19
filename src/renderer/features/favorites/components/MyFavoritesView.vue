@@ -49,7 +49,7 @@
               <td class="col-name">{{ item.nameOrTitle }}</td>
               <td class="col-type">
                 <span v-if="item.kind === 'notebook'" class="type-badge type-notebook">{{ $t('favorites.typeNotebook')
-                  }}</span>
+                }}</span>
                 <span v-else class="type-badge type-note">{{ $t('favorites.typeNote') }}</span>
               </td>
               <td class="col-location">
@@ -194,7 +194,7 @@ async function jumpToWorkspace(id: string, type: 'note' | 'notebook') {
   min-height: var(--col-header-h, 60px);
   display: flex;
   align-items: center;
-  padding: 0 32px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--panel-border);
   background: var(--panel);
 }
@@ -219,8 +219,8 @@ async function jumpToWorkspace(id: string, type: 'note' | 'notebook') {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in srgb, #f59e0b 78%, var(--text));
-  background: color-mix(in srgb, #f59e0b 14%, var(--panel));
+  color: color-mix(in srgb, #3b82f6 78%, var(--text));
+  background: color-mix(in srgb, #3b82f6 14%, var(--panel));
 }
 
 .dashboard-content {
@@ -376,13 +376,13 @@ async function jumpToWorkspace(id: string, type: 'note' | 'notebook') {
 
 .action-btn:hover {
   transform: translateY(-1px);
-  background: color-mix(in srgb, #f59e0b 12%, var(--panel));
-  color: #d97706;
+  background: color-mix(in srgb, #3b82f6 12%, var(--panel));
+  color: #2563eb;
 }
 
 .action-btn.is-active {
-  background: color-mix(in srgb, #f59e0b 14%, var(--panel));
-  color: #d97706;
+  background: color-mix(in srgb, #3b82f6 14%, var(--panel));
+  color: #2563eb;
 }
 
 .favorites-empty {
