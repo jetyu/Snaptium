@@ -273,7 +273,7 @@
   "label.previewAllowHtml": "HTML标签",
   "label.previewAllowInlineSvg": "内联图标",
   "label.previewFont": "字体",
-  "label.previewFontSize": "字体大小",
+  "label.previewFontSize": "字号",
   "label.previewRemoteImages": "远程图片",
   "label.previewTrustedSources": "受信任远程图片地址",
   "label.ragAutoIndex": "自动索引",

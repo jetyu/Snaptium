@@ -41,7 +41,6 @@
             @change="handleStartupViewChange">
             <option value="workbench">{{ t('option.startup.workbench') }}</option>
             <option value="workspace">{{ t('option.startup.workspace') }}</option>
-            <option value="tags">{{ t('option.startup.tags') }}</option>
           </select>
         </label>
       </section>
