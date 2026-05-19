@@ -418,6 +418,8 @@
   "placeholder.aiModel": "例如: deepseek-chat",
   "placeholder.hostName": "填写主域名（如 amazonaws.com）将自动信任其所有子域名",
   "placeholder.sourceName": "例如：我的deepseek",
+  "placeholder.hidePassword": "隐藏密码",
+  "placeholder.showPassword": "显示密码",
   "pref.pane.accessControl": "访问控制",
   "pref.pane.aiAssistant": "智能写作",
   "pref.pane.aiRAG": "知识库(Beta)",

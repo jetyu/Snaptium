@@ -39,7 +39,7 @@
         <p class="setting-description">{{ t('text.webdavPassword') }}</p>
       </div>
       <div class="input-container">
-        <input type="password" class="settings-input" :value="settingsStore.config.sync.webdav.password"
+        <PasswordInput :value="settingsStore.config.sync.webdav.password" autocomplete="off"
           @change="handleFieldChange('password', $event)" />
       </div>
     </section>
@@ -49,6 +49,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../../store/settings.store';
+import PasswordInput from '../../PasswordInput.vue';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();

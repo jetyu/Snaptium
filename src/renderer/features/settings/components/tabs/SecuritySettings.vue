@@ -102,13 +102,13 @@
               <div class="security-inline-form">
                 <div class="security-input-group">
                   <label class="setting-label">{{ t('e2ee.enterPassword') }}</label>
-                  <input v-model="setupPassword" type="password" class="settings-input"
-                    :placeholder="t('e2ee.enterPassword')" autocomplete="new-password" />
+                  <PasswordInput v-model="setupPassword" :placeholder="t('e2ee.enterPassword')"
+                    autocomplete="new-password" />
                 </div>
                 <div class="security-input-group">
                   <label class="setting-label">{{ t('e2ee.confirmPassword') }}</label>
-                  <input v-model="setupConfirmPassword" type="password" class="settings-input"
-                    :placeholder="t('e2ee.confirmPassword')" autocomplete="new-password" />
+                  <PasswordInput v-model="setupConfirmPassword" :placeholder="t('e2ee.confirmPassword')"
+                    autocomplete="new-password" />
                 </div>
               </div>
             </template>
@@ -119,8 +119,8 @@
                   <label class="setting-label">{{ t('e2ee.enterPassword') }}</label>
                   <p class="setting-description" style="margin-bottom: 0.5rem;">{{
                     t('e2ee.recoveryKey.regenerateVerifyDesc') }}</p>
-                  <input v-model="unlockPassword" type="password" class="settings-input"
-                    :placeholder="t('e2ee.enterPassword')" autocomplete="current-password"
+                  <PasswordInput v-model="unlockPassword" :placeholder="t('e2ee.enterPassword')"
+                    autocomplete="current-password"
                     @keyup.enter="handleSubmit" />
                 </div>
               </div>
@@ -135,13 +135,13 @@
                 </div>
                 <div class="security-input-group">
                   <label class="setting-label">{{ t('e2ee.newPassword') }}</label>
-                  <input v-model="changeNewPassword" type="password" class="settings-input"
-                    :placeholder="t('e2ee.newPassword')" autocomplete="new-password" />
+                  <PasswordInput v-model="changeNewPassword" :placeholder="t('e2ee.newPassword')"
+                    autocomplete="new-password" />
                 </div>
                 <div class="security-input-group">
                   <label class="setting-label">{{ t('e2ee.confirmPassword') }}</label>
-                  <input v-model="changeConfirmPassword" type="password" class="settings-input"
-                    :placeholder="t('e2ee.confirmPassword')" autocomplete="new-password" />
+                  <PasswordInput v-model="changeConfirmPassword" :placeholder="t('e2ee.confirmPassword')"
+                    autocomplete="new-password" />
                 </div>
               </div>
             </template>
@@ -149,18 +149,18 @@
               <div class="security-inline-form">
                 <div class="security-input-group">
                   <label class="setting-label">{{ t('e2ee.oldPassword') }}</label>
-                  <input v-model="changeOldPassword" type="password" class="settings-input"
-                    :placeholder="t('e2ee.oldPassword')" autocomplete="current-password" />
+                  <PasswordInput v-model="changeOldPassword" :placeholder="t('e2ee.oldPassword')"
+                    autocomplete="current-password" />
                 </div>
                 <div class="security-input-group">
                   <label class="setting-label">{{ t('e2ee.newPassword') }}</label>
-                  <input v-model="changeNewPassword" type="password" class="settings-input"
-                    :placeholder="t('e2ee.newPassword')" autocomplete="new-password" />
+                  <PasswordInput v-model="changeNewPassword" :placeholder="t('e2ee.newPassword')"
+                    autocomplete="new-password" />
                 </div>
                 <div class="security-input-group">
                   <label class="setting-label">{{ t('e2ee.confirmPassword') }}</label>
-                  <input v-model="changeConfirmPassword" type="password" class="settings-input"
-                    :placeholder="t('e2ee.confirmPassword')" autocomplete="new-password" />
+                  <PasswordInput v-model="changeConfirmPassword" :placeholder="t('e2ee.confirmPassword')"
+                    autocomplete="new-password" />
                 </div>
               </div>
             </template>
@@ -197,6 +197,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { systemDialog } from '@renderer/features/settings/services/system-dialog.service';
+import PasswordInput from '../PasswordInput.vue';
 import {
   E2eeUnlockModule,
   securityService,

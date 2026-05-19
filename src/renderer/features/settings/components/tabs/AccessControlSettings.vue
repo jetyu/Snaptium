@@ -82,8 +82,8 @@
           <div class="security-inline-form">
             <div class="security-input-group">
               <label class="setting-label">{{ t('e2ee.accessControl.unlockPassword') }}</label>
-              <input v-model="accessControlUnlockPassword" type="password" class="settings-input"
-                :placeholder="t('e2ee.accessControl.unlockPassword')" autocomplete="current-password"
+              <PasswordInput v-model="accessControlUnlockPassword" :placeholder="t('e2ee.accessControl.unlockPassword')"
+                autocomplete="current-password"
                 @keyup.enter="handleSubmit" />
             </div>
           </div>
@@ -112,6 +112,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ACCESS_CONTROL_TIMEOUT_OPTIONS, type AccessControlTimeout } from '@shared/e2ee.constants';
 import { systemDialog } from '@renderer/features/settings/services/system-dialog.service';
+import PasswordInput from '../PasswordInput.vue';
 import {
   securityService,
   normalizeSecurityError,

@@ -61,7 +61,7 @@
         <p class="setting-description">{{ t('text.ossSecretKey') }}</p>
       </div>
       <div class="input-container">
-        <input type="password" class="settings-input" :value="settingsStore.config.sync.ossS3.secretAccessKey"
+        <PasswordInput :value="settingsStore.config.sync.ossS3.secretAccessKey" autocomplete="off"
           @change="handleFieldChange('secretAccessKey', $event)" />
       </div>
     </section>
@@ -71,6 +71,7 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../../store/settings.store';
+import PasswordInput from '../../PasswordInput.vue';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();

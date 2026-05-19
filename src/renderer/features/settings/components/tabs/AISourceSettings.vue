@@ -65,8 +65,7 @@
         <div class="source-form-group">
           <label class="setting-label">{{ t('label.aiApiKey') }} <span class="required-mark">{{ t('label.starSign')
           }}</span></label>
-          <input v-model="newSource.apiKey" type="password" class="settings-input"
-            :placeholder="t('placeholder.aiAPIKey')" />
+          <PasswordInput v-model="newSource.apiKey" :placeholder="t('placeholder.aiAPIKey')" autocomplete="off" />
         </div>
         <div class="form-actions-row">
           <div class="buttons">
@@ -120,6 +119,7 @@ import { systemDialog } from '../../services/system-dialog.service';
 import { createLogger } from '../../../logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { Plus, Light, Delete, Edit } from '@icon-park/vue-next';
+import PasswordInput from '../PasswordInput.vue';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
