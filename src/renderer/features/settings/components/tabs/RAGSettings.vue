@@ -273,6 +273,11 @@ const handleRebuildIndex = async () => {
   }
 
   try {
+    const rebuildMode = await settingsService.confirmRagRebuildMode();
+    if (rebuildMode === 'cancel') {
+      return;
+    }
+
     const notes = getNotesForIndexing();
 
     if (notes.length === 0) {
@@ -280,7 +285,7 @@ const handleRebuildIndex = async () => {
       return;
     }
 
-    await rebuildIndex(notes);
+    await rebuildIndex(notes, 'manual', rebuildMode === 'full');
     await refreshStatus();
   } catch (error) {
     ragSettingsLogger.error(`Failed to rebuild index: ${getErrorMessage(error)}`);

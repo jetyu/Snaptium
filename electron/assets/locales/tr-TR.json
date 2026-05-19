@@ -37,7 +37,7 @@
   "button.export": "Dışa Aktar",
   "button.import": "İçe Aktar",
   "button.openLogFolder": "Günlük Klasörü",
-  "button.rebuildIndex": "Dizini Yeniden Oluştur",
+  "button.IncrementalRebuildIndex": "Dizini Yeniden Oluştur",
   "button.reset": "Sıfırla",
   "button.syncNow": "Şimdi Senkronize Et",
   "button.syncing": "Senkronize ediliyor...",

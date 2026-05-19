@@ -188,6 +188,7 @@ export const useRAGStore = defineStore('rag', () => {
     chunkSize: number,
     chunkOverlap: number,
     reason: IndexStatus['rebuildReason'] = 'manual',
+    fullRebuild = false,
   ) => {
     const settingsStore = useSettingsStore();
     const ragConfig = settingsStore.config.rag;
@@ -205,12 +206,21 @@ export const useRAGStore = defineStore('rag', () => {
     indexStatus.value.skippedNotes = 0;
 
     try {
+      if (fullRebuild) {
+        const cleared = await ragService.clearIndex();
+        if (!cleared.success) {
+          throw new Error(cleared.error || 'Failed to clear index');
+        }
+      }
+
       const currentById = new Map<string, NoteIndexPayload>();
       for (const note of notes) {
         currentById.set(note.id, note);
       }
 
-      const staleNoteIds = Object.keys(previousSignatures).filter((noteId) => !currentById.has(noteId));
+      const staleNoteIds = fullRebuild
+        ? []
+        : Object.keys(previousSignatures).filter((noteId) => !currentById.has(noteId));
       if (staleNoteIds.length > 0) {
         await runWithConcurrency(
           staleNoteIds.map((noteId) => async () => {
@@ -229,9 +239,9 @@ export const useRAGStore = defineStore('rag', () => {
         const signature = buildIndexSignature(note, chunkSize, chunkOverlap, embeddingModel);
         nextSignatures[note.id] = signature;
 
-        const previousSignature = previousSignatures[note.id];
-        const previousCount = Number(previousChunkCounts[note.id] || 0);
-        if (previousSignature === signature) {
+        const previousSignature = fullRebuild ? undefined : previousSignatures[note.id];
+        const previousCount = fullRebuild ? 0 : Number(previousChunkCounts[note.id] || 0);
+        if (!fullRebuild && previousSignature === signature) {
           nextChunkCounts[note.id] = previousCount;
           cachedTotalChunks += previousCount;
         }
@@ -239,6 +249,9 @@ export const useRAGStore = defineStore('rag', () => {
 
       const notesToReindex = notes.filter((note) => {
         const signature = nextSignatures[note.id];
+        if (fullRebuild) {
+          return true;
+        }
         return previousSignatures[note.id] !== signature;
       });
 
@@ -321,7 +334,7 @@ export const useRAGStore = defineStore('rag', () => {
       };
 
       ragLogger.info(
-        `Index sync finished: changed=${totalWork}, success=${successCounter.value}, failed=${failCounter.value}, skipped=${notes.length - totalWork}`,
+        `${fullRebuild ? 'Full' : 'Incremental'} index sync finished: changed=${totalWork}, success=${successCounter.value}, failed=${failCounter.value}, skipped=${notes.length - totalWork}`,
       );
     } catch (error) {
       indexStatus.value.error = getErrorMessage(error);

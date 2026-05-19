@@ -37,7 +37,7 @@
   "button.export": "Exporter",
   "button.import": "Importer",
   "button.openLogFolder": "Dossier des journaux",
-  "button.rebuildIndex": "Reconstruire l'index",
+  "button.IncrementalRebuildIndex": "Reconstruire l'index",
   "button.reset": "Réinitialiser",
   "button.syncNow": "Synchroniser maintenant",
   "button.syncing": "Synchronisation...",

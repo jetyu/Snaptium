@@ -35,6 +35,7 @@ export const IPC_CHANNELS = {
   SEARCH_NOTES: 'search:notes',
   SETTINGS_EXPORT: 'settings:export',
   SETTINGS_CONFIRM_EMBEDDING_SOURCE_CHANGE: 'settings:confirm-embedding-source-change',
+  SETTINGS_CONFIRM_RAG_REBUILD_MODE: 'settings:confirm-rag-rebuild-mode',
   SETTINGS_CONFIRM_DELETE_AI_SOURCE: 'settings:confirm-delete-ai-source',
   SETTINGS_CONFIRM_RESET_SYNC_PROVIDER: 'settings:confirm-reset-sync-provider',
   SETTINGS_SHOW_MESSAGE: 'settings:show-message',

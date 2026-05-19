@@ -37,7 +37,7 @@
   "button.export": "Export",
   "button.import": "Import",
   "button.openLogFolder": "Log Folder",
-  "button.rebuildIndex": "Rebuild Index",
+  "button.IncrementalRebuildIndex": "Rebuild Index",
   "button.reset": "Reset",
   "button.syncNow": "Sync Now",
   "button.syncing": "Syncing...",

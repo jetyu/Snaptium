@@ -37,7 +37,7 @@
   "button.export": "导出",
   "button.import": "导入",
   "button.openLogFolder": "日志文件夹",
-  "button.rebuildIndex": "重建索引",
+  "button.IncrementalRebuildIndex": "重建索引",
   "button.reset": "重置",
   "button.syncNow": "立即同步",
   "button.syncing": "同步中...",

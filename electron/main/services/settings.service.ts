@@ -62,6 +62,8 @@ interface SettingsMessageOptions {
   detail?: string;
 }
 
+type RagRebuildMode = 'incremental' | 'full' | 'cancel';
+
 export interface AccessControlConfig {
   enabled: boolean;
   lockOnStartup: boolean;
@@ -478,7 +480,31 @@ export const settingsService = {
       message: $t('message.confirm.changeEmbeddingModel'),
     });
 
-    return response === 1;
+    return response === 2;
+  },
+
+  async confirmRagRebuildMode(): Promise<RagRebuildMode> {
+    const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+    const { response } = await dialog.showMessageBox(focusedWindow, {
+      type: 'question',
+      buttons: [$t('button.cancel'), $t('button.IncrementalRebuildIndex'), $t('button.fullRebuildIndex')],
+      defaultId: 1,
+      cancelId: 0,
+      noLink: true,
+      title: $t('label.ragIndexStatus'),
+      message: $t('message.confirm.ragRebuildMode'),
+    });
+
+    if (response === 1) {
+      return 'incremental';
+    }
+
+    if (response === 2) {
+      return 'full';
+    }
+
+    return 'cancel';
   },
 
   async confirmDeleteAiSource(name: string): Promise<boolean> {

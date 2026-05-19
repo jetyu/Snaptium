@@ -49,7 +49,8 @@ export function useRAGIndex() {
    */
   const rebuildIndex = async (
     notes: Array<{ id: string; title: string; content: string }>,
-    reason: 'manual' | 'auto-index' = 'manual'
+    reason: 'manual' | 'auto-index' = 'manual',
+    fullRebuild = false,
   ) => {
     if (!isEnabled.value || !isConfigured.value) {
       throw new Error('RAG is not enabled or configured');
@@ -60,7 +61,8 @@ export function useRAGIndex() {
         notes,
         ragConfig.value.chunkSize,
         ragConfig.value.chunkOverlap,
-        reason
+        reason,
+        fullRebuild,
       );
     } catch (error) {
       ragIndexLogger.error(`Failed to rebuild index: ${error}`);

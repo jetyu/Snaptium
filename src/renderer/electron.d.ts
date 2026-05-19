@@ -298,6 +298,7 @@ declare global {
         setStartup: (enabled: boolean) => Promise<{ enabled: boolean; supported: boolean }>;
         pickDirectory: () => Promise<string | null>;
         confirmEmbeddingSourceChange: () => Promise<boolean>;
+        confirmRagRebuildMode: () => Promise<'incremental' | 'full' | 'cancel'>;
         confirmDeleteAiSource: (name: string) => Promise<boolean>;
         confirmResetSyncProvider: (name: string) => Promise<boolean>;
         showMessage: (options: {

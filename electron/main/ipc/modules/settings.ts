@@ -51,6 +51,14 @@ export function registerSettingsIpcHandlers() {
   });
 
   /**
+   * Confirm RAG rebuild mode using the native Electron dialog
+   */
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_RAG_REBUILD_MODE, async () => {
+    logger.debug('Settings confirm RAG rebuild mode');
+    return await settingsService.confirmRagRebuildMode();
+  });
+
+  /**
    * Confirm AI source deletion using the native Electron dialog
    */
   ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_DELETE_AI_SOURCE, async (_event, name) => {

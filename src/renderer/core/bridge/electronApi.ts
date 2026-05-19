@@ -352,6 +352,8 @@ export interface MessageDialogOptions {
   detail?: string;
 }
 
+export type RagRebuildMode = 'incremental' | 'full' | 'cancel';
+
 interface ShortcutsKeybindingPayload {
   commandId: string;
   key: string;
@@ -459,6 +461,7 @@ export const electronApi = {
     switchLanguage: (locale: string) => electronApi.settings.getApi().switchLanguage(locale),
     pickDirectory: () => electronApi.settings.getApi().pickDirectory(),
     confirmEmbeddingSourceChange: () => electronApi.settings.getApi().confirmEmbeddingSourceChange(),
+    confirmRagRebuildMode: (): Promise<RagRebuildMode> => electronApi.settings.getApi().confirmRagRebuildMode(),
     confirmDeleteAiSource: (name: string) => electronApi.settings.getApi().confirmDeleteAiSource(name),
     confirmResetSyncProvider: (name: string) => electronApi.settings.getApi().confirmResetSyncProvider(name),
     showMessage: (options: MessageDialogOptions): Promise<boolean> => {

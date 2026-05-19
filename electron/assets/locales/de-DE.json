@@ -37,7 +37,7 @@
   "button.export": "Exportieren",
   "button.import": "Importieren",
   "button.openLogFolder": "Protokollordner",
-  "button.rebuildIndex": "Index neu aufbauen",
+  "button.IncrementalRebuildIndex": "Index neu aufbauen",
   "button.reset": "Zurücksetzen",
   "button.syncNow": "Jetzt synchronisieren",
   "button.syncing": "Synchronisierung...",

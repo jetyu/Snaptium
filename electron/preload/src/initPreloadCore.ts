@@ -115,6 +115,7 @@ const electronAPI = Object.freeze({
     setStartup: (enabled: boolean) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
     pickDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_PICK_DIRECTORY),
     confirmEmbeddingSourceChange: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_EMBEDDING_SOURCE_CHANGE),
+    confirmRagRebuildMode: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_RAG_REBUILD_MODE),
     confirmDeleteAiSource: (name: string) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_DELETE_AI_SOURCE, name),
     confirmResetSyncProvider: (name: string) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_RESET_SYNC_PROVIDER, name),
     showMessage: (options: {

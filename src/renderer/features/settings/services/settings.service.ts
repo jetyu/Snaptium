@@ -4,6 +4,7 @@ import {
   type MarkdownExportResult,
   type MarkdownImportResult,
   type MessageDialogOptions,
+  type RagRebuildMode,
   type SppxExportResult,
   type SppxImportResult,
 } from '@renderer/core/bridge/electronApi';
@@ -204,6 +205,10 @@ export const settingsService = {
     }
 
     return await electronApi.settings.confirmEmbeddingSourceChange();
+  },
+
+  async confirmRagRebuildMode(): Promise<RagRebuildMode> {
+    return await electronApi.settings.confirmRagRebuildMode();
   },
 
   async confirmDeleteAiSource(name: string): Promise<boolean> {

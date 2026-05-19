@@ -37,7 +37,7 @@
   "button.export": "Exportar",
   "button.import": "Importar",
   "button.openLogFolder": "Pasta de Logs",
-  "button.rebuildIndex": "Reconstruir Índice",
+  "button.IncrementalRebuildIndex": "Reconstruir Índice",
   "button.reset": "Redefinir",
   "button.syncNow": "Sincronizar Agora",
   "button.syncing": "Sincronizando...",
