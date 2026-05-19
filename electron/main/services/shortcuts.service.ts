@@ -117,7 +117,7 @@ export const shortcutsService = {
   },
 
   async confirmResetToDefaults(): Promise<boolean> {
-    const { response } = await showMessageBox({
+    const dialogResult = await showMessageBox({
       type: 'warning',
       buttons: [$t('button.cancel'), $t('shortcuts.resetToDefaults')],
       defaultId: 0,
@@ -126,8 +126,10 @@ export const shortcutsService = {
       title: $t('shortcuts.title'),
       message: $t('shortcuts.resetConfirm'),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    return response === 1;
+    return selectedButtonIndex === 1;
   },
 
   async detectConflicts(key: string, excludeCommandId: string | null = null): Promise<ShortcutKeybinding[]> {

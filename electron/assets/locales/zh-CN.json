@@ -351,7 +351,7 @@
   "menu.window.close": "关闭",
   "menu.window.minimize": "最小化",
   "message.confirm.autoRebuildIndex": "索引数据已被清空。是否立即开始根据新模型全量重新构建索引？",
-  "message.confirm.changeEmbeddingModel": "切换 Embedding 模型将导致现有知识库索引失效。确定要切换并立即重新构建索引吗？",
+  "message.confirm.changeEmbeddingModel": "切换知识库模型会使当前知识库索引失效，并触发重新构建，过程可能耗时较长。是否继续？",
   "message.confirm.ragRebuildMode": "请选择重建方式：\n快速重建：增量更新索引，仅更新变更内容，速度较快\n完全重建：清空并重新构建全部索引，适用于数据异常或全量刷新，耗时较长",
   "message.error.indexNotesNotFound": "没有找到可索引的笔记",
   "message.error.ragIndexDimensionMismatch": "当前向量索引与嵌入模型维度不兼容，请重新重建索引后再检索",

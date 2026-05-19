@@ -246,7 +246,7 @@ const handleRAGUpdate = async <K extends keyof RAGSettings>(key: K, value: RAGSe
       if (notes.length === 0) {
         await clearIndex();
       } else {
-        await rebuildIndex(notes);
+        await rebuildIndex(notes, 'manual', true);
       }
 
       await refreshStatus();

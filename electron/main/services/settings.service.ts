@@ -471,7 +471,7 @@ export const settingsService = {
   async confirmEmbeddingSourceChange(): Promise<boolean> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 
-    const { response } = await dialog.showMessageBox(focusedWindow, {
+    const dialogResult = await dialog.showMessageBox(focusedWindow, {
       type: 'warning',
       buttons: [$t('button.cancel'), $t('button.changeAndRebuildIndex')],
       defaultId: 0,
@@ -479,14 +479,16 @@ export const settingsService = {
       noLink: true,
       message: $t('message.confirm.changeEmbeddingModel'),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    return response === 2;
+    return selectedButtonIndex === 1;
   },
 
   async confirmRagRebuildMode(): Promise<RagRebuildMode> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 
-    const { response } = await dialog.showMessageBox(focusedWindow, {
+    const dialogResult = await dialog.showMessageBox(focusedWindow, {
       type: 'question',
       buttons: [$t('button.cancel'), $t('button.IncrementalRebuildIndex'), $t('button.fullRebuildIndex')],
       defaultId: 1,
@@ -495,12 +497,14 @@ export const settingsService = {
       title: $t('label.ragIndexStatus'),
       message: $t('message.confirm.ragRebuildMode'),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    if (response === 1) {
+    if (selectedButtonIndex === 1) {
       return 'incremental';
     }
 
-    if (response === 2) {
+    if (selectedButtonIndex === 2) {
       return 'full';
     }
 
@@ -510,7 +514,7 @@ export const settingsService = {
   async confirmDeleteAiSource(name: string): Promise<boolean> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 
-    const { response } = await dialog.showMessageBox(focusedWindow, {
+    const dialogResult = await dialog.showMessageBox(focusedWindow, {
       type: 'warning',
       buttons: [$t('button.cancel'), $t('trash.delete')],
       defaultId: 0,
@@ -519,14 +523,16 @@ export const settingsService = {
       title: $t('common.delete'),
       message: interpolateMessage($t('dialog.deleteConfirm'), { name: String(name) }),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    return response === 1;
+    return selectedButtonIndex === 1;
   },
 
   async confirmResetSyncProvider(name: string): Promise<boolean> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 
-    const { response } = await dialog.showMessageBox(focusedWindow, {
+    const dialogResult = await dialog.showMessageBox(focusedWindow, {
       type: 'warning',
       buttons: [$t('button.cancel'), $t('button.clearConfig')],
       defaultId: 0,
@@ -535,8 +541,10 @@ export const settingsService = {
       title: $t('common.confirm'),
       message: interpolateMessage($t('dialog.confirmResetSyncProvider'), { name: String(name) }),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    return response === 1;
+    return selectedButtonIndex === 1;
   },
 
   /**
@@ -583,15 +591,17 @@ export const settingsService = {
   async resetConfig(): Promise<boolean> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 
-    const { response } = await dialog.showMessageBox(focusedWindow, {
+    const dialogResult = await dialog.showMessageBox(focusedWindow, {
       type: 'warning',
       buttons: [$t('button.confirm'), $t('button.cancel')],
       defaultId: 1,
       cancelId: 1,
       message: $t('dialog.resetConfirmNotify'),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    if (response !== 0) {
+    if (selectedButtonIndex !== 0) {
       return false;
     }
 

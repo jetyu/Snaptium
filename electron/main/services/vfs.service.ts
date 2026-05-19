@@ -869,7 +869,7 @@ export const vfsService = {
   },
 
   async confirmPermanentDeleteNode(): Promise<boolean> {
-    const { response } = await showMessageBox({
+    const dialogResult = await showMessageBox({
       type: 'warning',
       buttons: [$t('button.cancel'), $t('trash.deletePermanently')],
       defaultId: 0,
@@ -878,12 +878,14 @@ export const vfsService = {
       title: $t('label.trash'),
       message: $t('trash.permanentDeleteConfirm'),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    return response === 1;
+    return selectedButtonIndex === 1;
   },
 
   async confirmEmptyTrash(): Promise<boolean> {
-    const { response } = await showMessageBox({
+    const dialogResult = await showMessageBox({
       type: 'warning',
       buttons: [$t('button.cancel'), $t('trash.empty')],
       defaultId: 0,
@@ -892,8 +894,10 @@ export const vfsService = {
       title: $t('label.trash'),
       message: $t('trash.emptyAllConfirm'),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    return response === 1;
+    return selectedButtonIndex === 1;
   },
 
   async confirmDeleteNode(name: string): Promise<boolean> {
@@ -901,7 +905,7 @@ export const vfsService = {
       ? name.trim()
       : $t('default.thisItem');
 
-    const { response } = await showMessageBox({
+    const dialogResult = await showMessageBox({
       type: 'warning',
       buttons: [$t('button.cancel'), $t('button.confirm')],
       defaultId: 0,
@@ -910,12 +914,14 @@ export const vfsService = {
       title: $t('common.deleteNode'),
       message: interpolateMessage($t('dialog.deleteConfirm'), { name: displayName }),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    return response === 1;
+    return selectedButtonIndex === 1;
   },
 
   async confirmRecoverVersion(): Promise<boolean> {
-    const { response } = await showMessageBox({
+    const dialogResult = await showMessageBox({
       type: 'warning',
       buttons: [$t('button.cancel'), $t('history.restore')],
       defaultId: 0,
@@ -924,8 +930,10 @@ export const vfsService = {
       title: $t('history.title'),
       message: $t('history.restoreConfirm'),
     });
+    // selectedButtonIndex is zero-based and follows the order of buttons[]
+    const selectedButtonIndex = dialogResult.response;
 
-    return response === 1;
+    return selectedButtonIndex === 1;
   },
 
   async toggleNodeStar(nodeId: string, starred: boolean): Promise<WorkspaceNode> {
