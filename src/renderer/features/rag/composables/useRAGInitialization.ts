@@ -44,7 +44,7 @@ export function useRAGInitialization() {
 
   const autoIndexAllNotes = async (reason: 'auto-index' = 'auto-index') => {
     try {
-      ragInitLogger.info('Starting auto-indexing...');
+      ragInitLogger.info('Starting incremental index sync...');
 
       const notes = workspaceStore.notes.map(note => ({
         id: note.id,
@@ -58,7 +58,7 @@ export function useRAGInitialization() {
       }
 
       await rebuildIndex(notes, reason);
-      ragInitLogger.info(`Auto-indexed ${notes.length} notes`);
+      ragInitLogger.info(`Incremental index sync completed for ${notes.length} notes`);
     } catch (error) {
       ragInitLogger.error(`Auto-indexing failed: ${getErrorMessage(error)}`);
     }

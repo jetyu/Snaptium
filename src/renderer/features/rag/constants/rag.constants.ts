@@ -20,6 +20,9 @@ export const DEFAULT_RAG_CONFIG = {
   autoIndex: false,
   indexOnSave: false,
   lastIndexedAt: null,
+  indexSignatures: {} as Record<string, string>,
+  indexChunkCounts: {} as Record<string, number>,
+  cachedTotalChunks: 0,
 };
 
 

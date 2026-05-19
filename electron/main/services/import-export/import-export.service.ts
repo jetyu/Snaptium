@@ -34,6 +34,9 @@ export const importExportService = {
       rag: {
         ...config.rag,
         lastIndexedAt: null,
+        indexSignatures: {},
+        indexChunkCounts: {},
+        cachedTotalChunks: 0,
       },
       sync: {
         ...config.sync,

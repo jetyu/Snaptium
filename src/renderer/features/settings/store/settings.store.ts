@@ -59,6 +59,9 @@ export interface RAGSettings {
   autoIndex: boolean;
   indexOnSave: boolean;
   lastIndexedAt: number | null;
+  indexSignatures: Record<string, string>;
+  indexChunkCounts: Record<string, number>;
+  cachedTotalChunks: number;
 }
 
 export interface WebDavSyncSettings {
