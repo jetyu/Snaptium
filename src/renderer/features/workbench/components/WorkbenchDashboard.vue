@@ -1649,7 +1649,6 @@ watch(
 .smart-focus__head {
   gap: 8px;
   justify-content: space-between;
-  margin-top: -6px;
 }
 
 .smart-focus__head .smart-feedback {
