@@ -46,37 +46,35 @@
 
     <main class="tags-view__main">
       <header class="tags-view__main-header">
-        <div>
-          <p class="tags-view__eyebrow">{{ t('tags.notesTitle') }}</p>
-          <h2 class="tags-view__heading">{{ selectedTitle }}</h2>
+        <div class="tags-view__title-stack">
+          <h2 class="tags-view__heading">{{ t('tags.notesTitle', { selectedTitle: selectedTitle }) }}
+          </h2>
         </div>
         <span class="tags-view__note-count">{{ t('tags.noteCount', { count: selectedNotes.length }) }}</span>
       </header>
 
-      <div v-if="selectedNotes.length > 0" class="tags-view__notes">
-        <button v-for="note in selectedNotes" :key="note.id" type="button" class="tags-view__note"
-          @click="openNote(note.id)">
-          <div class="tags-view__note-icon">
-            <FileLockOne v-if="note.locked" theme="outline" :size="17" />
-            <Notes v-else theme="outline" :size="17" />
+      <div class="tags-view__main-content">
+        <section class="tags-view__notes-pane">
+          <div v-if="selectedNotes.length > 0" class="tags-view__notes">
+            <button v-for="note in selectedNotes" :key="note.id" type="button" class="tags-view__note"
+              @click="openNote(note.id)">
+              <div class="tags-view__note-icon">
+                <FileLockOne v-if="note.locked" theme="outline" :size="17" />
+                <Notes v-else theme="outline" :size="17" />
+              </div>
+              <div class="tags-view__note-body">
+                <div class="tags-view__note-row">
+                  <span class="tags-view__note-title">{{ note.title }}</span>
+                  <span class="tags-view__note-date">{{ formatNoteDate(note.updatedAt) }}</span>
+                </div>
+                <p class="tags-view__note-preview">{{ getNotePreview(note.content) }}</p>
+              </div>
+            </button>
           </div>
-          <div class="tags-view__note-body">
-            <div class="tags-view__note-row">
-              <span class="tags-view__note-title">{{ note.title }}</span>
-              <span class="tags-view__note-date">{{ formatNoteDate(note.updatedAt) }}</span>
-            </div>
-            <p class="tags-view__note-preview">{{ getNotePreview(note.content) }}</p>
-            <div v-if="normalizeNoteTags(note.tags).length > 0" class="tags-view__note-tags">
-              <span v-for="tag in normalizeNoteTags(note.tags)" :key="tag" class="tags-view__note-tag">
-                #{{ tag }}
-              </span>
-            </div>
+          <div v-else class="tags-view__empty-state">
+            {{ t('tags.emptyNotes') }}
           </div>
-        </button>
-      </div>
-
-      <div v-else class="tags-view__empty-state">
-        {{ t('tags.emptyNotes') }}
+        </section>
       </div>
     </main>
   </div>
@@ -222,6 +220,12 @@ watch(
   color: var(--text);
 }
 
+.tags-view__title-stack {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 .tags-view__title {
   font-size: 1rem;
   font-weight: 650;
@@ -334,11 +338,16 @@ watch(
   padding: 0 24px;
 }
 
-.tags-view__eyebrow {
-  margin: 0 0 3px;
-  color: var(--text-muted);
-  font-size: 0.74rem;
-  font-weight: 600;
+.tags-view__main-content {
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tags-view__notes-pane {
+  min-height: 0;
 }
 
 .tags-view__heading {
@@ -361,7 +370,7 @@ watch(
   min-width: 0;
   display: flex;
   gap: 12px;
-  padding: 14px 24px;
+  padding: 12px 16px;
   border: 0;
   border-bottom: 1px solid var(--panel-border);
   background: transparent;
@@ -424,26 +433,6 @@ watch(
   line-height: 1.45;
 }
 
-.tags-view__note-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.tags-view__note-tag {
-  max-width: 160px;
-  padding: 2px 7px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--panel-border));
-  border-radius: 7px;
-  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
-  color: var(--text-muted);
-  font-size: 0.74rem;
-}
-
 .tags-view__empty,
 .tags-view__empty-state {
   color: var(--text-muted);
@@ -469,16 +458,6 @@ watch(
 
   .tags-view__main-header {
     padding: 0 16px;
-  }
-
-  .tags-view__note {
-    padding: 12px 16px;
-  }
-
-  .tags-view__note-row {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 3px;
   }
 }
 </style>
