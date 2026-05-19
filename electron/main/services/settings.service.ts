@@ -110,7 +110,7 @@ interface AppSettings {
 }
 
 interface SnaptiumConfigPackage {
-  type: 'snaptiumconfig';
+  type: 'sppcfg';
   version: number;
   exportedAt: number;
   app: string;
@@ -135,9 +135,9 @@ type SettingsInput = Partial<AppSettings> & {
 
 const logger = loggerService.createLogger('Electron:Settings Service');
 const LOG_AUTO_CLEAR_DAY_OPTIONS: ReadonlySet<number> = new Set<number>([0, 10, 20]);
-const SNAPTIUM_CONFIG_PACKAGE_TYPE = 'snaptiumconfig' as const;
+const SNAPTIUM_CONFIG_PACKAGE_TYPE = 'sppcfg' as const;
 const SNAPTIUM_CONFIG_PACKAGE_VERSION = 1;
-const SNAPTIUM_CONFIG_EXTENSION = 'snaptiumconfig' as const;
+const SNAPTIUM_CONFIG_EXTENSION = 'sppcfg' as const;
 function interpolateMessage(template: string, replacements: Record<string, string> = {}): string {
   return Object.entries(replacements).reduce((message, [key, value]) => {
     return message.replaceAll(`{${key}}`, String(value));
