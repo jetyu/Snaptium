@@ -212,8 +212,10 @@ export interface WorkspaceContextMenuItemPayload {
   action?: string | null;
   labelKey?: string;
   label?: string;
-  type?: 'normal' | 'separator' | 'submenu';
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
   enabled?: boolean;
+  checked?: boolean;
+  iconDataUrl?: string;
   submenu?: WorkspaceContextMenuItemPayload[];
 }
 
@@ -247,6 +249,8 @@ export interface WorkspaceNodePayload {
   updatedAt: number;
   trashed?: boolean;
   locked?: boolean;
+  iconColor?: import('@shared/notebook-icon.constants').NotebookIconColor;
+  iconEmoji?: import('@shared/notebook-icon.constants').NotebookIconEmoji;
   starred?: boolean;
   starredAt?: number;
   tags?: string[];
@@ -365,7 +369,7 @@ interface ShortcutsKeybindingsConfigPayload {
   keybindings: ShortcutsKeybindingPayload[];
 }
 
-function ensureElectronApi() {
+function ensureElectronApi(): Window['electronAPI'] {
   if (!window.electronAPI) {
     throw new Error('electronAPI bridge is unavailable. Make sure preload is loaded.');
   }
@@ -726,6 +730,14 @@ export const electronApi = {
 
     toggleNodeLock: (payload: { nodeId: string; locked: boolean }): Promise<WorkspaceNodePayload> => {
       return electronApi.vfs.getApi().toggleNodeLock(payload);
+    },
+
+    updateNotebookIconColor: (payload: { nodeId: string; iconColor: import('@shared/notebook-icon.constants').NotebookIconColor | null }): Promise<WorkspaceNodePayload> => {
+      return electronApi.vfs.getApi().updateNotebookIconColor(payload);
+    },
+
+    updateNotebookIconEmoji: (payload: { nodeId: string; iconEmoji: import('@shared/notebook-icon.constants').NotebookIconEmoji | null }): Promise<WorkspaceNodePayload> => {
+      return electronApi.vfs.getApi().updateNotebookIconEmoji(payload);
     },
 
     updateNodeTags: (payload: { nodeId: string; tags: string[] }): Promise<WorkspaceNodePayload> => {

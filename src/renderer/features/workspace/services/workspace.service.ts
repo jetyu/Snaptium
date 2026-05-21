@@ -1,5 +1,11 @@
 import { i18n } from '@renderer/features/i18n';
 import { electronApi, type HistoryVersion, type SavedImagePayload } from '@renderer/core/bridge/electronApi';
+import {
+    isNotebookIconColor,
+    normalizeNotebookIconEmoji,
+    type NotebookIconColor,
+    type NotebookIconEmoji,
+} from '@shared/notebook-icon.constants';
 
 export interface Note {
     id: string;
@@ -24,6 +30,8 @@ export interface Notebook {
     createdAt: number;
     updatedAt: number;
     locked?: boolean;
+    iconColor?: NotebookIconColor;
+    iconEmoji?: NotebookIconEmoji;
     starred?: boolean;
     starredAt?: number;
 }
@@ -39,6 +47,8 @@ interface WorkspaceNode {
     updatedAt: number;
     trashed?: boolean;
     locked?: boolean;
+    iconColor?: NotebookIconColor;
+    iconEmoji?: NotebookIconEmoji;
     starred?: boolean;
     starredAt?: number;
     tags?: string[];
@@ -78,6 +88,8 @@ export interface StarredNotebook {
     createdAt: number;
     updatedAt: number;
     locked: boolean;
+    iconColor?: NotebookIconColor;
+    iconEmoji?: NotebookIconEmoji;
     starredAt: number;
 }
 
@@ -132,6 +144,14 @@ function normalizeNotebookName(name?: string | null): string {
 function normalizeDialogName(name?: string | null): string {
     const normalized = name?.trim();
     return normalized || i18n.global.t('default.thisItem');
+}
+
+function normalizeNotebookIconColor(value: unknown): NotebookIconColor | undefined {
+    return isNotebookIconColor(value) ? value : undefined;
+}
+
+function normalizeNotebookEmoji(value: unknown): NotebookIconEmoji | undefined {
+    return normalizeNotebookIconEmoji(value);
 }
 
 function normalizeMultilineContent(content: string): string {
@@ -226,6 +246,8 @@ function mapNodeToNotebook(node: WorkspaceNode): Notebook | null {
         createdAt: node.createdAt,
         updatedAt: node.updatedAt,
         locked: node.locked ?? false,
+        iconColor: normalizeNotebookIconColor(node.iconColor),
+        iconEmoji: normalizeNotebookEmoji(node.iconEmoji),
         starred: Boolean(node.starred),
         starredAt: node.starredAt as number | undefined,
     };
@@ -265,6 +287,8 @@ function mapNodeToStarredNode(node: WorkspaceNode): StarredNode | null {
             createdAt: node.createdAt,
             updatedAt: node.updatedAt,
             locked: node.locked ?? false,
+            iconColor: normalizeNotebookIconColor(node.iconColor),
+            iconEmoji: normalizeNotebookEmoji(node.iconEmoji),
             starredAt,
         };
     }
@@ -363,6 +387,7 @@ export const workspaceService = {
             createdAt: node.createdAt,
             updatedAt: node.updatedAt,
             locked: node.locked ?? false,
+            iconColor: normalizeNotebookIconColor(node.iconColor),
         };
     },
 
@@ -481,6 +506,42 @@ export const workspaceService = {
 
         return {
             locked: updatedNode.locked ?? locked,
+            updatedAt: updatedNode.updatedAt,
+        };
+    },
+
+    async updateNotebookIconColor(
+        notebookId: string,
+        iconColor: NotebookIconColor | null
+    ): Promise<{ iconColor: NotebookIconColor | undefined; updatedAt: number }> {
+        ensureVfsAvailable();
+
+        const updatedNode = await electronApi.vfs.updateNotebookIconColor({
+            nodeId: normalizeNodeId(notebookId),
+            iconColor,
+        });
+        notifyVfsChanged();
+
+        return {
+            iconColor: normalizeNotebookIconColor(updatedNode.iconColor),
+            updatedAt: updatedNode.updatedAt,
+        };
+    },
+
+    async updateNotebookIconEmoji(
+        notebookId: string,
+        iconEmoji: NotebookIconEmoji | null
+    ): Promise<{ iconEmoji: NotebookIconEmoji | undefined; updatedAt: number }> {
+        ensureVfsAvailable();
+
+        const updatedNode = await electronApi.vfs.updateNotebookIconEmoji({
+            nodeId: normalizeNodeId(notebookId),
+            iconEmoji,
+        });
+        notifyVfsChanged();
+
+        return {
+            iconEmoji: normalizeNotebookEmoji(updatedNode.iconEmoji),
             updatedAt: updatedNode.updatedAt,
         };
     },

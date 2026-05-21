@@ -1,11 +1,11 @@
-import { Menu, ipcMain, type BrowserWindow, type MenuItemConstructorOptions } from 'electron';
+import { Menu, ipcMain, nativeImage, type BrowserWindow, type MenuItemConstructorOptions } from 'electron';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
 
 const logger = loggerService.createLogger('Electron:Workspace Menu IPC');
 
 type MenuAction = string | null;
-type MenuItemType = 'normal' | 'separator' | 'submenu';
+type MenuItemType = 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
 
 interface WorkspaceContextMenuItemPayload {
   action?: string | null;
@@ -13,6 +13,8 @@ interface WorkspaceContextMenuItemPayload {
   label?: string;
   type?: MenuItemType;
   enabled?: boolean;
+  checked?: boolean;
+  iconDataUrl?: string;
   submenu?: WorkspaceContextMenuItemPayload[];
 }
 
@@ -61,9 +63,16 @@ function buildMenuItems(
       ? item.action
       : null;
 
+    const icon = typeof item.iconDataUrl === 'string' && item.iconDataUrl.startsWith('data:')
+      ? nativeImage.createFromDataURL(item.iconDataUrl)
+      : undefined;
+
     return {
       id: action ?? undefined,
       label: resolveLabel(item, labels),
+      type: item.type ?? 'normal',
+      checked: item.checked === true,
+      icon,
       enabled: item.enabled !== false && action !== null,
       click: action ? () => resolve(action) : undefined,
     };

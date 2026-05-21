@@ -27,6 +27,7 @@ interface UseWorkspaceContextMenuOptions {
   beginRenamingNote: (note: Note) => void;
   beginRenamingNotebook: (notebook: Notebook) => void;
   toggleNodeLock: (id: string, locked: boolean) => Promise<void>;
+  openNotebookAppearancePicker: (notebook: Notebook) => void;
   toggleNodeStar: (id: string, type: 'note' | 'notebook', starred: boolean) => Promise<void>;
   openHistory: (id: string) => void;
 }
@@ -114,6 +115,11 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
       case WORKSPACE_CONSTANTS.ACTIONS.HISTORY:
         if (context.note) {
           options.openHistory(context.note.id);
+        }
+        break;
+      case WORKSPACE_CONSTANTS.ACTIONS.OPEN_NOTEBOOK_ICON_APPEARANCE:
+        if (context.notebook) {
+          options.openNotebookAppearancePicker(context.notebook);
         }
         break;
       default:

@@ -48,7 +48,13 @@
                     <td>
                       <div class="node-name">
                         <Notes v-if="node.type === 'file'" theme="outline" :size="14" />
-                        <NotebookOne v-else theme="outline" :size="14" />
+                        <NotebookVisualIcon
+                          v-else
+                          :icon-color="node.iconColor"
+                          :icon-emoji="node.iconEmoji"
+                          :icon-size="12"
+                          :box-size="16"
+                        />
                         <span class="name-text">{{ node.name }}</span>
                         <span v-if="node.childCount > 0" class="child-count">
                           ({{ $t('trash.containsItems', { count: node.childCount }) }})
@@ -83,7 +89,8 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue';
 import { useTrash } from '../composables/useTrash';
-import { Delete, Close, Clear, Refresh, Notes, NotebookOne } from '@icon-park/vue-next';
+import { Delete, Close, Clear, Refresh, Notes } from '@icon-park/vue-next';
+import NotebookVisualIcon from '@renderer/features/workspace/components/NotebookVisualIcon.vue';
 
 const { isOpen, trashedNodes, isLoading, error, clearError, closeTrash, restoreNode, permanentlyDeleteNode, emptyTrash } = useTrash();
 const overlayRef = ref<HTMLElement | null>(null);

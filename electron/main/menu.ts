@@ -21,8 +21,11 @@ function mapConfigToMenuItem(
     label: config.labelKey ? $t(config.labelKey) : undefined,
     accelerator: config.accelerator,
     type: config.type,
-    role: config.role as any,
   };
+
+  if (config.role) {
+    item.role = config.role as NonNullable<MenuItemConstructorOptions['role']>;
+  }
 
   if (config.id && !config.role) {
     item.click = () => handleMenuAction(config.id!, mainWindow);
@@ -75,7 +78,7 @@ function handleMenuAction(action: MenuAction, mainWindow: BrowserWindow) {
   }
 }
 
-function getAppMenu(mainWindow: BrowserWindow): MenuItemConstructorOptions {
+function getAppMenu(): MenuItemConstructorOptions {
   return {
     label: app.name,
     submenu: [
@@ -100,7 +103,7 @@ export function setupAppMenu(mainWindow: BrowserWindow, locale?: string): void {
   const template: MenuItemConstructorOptions[] = [];
 
   if (isMacPlatform()) {
-    template.push(getAppMenu(mainWindow));
+    template.push(getAppMenu());
   }
 
   MENU_CONFIG.forEach((category) => {

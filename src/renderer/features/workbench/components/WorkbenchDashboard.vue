@@ -1052,7 +1052,7 @@ watch(
   margin: 0 auto;
   display: grid;
   grid-template-columns: minmax(0, 1fr) clamp(300px, 20vw, 420px);
-  gap: clamp(16px, 2vw, 32px);
+  gap: 16px;
   align-items: start;
   min-height: 0;
 }
@@ -1060,7 +1060,7 @@ watch(
 .workbench-main {
   min-width: 0;
   display: grid;
-  gap: 20px;
+  gap: 16px;
 }
 
 .hero-card {
@@ -1068,10 +1068,10 @@ watch(
   display: grid;
   grid-template-columns: minmax(292px, 0.82fr) minmax(380px, 1fr);
   gap: 16px;
-  padding: 18px 0 16px 22px;
+  padding: 18px 0 16px 24px;
   overflow: hidden;
   border: 1px solid rgba(95, 151, 232, 0.18);
-  border-radius: 20px;
+  border-radius: 16px;
   background:
     radial-gradient(circle at 9% 13%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.54) 38%, transparent 64%),
     linear-gradient(126deg, rgba(255, 255, 255, 0.94) 0%, rgba(251, 250, 255, 0.9) 44%, rgba(238, 234, 255, 0.7) 100%);
@@ -1232,7 +1232,7 @@ watch(
   min-height: 0;
   margin: -18px 0 -16px;
   overflow: hidden;
-  border-radius: 0 20px 20px 0;
+  border-radius: 0 16px 16px 0;
   opacity: 0.94;
 }
 
@@ -1356,7 +1356,7 @@ watch(
 .overview-grid {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: clamp(8px, 1.2vw, 20px);
+  gap: 16px;
 }
 
 .overview-card {
@@ -1369,7 +1369,7 @@ watch(
   gap: 4px;
   padding: 10px 11px;
   border: 1px solid var(--workbench-border);
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--workbench-card);
   box-shadow: var(--workbench-shadow-soft);
   cursor: default;
@@ -1411,7 +1411,7 @@ watch(
   display: grid;
   overflow: hidden;
   border: 1px solid var(--workbench-border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--workbench-panel);
   box-shadow: var(--workbench-shadow-soft);
   backdrop-filter: blur(18px);
@@ -1419,7 +1419,7 @@ watch(
 
 .panel-row {
   display: grid;
-  gap: 12px;
+  gap: 16px;
 }
 
 .panel-row--recent {
@@ -1436,7 +1436,7 @@ watch(
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 16px 18px 6px;
+  padding: 16px 20px 10px;
 }
 
 .panel-badge {
@@ -1457,7 +1457,7 @@ watch(
 }
 
 .feed-list {
-  padding: 0 18px 16px;
+  padding: 0 20px 16px;
 }
 
 .feed-row {
@@ -1571,13 +1571,13 @@ watch(
 .smart-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.02fr) minmax(248px, 0.98fr);
-  gap: 9px;
-  padding: 4px 16px 12px;
+  gap: 12px;
+  padding: 4px 20px 16px;
 }
 
 .panel--smart .smart-grid {
   padding-top: 0;
-  padding-bottom: 12px;
+  padding-bottom: 16px;
 }
 
 .smart-focus {
@@ -1585,7 +1585,7 @@ watch(
   min-height: 128px;
   display: grid;
   gap: 6px;
-  padding: 8px 12px 10px;
+  padding: 10px 16px;
   border: 1px solid color-mix(in srgb, var(--workbench-blue) 18%, var(--workbench-border));
   border-radius: 12px;
   background:
@@ -1808,9 +1808,9 @@ watch(
   grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 7px;
-  padding: 8px 10px;
+  padding: 8px 12px;
   border: 1px solid var(--workbench-border);
-  border-radius: 11px;
+  border-radius: 12px;
   background: rgba(255, 255, 255, 0.46);
   color: var(--workbench-ink);
   text-align: left;
@@ -1915,15 +1915,15 @@ watch(
   min-width: 0;
   display: grid;
   align-content: start;
-  gap: 14px;
+  gap: 16px;
 }
 
 .side-card {
   display: grid;
   gap: 12px;
-  padding: 18px 19px;
+  padding: 18px 20px;
   border: 1px solid var(--workbench-border);
-  border-radius: 18px;
+  border-radius: 16px;
   background: var(--workbench-card);
   box-shadow: var(--workbench-shadow-soft);
   backdrop-filter: blur(18px);
@@ -2108,7 +2108,7 @@ watch(
 }
 
 .growth-chart {
-  height: 118px;
+  height: 100px;
   overflow: hidden;
   border: 1px solid var(--workbench-border);
   border-radius: 14px;
@@ -2126,7 +2126,7 @@ watch(
 .growth-chart svg {
   width: 100%;
   height: 100%;
-  padding: 18px 14px 14px;
+  padding: 16px 14px 12px;
 }
 
 .growth-chart polyline {
@@ -2147,12 +2147,12 @@ watch(
 .active-tag-row {
   width: 100%;
   min-width: 0;
-  min-height: 43px;
+  min-height: 38px;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 4px;
   align-items: center;
-  padding: 7px 9px;
+  padding: 5px 9px;
   border: 1px solid transparent;
   border-radius: 12px;
   background: transparent;
@@ -2347,6 +2347,7 @@ watch(
   .hero-card {
     grid-template-columns: minmax(0, 1fr);
     padding-right: 24px;
+    border-radius: 16px;
   }
 
   .hero-art {
@@ -2355,7 +2356,6 @@ watch(
     aspect-ratio: 20 / 9;
     border-radius: 16px;
   }
-
 }
 
 @media (max-width: 900px) {
@@ -2374,20 +2374,23 @@ watch(
 
   .overview-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
   }
 
   .smart-grid {
     grid-template-columns: 1fr;
-    gap: 8px;
-    padding: 2px 14px 10px;
+    gap: 12px;
+    padding: 2px 16px 12px;
   }
 
   .panel-row--recent {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .workbench-side {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
 
   .side-card--topic {
@@ -2465,13 +2468,13 @@ watch(
   }
 
   .overview-grid {
-    gap: 8px;
+    gap: 10px;
   }
 
   .overview-card {
     gap: 3px;
     padding: 7px 9px;
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
   .overview-card__head {
@@ -2483,20 +2486,20 @@ watch(
   }
 
   .panel {
-    border-radius: 14px;
+    border-radius: 16px;
   }
 
   .panel-row {
-    gap: 10px;
+    gap: 12px;
   }
 
   .panel__header {
     gap: 8px;
-    padding: 10px 14px 4px;
+    padding: 10px 16px 4px;
   }
 
   .panel--smart .panel__header {
-    padding: 8px 14px 2px;
+    padding: 8px 16px 2px;
   }
 
   .panel__header h2 {
@@ -2510,7 +2513,7 @@ watch(
   }
 
   .feed-list {
-    padding: 0 14px 10px;
+    padding: 0 16px 10px;
   }
 
   .feed-row {
@@ -2541,7 +2544,7 @@ watch(
   .smart-grid {
     grid-template-columns: minmax(0, 1.02fr) minmax(260px, 0.98fr);
     gap: 10px;
-    padding: 6px 14px 12px;
+    padding: 6px 16px 12px;
   }
 
   .panel--smart .smart-grid {
@@ -2622,8 +2625,8 @@ watch(
   .smart-lane {
     min-height: 39px;
     gap: 6px;
-    padding: 7px 9px;
-    border-radius: 11px;
+    padding: 7px 11px;
+    border-radius: 12px;
   }
 
   .smart-lane__open {
@@ -2650,13 +2653,13 @@ watch(
   }
 
   .workbench-side {
-    gap: 10px;
+    gap: 12px;
   }
 
   .side-card {
     gap: 8px;
-    padding: 12px 14px;
-    border-radius: 14px;
+    padding: 12px 16px;
+    border-radius: 16px;
   }
 
   .side-card__header {
@@ -2693,7 +2696,7 @@ watch(
   }
 
   .growth-chart {
-    height: 78px;
+    height: 74px;
     border-radius: 11px;
   }
 
@@ -2709,7 +2712,7 @@ watch(
     min-height: 34px;
     gap: 3px;
     padding: 5px 7px;
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
   .active-tag-row__name {
@@ -2730,7 +2733,7 @@ watch(
     grid-template-columns: minmax(0, 1fr) 68px;
     gap: 7px;
     padding: 5px 7px;
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
   .topic-row__main {
@@ -2766,12 +2769,12 @@ watch(
   }
 
   .module-empty {
-    margin: 0 14px 10px;
-    border-radius: 11px;
+    margin: 0 16px 10px;
+    border-radius: 12px;
   }
 
   .side-card__empty {
-    border-radius: 10px;
+    border-radius: 12px;
   }
 }
 

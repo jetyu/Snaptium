@@ -8,7 +8,16 @@ type VoidCallback = () => void;
 type DataCallback<T = unknown> = (data: T) => void;
 
 interface SaveFilePayload { filePath: string | null; content: string; }
-interface WorkspaceContextMenuItemPayload { action?: string | null; labelKey?: string; label?: string; type?: 'normal' | 'separator' | 'submenu'; enabled?: boolean; submenu?: WorkspaceContextMenuItemPayload[]; }
+interface WorkspaceContextMenuItemPayload {
+  action?: string | null;
+  labelKey?: string;
+  label?: string;
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
+  enabled?: boolean;
+  checked?: boolean;
+  iconDataUrl?: string;
+  submenu?: WorkspaceContextMenuItemPayload[];
+}
 interface WorkspaceContextMenuPayload { nodeId: string; nodeType?: string; isRoot?: boolean; items?: WorkspaceContextMenuItemPayload[]; }
 interface EditorContextMenuPayload { selectedText?: string; hasSelection?: boolean; canPaste?: boolean; }
 interface AiSourceTestConnectionPayload { aiEndpoint: string; aiApiKey: string; aiModel: string; }
@@ -61,6 +70,10 @@ const electronAPI = Object.freeze({
       ipcRenderer.invoke(IPC_CHANNELS.VFS_MOVE_NODE, payload),
     toggleNodeLock: (payload: { nodeId: string; locked: boolean }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK, payload),
+    updateNotebookIconColor: (payload: { nodeId: string; iconColor: string | null }) =>
+      ipcRenderer.invoke(IPC_CHANNELS.VFS_UPDATE_NOTEBOOK_ICON_COLOR, payload),
+    updateNotebookIconEmoji: (payload: { nodeId: string; iconEmoji: string | null }) =>
+      ipcRenderer.invoke(IPC_CHANNELS.VFS_UPDATE_NOTEBOOK_ICON_EMOJI, payload),
     updateNodeTags: (payload: { nodeId: string; tags: string[] }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_UPDATE_NODE_TAGS, payload),
     getTrashedNodes: () => ipcRenderer.invoke(IPC_CHANNELS.VFS_GET_TRASHED_NODES),

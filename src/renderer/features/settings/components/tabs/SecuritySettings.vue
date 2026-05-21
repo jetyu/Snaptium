@@ -509,10 +509,13 @@ async function copyRecoveryKey(): Promise<void> {
   try {
     if (navigator.clipboard?.writeText) {
       await navigator.clipboard.writeText(generatedRecoveryKey.value);
-    } else if (window.electronAPI?.editor) {
-      await window.electronAPI.editor.writeClipboard(generatedRecoveryKey.value);
     } else {
-      throw new Error(t('common.unknown'));
+      const editorApi = window.electronAPI.editor;
+      if (editorApi) {
+        await editorApi.writeClipboard(generatedRecoveryKey.value);
+      } else {
+        throw new Error(t('common.unknown'));
+      }
     }
 
     await showSecurityDialog('info', t('e2ee.recoveryKey.copied'));

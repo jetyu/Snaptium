@@ -514,6 +514,40 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
     },
 
+    async updateNotebookIconColor(id: string, iconColor: Notebook['iconColor'] | null) {
+      const notebook = this.notebooks.find((candidate) => candidate.id === id);
+      if (!notebook) {
+        logger.warn(`Cannot update notebook icon color, notebook not found: ${id}`);
+        return;
+      }
+
+      try {
+        const result = await workspaceService.updateNotebookIconColor(id, iconColor ?? null);
+        notebook.iconColor = result.iconColor;
+        notebook.updatedAt = result.updatedAt;
+        logger.info(`Updated notebook icon color: ${id} -> ${result.iconColor ?? 'default'}`);
+      } catch (err: unknown) {
+        logger.error(`Failed to update notebook icon color for ${id}: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async updateNotebookIconEmoji(id: string, iconEmoji: Notebook['iconEmoji'] | null) {
+      const notebook = this.notebooks.find((candidate) => candidate.id === id);
+      if (!notebook) {
+        logger.warn(`Cannot update notebook icon emoji, notebook not found: ${id}`);
+        return;
+      }
+
+      try {
+        const result = await workspaceService.updateNotebookIconEmoji(id, iconEmoji ?? null);
+        notebook.iconEmoji = result.iconEmoji;
+        notebook.updatedAt = result.updatedAt;
+        logger.info(`Updated notebook icon emoji: ${id} -> ${result.iconEmoji ?? 'default'}`);
+      } catch (err: unknown) {
+        logger.error(`Failed to update notebook icon emoji for ${id}: ${getErrorMessage(err)}`);
+      }
+    },
+
     async openHistoryDialog(noteId: string) {
       const note = this.notes.find((candidate) => candidate.id === noteId);
       if (!note) return;

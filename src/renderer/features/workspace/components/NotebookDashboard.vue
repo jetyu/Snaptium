@@ -3,7 +3,12 @@
     <div class="dashboard-content">
       <header class="dashboard-header">
         <div class="title-section icon-text">
-          <NotebookOne theme="outline" :size="28" />
+          <NotebookVisualIcon
+            :icon-color="currentNotebook?.iconColor"
+            :icon-emoji="currentNotebook?.iconEmoji"
+            :icon-size="22"
+            :box-size="30"
+          />
           <h1>{{ notebookName }}</h1>
         </div>
         <div class="actions">
@@ -33,7 +38,7 @@
         <h2>{{ $t("notebookDashboardSubNotebooks") }}</h2>
         <div class="notebooks-grid">
           <div v-for="nb in subNotebooks" :key="nb.id" class="notebook-card icon-text" @click="selectNotebook(nb.id)">
-            <NotebookOne theme="outline" :size="16" />
+            <NotebookVisualIcon :icon-color="nb.iconColor" :icon-emoji="nb.iconEmoji" :icon-size="13" :box-size="18" />
             <div class="notebook-info">
               <span class="notebook-name" :title="nb.name">{{ nb.name }}</span>
               <span class="notebook-meta">{{ formatDate(nb.updatedAt, locale) }}</span>
@@ -66,7 +71,8 @@ import { computed } from "vue";
 import { useWorkspace } from "@renderer/features/workspace";
 import { useI18n } from "vue-i18n";
 import { formatDate } from "@renderer/core/utils/date.utils";
-import { Plus, Notes, NotebookOne } from '@icon-park/vue-next';
+import { Plus, Notes } from '@icon-park/vue-next';
+import NotebookVisualIcon from './NotebookVisualIcon.vue';
 
 function compareNodeOrder(left: { order: number; createdAt: number; id: string }, right: { order: number; createdAt: number; id: string }) {
   if (left.order !== right.order) {

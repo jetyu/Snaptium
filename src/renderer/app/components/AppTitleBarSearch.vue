@@ -35,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Search, Close, FileText } from '@icon-park/vue-next';
 import { searchService, type SearchResult, type SearchMatch } from '@renderer/features/search/services/search.service';

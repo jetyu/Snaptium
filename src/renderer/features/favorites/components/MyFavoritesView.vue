@@ -44,7 +44,13 @@
               <td class="col-icon">
                 <FileLockOne v-if="item.kind === 'note' && item.locked" theme="outline" :size="16" />
                 <Notes v-else-if="item.kind === 'note'" theme="outline" :size="16" />
-                <NotebookOne v-else theme="outline" :size="16" />
+                <NotebookVisualIcon
+                  v-else
+                  :icon-color="item.iconColor"
+                  :icon-emoji="item.iconEmoji"
+                  :icon-size="13"
+                  :box-size="18"
+                />
               </td>
               <td class="col-name">{{ item.nameOrTitle }}</td>
               <td class="col-type">
@@ -79,9 +85,10 @@ import { computed, onMounted, ref } from 'vue';
 import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
-import { NotebookOne, Notes, FileLockOne, Star } from '@icon-park/vue-next';
+import { Notes, FileLockOne, Star } from '@icon-park/vue-next';
 import { useI18n } from 'vue-i18n';
 import { formatDate as formatTime } from '@renderer/core/utils/date.utils';
+import NotebookVisualIcon from '@renderer/features/workspace/components/NotebookVisualIcon.vue';
 
 type SortField = 'name' | 'type' | 'location' | 'updatedAt' | 'starredAt';
 type SortOrder = 'asc' | 'desc';

@@ -18,6 +18,17 @@
   --accent: #3b72f6;
   --accent-hover: #2563eb;
   --danger: #e5484d;
+  --notebook-icon-slate: #475569;
+  --notebook-icon-blue: #2563eb;
+  --notebook-icon-cyan: #0891b2;
+  --notebook-icon-green: #16a34a;
+  --notebook-icon-amber: #d97706;
+  --notebook-icon-rose: #ff5378;
+  --notebook-icon-indigo: #4f46e5;
+  --notebook-icon-teal: #0d9488;
+  --notebook-icon-lime: #65a30d;
+  --notebook-icon-red: #ff0000;
+  --notebook-icon-white: #ffffff;
 }
 
 /* ===== Dark Theme ===== */
@@ -32,6 +43,17 @@
   --accent: #4c82f8;
   --accent-hover: #6091fa;
   --danger: #f85a5e;
+  --notebook-icon-slate: #94a3b8;
+  --notebook-icon-blue: #60a5fa;
+  --notebook-icon-cyan: #22d3ee;
+  --notebook-icon-green: #4ade80;
+  --notebook-icon-amber: #fbbf24;
+  --notebook-icon-rose: #fb7185;
+  --notebook-icon-indigo: #818cf8;
+  --notebook-icon-teal: #2dd4bf;
+  --notebook-icon-lime: #a3e635;
+  --notebook-icon-red: #f87171;
+  --notebook-icon-white: #ffffff;
 }
 
 /* ===== VS Code Style Scrollbars ===== */

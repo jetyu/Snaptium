@@ -7,7 +7,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue({
+      template: {
+        compilerOptions: {
+          isCustomElement: (tag) => tag === 'em-emoji-picker',
+        },
+      },
+    }),
+  ],
   root: '.',
   base: './',
   build: {

@@ -9,8 +9,10 @@ export interface WorkspaceMenuItem {
   action?: WorkspaceContextAction | null;
   labelKey?: string;
   label?: string;
-  type?: 'normal' | 'separator' | 'submenu';
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
   enabled?: boolean;
+  checked?: boolean;
+  iconDataUrl?: string;
   submenu?: WorkspaceMenuItem[];
 }
 
@@ -29,6 +31,8 @@ function toPayloadItem(item: WorkspaceMenuItem): WorkspaceMenuItem {
     label: item.label,
     type: item.type ?? WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.NORMAL,
     enabled: item.enabled,
+    checked: item.checked,
+    iconDataUrl: item.iconDataUrl,
     submenu: Array.isArray(item.submenu) ? item.submenu.map(toPayloadItem) : undefined,
   };
 }
@@ -60,7 +64,8 @@ export function createWorkspaceContextMenuLabels(t: Translate) {
     [WORKSPACE_CONSTANTS.MENU.PROPERTIES]: t(WORKSPACE_CONSTANTS.MENU.PROPERTIES),
     [WORKSPACE_CONSTANTS.MENU.HISTORY]: t(WORKSPACE_CONSTANTS.MENU.HISTORY),
     [WORKSPACE_CONSTANTS.MENU.STAR]: t(WORKSPACE_CONSTANTS.MENU.STAR),
-    [WORKSPACE_CONSTANTS.MENU.UNSTAR]: t(WORKSPACE_CONSTANTS.MENU.UNSTAR)
+    [WORKSPACE_CONSTANTS.MENU.UNSTAR]: t(WORKSPACE_CONSTANTS.MENU.UNSTAR),
+    [WORKSPACE_CONSTANTS.MENU.NOTEBOOK_ICON_APPEARANCE]: t(WORKSPACE_CONSTANTS.MENU.NOTEBOOK_ICON_APPEARANCE),
   };
 }
 
@@ -118,6 +123,7 @@ export function getNotebookContextMenu(notebook: Notebook, moveTargets: Workspac
     { action: WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_STAR, labelKey: notebook.starred ? WORKSPACE_CONSTANTS.MENU.UNSTAR : WORKSPACE_CONSTANTS.MENU.STAR },
     { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTE },
     { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTEBOOK, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK },
+    { action: WORKSPACE_CONSTANTS.ACTIONS.OPEN_NOTEBOOK_ICON_APPEARANCE, labelKey: WORKSPACE_CONSTANTS.MENU.NOTEBOOK_ICON_APPEARANCE },
     ...(moveToSubmenu
       ? [
         { type: WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SEPARATOR },

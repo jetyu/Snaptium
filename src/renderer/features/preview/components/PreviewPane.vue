@@ -180,8 +180,9 @@ async function writeTextToClipboard(text: string) {
     return;
   }
 
-  if (window.electronAPI?.editor) {
-    await window.electronAPI.editor.writeClipboard(text);
+  const editorApi = window.electronAPI.editor;
+  if (editorApi) {
+    await editorApi.writeClipboard(text);
     return;
   }
 

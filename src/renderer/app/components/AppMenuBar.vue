@@ -125,7 +125,7 @@ function handleAction(action?: MenuAction) {
       document.execCommand('selectAll');
       break;
     case 'update':
-      (window as any).electronAPI.updater.check(false);
+      window.electronAPI.updater?.check(false);
       break;
     case 'feedback':
       window.open('https://github.com/jetyu/NoteWizard/issues');

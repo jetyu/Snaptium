@@ -59,7 +59,12 @@
 
         <div class="workspace-row__icon icon-wrapper">
           <FileLockOne v-if="entry.kind === 'note' && entry.item.locked" theme="outline" :size="14" />
-          <NotebookOne v-else-if="entry.kind === 'notebook'" theme="outline" :size="14" />
+          <NotebookVisualIcon
+            v-else-if="entry.kind === 'notebook'"
+            class="workspace-row__notebook-icon"
+            :icon-color="entry.item.iconColor"
+            :icon-emoji="entry.item.iconEmoji"
+          />
           <Notes v-else theme="outline" :size="14" />
         </div>
         <div class="workspace-row__content">
@@ -96,6 +101,15 @@
     <SyncHoverCard v-model:card-ref="syncHoverCardRef" :visible="isSyncHoverCardVisible" :style="syncHoverCardStyle"
       :status-label="statusLabel" :status-tone-class="statusToneClass" :formatted-last-synced="formattedLastSynced"
       :summary-items="summaryItems" @mouseenter="showSyncHoverCard" @mouseleave="scheduleHideSyncHoverCard" />
+
+    <NotebookAppearanceDialog
+      v-model="isNotebookAppearanceDialogOpen"
+      :notebook-name="notebookAppearanceTarget?.name ?? ''"
+      :icon-color="notebookAppearanceTarget?.iconColor"
+      :icon-emoji="notebookAppearanceTarget?.iconEmoji"
+      @select-color="handleNotebookIconColorSelect"
+      @select-emoji="handleNotebookIconEmojiSelect"
+    />
   </aside>
 </template>
 
@@ -118,8 +132,10 @@ import {
   type WorkspaceMoveTarget,
 } from "../services/workspaceContextMenu.service";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
-import { Plus, Right, FileLockOne, Notes, NotebookOne, Refresh, DoubleRight, DoubleDown } from '@icon-park/vue-next';
+import { Plus, Right, FileLockOne, Notes, Refresh, DoubleRight, DoubleDown } from '@icon-park/vue-next';
 import StarButton from "../../favorites/components/StarButton.vue";
+import NotebookVisualIcon from './NotebookVisualIcon.vue';
+import NotebookAppearanceDialog from './NotebookAppearanceDialog.vue';
 
 type WorkspaceNodeKind = "note" | "notebook";
 type MovableEntry = { id: string; kind: WorkspaceNodeKind; parentId: string | null };
@@ -164,6 +180,8 @@ const {
   renameNote,
   renameNotebook,
   toggleNodeLock,
+  updateNotebookIconColor,
+  updateNotebookIconEmoji,
   toggleNodeStar,
   openHistoryDialog,
 } = useWorkspace();
@@ -191,6 +209,8 @@ const selectionAnchorId = ref<string | null>(null);
 const dragState = ref<DragPayload | null>(null);
 const dropTarget = ref<DropTarget | null>(null);
 const suppressNextClick = ref(false);
+const isNotebookAppearanceDialogOpen = ref(false);
+const notebookAppearanceTargetId = ref<string | null>(null);
 
 const notebookIdsWithChildren = computed(() => {
   return notebooks.value
@@ -239,6 +259,37 @@ function compareTreeNodeOrder(left: WorkspaceTreeNode, right: WorkspaceTreeNode)
 
 function focusSidebar() {
   sidebarRef.value?.focus({ preventScroll: true });
+}
+
+const notebookAppearanceTarget = computed<Notebook | null>(() => {
+  if (!notebookAppearanceTargetId.value) {
+    return null;
+  }
+
+  return notebooks.value.find((notebook) => notebook.id === notebookAppearanceTargetId.value) ?? null;
+});
+
+function openNotebookAppearancePicker(notebook: Notebook) {
+  notebookAppearanceTargetId.value = notebook.id;
+  isNotebookAppearanceDialogOpen.value = true;
+}
+
+async function handleNotebookIconColorSelect(iconColor: Notebook['iconColor'] | null) {
+  const targetId = notebookAppearanceTargetId.value;
+  if (!targetId) {
+    return;
+  }
+
+  await updateNotebookIconColor(targetId, iconColor);
+}
+
+async function handleNotebookIconEmojiSelect(iconEmoji: Notebook['iconEmoji'] | null) {
+  const targetId = notebookAppearanceTargetId.value;
+  if (!targetId) {
+    return;
+  }
+
+  await updateNotebookIconEmoji(targetId, iconEmoji);
 }
 
 function getCurrentActiveId() {
@@ -977,6 +1028,29 @@ watch(
 );
 
 watch(
+  isNotebookAppearanceDialogOpen,
+  (visible) => {
+    if (visible) {
+      return;
+    }
+
+    notebookAppearanceTargetId.value = null;
+  }
+);
+
+watch(
+  notebookAppearanceTarget,
+  (target) => {
+    if (!isNotebookAppearanceDialogOpen.value || target) {
+      return;
+    }
+
+    isNotebookAppearanceDialogOpen.value = false;
+    notebookAppearanceTargetId.value = null;
+  }
+);
+
+watch(
   [activeNoteId, activeNotebookId],
   () => {
     if (selectedIds.value.size <= 1) {
@@ -1050,6 +1124,7 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     beginRenamingNote,
     beginRenamingNotebook,
     toggleNodeLock,
+    openNotebookAppearancePicker,
     toggleNodeStar,
     openHistory: openHistoryDialog,
   });
@@ -1284,6 +1359,19 @@ onMounted(() => {
 
 .workspace-row__chevron--placeholder {
   pointer-events: none;
+}
+
+.workspace-row__icon {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  color: var(--text-muted);
+  transition: color 0.15s, background 0.15s, box-shadow 0.15s;
+}
+
+.workspace-row__notebook-icon {
+  width: 18px;
+  height: 18px;
 }
 
 .workspace-row__content {
