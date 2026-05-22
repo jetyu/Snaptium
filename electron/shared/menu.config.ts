@@ -54,21 +54,6 @@ export const MENU_CONFIG: MenuCategoryConfig[] = [
     ],
   },
   {
-    id: 'edit',
-    labelKey: 'menu.edit',
-    items: [
-      { id: 'undo', labelKey: 'menu.edit.undo', role: 'undo', accelerator: 'CmdOrCtrl+Z' },
-      { id: 'redo', labelKey: 'menu.edit.redo', role: 'redo', accelerator: 'CmdOrCtrl+Shift+Z' },
-      { type: 'separator' },
-      { id: 'cut', labelKey: 'menu.edit.cut', role: 'cut', accelerator: 'CmdOrCtrl+X' },
-      { id: 'copy', labelKey: 'menu.edit.copy', role: 'copy', accelerator: 'CmdOrCtrl+C' },
-      { id: 'paste', labelKey: 'menu.edit.paste', role: 'paste', accelerator: 'CmdOrCtrl+V' },
-      { id: 'selectAll', labelKey: 'contextMenu.selectAll', role: 'selectAll', accelerator: 'CmdOrCtrl+A' },
-      { type: 'separator' },
-      { id: 'find', labelKey: 'menu.edit.find', accelerator: 'CmdOrCtrl+F' },
-    ],
-  },
-  {
     id: 'view',
     labelKey: 'menu.view',
     items: [
