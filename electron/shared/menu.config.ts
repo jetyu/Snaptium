@@ -1,13 +1,6 @@
 export type MenuAction =
   | 'preferences'
   | 'quit'
-  | 'undo'
-  | 'redo'
-  | 'cut'
-  | 'copy'
-  | 'paste'
-  | 'selectAll'
-  | 'find'
   | 'reload'
   | 'forceReload'
   | 'toggleDevTools'

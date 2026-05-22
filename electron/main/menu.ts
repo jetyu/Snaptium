@@ -43,9 +43,6 @@ function handleMenuAction(action: MenuAction, mainWindow: BrowserWindow) {
     case 'preferences':
       mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_PREFERENCES);
       break;
-    case 'find':
-      mainWindow.webContents.send('menu:find');
-      break;
     case 'update':
       mainWindow.webContents.send(IPC_CHANNELS.MENU_CHECK_FOR_UPDATES);
       break;
