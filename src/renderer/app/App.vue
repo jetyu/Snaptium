@@ -7,6 +7,7 @@
   <TrashDialog />
   <HistoryDialog />
   <AccessControlOverlay />
+  <LicenseDialog />
 </template>
 
 
@@ -29,6 +30,7 @@ import { HistoryDialog } from '@renderer/features/workspace';
 import { useSyncLifecycle } from '@renderer/features/sync';
 import { AccessControlOverlay } from '@renderer/features/security';
 import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
+import { LicenseDialog } from '@renderer/features/license';
 
 const settingsStore = useSettingsStore();
 const shortcutsStore = useShortcutsStore();

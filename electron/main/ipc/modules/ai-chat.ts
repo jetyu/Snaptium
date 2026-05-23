@@ -5,6 +5,7 @@ import { aiConfigService } from '../../services/ai-config.service.js';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
 import { getErrorMessage } from '../../services/error.service.js';
+import { LICENSE_RUNTIME_FEATURES, licenseService } from '../../services/license.service.js';
 
 const logger = loggerService.createLogger('Electron:AI Chat IPC');
 
@@ -58,6 +59,7 @@ async function generateAIResponse(config: GenerateAIResponseConfig): Promise<str
 export function registerAIChatHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.AI_CHAT_GENERATE, async (_event, payload: unknown) => {
     try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.AI_ASSISTANT);
       const validatedPayload: AiChatGeneratePayload = AiChatGenerateSchema.parse(payload);
       const assistantConfig = await aiConfigService.resolveAssistantConfig();
       const answer = await generateAIResponse({
@@ -80,6 +82,7 @@ export function registerAIChatHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.AI_CHAT_GENERATE_COMPLETION, async (_event, payload: unknown) => {
     try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.AI_ASSISTANT);
       const validatedPayload: AiCompletionPayload = AiCompletionSchema.parse(payload);
       const assistantConfig = await aiConfigService.resolveAssistantConfig();
       const systemPrompt = validatedPayload.systemPrompt?.trim() || assistantConfig.systemPrompt;

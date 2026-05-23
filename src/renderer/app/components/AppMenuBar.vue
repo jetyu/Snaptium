@@ -26,13 +26,13 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettings } from '@renderer/features/settings/composables/useSettings';
 import { useAbout } from '@renderer/features/about';
-import { useSearch } from '@renderer/features/search';
+import { useLicenseDialog } from '@renderer/features/license';
 import { MENU_CONFIG, type MenuAction } from '@shared/menu.config';
 
 const { t } = useI18n();
 const { openSettings } = useSettings();
 const { openAbout } = useAbout();
-const { openGlobalSearch } = useSearch();
+const { openLicenseDialog } = useLicenseDialog();
 
 const activeMenu = ref<string | null>(null);
 const isMenuOpen = ref(false);
@@ -100,35 +100,17 @@ function handleAction(action?: MenuAction) {
     case 'about':
       openAbout();
       break;
-    case 'find':
-      openGlobalSearch();
-      break;
     case 'quit':
       window.close();
-      break;
-    case 'undo':
-      document.execCommand('undo');
-      break;
-    case 'redo':
-      document.execCommand('redo');
-      break;
-    case 'cut':
-      document.execCommand('cut');
-      break;
-    case 'copy':
-      document.execCommand('copy');
-      break;
-    case 'paste':
-      document.execCommand('paste');
-      break;
-    case 'selectAll':
-      document.execCommand('selectAll');
       break;
     case 'update':
       window.electronAPI.updater?.check(false);
       break;
     case 'feedback':
       window.open('https://github.com/jetyu/NoteWizard/issues');
+      break;
+    case 'activateLicense':
+      openLicenseDialog();
       break;
     case 'website':
       window.open('https://snaptium.com');

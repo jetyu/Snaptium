@@ -12,6 +12,7 @@ import { aiConfigService } from '../../services/ai-config.service.js';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
 import { getErrorMessage } from '../../services/error.service.js';
+import { LICENSE_RUNTIME_FEATURES, licenseService } from '../../services/license.service.js';
 
 const logger = loggerService.createLogger('Main:RAG IPC');
 
@@ -43,6 +44,7 @@ export function registerRAGHandlers() {
   // Initialize RAG service
   ipcMain.handle(IPC_CHANNELS.RAG_INITIALIZE, async (event, request) => {
     try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.RAG);
       InitializeSchema.parse(request);
       const ragConfig = await aiConfigService.resolveRagConfig();
       await ragService.initialize(ragConfig.workspaceRoot, ragConfig.embeddingConfig);
@@ -57,6 +59,7 @@ export function registerRAGHandlers() {
   // Index a single note (Batch-Atomic)
   ipcMain.handle(IPC_CHANNELS.RAG_INDEX_NOTE, async (event, request) => {
     try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.RAG);
       const validated = IndexNoteSchema.parse(request);
       const result = await ragService.indexNote(validated);
       return result;
@@ -69,6 +72,7 @@ export function registerRAGHandlers() {
 
   ipcMain.handle(IPC_CHANNELS.RAG_SEARCH_TEXT, async (_event, request) => {
     try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.RAG);
       const validated = SearchTextSchema.parse(request);
       const ragConfig = await aiConfigService.resolveRagConfig();
 
@@ -96,6 +100,7 @@ export function registerRAGHandlers() {
   // Delete note index (Atomic)
   ipcMain.handle(IPC_CHANNELS.RAG_DELETE_NOTE_INDEX, async (event, noteId) => {
     try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.RAG);
       z.string().parse(noteId);
       const result = await ragService.deleteNoteIndex(noteId);
       return result;
@@ -109,6 +114,7 @@ export function registerRAGHandlers() {
   // Get RAG status (Atomic)
   ipcMain.handle(IPC_CHANNELS.RAG_GET_STATUS, async () => {
     try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.RAG);
       const status = await ragService.getStatus();
       return { success: true, ...status };
     } catch (error) {
@@ -120,6 +126,7 @@ export function registerRAGHandlers() {
 
   ipcMain.handle(IPC_CHANNELS.RAG_REBUILD_INDEX, async () => {
     try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.RAG);
       await ragService.clear();
       return { success: true };
     } catch (error) {
@@ -131,6 +138,7 @@ export function registerRAGHandlers() {
 
   ipcMain.handle(IPC_CHANNELS.RAG_ASK_QUESTION, async (_event, request) => {
     try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.RAG);
       const validated = AskQuestionSchema.parse(request);
       const ragConfig = await aiConfigService.resolveRagConfig();
 

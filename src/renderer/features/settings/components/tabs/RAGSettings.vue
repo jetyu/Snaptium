@@ -1,6 +1,12 @@
 <template>
   <div class="rag-settings">
     <h3 class="panel-title">{{ t('pref.pane.aiRAG') }}</h3>
+    <LicenseGateNotice
+      v-if="isLicenseLocked"
+      class="license-gate"
+      title-key="license.gate.rag.title"
+      description-key="license.gate.rag.description"
+    />
 
     <div class="settings-grid">
       <!-- Enable RAG -->
@@ -11,7 +17,7 @@
         </div>
 
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.rag.enabled }"
-          :aria-pressed="settingsStore.config.rag.enabled" @click="handleToggle('enabled')">
+          :aria-pressed="settingsStore.config.rag.enabled" :disabled="isLicenseLocked" @click="handleToggle('enabled')">
           <span class="startup-switch-track">
             <span class="startup-switch-thumb" />
           </span>
@@ -26,10 +32,10 @@
           <p class="setting-label">{{ t('label.ragEmbeddingModel') }}</p>
           <p class="setting-description">{{ t('text.ragEmbeddingModel') }}</p>
         </div>
-        <label class="select-shell" :class="{ disabled: !settingsStore.config.rag.enabled }">
+        <label class="select-shell" :class="{ disabled: isLicenseLocked || !settingsStore.config.rag.enabled }">
           <select class="settings-select" :value="settingsStore.config.rag.embeddingSourceId"
             @change="handleRAGUpdate('embeddingSourceId', ($event.target as HTMLSelectElement).value, $event)"
-            :disabled="!settingsStore.config.rag.enabled">
+            :disabled="isLicenseLocked || !settingsStore.config.rag.enabled">
             <option v-if="settingsStore.config.aiSources.length === 0" value="">{{
               t('option.default.selectOption') }}</option>
             <option v-for="source in settingsStore.config.aiSources" :key="source.id" :value="source.id">
@@ -46,10 +52,10 @@
           <p class="setting-description">{{ t('text.ragChatModel') }}</p>
         </div>
         <label class="select-shell"
-          :class="{ disabled: settingsStore.config.aiSources.length === 0 || !settingsStore.config.rag.enabled }">
+          :class="{ disabled: isLicenseLocked || settingsStore.config.aiSources.length === 0 || !settingsStore.config.rag.enabled }">
           <select class="settings-select" :value="settingsStore.config.rag.ragChatSourceId"
             @change="handleRAGUpdate('ragChatSourceId', ($event.target as HTMLSelectElement).value)"
-            :disabled="settingsStore.config.aiSources.length === 0 || !settingsStore.config.rag.enabled">
+            :disabled="isLicenseLocked || settingsStore.config.aiSources.length === 0 || !settingsStore.config.rag.enabled">
             <option value="">{{
               t('option.rag.disabled') }}</option>
             <option v-for="source in settingsStore.config.aiSources" :key="source.id" :value="source.id">
@@ -70,7 +76,7 @@
 
           <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.rag.autoIndex }"
             :aria-pressed="settingsStore.config.rag.autoIndex" @click="handleToggle('autoIndex')"
-            :disabled="!settingsStore.config.rag.enabled">
+            :disabled="isLicenseLocked || !settingsStore.config.rag.enabled">
             <span class="startup-switch-track">
               <span class="startup-switch-thumb" />
             </span>
@@ -89,7 +95,7 @@
 
           <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.rag.indexOnSave }"
             :aria-pressed="settingsStore.config.rag.indexOnSave" @click="handleToggle('indexOnSave')"
-            :disabled="!settingsStore.config.rag.enabled">
+            :disabled="isLicenseLocked || !settingsStore.config.rag.enabled">
             <span class="startup-switch-track">
               <span class="startup-switch-thumb" />
             </span>
@@ -118,7 +124,7 @@
             </div>
           </div>
 
-          <button type="button" class="action-button" :disabled="isIndexing || !isConfigured"
+          <button type="button" class="action-button" :disabled="isLicenseLocked || isIndexing || !isConfigured"
             @click="handleRebuildIndex">
             <span v-if="isIndexing" class="spinner"></span>
             <span>{{ rebuildButtonText }}</span>
@@ -137,7 +143,7 @@
             <div class="number-input-container">
               <input type="number" class="settings-input number-input" :value="settingsStore.config.rag.chunkSize"
                 @input="handleRAGNumberUpdate('chunkSize', $event)" step="100" min="500" max="800"
-                :disabled="!settingsStore.config.rag.enabled" />
+                :disabled="isLicenseLocked || !settingsStore.config.rag.enabled" />
             </div>
           </section>
 
@@ -149,7 +155,7 @@
             <div class="number-input-container">
               <input type="number" class="settings-input number-input" :value="settingsStore.config.rag.chunkOverlap"
                 @input="handleRAGNumberUpdate('chunkOverlap', $event)" step="10" min="50" max="100"
-                :disabled="!settingsStore.config.rag.enabled" />
+                :disabled="isLicenseLocked || !settingsStore.config.rag.enabled" />
             </div>
           </section>
 
@@ -161,7 +167,7 @@
             <div class="number-input-container">
               <input type="number" class="settings-input number-input" :value="settingsStore.config.rag.topK"
                 @input="handleRAGNumberUpdate('topK', $event)" step="1" min="1" max="10"
-                :disabled="!settingsStore.config.rag.enabled" />
+                :disabled="isLicenseLocked || !settingsStore.config.rag.enabled" />
             </div>
           </section>
 
@@ -174,7 +180,7 @@
               <input type="number" class="settings-input number-input"
                 :value="settingsStore.config.rag.similarityThreshold"
                 @input="handleRAGNumberUpdate('similarityThreshold', $event)" step="0.05" min="0" max="1"
-                :disabled="!settingsStore.config.rag.enabled" />
+                :disabled="isLicenseLocked || !settingsStore.config.rag.enabled" />
             </div>
           </section>
         </div>
@@ -193,6 +199,7 @@ import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { ragService } from '@renderer/features/rag/services/rag.service';
+import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 
 
 const { t } = useI18n();
@@ -201,14 +208,29 @@ const workspaceStore = useWorkspaceStore();
 const { indexStatus, isIndexing, rebuildIndex, refreshStatus, clearIndex } = useRAGIndex();
 const { isConfigured } = useRAGConfig();
 const ragSettingsLogger = createLogger('RAGSettings');
+const ragLicenseGate = useLicenseGate('rag');
+const isLicenseLocked = computed(() => !ragLicenseGate.allowed.value);
+
+const requestLicenseAccessIfNeeded = (): boolean => {
+  if (!isLicenseLocked.value) {
+    return false;
+  }
+
+  ragLicenseGate.requestAccess();
+  return true;
+};
 
 onMounted(() => {
-  if (settingsStore.config.rag.enabled) {
+  if (!isLicenseLocked.value && settingsStore.config.rag.enabled) {
     refreshStatus();
   }
 });
 
 const handleToggle = async (key: keyof RAGSettings) => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   await settingsStore.updateRAGSetting(key, !settingsStore.config.rag[key]);
 };
 
@@ -225,6 +247,11 @@ const getNotesForIndexing = () => workspaceStore.notes.map((node) => ({
 }));
 
 const handleRAGUpdate = async <K extends keyof RAGSettings>(key: K, value: RAGSettings[K], event?: Event) => {
+  if (requestLicenseAccessIfNeeded()) {
+    revertSelectValue(key, event);
+    return;
+  }
+
   if (key === 'embeddingSourceId') {
     if (value === settingsStore.config.rag[key]) return;
 
@@ -261,12 +288,20 @@ const handleRAGUpdate = async <K extends keyof RAGSettings>(key: K, value: RAGSe
 };
 
 const handleRAGNumberUpdate = async (key: keyof RAGSettings, event: Event) => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   const target = event.target as HTMLInputElement;
   const value = key === 'similarityThreshold' ? parseFloat(target.value) : parseInt(target.value);
   await settingsStore.updateRAGSetting(key, value || 0);
 };
 
 const handleRebuildIndex = async () => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   if (!isConfigured.value) {
     ragSettingsLogger.error(t('message.error.ragNotConfigured'));
     return;
@@ -344,5 +379,9 @@ const formatDate = (timestamp: number) => {
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.license-gate {
+  margin-bottom: 1rem;
 }
 </style>

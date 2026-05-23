@@ -49,6 +49,9 @@ function handleMenuAction(action: MenuAction, mainWindow: BrowserWindow) {
     case 'about':
       mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_ABOUT);
       break;
+    case 'activateLicense':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_LICENSE);
+      break;
     case 'website':
       shell.openExternal('https://snaptium.com');
       break;

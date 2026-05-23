@@ -1,6 +1,12 @@
 <template>
   <div class="ai-assistant-settings">
     <h3 class="panel-title">{{ t('pref.pane.aiAssistant') }}</h3>
+    <LicenseGateNotice
+      v-if="isLicenseLocked"
+      class="license-gate"
+      title-key="license.gate.aiAssistant.title"
+      description-key="license.gate.aiAssistant.description"
+    />
     <div class="settings-grid">
       <!-- Enable AI Assistant -->
       <section class="setting-card">
@@ -9,7 +15,7 @@
           <p class="setting-description">{{ t('text.aiAssistant') }}</p>
         </div>
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.aiAssistant.enabled }"
-          :aria-pressed="settingsStore.config.aiAssistant.enabled" @click="handleToggle('enabled')">
+          :aria-pressed="settingsStore.config.aiAssistant.enabled" :disabled="isLicenseLocked" @click="handleToggle('enabled')">
           <span class="startup-switch-track">
             <span class="startup-switch-thumb" />
           </span>
@@ -25,10 +31,10 @@
           <p class="setting-label">{{ t('label.selectAIAssistantSourceName') }}</p>
           <p class="setting-description">{{ t('text.selectAIAssistantSourceName') }}</p>
         </div>
-        <label class="select-shell" :class="{ disabled: !settingsStore.config.aiAssistant.enabled }">
+        <label class="select-shell" :class="{ disabled: isLicenseLocked || !settingsStore.config.aiAssistant.enabled }">
           <select class="settings-select" :value="settingsStore.config.aiAssistant.sourceId"
             @change="handleSourceIdChange"
-            :disabled="!settingsStore.config.aiAssistant.enabled">
+            :disabled="isLicenseLocked || !settingsStore.config.aiAssistant.enabled">
             <option v-if="settingsStore.config.aiSources.length === 0" value="" disabled>{{
               t('option.default.selectOption') }}</option>
             <option v-for="source in settingsStore.config.aiSources" :key="source.id" :value="source.id">
@@ -44,10 +50,10 @@
           <p class="setting-description">{{ t(`text.aiWritingMode.${settingsStore.config.aiAssistant.triggerMode}`) }}
           </p>
         </div>
-        <label class="select-shell" :class="{ disabled: !settingsStore.config.aiAssistant.enabled }">
+        <label class="select-shell" :class="{ disabled: isLicenseLocked || !settingsStore.config.aiAssistant.enabled }">
           <select class="settings-select" :value="settingsStore.config.aiAssistant.triggerMode"
             @change="handleTriggerModeChange"
-            :disabled="!settingsStore.config.aiAssistant.enabled">
+            :disabled="isLicenseLocked || !settingsStore.config.aiAssistant.enabled">
             <option v-for="option in writingModeOptions" :key="option.value" :value="option.value">
               {{ t(option.labelKey) }}
             </option>
@@ -59,10 +65,10 @@
           <p class="setting-label">{{ t('label.aiWritingStyle') }}</p>
           <p class="setting-description">{{ t('text.aiWritingStyle') }}</p>
         </div>
-        <label class="select-shell" :class="{ disabled: !settingsStore.config.aiAssistant.enabled }">
+        <label class="select-shell" :class="{ disabled: isLicenseLocked || !settingsStore.config.aiAssistant.enabled }">
           <select class="settings-select" :value="settingsStore.config.aiAssistant.writingStyle"
             @change="handleWritingStyleChange"
-            :disabled="!settingsStore.config.aiAssistant.enabled">
+            :disabled="isLicenseLocked || !settingsStore.config.aiAssistant.enabled">
             <option v-for="option in writingStyleOptions" :key="option.value" :value="option.value">
               {{ t(option.labelKey) }}
             </option>
@@ -74,10 +80,10 @@
           <p class="setting-label">{{ t('label.aiWritingScenario') }}</p>
           <p class="setting-description">{{ t('text.aiWritingScenario') }}</p>
         </div>
-        <label class="select-shell" :class="{ disabled: !settingsStore.config.aiAssistant.enabled }">
+        <label class="select-shell" :class="{ disabled: isLicenseLocked || !settingsStore.config.aiAssistant.enabled }">
           <select class="settings-select" :value="settingsStore.config.aiAssistant.writingScenario"
             @change="handleWritingScenarioChange"
-            :disabled="!settingsStore.config.aiAssistant.enabled">
+            :disabled="isLicenseLocked || !settingsStore.config.aiAssistant.enabled">
             <option v-for="option in writingScenarioOptions" :key="option.value" :value="option.value">
               {{ t(option.labelKey) }}
             </option>
@@ -92,7 +98,7 @@
         </div>
         <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.aiAssistant.autoContinue }"
           :aria-pressed="settingsStore.config.aiAssistant.autoContinue" @click="handleToggle('autoContinue')"
-          :disabled="!settingsStore.config.aiAssistant.enabled" style="margin-left: auto;">
+          :disabled="isLicenseLocked || !settingsStore.config.aiAssistant.enabled" style="margin-left: auto;">
           <span class="startup-switch-track">
             <span class="startup-switch-thumb" />
           </span>
@@ -103,6 +109,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   AI_WRITING_SCENARIO_OPTIONS,
@@ -114,6 +121,7 @@ import {
   isValidAiWritingScenario,
   isValidAiWritingStyle,
 } from '@shared/ai.constants';
+import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 import { useSettingsStore, type AIAssistantSettings } from '../../store/settings.store';
 
 const { t } = useI18n();
@@ -121,12 +129,31 @@ const settingsStore = useSettingsStore();
 const writingStyleOptions = AI_WRITING_STYLE_OPTIONS;
 const writingScenarioOptions = AI_WRITING_SCENARIO_OPTIONS;
 const writingModeOptions = AI_WRITING_MODE_OPTIONS;
+const aiAssistantLicenseGate = useLicenseGate('aiAssistant');
+const isLicenseLocked = computed(() => !aiAssistantLicenseGate.allowed.value);
+
+const requestLicenseAccessIfNeeded = (): boolean => {
+  if (!isLicenseLocked.value) {
+    return false;
+  }
+
+  aiAssistantLicenseGate.requestAccess();
+  return true;
+};
 
 const handleToggle = async (key: keyof AIAssistantSettings) => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   await settingsStore.updateAssistantSetting(key, !settingsStore.config.aiAssistant[key]);
 };
 
 const handleAssistantUpdate = async <K extends keyof AIAssistantSettings>(key: K, value: AIAssistantSettings[K]) => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   await settingsStore.updateAssistantSetting(key, value);
 };
 
@@ -167,3 +194,9 @@ const handleWritingScenarioChange = async (event: Event) => {
 
 // Removed handleAssistantNumberUpdate as typingDelay is removed
 </script>
+
+<style scoped>
+.license-gate {
+  margin-bottom: 1rem;
+}
+</style>

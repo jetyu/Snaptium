@@ -121,6 +121,11 @@ const electronAPI = Object.freeze({
       ipcRenderer.on(IPC_CHANNELS.MENU_CHECK_FOR_UPDATES, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_CHECK_FOR_UPDATES, subscription);
     },
+    onOpenLicense: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_LICENSE, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_LICENSE, subscription);
+    },
   }),
   settings: Object.freeze({
     getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_LOAD),
@@ -252,6 +257,19 @@ const electronAPI = Object.freeze({
       const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
       ipcRenderer.on(IPC_CHANNELS.ACCESS_CONTROL_STATE_CHANGED, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.ACCESS_CONTROL_STATE_CHANGED, subscription);
+    },
+  }),
+  license: Object.freeze({
+    getState: () => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_GET_STATE),
+    activate: (licenseKey: string) => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_ACTIVATE, licenseKey),
+    validate: () => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_VALIDATE),
+    refreshDevices: () => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_REFRESH_DEVICES),
+    deactivateDevice: (deviceId: string) => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_DEACTIVATE_DEVICE, deviceId),
+    clear: () => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_CLEAR),
+    onStateChanged: (callback: DataCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.LICENSE_STATE_CHANGED, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.LICENSE_STATE_CHANGED, subscription);
     },
   }),
 });

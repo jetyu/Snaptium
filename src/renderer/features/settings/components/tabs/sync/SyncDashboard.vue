@@ -1,5 +1,11 @@
 ﻿<template>
   <div class="settings-grid">
+    <LicenseGateNotice
+      v-if="isLicenseLocked"
+      class="sync-license-gate"
+      title-key="license.gate.sync.title"
+      description-key="license.gate.sync.description"
+    />
     <section class="setting-card">
       <div class="setting-copy">
         <p class="setting-label">{{ t('label.syncRemoteData') }}</p>
@@ -9,6 +15,7 @@
         type="button"
         class="startup-switch"
         :class="{ enabled: settingsStore.config.sync.enabled }"
+        :disabled="isLicenseLocked"
         @click="toggleSyncEnabled"
       >
         <span class="startup-switch-track">
@@ -181,6 +188,7 @@ import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.
 import { securityService, normalizeSecurityError } from '@renderer/features/security';
 import { settingsService } from '../../../services/settings.service';
 import { systemDialog } from '../../../services/system-dialog.service';
+import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 
 const emit = defineEmits<{
   (e: 'editProvider', provider: 'webdav' | 'oss-s3'): void;
@@ -190,12 +198,23 @@ const { t } = useI18n();
 const settingsStore = useSettingsStore();
 const syncStore = useSyncStore();
 const workspaceStore = useWorkspaceStore();
+const syncLicenseGate = useLicenseGate('sync');
+const isLicenseLocked = computed(() => !syncLicenseGate.allowed.value);
 
 const isConfigReady = computed(() => syncService.isConfigReady(settingsStore.config.sync));
 const { statusLabel, statusToneClass, summaryItems, formattedLastSynced } = useSyncPresentation();
 const syncStatusToneClass = computed(() => statusToneClass.value);
 
-const isSyncDisabled = computed(() => !settingsStore.config.sync.enabled);
+const isSyncDisabled = computed(() => isLicenseLocked.value || !settingsStore.config.sync.enabled);
+
+const requestLicenseAccessIfNeeded = (): boolean => {
+  if (!isLicenseLocked.value) {
+    return false;
+  }
+
+  syncLicenseGate.requestAccess();
+  return true;
+};
 
 async function showSyncDialog(message: string, type: 'error' | 'warning' = 'warning'): Promise<void> {
   if (type === 'error') {
@@ -212,6 +231,10 @@ async function showSyncDialog(message: string, type: 'error' | 'warning' = 'warn
 }
 
 const toggleSyncEnabled = async () => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   const nextEnabled = !settingsStore.config.sync.enabled;
   if (!nextEnabled) {
     await settingsStore.updateSyncSetting('enabled', false);
@@ -226,6 +249,10 @@ const toggleSyncEnabled = async () => {
 };
 
 const toggleAutoSyncOnSave = () => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   if (isSyncDisabled.value) {
     return;
   }
@@ -234,6 +261,10 @@ const toggleAutoSyncOnSave = () => {
 };
 
 const handleIntervalChange = (event: Event) => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   if (isSyncDisabled.value) {
     return;
   }
@@ -242,6 +273,10 @@ const handleIntervalChange = (event: Event) => {
 };
 
 const handleProviderSelect = async (provider: 'webdav' | 'oss-s3') => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   if (isSyncDisabled.value) {
     return;
   }
@@ -297,6 +332,10 @@ async function ensureE2eeReadyForSync(): Promise<boolean> {
 }
 
 const handleSyncNow = async () => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   if (!(await ensureE2eeReadyForSync())) {
     return;
   }
@@ -309,10 +348,18 @@ const handleSyncNow = async () => {
 };
 
 const handleEditBtnClick = (provider: 'webdav' | 'oss-s3') => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   emit('editProvider', provider);
 };
 
 const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   const providerName = provider === 'webdav' ? t('option.sync.webdav') : t('option.sync.oss');
   const confirmed = await settingsService.confirmResetSyncProvider(providerName);
   if (confirmed) {
@@ -540,6 +587,10 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 .action-icon-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.sync-license-gate {
+  grid-column: 1 / -1;
 }
 
 @media (max-width: 960px) {

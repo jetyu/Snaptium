@@ -3,6 +3,12 @@
     <div class="header-actions">
       <h3 class="panel-title">{{ t('pref.pane.aiSources') }}</h3>
     </div>
+    <LicenseGateNotice
+      v-if="isLicenseLocked"
+      class="license-gate"
+      title-key="license.gate.aiSources.title"
+      description-key="license.gate.aiSources.description"
+    />
 
 
     <div class="source-list">
@@ -13,10 +19,10 @@
             <div class="source-header">
               <h4 class="source-title">{{ source.name }}</h4>
               <div class="settings-card-actions">
-                <button class="action-btn" @click="handleEditSource(source)" :title="t('common.editor')">
+                <button class="action-btn" :disabled="isLicenseLocked" @click="handleEditSource(source)" :title="t('common.editor')">
                   <Edit theme="outline" size="14" />
                 </button>
-                <button class="action-btn delete" @click="removeSource(source)" :title="t('trash.delete')">
+                <button class="action-btn delete" :disabled="isLicenseLocked" @click="removeSource(source)" :title="t('trash.delete')">
                   <Delete theme="outline" size="14" />
                 </button>
               </div>
@@ -47,36 +53,36 @@
             <span class="char-counter">{{ newSource.name.length }}/10</span>
           </label>
           <input v-model="newSource.name" type="text" class="settings-input" maxlength="10"
-            :placeholder="t('placeholder.sourceName')" />
+            :placeholder="t('placeholder.sourceName')" :disabled="isLicenseLocked" />
         </div>
 
         <div class="source-form-group">
           <label class="setting-label">{{ t('label.aiApiEndpoint') }} <span class="required-mark">{{ t('label.starSign')
           }}</span></label>
           <input v-model="newSource.endpoint" type="text" class="settings-input"
-            :placeholder="t('placeholder.aiAPIEndpoint')" />
+            :placeholder="t('placeholder.aiAPIEndpoint')" :disabled="isLicenseLocked" />
         </div>
         <div class="source-form-group">
           <label class="setting-label">{{ t('label.aiModel') }} <span class="required-mark">{{ t('label.starSign')
           }}</span></label>
           <input v-model="newSource.aiModel" type="text" class="settings-input"
-            :placeholder="t('placeholder.aiModel')" />
+            :placeholder="t('placeholder.aiModel')" :disabled="isLicenseLocked" />
         </div>
         <div class="source-form-group">
           <label class="setting-label">{{ t('label.aiApiKey') }} <span class="required-mark">{{ t('label.starSign')
           }}</span></label>
-          <PasswordInput v-model="newSource.apiKey" :placeholder="t('placeholder.aiAPIKey')" autocomplete="off" />
+          <PasswordInput v-model="newSource.apiKey" :placeholder="t('placeholder.aiAPIKey')" autocomplete="off" :disabled="isLicenseLocked" />
         </div>
         <div class="form-actions-row">
           <div class="buttons">
-            <button class="action-button secondary" @click="handleTestNewSource" :disabled="!canTest || isTesting">
+            <button class="action-button secondary" @click="handleTestNewSource" :disabled="isLicenseLocked || !canTest || isTesting">
               <span v-if="isTesting" class="spinner small"></span>
               {{ isTesting ? t('button.testing') : t('button.testConnection') }}
             </button>
             <button class="action-button secondary" @click="handleCancelAdd">
               {{ t('button.cancel') }}
             </button>
-            <button class="action-button primary" @click="handleAddSource" :disabled="!isFormValid || isAdding">
+            <button class="action-button primary" @click="handleAddSource" :disabled="isLicenseLocked || !isFormValid || isAdding">
               <template v-if="isAdding">
                 <span class="spinner small"></span>
               </template>
@@ -89,7 +95,7 @@
       </div>
 
       <!-- Add Source Card (Placeholder) -->
-      <div v-else-if="settingsStore.config.aiSources.length > 0" class="add-source-card" @click="showAddForm = true">
+      <div v-else-if="settingsStore.config.aiSources.length > 0" class="add-source-card" @click="handleAddSourceTrigger">
         <div class="add-icon">
           <Plus theme="outline" :size="24" />
         </div>
@@ -97,7 +103,7 @@
       </div>
 
       <div v-if="settingsStore.config.aiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card"
-        @click="showAddForm = true">
+        @click="handleAddSourceTrigger">
         <div class="empty-icon">
           <Light theme="outline" :size="48" />
         </div>
@@ -119,16 +125,19 @@ import { systemDialog } from '../../services/system-dialog.service';
 import { createLogger } from '../../../logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { Plus, Light, Delete, Edit } from '@icon-park/vue-next';
+import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 import PasswordInput from '../PasswordInput.vue';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
 const aisLogger = createLogger('AISettings');
+const aiSourceLicenseGate = useLicenseGate('aiSources');
 
 const showAddForm = ref(false);
 const isAdding = ref(false);
 const isTesting = ref(false);
 const editingSourceId = ref<string | null>(null);
+const isLicenseLocked = computed(() => !aiSourceLicenseGate.allowed.value);
 
 const isEditMode = computed(() => !!editingSourceId.value);
 
@@ -152,7 +161,28 @@ const canTest = computed(() => {
 // Validation for adding (Name, Endpoint, Key are mandatory. Model is optional but recommended)
 const isFormValid = computed(() => canTest.value);
 
+const requestLicenseAccessIfNeeded = (): boolean => {
+  if (!isLicenseLocked.value) {
+    return false;
+  }
+
+  aiSourceLicenseGate.requestAccess();
+  return true;
+};
+
+const handleAddSourceTrigger = (): void => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
+  showAddForm.value = true;
+};
+
 const handleAddSource = async () => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   if (!isFormValid.value || isAdding.value) return;
 
   isAdding.value = true;
@@ -189,6 +219,10 @@ const handleAddSource = async () => {
 };
 
 const handleEditSource = (source: AISource) => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   editingSourceId.value = source.id;
   newSource.name = source.name;
   newSource.endpoint = source.endpoint;
@@ -211,6 +245,10 @@ const handleCancelAdd = () => {
 };
 
 const handleTestNewSource = async () => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   if (!canTest.value || isTesting.value) return;
 
   aisLogger.info(`Testing connectivity for new source: ${newSource.endpoint}`);
@@ -250,6 +288,10 @@ const handleTestNewSource = async () => {
 };
 
 const removeSource = async (source: AISource) => {
+  if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
   const confirmed = await settingsService.confirmDeleteAiSource(source.name);
   if (confirmed) {
     await settingsStore.removeAiSource(source.id);
@@ -265,6 +307,10 @@ const removeSource = async (source: AISource) => {
   align-items: center;
   margin-top: 0;
   margin-bottom: 1.25rem;
+}
+
+.license-gate {
+  margin-bottom: 1rem;
 }
 
 .add-form-card {

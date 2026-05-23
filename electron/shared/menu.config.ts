@@ -18,6 +18,7 @@ export type MenuAction =
   | 'privacy'
   | 'terms'
   | 'update'
+  | 'activateLicense'
   | 'feedback'
   | 'about';
 
@@ -74,6 +75,7 @@ export const MENU_CONFIG: MenuCategoryConfig[] = [
       { id: 'terms', labelKey: 'menu.help.termsOfService' },
       { type: 'separator' },
       { id: 'update', labelKey: 'menu.help.update' },
+      { id: 'activateLicense', labelKey: 'menu.help.activateLicense' },
       { id: 'feedback', labelKey: 'menu.help.feedback' },
       { type: 'separator' },
       { id: 'about', labelKey: 'menu.help.about' },

@@ -13,6 +13,7 @@ import { IPC_CHANNELS } from './constants/ipc.constants.js';
 import { vfsService } from './services/vfs.service.js';
 import { accessControlService } from './services/access-control.service.js';
 import { errorService } from './services/error.service.js';
+import { licenseService } from './services/license.service.js';
 
 const WORKSPACE_RESOURCE_SCHEME = 'note-resource';
 
@@ -93,18 +94,39 @@ function registerPreviewSecurityPolicies(electronSession: Electron.Session): voi
   });
 }
 
+function broadcastLicenseState(): void {
+  const state = licenseService.getState();
+  const windows = BrowserWindow.getAllWindows();
+  for (const window of windows) {
+    if (!window.isDestroyed()) {
+      window.webContents.send(IPC_CHANNELS.LICENSE_STATE_CHANGED, state);
+    }
+  }
+}
+
 errorService.registerGlobalErrorHandlers();
 
 app.whenReady().then(async () => {
   registerWorkspaceResourceProtocol();
   const preferences = await settingsService.loadConfig();
   await accessControlService.initialize();
+  licenseService.addStateChangeListener(() => {
+    broadcastLicenseState();
+  });
+  void licenseService.initialize().catch((error) => {
+    loggerService.error('MainBootstrap', 'License initialization failed', {
+      message: error instanceof Error ? error.message : String(error),
+    });
+  });
   registerPreviewSecurityPolicies(session.defaultSession);
   loggerService.updateConfig(preferences);
   const appRootPath = app.getAppPath();
   const mainWindow = createMainWindow({ isDev, appPath: appRootPath });
   registerIpcHandlers(mainWindow);
   setupAppMenu(mainWindow, preferences.language);
+  mainWindow.webContents.once('did-finish-load', () => {
+    broadcastLicenseState();
+  });
   
   trayService.init(mainWindow);
   
@@ -126,6 +148,9 @@ app.whenReady().then(async () => {
         registerIpcHandlers(window);
         setupAppMenu(window, nextPreferences.language);
         trayService.init(window);
+        window.webContents.once('did-finish-load', () => {
+          broadcastLicenseState();
+        });
       });
     }
   });
@@ -150,4 +175,5 @@ app.on(IPC_CHANNELS.ELECTRON_BEFORE_QUIT, () => {
   isQuitting = true;
   trayService.destroy();
   updaterService.destroy();
+  licenseService.destroy();
 });
