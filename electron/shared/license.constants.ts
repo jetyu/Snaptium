@@ -1,7 +1,10 @@
 export const LICENSE_PLANS = {
   FREE: 'free',
+  TRIAL: 'trial',
   INSIDER: 'insider',
   PRO: 'pro',
+  ULTIMATE: 'ultimate',
+  ENTERPRISE: 'enterprise',
 } as const satisfies Record<string, string>;
 
 export type LicensePlan = (typeof LICENSE_PLANS)[keyof typeof LICENSE_PLANS];
@@ -153,12 +156,26 @@ export const LICENSE_ERROR_CODES = {
 
 export type LicenseErrorCode = (typeof LICENSE_ERROR_CODES)[keyof typeof LICENSE_ERROR_CODES];
 
+export const PAID_LICENSE_PLANS = [
+  LICENSE_PLANS.TRIAL,
+  LICENSE_PLANS.INSIDER,
+  LICENSE_PLANS.PRO,
+  LICENSE_PLANS.ULTIMATE,
+  LICENSE_PLANS.ENTERPRISE,
+] as const;
+
 export const PLAN_FEATURES: Record<LicensePlan, Record<LicensedFeature, boolean>> = {
   free: {
     aiSources: false,
     aiAssistant: false,
     rag: false,
     sync: false,
+  },
+  trial: {
+    aiSources: true,
+    aiAssistant: true,
+    rag: true,
+    sync: true,
   },
   insider: {
     aiSources: true,
@@ -172,8 +189,20 @@ export const PLAN_FEATURES: Record<LicensePlan, Record<LicensedFeature, boolean>
     rag: true,
     sync: true,
   },
+  ultimate: {
+    aiSources: true,
+    aiAssistant: true,
+    rag: true,
+    sync: true,
+  },
+  enterprise: {
+    aiSources: true,
+    aiAssistant: true,
+    rag: true,
+    sync: true,
+  },
 };
 
 export function isPaidPlan(plan: LicensePlan): boolean {
-  return plan === LICENSE_PLANS.INSIDER || plan === LICENSE_PLANS.PRO;
+  return plan !== LICENSE_PLANS.FREE;
 }

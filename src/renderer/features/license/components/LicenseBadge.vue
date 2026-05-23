@@ -65,6 +65,24 @@ const toneClass = computed(() => {
   color: #2f6b0f;
 }
 
+.license-badge.trial {
+  background: #fff7e8;
+  border-color: #fed7aa;
+  color: #9a3412;
+}
+
+.license-badge.ultimate {
+  background: #fff1f8;
+  border-color: #f9a8d4;
+  color: #9d174d;
+}
+
+.license-badge.enterprise {
+  background: #ecfeff;
+  border-color: #a5f3fc;
+  color: #155e75;
+}
+
 .license-badge.is-expired {
   background: #fff1f2;
   border-color: #fecdd3;
@@ -76,4 +94,3 @@ const toneClass = computed(() => {
   font-size: 0.7rem;
 }
 </style>
-

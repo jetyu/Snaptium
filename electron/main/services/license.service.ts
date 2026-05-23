@@ -22,6 +22,7 @@ import {
   type LicenseState,
   type LicenseValidationResponse,
   type PersistedLicenseState,
+  PAID_LICENSE_PLANS,
   PLAN_FEATURES,
   isPaidPlan,
 } from '../../shared/license.constants.js';
@@ -112,7 +113,7 @@ const licenseHeartbeatResponseSchema = z.object({
 const persistedStateSchema = z.object({
   version: z.number().int().positive(),
   encryptedToken: z.string().nullable(),
-  plan: z.enum([LICENSE_PLANS.INSIDER, LICENSE_PLANS.PRO]).nullable(),
+  plan: z.enum(PAID_LICENSE_PLANS).nullable(),
   expiresAt: z.string().nullable(),
   graceExpiresAt: z.string().nullable(),
   maxDevices: z.number().int().nonnegative().nullable(),
@@ -164,8 +165,11 @@ function parseApiError(value: unknown): LicenseApiErrorResponse {
 function normalizePlan(value: string): LicensePlan | null {
   const normalized = value.trim().toLowerCase();
   if (normalized === LICENSE_PLANS.FREE) return LICENSE_PLANS.FREE;
+  if (normalized === LICENSE_PLANS.TRIAL) return LICENSE_PLANS.TRIAL;
   if (normalized === LICENSE_PLANS.INSIDER) return LICENSE_PLANS.INSIDER;
   if (normalized === LICENSE_PLANS.PRO) return LICENSE_PLANS.PRO;
+  if (normalized === LICENSE_PLANS.ULTIMATE) return LICENSE_PLANS.ULTIMATE;
+  if (normalized === LICENSE_PLANS.ENTERPRISE) return LICENSE_PLANS.ENTERPRISE;
   return null;
 }
 
@@ -246,7 +250,7 @@ export class LicenseService {
 
     throw createLicenseError(
       LICENSE_ERROR_CODES.LICENSE_INACTIVE,
-      `Feature "${feature}" requires an active Insider/Pro license.`,
+      `Feature "${feature}" requires an active paid license.`,
     );
   }
 
@@ -677,7 +681,7 @@ export class LicenseService {
   ): void {
     const plan = this.resolvePlanOrThrow(response.type);
     if (!options?.allowUnknownType && !isPaidPlan(plan)) {
-      throw createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, 'License type must be Insider or Pro for activated users.');
+      throw createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, 'License type must be a paid plan for activated users.');
     }
 
     this.state.plan = plan;
