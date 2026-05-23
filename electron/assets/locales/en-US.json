@@ -801,6 +801,7 @@
   "license.activation.inputLabel": "License Key",
   "license.activation.placeholder": "SNP?-XXXX-XXXX-XXXX-XXXX",
   "license.activation.button": "Activate",
+  "license.activation.purchase": "Buy License Key",
   "license.activation.failed": "Activation failed. Please check your license key and network connection.",
   "license.feature.aiSources": "AI source configuration",
   "license.feature.aiAssistant": "AI writing assistant",

@@ -324,7 +324,7 @@ const DEFAULT_LICENSE_STATE: LicenseState = {
 
 ## 校验规则
 
-启动时，如果本地存在已激活授权，则进行远端校验。
+启动时，如果本地存在已激活许可证，则进行远端校验。
 
 ```text
 应用启动
@@ -653,7 +653,7 @@ expired / invalid：显示 Free 或 Expired，点击进入激活页。
 
 ```text
 Help
--> Activate License / 激活授权
+-> Activate License / 激活许可证
 ```
 
 配置落点：
@@ -688,7 +688,7 @@ MENU_OPEN_LICENSE: 'menu:open-license'
 -> Free：显示 LicenseActivationView
 -> Insider / Pro：显示 LicenseManagementView
 
-点击 Help -> Activate License / 激活授权
+点击 Help -> Activate License / 激活许可证
 -> 打开 LicenseDialog
 -> Free：显示 LicenseActivationView
 -> Insider / Pro：显示 LicenseManagementView
@@ -876,7 +876,7 @@ UI 行为：
 
 - 禁用输入框、开关、运行按钮。
 - Free 用户访问高级功能时展示升级提示：该功能需要 Insider 或 Pro。
-- 提供“激活授权”或“升级到 Pro”入口。
+- 提供“激活许可证”或“升级到 Pro”入口。
 - 用户从 Insider / Pro 回落到 Free 时，不删除已经配置的高级设置，只禁用使用。
 
 ### 运行时层
@@ -934,7 +934,7 @@ registerIpcHandlers(mainWindow)
 
 ### 第二阶段：入口和标识
 
-- 在帮助菜单新增“激活授权”。
+- 在帮助菜单新增“激活许可证”。
 - 在菜单栏加入 `LicenseBadge`。
 - 点击授权标识打开独立授权弹窗。
 - Free 状态显示待激活页面。
@@ -962,7 +962,7 @@ registerIpcHandlers(mainWindow)
 ### 第五阶段：启动与心跳
 
 - 应用启动时初始化 license service。
-- 校验本地已激活授权。
+- 校验本地已激活许可证。
 - 对 active / offline_grace / session_grace Insider 或 Pro 启动 heartbeat。
 - 向 Renderer 推送授权状态变化。
 

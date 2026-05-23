@@ -26,15 +26,25 @@
       />
     </label>
 
-    <button
-      type="button"
-      class="action-button primary license-btn activate-btn"
-      :disabled="isSubmitting || licenseKey.trim().length === 0"
-      @click="handleActivate"
-    >
-      <span v-if="isSubmitting" class="spinner small"></span>
-      <span v-else>{{ t('license.activation.button') }}</span>
-    </button>
+    <div class="action-row">
+      <button
+        type="button"
+        class="action-button primary license-btn activate-btn"
+        :disabled="isSubmitting || licenseKey.trim().length === 0"
+        @click="handleActivate"
+      >
+        <span v-if="isSubmitting" class="spinner small"></span>
+        <span v-else>{{ t('license.activation.button') }}</span>
+      </button>
+      <a
+        class="action-button secondary license-btn buy-btn"
+        :href="LICENSE_PURCHASE_URL"
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+      >
+        {{ t('license.activation.purchase') }}
+      </a>
+    </div>
 
     <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
   </div>
@@ -47,6 +57,7 @@ import { getErrorMessage } from '@shared/utils/error.utils';
 import { licenseService } from '../services/license.service';
 
 const { t } = useI18n();
+const LICENSE_PURCHASE_URL = 'https://snaptium.com';
 const licenseKey = ref('');
 const isSubmitting = ref(false);
 const errorMessage = ref('');
@@ -151,8 +162,26 @@ async function handleActivate(): Promise<void> {
   box-shadow: 0 0 0 3px rgba(122, 167, 255, 0.2);
 }
 
-.activate-btn {
-  width: 100%;
+.action-row {
+  display: flex;
+  gap: 8px;
+}
+
+.activate-btn,
+.buy-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
+}
+
+.buy-btn {
+  text-decoration: none;
+}
+
+@media (max-width: 640px) {
+  .action-row {
+    flex-direction: column;
+  }
 }
 
 .error {
