@@ -1,11 +1,5 @@
 ﻿<template>
   <div class="settings-grid">
-    <LicenseGateNotice
-      v-if="isLicenseLocked"
-      class="sync-license-gate"
-      title-key="license.gate.sync.title"
-      description-key="license.gate.sync.description"
-    />
     <section class="setting-card">
       <div class="setting-copy">
         <p class="setting-label">{{ t('label.syncRemoteData') }}</p>
@@ -188,7 +182,7 @@ import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.
 import { securityService, normalizeSecurityError } from '@renderer/features/security';
 import { settingsService } from '../../../services/settings.service';
 import { systemDialog } from '../../../services/system-dialog.service';
-import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
+import { useLicenseGate } from '@renderer/features/license';
 
 const emit = defineEmits<{
   (e: 'editProvider', provider: 'webdav' | 'oss-s3'): void;
@@ -587,10 +581,6 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 .action-icon-btn:disabled {
   opacity: 0.55;
   cursor: not-allowed;
-}
-
-.sync-license-gate {
-  grid-column: 1 / -1;
 }
 
 @media (max-width: 960px) {
