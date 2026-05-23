@@ -813,6 +813,8 @@
   "license.management.expiresAt": "Expires at",
   "license.management.graceExpiresAt": "Grace expires at",
   "license.management.activatedDevices": "Activated devices",
+  "license.management.planType": "License type",
+  "license.management.downgradedTitle": "License validation failed. Advanced features are disabled on this device.",
   "license.management.lastValidatedAt": "Last validated",
   "license.devices.name": "Device",
   "license.devices.platform": "Platform",

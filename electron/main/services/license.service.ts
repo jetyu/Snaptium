@@ -479,15 +479,6 @@ export class LicenseService {
         return this.getState();
       }
 
-      if (normalizedError.code === LICENSE_ERROR_CODES.CANNOT_DEACTIVATE_CURRENT_DEVICE) {
-        await this.clearLicenseInternal(LICENSE_STATUSES.FREE, {
-          lastErrorCode: null,
-          lastErrorMessage: null,
-        });
-        this.notifyStateChange();
-        return this.getState();
-      }
-
       this.state.lastErrorCode = String(normalizedError.code);
       this.state.lastErrorMessage = normalizedError.message;
       this.notifyStateChange();

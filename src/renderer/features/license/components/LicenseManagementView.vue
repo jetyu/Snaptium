@@ -1,44 +1,60 @@
 <template>
   <div class="management-view">
-    <div class="header">
-      <div>
-        <h2 class="title">{{ t(`license.badge.${store.plan}`) }}</h2>
-        <p class="status">{{ t(store.getStatusTextKey(store.status)) }}</p>
+    <section class="summary-panel">
+      <div class="summary-main">
+        <h2 class="title">{{ t('license.management.planType') }}: {{ t(`license.badge.${store.plan}`) }}</h2>
+        <p class="status-text">{{ t('license.devices.status') }}: {{ t(store.getStatusTextKey(store.status)) }}</p>
       </div>
       <div class="actions">
-        <button type="button" class="action-button secondary" :disabled="isRefreshing" @click="handleRefresh">
+        <button type="button" class="action-button secondary license-btn" :disabled="isRefreshing || !store.canManage" @click="handleRefresh">
           <span v-if="isRefreshing" class="spinner small"></span>
           <span v-else>{{ t('license.management.refresh') }}</span>
         </button>
-        <button type="button" class="action-button secondary" :disabled="isRefreshing" @click="handleValidate">
+        <button type="button" class="action-button secondary license-btn" :disabled="isRefreshing || !store.canManage" @click="handleValidate">
           {{ t('license.management.validate') }}
         </button>
-        <button type="button" class="action-button secondary danger" :disabled="isClearing" @click="handleClear">
+        <button
+          type="button"
+          class="action-button secondary license-btn is-danger"
+          :disabled="isClearing || !store.canManage"
+          @click="handleClear"
+        >
           {{ t('license.management.clear') }}
         </button>
       </div>
-    </div>
+    </section>
 
-    <div class="meta-grid">
-      <div class="meta-item">
+    <section v-if="showDowngradeNotice" class="downgrade-alert">
+      <p class="downgrade-title">{{ t('license.management.downgradedTitle') }}</p>
+      <p class="downgrade-status">{{ t('license.devices.status') }}: {{ t(store.getStatusTextKey(store.status)) }}</p>
+      <p v-if="store.lastErrorMessage" class="downgrade-reason">{{ store.lastErrorMessage }}</p>
+      <button type="button" class="action-button primary license-btn" @click="emit('switch-activation')">
+        {{ t('license.gate.action') }}
+      </button>
+    </section>
+
+    <section class="meta-grid">
+      <article class="meta-item">
         <span class="label">{{ t('license.management.expiresAt') }}</span>
         <span class="value">{{ formatDate(store.state.expiresAt) }}</span>
-      </div>
-      <div class="meta-item">
+      </article>
+      <article class="meta-item">
         <span class="label">{{ t('license.management.graceExpiresAt') }}</span>
         <span class="value">{{ formatDate(store.state.graceExpiresAt) }}</span>
-      </div>
-      <div class="meta-item">
+      </article>
+      <article class="meta-item">
         <span class="label">{{ t('license.management.activatedDevices') }}</span>
         <span class="value">{{ store.activatedDevices }} / {{ store.maxDevices ?? '-' }}</span>
-      </div>
-      <div class="meta-item">
+      </article>
+      <article class="meta-item">
         <span class="label">{{ t('license.management.lastValidatedAt') }}</span>
         <span class="value">{{ formatTimestamp(store.lastValidatedAt) }}</span>
-      </div>
-    </div>
+      </article>
+    </section>
 
-    <LicenseDeviceList :devices="store.devices" />
+    <section class="device-panel">
+      <LicenseDeviceList :devices="store.devices" />
+    </section>
   </div>
 </template>
 
@@ -48,6 +64,18 @@ import { useI18n } from 'vue-i18n';
 import { licenseService } from '../services/license.service';
 import { useLicenseStore } from '../store/license.store';
 import LicenseDeviceList from './LicenseDeviceList.vue';
+
+interface Props {
+  showDowngradeNotice?: boolean;
+}
+
+withDefaults(defineProps<Props>(), {
+  showDowngradeNotice: false,
+});
+
+const emit = defineEmits<{
+  (e: 'switch-activation'): void;
+}>();
 
 const { t } = useI18n();
 const store = useLicenseStore();
@@ -122,67 +150,148 @@ async function handleClear(): Promise<void> {
 .management-view {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
-.header {
+.summary-panel {
+  border: 1px solid #e7eaf0;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fbfbfc;
   display: flex;
   justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.summary-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .title {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.16rem;
+  line-height: 1.2;
+  color: #0f172a;
 }
 
-.status {
-  margin: 6px 0 0 0;
+.status-text {
+  margin: 0;
   color: #475569;
+  font-size: 0.9rem;
+  font-weight: 500;
 }
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
+.license-btn.is-danger {
+  border-color: #fecaca;
+  color: #be123c;
+  background: #fff1f2;
+}
+
+.license-btn.is-danger:hover:not(:disabled) {
+  border-color: #fca5a5;
+  background: #ffe4e6;
+  color: #9f1239;
+}
+
+.downgrade-alert {
+  border: 1px solid #fecdd3;
+  border-radius: 10px;
+  background: #fff1f2;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.downgrade-title {
+  margin: 0;
+  color: #9f1239;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.downgrade-status {
+  margin: 0;
+  color: #475569;
+  font-size: 0.84rem;
+}
+
+.downgrade-reason {
+  margin: 0;
+  color: #be123c;
+  font-size: 0.83rem;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
 .meta-grid {
+  border: 1px solid #e7eaf0;
+  border-radius: 10px;
+  background: #fbfbfc;
+  padding: 10px;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 8px;
 }
 
 .meta-item {
-  border: 1px solid #e2e8f0;
+  border: 1px solid #e7eaf0;
   border-radius: 8px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   display: flex;
   justify-content: space-between;
-  gap: 8px;
-  font-size: 0.84rem;
+  gap: 10px;
+  font-size: 0.85rem;
+  background: #ffffff;
 }
 
 .meta-item .label {
-  color: #64748b;
+  color: #5f6b7a;
+  font-weight: 500;
 }
 
 .meta-item .value {
   color: #0f172a;
+  font-weight: 600;
 }
 
-.danger {
-  border-color: #fecaca;
-  color: #b91c1c;
+.device-panel {
+  border: 1px solid #e7eaf0;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 10px;
 }
 
 @media (max-width: 920px) {
-  .header {
+  .summary-panel {
     flex-direction: column;
   }
 
   .meta-grid {
     grid-template-columns: 1fr;
   }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions .license-btn {
+    flex: 1 1 calc(50% - 8px);
+  }
+}
+
+@media (max-width: 640px) {
+  .actions .license-btn {
+    flex-basis: 100%;
+  }
 }
 </style>
-

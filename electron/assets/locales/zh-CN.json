@@ -374,6 +374,8 @@
   "license.management.expiresAt": "到期时间",
   "license.management.graceExpiresAt": "宽限截止",
   "license.management.lastValidatedAt": "最近校验",
+  "license.management.planType": "许可证类型",
+  "license.management.downgradedTitle": "授权校验失败，当前设备已禁用高级功能。",
   "license.management.refresh": "刷新设备",
   "license.management.validate": "重新校验",
   "license.status.active": "已激活",

@@ -1,30 +1,37 @@
 <template>
   <div class="activation-view">
-    <h2 class="title">{{ t('license.activation.title') }}</h2>
-    <p class="description">{{ t('license.activation.description') }}</p>
+    <div class="title-group">
+      <h2 class="title">{{ t('license.activation.title') }}</h2>
+      <p class="description">{{ t('license.activation.description') }}</p>
+    </div>
 
-    <div class="feature-list">
-      <p>{{ t('license.activation.featuresTitle') }}</p>
-      <ul>
+    <section class="feature-list">
+      <p class="feature-title">{{ t('license.activation.featuresTitle') }}</p>
+      <ul class="feature-items">
         <li>{{ t('license.feature.aiSources') }}</li>
         <li>{{ t('license.feature.aiAssistant') }}</li>
         <li>{{ t('license.feature.rag') }}</li>
         <li>{{ t('license.feature.sync') }}</li>
       </ul>
-    </div>
+    </section>
 
     <label class="field">
-      <span>{{ t('license.activation.inputLabel') }}</span>
+      <span class="field-label">{{ t('license.activation.inputLabel') }}</span>
       <input
         v-model="licenseKey"
         type="text"
-        class="settings-input"
+        class="settings-input license-key-input"
         :placeholder="t('license.activation.placeholder')"
         autocomplete="off"
       />
     </label>
 
-    <button type="button" class="action-button primary" :disabled="isSubmitting || licenseKey.trim().length === 0" @click="handleActivate">
+    <button
+      type="button"
+      class="action-button primary license-btn activate-btn"
+      :disabled="isSubmitting || licenseKey.trim().length === 0"
+      @click="handleActivate"
+    >
       <span v-if="isSubmitting" class="spinner small"></span>
       <span v-else>{{ t('license.activation.button') }}</span>
     </button>
@@ -66,34 +73,57 @@ async function handleActivate(): Promise<void> {
 .activation-view {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  border: 1px solid #e7eaf0;
+  border-radius: 10px;
+  padding: 14px;
+  background: #fbfbfc;
+}
+
+.title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .title {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.24rem;
+  line-height: 1.2;
 }
 
 .description {
   margin: 0;
   color: #475569;
+  font-size: 0.93rem;
 }
 
 .feature-list {
-  border: 1px solid #dbe5f2;
-  background: #f7fbff;
-  border-radius: 10px;
-  padding: 10px 12px;
+  border: 1px solid #e7eaf0;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 12px;
 }
 
-.feature-list p {
+.feature-title {
   margin: 0 0 8px 0;
   font-weight: 600;
+  color: #111827;
+  font-size: 0.88rem;
 }
 
-.feature-list ul {
+.feature-items {
   margin: 0;
   padding-left: 18px;
+  color: #334155;
+}
+
+.feature-items li {
+  margin: 0 0 4px 0;
+}
+
+.feature-items li:last-child {
+  margin-bottom: 0;
 }
 
 .field {
@@ -102,10 +132,36 @@ async function handleActivate(): Promise<void> {
   gap: 6px;
 }
 
+.field-label {
+  font-size: 0.86rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.license-key-input {
+  height: 36px;
+  border-radius: 8px;
+  border-color: #c9d1dc;
+  background: #ffffff;
+  font-size: 0.9rem;
+}
+
+.license-key-input:focus {
+  border-color: #7aa7ff;
+  box-shadow: 0 0 0 3px rgba(122, 167, 255, 0.2);
+}
+
+.activate-btn {
+  width: 100%;
+}
+
 .error {
   margin: 0;
   color: #be123c;
-  font-size: 0.86rem;
+  font-size: 0.85rem;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  background: #fff1f2;
+  padding: 8px 10px;
 }
 </style>
-

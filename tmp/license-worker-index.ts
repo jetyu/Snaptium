@@ -1004,15 +1004,6 @@ app.post("/v1/license/deactivate-device", async (c) => {
     return authContext;
   }
 
-  if (normalizedDeviceId === authContext.currentDevice.id) {
-    return jsonError(
-      c,
-      409,
-      "cannot_deactivate_current_device",
-      "Current device cannot be remotely deactivated."
-    );
-  }
-
   const updateRes = await c.env.DB.prepare(
     "UPDATE license_devices SET status = 'inactive', last_seen_at = ?, last_ip_prefix = ? WHERE id = ? AND license_id = ? AND status = 'active'"
   )
