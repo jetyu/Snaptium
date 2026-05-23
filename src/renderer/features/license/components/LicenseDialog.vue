@@ -16,11 +16,7 @@
           </div>
 
           <div class="license-content">
-            <LicenseManagementView
-              v-if="panelMode === 'management'"
-              :show-downgrade-notice="!store.canManage"
-              @switch-activation="switchToActivationPanel"
-            />
+            <LicenseManagementView v-if="panelMode === 'management'" />
             <LicenseActivationView v-else />
           </div>
         </div>
@@ -72,11 +68,6 @@ watch(
     }
   },
 );
-
-function switchToActivationPanel(): void {
-  panelMode.value = 'activation';
-}
-
 onMounted(async () => {
   await licenseService.initialize();
   removeMainMenuListener = initMainProcessListeners();
@@ -181,5 +172,3 @@ onUnmounted(() => {
   opacity: 0;
 }
 </style>
-
-

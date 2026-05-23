@@ -3,7 +3,10 @@
     <section class="summary-panel">
       <div class="summary-main">
         <h2 class="title">{{ t('license.management.planType') }}: {{ t(`license.badge.${store.plan}`) }}</h2>
-        <p class="status-text">{{ t('license.devices.status') }}: {{ t(store.getStatusTextKey(store.status)) }}</p>
+        <p class="status-text">
+          {{ t('license.devices.status') }}: {{ t(store.getStatusTextKey(store.status)) }}
+          <span v-if="!store.canManage && store.lastErrorMessage" class="status-inline-reason"> {{ store.lastErrorMessage }}</span>
+        </p>
       </div>
       <div class="actions">
         <button type="button" class="action-button secondary license-btn" :disabled="isRefreshing || !store.canManage" @click="handleRefresh">
@@ -22,15 +25,6 @@
           {{ t('license.management.clear') }}
         </button>
       </div>
-    </section>
-
-    <section v-if="showDowngradeNotice" class="downgrade-alert">
-      <p class="downgrade-title">{{ t('license.management.downgradedTitle') }}</p>
-      <p class="downgrade-status">{{ t('license.devices.status') }}: {{ t(store.getStatusTextKey(store.status)) }}</p>
-      <p v-if="store.lastErrorMessage" class="downgrade-reason">{{ store.lastErrorMessage }}</p>
-      <button type="button" class="action-button primary license-btn" @click="emit('switch-activation')">
-        {{ t('license.gate.action') }}
-      </button>
     </section>
 
     <section class="meta-grid">
@@ -64,18 +58,6 @@ import { useI18n } from 'vue-i18n';
 import { licenseService } from '../services/license.service';
 import { useLicenseStore } from '../store/license.store';
 import LicenseDeviceList from './LicenseDeviceList.vue';
-
-interface Props {
-  showDowngradeNotice?: boolean;
-}
-
-withDefaults(defineProps<Props>(), {
-  showDowngradeNotice: false,
-});
-
-const emit = defineEmits<{
-  (e: 'switch-activation'): void;
-}>();
 
 const { t } = useI18n();
 const store = useLicenseStore();
@@ -182,6 +164,12 @@ async function handleClear(): Promise<void> {
   color: #475569;
   font-size: 0.9rem;
   font-weight: 500;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.status-inline-reason {
+  color: #be123c;
 }
 
 .actions {
@@ -200,37 +188,6 @@ async function handleClear(): Promise<void> {
   border-color: #fca5a5;
   background: #ffe4e6;
   color: #9f1239;
-}
-
-.downgrade-alert {
-  border: 1px solid #fecdd3;
-  border-radius: 10px;
-  background: #fff1f2;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.downgrade-title {
-  margin: 0;
-  color: #9f1239;
-  font-size: 0.9rem;
-  font-weight: 600;
-}
-
-.downgrade-status {
-  margin: 0;
-  color: #475569;
-  font-size: 0.84rem;
-}
-
-.downgrade-reason {
-  margin: 0;
-  color: #be123c;
-  font-size: 0.83rem;
-  line-height: 1.4;
-  word-break: break-word;
 }
 
 .meta-grid {
