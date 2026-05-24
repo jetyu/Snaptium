@@ -28,7 +28,7 @@ export function registerVfsIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.VFS_WRITE_CONTENT);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_SAVE_IMAGE);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER);
-  ipcMain.removeHandler(IPC_CHANNELS.VFS_DELETE_NODE);
+  ipcMain.removeHandler(IPC_CHANNELS.VFS_DELETE_NODES);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_UPDATE_NOTEBOOK_ICON_COLOR);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_UPDATE_NOTEBOOK_ICON_EMOJI);
@@ -113,8 +113,9 @@ export function registerVfsIpcHandlers() {
     return vfsService.showNoteInFolder(uuidSchema.parse(nodeId));
   });
 
-  ipcMain.handle(IPC_CHANNELS.VFS_DELETE_NODE, (_event, nodeId) => {
-    return vfsService.deleteNode(uuidSchema.parse(nodeId));
+  ipcMain.handle(IPC_CHANNELS.VFS_DELETE_NODES, (_event, nodeIds = []) => {
+    const schema = z.array(uuidSchema).min(1);
+    return vfsService.deleteNodes(schema.parse(nodeIds));
   });
 
   ipcMain.handle(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK, (_event, payload = {}) => {

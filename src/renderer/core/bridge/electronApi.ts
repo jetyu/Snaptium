@@ -802,8 +802,8 @@ export const electronApi = {
       return electronApi.vfs.getApi().saveImage(payload);
     },
 
-    deleteNode: (nodeId: string): Promise<WorkspaceNodePayload> => {
-      return electronApi.vfs.getApi().deleteNode(nodeId);
+    deleteNodes: (nodeIds: string[]): Promise<WorkspaceNodePayload[]> => {
+      return electronApi.vfs.getApi().deleteNodes(nodeIds);
     },
 
     moveNode: (payload: { nodeId: string; parentId: string | null; index: number }): Promise<WorkspaceNodePayload> => {

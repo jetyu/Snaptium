@@ -72,7 +72,7 @@ const electronAPI = Object.freeze({
     saveImage: (payload: { contentId: string; fileName?: string; mimeType: string; dataBase64: string }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_SAVE_IMAGE, payload),
     showNoteInFolder: (nodeId: string) => ipcRenderer.invoke(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER, nodeId),
-    deleteNode: (nodeId: string) => ipcRenderer.invoke(IPC_CHANNELS.VFS_DELETE_NODE, nodeId),
+    deleteNodes: (nodeIds: string[]) => ipcRenderer.invoke(IPC_CHANNELS.VFS_DELETE_NODES, nodeIds),
     moveNode: (payload: { nodeId: string; parentId: string | null; index: number }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_MOVE_NODE, payload),
     toggleNodeLock: (payload: { nodeId: string; locked: boolean }) =>

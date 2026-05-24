@@ -469,10 +469,15 @@ export const workspaceService = {
         }
     },
 
-    async deleteNode(nodeId: string): Promise<void> {
+    async deleteNodes(nodeIds: string[]): Promise<void> {
         ensureVfsAvailable();
 
-        await electronApi.vfs.deleteNode(normalizeNodeId(nodeId));
+        const normalizedNodeIds = Array.from(new Set(nodeIds.map((nodeId) => normalizeNodeId(nodeId))));
+        if (normalizedNodeIds.length === 0) {
+            return;
+        }
+
+        await electronApi.vfs.deleteNodes(normalizedNodeIds);
         notifyVfsChanged();
     },
 

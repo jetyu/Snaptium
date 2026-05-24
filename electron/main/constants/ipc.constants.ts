@@ -117,7 +117,7 @@ export const IPC_CHANNELS = {
   VFS_CONFIRM_RECOVER_VERSION: 'vfs:confirm-recover-version',
   VFS_CREATE_FILE: 'vfs:create-file',
   VFS_CREATE_FOLDER: 'vfs:create-folder',
-  VFS_DELETE_NODE: 'vfs:delete-node',
+  VFS_DELETE_NODES: 'vfs:delete-nodes',
   VFS_EMPTY_TRASH: 'vfs:empty-trash',
   VFS_GET_HISTORY: 'vfs:get-history',
   VFS_GET_HISTORY_CONTENT: 'vfs:get-history-content',

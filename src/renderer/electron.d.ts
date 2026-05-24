@@ -266,7 +266,7 @@ declare global {
         writeContent: (payload: { contentId: string; content: string }) => Promise<boolean>;
         saveImage: (payload: { contentId: string; fileName?: string; mimeType: string; dataBase64: string }) => Promise<SavedImagePayload>;
         showNoteInFolder: (nodeId: string) => Promise<boolean>;
-        deleteNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
+        deleteNodes: (nodeIds: string[]) => Promise<WorkspaceNodePayload[]>;
         moveNode: (payload: { nodeId: string; parentId: string | null; index: number }) => Promise<WorkspaceNodePayload>;
         toggleNodeLock: (payload: { nodeId: string; locked: boolean }) => Promise<WorkspaceNodePayload>;
         updateNotebookIconColor: (payload: { nodeId: string; iconColor: NotebookIconColor | null }) => Promise<WorkspaceNodePayload>;

@@ -663,13 +663,7 @@ async function deleteSelectedEntries() {
     return;
   }
 
-  for (const entry of entries) {
-    if (entry.kind === "note") {
-      await workspaceStore.deleteNote(entry.id);
-    } else {
-      await workspaceStore.deleteNotebook(entry.id);
-    }
-  }
+  await workspaceStore.deleteNodes(entries.map((entry) => entry.id));
 
   syncSelectionToActive();
 }

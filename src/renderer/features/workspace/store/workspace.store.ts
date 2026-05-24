@@ -119,7 +119,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (!window.__vfsListenerAdded) {
         window.addEventListener('vfs-changed', () => {
           logger.info('VFS change detected, refreshing workspace...');
-          this.initializeWorkspace(true);
+          void this.initializeWorkspace(true);
         });
         window.__vfsListenerAdded = true;
       }
@@ -425,7 +425,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (index === -1) return;
 
       try {
-        await workspaceService.deleteNode(id);
+        await workspaceService.deleteNodes([id]);
       } catch (err: unknown) {
         const message = getErrorMessage(err);
         logger.error(`Failed to delete note ${id}: ${message}`);
@@ -459,7 +459,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (!notebook) return;
 
       try {
-        await workspaceService.deleteNode(id);
+        await workspaceService.deleteNodes([id]);
       } catch (err: unknown) {
         const message = getErrorMessage(err);
         logger.error(`Failed to delete notebook ${id}: ${message}`);
@@ -480,6 +480,41 @@ export const useWorkspaceStore = defineStore('workspace', {
 
       logger.info(`Deleted notebook and descendants: ${id} (Total items removed: ${idsToRemove.size})`);
       window.dispatchEvent(new CustomEvent('vfs-changed'));
+    },
+
+    async deleteNodes(ids: string[]) {
+      const nodeIds = Array.from(new Set(ids));
+      if (nodeIds.length === 0) {
+        return;
+      }
+
+      try {
+        await workspaceService.deleteNodes(nodeIds);
+      } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        logger.error(`Failed to delete selected nodes: ${message}`);
+        return;
+      }
+
+      const idsToRemove = new Set<string>();
+      for (const id of nodeIds) {
+        idsToRemove.add(id);
+        for (const descendantId of getDescendantIds(this.notes, this.notebooks, id)) {
+          idsToRemove.add(descendantId);
+        }
+      }
+
+      this.notes = this.notes.filter((note) => !idsToRemove.has(note.id));
+      this.notebooks = this.notebooks.filter((candidate) => !idsToRemove.has(candidate.id));
+
+      if (idsToRemove.has(this.activeNoteId ?? '')) {
+        this.activeNoteId = this.notes[0]?.id ?? null;
+      }
+      if (idsToRemove.has(this.activeNotebookId ?? '')) {
+        this.activeNotebookId = null;
+      }
+
+      logger.info(`Deleted selected nodes and descendants: ${nodeIds.length} root candidate(s), ${idsToRemove.size} total item(s) removed.`);
     },
 
     async confirmDeleteNotebook(id: string): Promise<boolean> {
