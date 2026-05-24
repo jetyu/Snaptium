@@ -138,6 +138,31 @@ const electronAPI = Object.freeze({
       ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_LICENSE, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_LICENSE, subscription);
     },
+    onImportMarkdown: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_MARKDOWN, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_IMPORT_MARKDOWN, subscription);
+    },
+    onImportSppx: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_SPPX, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_IMPORT_SPPX, subscription);
+    },
+    onImportNwp: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_NWP, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_IMPORT_NWP, subscription);
+    },
+    onExportMarkdown: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_EXPORT_MARKDOWN, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_EXPORT_MARKDOWN, subscription);
+    },
+    onExportSppx: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_EXPORT_SPPX, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_EXPORT_SPPX, subscription);
+    },
   }),
   settings: Object.freeze({
     getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_LOAD),
@@ -162,6 +187,7 @@ const electronAPI = Object.freeze({
   dataTransfer: Object.freeze({
     exportSppx: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_SPPX),
     importSppx: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_SPPX),
+    importNwp: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_NWP),
     exportMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_MARKDOWN),
     importMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_MARKDOWN),
   }),

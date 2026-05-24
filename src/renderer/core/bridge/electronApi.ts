@@ -349,6 +349,14 @@ export interface MarkdownExportResult extends DataTransferBaseResult {
   failedFilePaths?: string[];
 }
 
+export interface NwpImportResult extends DataTransferBaseResult {
+  stats?: {
+    imported: number;
+    skipped: number;
+    failed: number;
+  };
+}
+
 export interface MessageDialogOptions {
   type?: 'none' | 'info' | 'error' | 'question' | 'warning';
   title?: string;
@@ -413,6 +421,11 @@ export const electronApi = {
     onOpenAbout: (callback: () => void) => electronApi.menu.getApi().onOpenAbout(callback),
     onCheckForUpdates: (callback: () => void) => electronApi.menu.getApi().onCheckForUpdates(callback),
     onOpenLicense: (callback: () => void) => electronApi.menu.getApi().onOpenLicense(callback),
+    onImportMarkdown: (callback: () => void) => electronApi.menu.getApi().onImportMarkdown(callback),
+    onImportSppx: (callback: () => void) => electronApi.menu.getApi().onImportSppx(callback),
+    onImportNwp: (callback: () => void) => electronApi.menu.getApi().onImportNwp(callback),
+    onExportMarkdown: (callback: () => void) => electronApi.menu.getApi().onExportMarkdown(callback),
+    onExportSppx: (callback: () => void) => electronApi.menu.getApi().onExportSppx(callback),
   },
 
   app: {
@@ -511,6 +524,9 @@ export const electronApi = {
     },
     importSppx: (): Promise<SppxImportResult> => {
       return electronApi.dataTransfer.getApi().importSppx();
+    },
+    importNwp: (): Promise<NwpImportResult> => {
+      return electronApi.dataTransfer.getApi().importNwp();
     },
     exportMarkdown: (): Promise<MarkdownExportResult> => {
       return electronApi.dataTransfer.getApi().exportMarkdown();

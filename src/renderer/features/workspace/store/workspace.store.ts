@@ -682,5 +682,59 @@ export const useWorkspaceStore = defineStore('workspace', {
         logger.error(`Failed to open external file: ${getErrorMessage(err)}`);
       }
     },
+
+    async importMarkdown() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        const result = await electronApi.dataTransfer.importMarkdown();
+        if (result.success && result.importedNotes! > 0) {
+          await this.initializeWorkspace(true);
+        }
+      } catch (err: unknown) {
+        logger.error(`Failed to import markdown: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async importSppx() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        const result = await electronApi.dataTransfer.importSppx();
+        if (result.success) {
+          await this.initializeWorkspace(true);
+        }
+      } catch (err: unknown) {
+        logger.error(`Failed to import sppx: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async importNwp() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        const result = await electronApi.dataTransfer.importNwp();
+        if (result.success && result.stats?.imported! > 0) {
+          await this.initializeWorkspace(true);
+        }
+      } catch (err: unknown) {
+        logger.error(`Failed to import nwp: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async exportMarkdown() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        await electronApi.dataTransfer.exportMarkdown();
+      } catch (err: unknown) {
+        logger.error(`Failed to export markdown: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async exportSppx() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        await electronApi.dataTransfer.exportSppx();
+      } catch (err: unknown) {
+        logger.error(`Failed to export sppx: ${getErrorMessage(err)}`);
+      }
+    },
   },
 });

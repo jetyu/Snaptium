@@ -21,7 +21,12 @@ export type MenuAction =
   | 'update'
   | 'activateLicense'
   | 'feedback'
-  | 'about';
+  | 'about'
+  | 'importMarkdown'
+  | 'importSppx'
+  | 'importNwp'
+  | 'exportMarkdown'
+  | 'exportSppx';
 
 export interface MenuItemConfig {
   id?: MenuAction;
@@ -43,7 +48,14 @@ export const MENU_CONFIG: MenuCategoryConfig[] = [
     id: 'file',
     labelKey: 'menu.file',
     items: [
-      { id: 'openFile', labelKey: 'menu.file.open', accelerator: 'CmdOrCtrl+O' },
+      { id: 'openFile', labelKey: 'menu.file.open' },
+      { type: 'separator' },
+      { id: 'importMarkdown', labelKey: 'menu.file.importMarkdown' },
+      { id: 'importSppx', labelKey: 'menu.file.importSppx' },
+      { id: 'importNwp', labelKey: 'menu.file.importNwp' },
+      { type: 'separator' },
+      { id: 'exportMarkdown', labelKey: 'menu.file.exportMarkdown' },
+      { id: 'exportSppx', labelKey: 'menu.file.exportSppx' },
       { type: 'separator' },
       { id: 'preferences', labelKey: 'menu.file.preferences' },
       { type: 'separator' },
@@ -77,11 +89,10 @@ export const MENU_CONFIG: MenuCategoryConfig[] = [
       { id: 'terms', labelKey: 'menu.help.termsOfService' },
       { type: 'separator' },
       { id: 'update', labelKey: 'menu.help.update' },
-     
       { id: 'feedback', labelKey: 'menu.help.feedback' },
       { type: 'separator' },
       { id: 'toggleDevTools', labelKey: 'menu.help.devTools', role: 'toggleDevTools' },
-       { id: 'activateLicense', labelKey: 'menu.help.activateLicense' },
+      { id: 'activateLicense', labelKey: 'menu.help.activateLicense' },
       { id: 'about', labelKey: 'menu.help.about' },
     ],
   },

@@ -99,6 +99,21 @@ function handleAction(action?: MenuAction) {
     case 'openFile':
       void workspaceStore.openExternalFile();
       break;
+    case 'importMarkdown':
+      void workspaceStore.importMarkdown();
+      break;
+    case 'importSppx':
+      void workspaceStore.importSppx();
+      break;
+    case 'importNwp':
+      void workspaceStore.importNwp();
+      break;
+    case 'exportMarkdown':
+      void workspaceStore.exportMarkdown();
+      break;
+    case 'exportSppx':
+      void workspaceStore.exportSppx();
+      break;
     case 'reload':
       void window.electronAPI.window?.reload();
       break;

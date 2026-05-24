@@ -308,6 +308,11 @@ declare global {
         onOpenAbout: (callback: () => void) => () => void;
         onCheckForUpdates: (callback: () => void) => () => void;
         onOpenLicense: (callback: () => void) => () => void;
+        onImportMarkdown: (callback: () => void) => () => void;
+        onImportSppx: (callback: () => void) => () => void;
+        onImportNwp: (callback: () => void) => () => void;
+        onExportMarkdown: (callback: () => void) => () => void;
+        onExportSppx: (callback: () => void) => () => void;
       };
 
       license?: {
@@ -353,6 +358,15 @@ declare global {
           cancelled?: boolean;
           filePath?: string;
           importedAt?: number;
+        }>;
+        importNwp: () => Promise<{
+          success: boolean;
+          cancelled?: boolean;
+          stats?: {
+            imported: number;
+            skipped: number;
+            failed: number;
+          };
         }>;
         exportMarkdown: () => Promise<{
           success: boolean;

@@ -4,6 +4,7 @@ import { sppxExportService } from './sppx-export.service.js';
 import { sppxImportService } from './sppx-import.service.js';
 import { markdownExportService } from './markdown-export.service.js';
 import { markdownImportService } from './markdown-import.service.js';
+import { nwpImportService } from './nwp-import.service.js';
 import { getErrorMessage } from '../../services/error.service.js';
 
 const logger = loggerService.createLogger('Main:Import Export Service');
@@ -55,5 +56,9 @@ export const importExportService = {
 
   async importMarkdownBatch() {
     return await markdownImportService.importMarkdown();
+  },
+
+  async importNwpPackage() {
+    return await nwpImportService.importPackage();
   },
 };

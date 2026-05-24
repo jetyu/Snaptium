@@ -10,6 +10,7 @@ export function registerImportExportIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.DATA_IMPORT_SPPX);
   ipcMain.removeHandler(IPC_CHANNELS.DATA_EXPORT_MARKDOWN);
   ipcMain.removeHandler(IPC_CHANNELS.DATA_IMPORT_MARKDOWN);
+  ipcMain.removeHandler(IPC_CHANNELS.DATA_IMPORT_NWP);
 
   ipcMain.handle(IPC_CHANNELS.DATA_EXPORT_SPPX, async () => {
     return await importExportService.exportSppxPackage();
@@ -25,6 +26,10 @@ export function registerImportExportIpcHandlers() {
 
   ipcMain.handle(IPC_CHANNELS.DATA_IMPORT_MARKDOWN, async () => {
     return await importExportService.importMarkdownBatch();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.DATA_IMPORT_NWP, async () => {
+    return await importExportService.importNwpPackage();
   });
 
   logger.debug('Import/export IPC handlers registered');
