@@ -247,6 +247,13 @@ declare global {
         unmaximize: () => Promise<void>;
         close: () => Promise<void>;
         isMaximized: () => Promise<boolean>;
+        reload: () => Promise<void>;
+        forceReload: () => Promise<void>;
+        toggleDevTools: () => Promise<void>;
+        resetZoom: () => Promise<void>;
+        zoomIn: () => Promise<void>;
+        zoomOut: () => Promise<void>;
+        toggleFullscreen: () => Promise<void>;
         onStateChanged: (callback: (data: WindowStatePayload) => void) => () => void;
       };
 

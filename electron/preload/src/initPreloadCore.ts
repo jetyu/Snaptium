@@ -46,6 +46,13 @@ const electronAPI = Object.freeze({
     unmaximize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_UNMAXIMIZE),
     close: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_CLOSE),
     isMaximized: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_IS_MAXIMIZED),
+    reload: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_RELOAD),
+    forceReload: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_FORCE_RELOAD),
+    toggleDevTools: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_TOGGLE_DEVTOOLS),
+    resetZoom: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_RESET_ZOOM),
+    zoomIn: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_ZOOM_IN),
+    zoomOut: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_ZOOM_OUT),
+    toggleFullscreen: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_TOGGLE_FULLSCREEN),
     onStateChanged: (callback: DataCallback<{ isMaximized: boolean }>) => {
       const subscription = (_event: Electron.IpcRendererEvent, data: { isMaximized: boolean }) => callback(data);
       ipcRenderer.on(IPC_CHANNELS.WINDOW_STATE_CHANGED, subscription);

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="app-menu-bar">
     <div v-for="menu in filteredMenus" :key="menu.id" class="app-menu-bar__item" @mouseenter="handleMouseEnter(menu.id)"
       @mouseleave="handleMouseLeave">
@@ -39,7 +39,7 @@ const isMenuOpen = ref(false);
 let closeTimer: number | null = null;
 
 // Only show certain categories in the UI menu bar
-const visibleCategoryIds = ['file', 'edit', 'help'];
+const visibleCategoryIds = ['file', 'view', 'help'];
 const filteredMenus = computed(() => MENU_CONFIG.filter(m => visibleCategoryIds.includes(m.id)));
 
 function formatShortcut(accelerator: string): string {
@@ -94,6 +94,27 @@ function handleAction(action?: MenuAction) {
   if (!action) return;
 
   switch (action) {
+    case 'reload':
+      void window.electronAPI.window?.reload();
+      break;
+    case 'forceReload':
+      void window.electronAPI.window?.forceReload();
+      break;
+    case 'toggleDevTools':
+      void window.electronAPI.window?.toggleDevTools();
+      break;
+    case 'resetZoom':
+      void window.electronAPI.window?.resetZoom();
+      break;
+    case 'zoomIn':
+      void window.electronAPI.window?.zoomIn();
+      break;
+    case 'zoomOut':
+      void window.electronAPI.window?.zoomOut();
+      break;
+    case 'toggleFullscreen':
+      void window.electronAPI.window?.toggleFullscreen();
+      break;
     case 'preferences':
       openSettings('general');
       break;

@@ -448,6 +448,27 @@ export const electronApi = {
     isMaximized: (): Promise<boolean> => {
       return electronApi.window.getApi().isMaximized();
     },
+    reload: (): Promise<void> => {
+      return electronApi.window.getApi().reload();
+    },
+    forceReload: (): Promise<void> => {
+      return electronApi.window.getApi().forceReload();
+    },
+    toggleDevTools: (): Promise<void> => {
+      return electronApi.window.getApi().toggleDevTools();
+    },
+    resetZoom: (): Promise<void> => {
+      return electronApi.window.getApi().resetZoom();
+    },
+    zoomIn: (): Promise<void> => {
+      return electronApi.window.getApi().zoomIn();
+    },
+    zoomOut: (): Promise<void> => {
+      return electronApi.window.getApi().zoomOut();
+    },
+    toggleFullscreen: (): Promise<void> => {
+      return electronApi.window.getApi().toggleFullscreen();
+    },
     onStateChanged: (callback: (data: WindowStatePayload) => void): (() => void) => {
       return electronApi.window.getApi().onStateChanged(callback);
     },

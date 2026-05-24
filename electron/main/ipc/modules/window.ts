@@ -44,6 +44,49 @@ export function registerWindowIpcHandlers(mainWindow: BrowserWindow): void {
     return mainWindow.isMaximized();
   });
 
+  ipcMain.handle(IPC_CHANNELS.WINDOW_RELOAD, () => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.reload();
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_FORCE_RELOAD, () => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.reloadIgnoringCache();
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_TOGGLE_DEVTOOLS, () => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_RESET_ZOOM, () => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.setZoomLevel(0);
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_ZOOM_IN, () => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.setZoomLevel(mainWindow.webContents.getZoomLevel() + 1);
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_ZOOM_OUT, () => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.webContents.setZoomLevel(mainWindow.webContents.getZoomLevel() - 1);
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.WINDOW_TOGGLE_FULLSCREEN, () => {
+    if (!mainWindow.isDestroyed()) {
+      mainWindow.setFullScreen(!mainWindow.isFullScreen());
+      emitWindowState(mainWindow);
+    }
+  });
+
   const syncState = () => emitWindowState(mainWindow);
   mainWindow.on('maximize', syncState);
   mainWindow.on('unmaximize', syncState);
