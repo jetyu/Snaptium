@@ -1,4 +1,6 @@
+import { electronApi } from '@renderer/core/bridge/electronApi';
 import { defineStore } from 'pinia';
+import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { createLogger } from '@renderer/features/logger';
 import type { HistoryVersion } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
@@ -638,6 +640,46 @@ export const useWorkspaceStore = defineStore('workspace', {
       } catch (err: unknown) {
         const message = getErrorMessage(err);
         logger.error(`Failed to toggle star for node ${id}: ${message}`);
+      }
+    },
+
+    async openExternalFile(): Promise<void> {
+      if (!electronApi.menu.isAvailable()) {
+        logger.warn('Cannot open external file: electronAPI unavailable.');
+        return;
+      }
+
+      try {
+        // 调用原有 openFile IPC，弹出系统文件选择框（在 ipc/modules/editor.ts 中注册）
+        const result = await electronApi.openFile();
+        if (!result) {
+          // 用户取消
+          return;
+        }
+
+        const { filePath, content } = result;
+        const fileName = filePath.split(/[\\/]/).pop() ?? 'Imported File';
+        // 去掉后缀作为笔记标题
+        const title = fileName.replace(/\.(md|txt)$/i, '');
+
+        const newNote = await workspaceService.createNote(null, title, content);
+
+        const index = this.notes.findIndex((n) => n.id === newNote.id);
+        if (index === -1) {
+          this.notes.push(newNote);
+        } else {
+          this.notes[index] = newNote;
+        }
+
+        this.activeNoteId = newNote.id;
+        this.activeNotebookId = null;
+
+        const appShellStore = useAppShellStore();
+        await appShellStore.setActiveMainView('workspace');
+
+        logger.info(`Imported external file as note: ${newNote.id} (from ${filePath})`);
+      } catch (err: unknown) {
+        logger.error(`Failed to open external file: ${getErrorMessage(err)}`);
       }
     },
   },

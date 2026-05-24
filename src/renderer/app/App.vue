@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <MainLayout />
   <SidebarManagerDialog />
   <SettingsDialog />
@@ -12,7 +12,7 @@
 
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import MainLayout from './MainLayout.vue';
 import SidebarManagerDialog from './components/SidebarManagerDialog.vue';
 import { SettingsDialog, useSettingsStore } from '@renderer/features/settings';
@@ -31,6 +31,7 @@ import { useSyncLifecycle } from '@renderer/features/sync';
 import { AccessControlOverlay } from '@renderer/features/security';
 import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
 import { LicenseDialog } from '@renderer/features/license';
+import { electronApi } from '@renderer/core/bridge/electronApi';
 
 const settingsStore = useSettingsStore();
 const shortcutsStore = useShortcutsStore();
@@ -42,6 +43,9 @@ const { initializeSync, setupAutoSync } = useSyncLifecycle();
 useEditorSettings();
 useGeneralSettings();
 useCommandRegistration();
+
+// 原生菜单（macOS）的监听器清理函数
+let unsubscribeOpenFile: (() => void) | null = null;
 
 onMounted(async () => {
   await settingsStore.loadSettings();
@@ -59,6 +63,17 @@ onMounted(async () => {
   // 设置保存时自动索引
   setupAutoIndexOnSave();
   setupAutoSync();
+
+  // 注册原生菜单「打开文件」监听（macOS 顶部菜单栏触发）
+  if (electronApi.menu.isAvailable()) {
+    unsubscribeOpenFile = electronApi.menu.onOpenFile(() => {
+      void workspaceStore.openExternalFile();
+    });
+  }
+});
+
+onUnmounted(() => {
+  unsubscribeOpenFile?.();
 });
 </script>
 

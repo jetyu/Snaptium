@@ -304,6 +304,7 @@ declare global {
 
       menu?: {
         onOpenPreferences: (callback: () => void) => () => void;
+        onOpenFile: (callback: () => void) => () => void;
         onOpenAbout: (callback: () => void) => () => void;
         onCheckForUpdates: (callback: () => void) => () => void;
         onOpenLicense: (callback: () => void) => () => void;

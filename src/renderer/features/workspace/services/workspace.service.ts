@@ -339,16 +339,16 @@ export const workspaceService = {
         return currentWorkspaceRoot;
     },
 
-    async createNote(parentId: string | null, title?: string): Promise<Note> {
+    async createNote(parentId: string | null, title?: string, content?: string): Promise<Note> {
         ensureVfsAvailable();
 
         const noteTitle = normalizeNoteTitle(title);
-        const content = `# ${noteTitle}\n\n`;
+        const fileContent = content !== undefined ? content : `# ${noteTitle}\n\n`;
 
         const node = await electronApi.vfs.createFile({
             parentId,
             name: noteTitle,
-            content,
+            content: fileContent,
         });
 
         notifyVfsChanged();
@@ -357,7 +357,7 @@ export const workspaceService = {
             id: node.id,
             contentId: node.contentId!,
             title: normalizeNoteTitle(node.name),
-            content,
+            content: fileContent,
             parentId: node.parentId ?? null,
             order: Number(node.order ?? node.createdAt),
             createdAt: node.createdAt,

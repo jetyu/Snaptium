@@ -118,6 +118,11 @@ const electronAPI = Object.freeze({
       ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_PREFERENCES, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_PREFERENCES, subscription);
     },
+    onOpenFile: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_FILE, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_FILE, subscription);
+    },
     onOpenAbout: (callback: VoidCallback) => {
       const subscription = (_event: Electron.IpcRendererEvent) => callback();
       ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_ABOUT, subscription);

@@ -5,9 +5,9 @@ import {
   type BrowserWindow,
   type MenuItemConstructorOptions,
 } from 'electron';
-import { $t, i18n } from './utils/i18n.js';
-import { IPC_CHANNELS } from './constants/ipc.constants.js';
-import { MENU_CONFIG, type MenuAction, type MenuItemConfig } from '../shared/menu.config.js';
+import { $t, i18n } from '../utils/i18n.js';
+import { IPC_CHANNELS } from '../constants/ipc.constants.js';
+import { MENU_CONFIG, type MenuAction, type MenuItemConfig } from '../../shared/menu.config.js';
 
 function isMacPlatform(): boolean {
   return process.platform === IPC_CHANNELS.PLATFORM_DARWIN_KERNEL;
@@ -40,6 +40,9 @@ function mapConfigToMenuItem(
 
 function handleMenuAction(action: MenuAction, mainWindow: BrowserWindow) {
   switch (action) {
+    case 'openFile':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_FILE);
+      break;
     case 'preferences':
       mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_PREFERENCES);
       break;

@@ -18,6 +18,11 @@ export const COMMANDS = {
     category: COMMAND_CATEGORIES.FILE,
     defaultKeybinding: 'CommandOrControl+N',
   },
+  FILE_OPEN: {
+    id: 'file.open',
+    category: COMMAND_CATEGORIES.FILE,
+    defaultKeybinding: 'CommandOrControl+O',
+  },
   FILE_SAVE: {
     id: 'file.save',
     category: COMMAND_CATEGORIES.FILE,
@@ -26,7 +31,7 @@ export const COMMANDS = {
   FILE_DELETE: {
     id: 'file.delete',
     category: COMMAND_CATEGORIES.FILE,
-    defaultKeybinding: null,
+    defaultKeybinding: 'CommandOrControl+Delete',
   },
   FILE_RENAME: {
     id: 'file.rename',

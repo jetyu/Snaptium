@@ -1,4 +1,5 @@
 export type MenuAction =
+  | 'openFile'
   | 'preferences'
   | 'quit'
   | 'reload'
@@ -42,6 +43,8 @@ export const MENU_CONFIG: MenuCategoryConfig[] = [
     id: 'file',
     labelKey: 'menu.file',
     items: [
+      { id: 'openFile', labelKey: 'menu.file.open', accelerator: 'CmdOrCtrl+O' },
+      { type: 'separator' },
       { id: 'preferences', labelKey: 'menu.file.preferences' },
       { type: 'separator' },
       { id: 'quit', labelKey: 'menu.file.quit', role: 'quit' },

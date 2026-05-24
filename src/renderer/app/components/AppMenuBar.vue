@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="app-menu-bar">
     <div v-for="menu in filteredMenus" :key="menu.id" class="app-menu-bar__item" @mouseenter="handleMouseEnter(menu.id)"
       @mouseleave="handleMouseLeave">
@@ -28,11 +28,13 @@ import { useSettings } from '@renderer/features/settings/composables/useSettings
 import { useAbout } from '@renderer/features/about';
 import { useLicenseDialog } from '@renderer/features/license';
 import { MENU_CONFIG, type MenuAction } from '@shared/menu.config';
+import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 
 const { t } = useI18n();
 const { openSettings } = useSettings();
 const { openAbout } = useAbout();
 const { openLicenseDialog } = useLicenseDialog();
+const workspaceStore = useWorkspaceStore();
 
 const activeMenu = ref<string | null>(null);
 const isMenuOpen = ref(false);
@@ -94,6 +96,9 @@ function handleAction(action?: MenuAction) {
   if (!action) return;
 
   switch (action) {
+    case 'openFile':
+      void workspaceStore.openExternalFile();
+      break;
     case 'reload':
       void window.electronAPI.window?.reload();
       break;

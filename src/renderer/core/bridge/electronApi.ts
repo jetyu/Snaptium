@@ -409,6 +409,7 @@ export const electronApi = {
       return api;
     },
     onOpenPreferences: (callback: () => void) => electronApi.menu.getApi().onOpenPreferences(callback),
+    onOpenFile: (callback: () => void) => electronApi.menu.getApi().onOpenFile(callback),
     onOpenAbout: (callback: () => void) => electronApi.menu.getApi().onOpenAbout(callback),
     onCheckForUpdates: (callback: () => void) => electronApi.menu.getApi().onCheckForUpdates(callback),
     onOpenLicense: (callback: () => void) => electronApi.menu.getApi().onOpenLicense(callback),

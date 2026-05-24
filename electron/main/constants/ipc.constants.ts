@@ -47,6 +47,7 @@ export const IPC_CHANNELS = {
   MENU_OPEN_ABOUT: 'menu:open-about',
   MENU_OPEN_LICENSE: 'menu:open-license',
   MENU_OPEN_PREFERENCES: 'menu:open-preferences',
+  MENU_OPEN_FILE: 'menu:open-file',
   OPEN_FILE: 'editor:open-file',
   PLATFORM_DARWIN_KERNEL: 'darwin',
   PLATFORM_WIN32_KERNEL: 'win32',
