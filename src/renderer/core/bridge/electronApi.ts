@@ -357,6 +357,18 @@ export interface NwpImportResult extends DataTransferBaseResult {
   };
 }
 
+export interface EnexImportResult extends DataTransferBaseResult {
+  directoryPath?: string;
+  scannedFiles?: number;
+  importedNotes?: number;
+  createdNotebooks?: number;
+  copiedImages?: number;
+  skippedFiles?: number;
+  skippedImages?: number;
+  failedFiles?: number;
+  failedFilePaths?: string[];
+}
+
 export interface MessageDialogOptions {
   type?: 'none' | 'info' | 'error' | 'question' | 'warning';
   title?: string;
@@ -422,6 +434,7 @@ export const electronApi = {
     onCheckForUpdates: (callback: () => void) => electronApi.menu.getApi().onCheckForUpdates(callback),
     onOpenLicense: (callback: () => void) => electronApi.menu.getApi().onOpenLicense(callback),
     onImportMarkdown: (callback: () => void) => electronApi.menu.getApi().onImportMarkdown(callback),
+    onImportEnex: (callback: () => void) => electronApi.menu.getApi().onImportEnex(callback),
     onImportSppx: (callback: () => void) => electronApi.menu.getApi().onImportSppx(callback),
     onImportNwp: (callback: () => void) => electronApi.menu.getApi().onImportNwp(callback),
     onExportMarkdown: (callback: () => void) => electronApi.menu.getApi().onExportMarkdown(callback),
@@ -519,21 +532,25 @@ export const electronApi = {
       if (!api) throw new Error('Data transfer bridge is unavailable');
       return api;
     },
-    exportSppx: (): Promise<SppxExportResult> => {
-      return electronApi.dataTransfer.getApi().exportSppx();
-    },
     importSppx: (): Promise<SppxImportResult> => {
       return electronApi.dataTransfer.getApi().importSppx();
     },
-    importNwp: (): Promise<NwpImportResult> => {
-      return electronApi.dataTransfer.getApi().importNwp();
-    },
-    exportMarkdown: (): Promise<MarkdownExportResult> => {
-      return electronApi.dataTransfer.getApi().exportMarkdown();
+    exportSppx: (): Promise<SppxExportResult> => {
+      return electronApi.dataTransfer.getApi().exportSppx();
     },
     importMarkdown: (): Promise<MarkdownImportResult> => {
       return electronApi.dataTransfer.getApi().importMarkdown();
     },
+    exportMarkdown: (): Promise<MarkdownExportResult> => {
+      return electronApi.dataTransfer.getApi().exportMarkdown();
+    },
+    importEnex: (): Promise<EnexImportResult> => {
+      return electronApi.dataTransfer.getApi().importEnex();
+    },
+    importNwp: (): Promise<NwpImportResult> => {
+      return electronApi.dataTransfer.getApi().importNwp();
+    },
+
   },
 
   search: {

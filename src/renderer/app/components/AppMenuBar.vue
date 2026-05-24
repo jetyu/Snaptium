@@ -102,6 +102,9 @@ function handleAction(action?: MenuAction) {
     case 'importMarkdown':
       void workspaceStore.importMarkdown();
       break;
+    case 'importEnex':
+      void workspaceStore.importEnex();
+      break;
     case 'importSppx':
       void workspaceStore.importSppx();
       break;
@@ -268,6 +271,7 @@ onBeforeUnmount(() => {
   font-size: 0.82rem;
   cursor: pointer;
   transition: background-color 0.12s ease;
+  white-space: nowrap;
 }
 
 .app-menu-bar__dropdown-item:hover {

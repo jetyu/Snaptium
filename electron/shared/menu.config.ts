@@ -23,6 +23,7 @@ export type MenuAction =
   | 'feedback'
   | 'about'
   | 'importMarkdown'
+  | 'importEnex'
   | 'importSppx'
   | 'importNwp'
   | 'exportMarkdown'
@@ -51,6 +52,7 @@ export const MENU_CONFIG: MenuCategoryConfig[] = [
       { id: 'openFile', labelKey: 'menu.file.open' },
       { type: 'separator' },
       { id: 'importMarkdown', labelKey: 'menu.file.importMarkdown' },
+      { id: 'importEnex', labelKey: 'menu.file.importEnex' },
       { id: 'importSppx', labelKey: 'menu.file.importSppx' },
       { id: 'importNwp', labelKey: 'menu.file.importNwp' },
       { type: 'separator' },

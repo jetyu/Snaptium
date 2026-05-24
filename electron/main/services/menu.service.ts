@@ -46,6 +46,9 @@ function handleMenuAction(action: MenuAction, mainWindow: BrowserWindow) {
     case 'importMarkdown':
       mainWindow.webContents.send(IPC_CHANNELS.MENU_IMPORT_MARKDOWN);
       break;
+    case 'importEnex':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_IMPORT_ENEX);
+      break;
     case 'importSppx':
       mainWindow.webContents.send(IPC_CHANNELS.MENU_IMPORT_SPPX);
       break;

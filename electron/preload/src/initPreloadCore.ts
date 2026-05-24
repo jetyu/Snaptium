@@ -143,6 +143,11 @@ const electronAPI = Object.freeze({
       ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_MARKDOWN, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_IMPORT_MARKDOWN, subscription);
     },
+    onImportEnex: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_ENEX, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_IMPORT_ENEX, subscription);
+    },
     onImportSppx: (callback: VoidCallback) => {
       const subscription = (_event: Electron.IpcRendererEvent) => callback();
       ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_SPPX, subscription);
@@ -185,11 +190,12 @@ const electronAPI = Object.freeze({
     resetConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_RESET),
   }),
   dataTransfer: Object.freeze({
-    exportSppx: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_SPPX),
     importSppx: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_SPPX),
-    importNwp: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_NWP),
-    exportMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_MARKDOWN),
+    exportSppx: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_SPPX),
     importMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_MARKDOWN),
+    exportMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_MARKDOWN),
+    importNwp: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_NWP),
+    importEnex: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_ENEX),
   }),
   aiSource: Object.freeze({
     testConnection: (config: AiSourceTestConnectionPayload) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),

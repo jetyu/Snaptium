@@ -695,6 +695,19 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
     },
 
+    async importEnex() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        const result = await electronApi.dataTransfer.importEnex();
+        // Result is MarkdownImportResult as ENEX import delegates to Markdown import
+        if (result.success && (result.importedNotes ?? 0) > 0) {
+          await this.initializeWorkspace(true);
+        }
+      } catch (err: unknown) {
+        logger.error(`Failed to import enex: ${getErrorMessage(err)}`);
+      }
+    },
+
     async importSppx() {
       if (!electronApi.dataTransfer.isAvailable()) return;
       try {
@@ -711,7 +724,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (!electronApi.dataTransfer.isAvailable()) return;
       try {
         const result = await electronApi.dataTransfer.importNwp();
-        if (result.success && result.stats?.imported! > 0) {
+        if (result.success && (result.stats?.imported ?? 0) > 0) {
           await this.initializeWorkspace(true);
         }
       } catch (err: unknown) {

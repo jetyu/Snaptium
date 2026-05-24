@@ -250,11 +250,6 @@ async function importRelativeImagesToNote({
 
 export const markdownImportService = {
   async importMarkdown(): Promise<MarkdownImportResult> {
-    const workspaceRoot = await vfsService.ensureInitialized().catch(() => null);
-    if (!workspaceRoot) {
-      throw new Error($t('dataTransfer.error.workspaceUnavailable'));
-    }
-
     const focusedWindow = getFocusedWindow();
     const openDialogOptions: OpenDialogOptions = {
       title: $t('dataTransfer.markdownImport.dialogTitle'),
@@ -271,7 +266,15 @@ export const markdownImportService = {
       };
     }
 
-    const sourceDirectoryPath = openDialogResult.filePaths[0];
+    return await this.importDirectory(openDialogResult.filePaths[0]);
+  },
+
+  async importDirectory(sourceDirectoryPath: string): Promise<MarkdownImportResult> {
+    const workspaceRoot = await vfsService.ensureInitialized().catch(() => null);
+    if (!workspaceRoot) {
+      throw new Error($t('dataTransfer.error.workspaceUnavailable'));
+    }
+
     const markdownFiles = await collectMarkdownFilesRecursively(sourceDirectoryPath);
     const stats: MarkdownImportStats = {
       scannedFiles: markdownFiles.length,

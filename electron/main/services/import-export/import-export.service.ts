@@ -4,6 +4,7 @@ import { sppxExportService } from './sppx-export.service.js';
 import { sppxImportService } from './sppx-import.service.js';
 import { markdownExportService } from './markdown-export.service.js';
 import { markdownImportService } from './markdown-import.service.js';
+import { enexImportService } from './enex-import.service.js';
 import { nwpImportService } from './nwp-import.service.js';
 import { getErrorMessage } from '../../services/error.service.js';
 
@@ -56,6 +57,10 @@ export const importExportService = {
 
   async importMarkdownBatch() {
     return await markdownImportService.importMarkdown();
+  },
+
+  async importEnex() {
+    return await enexImportService.importEnex();
   },
 
   async importNwpPackage() {

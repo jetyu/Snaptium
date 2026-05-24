@@ -44,7 +44,7 @@ useEditorSettings();
 useGeneralSettings();
 useCommandRegistration();
 
-// 原生菜单（macOS）的监听器清理函数
+// 原生菜单（macOS/Windows）的监听器清理函数
 const unsubscribers: Array<(() => void)> = [];
 
 onMounted(async () => {
@@ -64,7 +64,7 @@ onMounted(async () => {
   setupAutoIndexOnSave();
   setupAutoSync();
 
-  // 注册原生菜单监听（macOS 顶部菜单栏触发）
+  // 注册原生菜单监听（顶部菜单栏触发）
   if (electronApi.menu.isAvailable()) {
     unsubscribers.push(
       electronApi.menu.onOpenFile(() => {
@@ -74,6 +74,11 @@ onMounted(async () => {
     unsubscribers.push(
       electronApi.menu.onImportMarkdown(() => {
         void workspaceStore.importMarkdown();
+      })
+    );
+    unsubscribers.push(
+      electronApi.menu.onImportEnex(() => {
+        void workspaceStore.importEnex();
       })
     );
     unsubscribers.push(
@@ -103,4 +108,3 @@ onUnmounted(() => {
   unsubscribers.forEach((unsub) => unsub());
 });
 </script>
-

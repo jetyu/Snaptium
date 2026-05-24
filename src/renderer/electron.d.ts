@@ -309,6 +309,7 @@ declare global {
         onCheckForUpdates: (callback: () => void) => () => void;
         onOpenLicense: (callback: () => void) => () => void;
         onImportMarkdown: (callback: () => void) => () => void;
+        onImportEnex: (callback: () => void) => () => void;
         onImportSppx: (callback: () => void) => () => void;
         onImportNwp: (callback: () => void) => () => void;
         onExportMarkdown: (callback: () => void) => () => void;
@@ -380,6 +381,19 @@ declare global {
           failedFilePaths?: string[];
         }>;
         importMarkdown: () => Promise<{
+          success: boolean;
+          cancelled?: boolean;
+          directoryPath?: string;
+          scannedFiles?: number;
+          importedNotes?: number;
+          createdNotebooks?: number;
+          copiedImages?: number;
+          skippedFiles?: number;
+          skippedImages?: number;
+          failedFiles?: number;
+          failedFilePaths?: string[];
+        }>;
+        importEnex: () => Promise<{
           success: boolean;
           cancelled?: boolean;
           directoryPath?: string;
