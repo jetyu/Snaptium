@@ -1,7 +1,6 @@
 <template>
   <MainLayout />
   <SidebarManagerDialog />
-  <SettingsDialog />
   <AboutDialog />
   <UpdateDialog />
   <TrashDialog />
@@ -15,7 +14,7 @@
 import { onMounted, onUnmounted } from 'vue';
 import MainLayout from './MainLayout.vue';
 import SidebarManagerDialog from './components/SidebarManagerDialog.vue';
-import { SettingsDialog, useSettingsStore } from '@renderer/features/settings';
+import { useSettingsStore } from '@renderer/features/settings';
 import { AboutDialog } from '@renderer/features/about';
 import { UpdateDialog } from '@renderer/features/updater';
 import { TrashDialog } from '@renderer/features/trash';

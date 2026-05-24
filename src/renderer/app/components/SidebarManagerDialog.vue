@@ -143,6 +143,7 @@ const mainViewIconMap: Record<AppShellMainViewId, typeof NotebookOne> = {
   workspace: NotebookOne,
   tags: TagOne,
   favorites: Star,
+  settings: SettingTwo,
 };
 
 const moduleIconMap: Record<AppShellModuleId, typeof Search> = {

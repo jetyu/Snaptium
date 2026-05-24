@@ -59,6 +59,7 @@ const mainViewIconMap = computed(() => ({
   workspace: NotebookOne,
   tags: TagOne,
   favorites: Star,
+  settings: SettingTwo,
 }));
 
 const moduleIconMap = computed(() => ({

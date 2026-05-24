@@ -8,6 +8,7 @@
       <WorkbenchView v-if="activeMainView === 'workbench'" />
       <MyFavoritesView v-else-if="activeMainView === 'favorites'" />
       <TagsView v-else-if="activeMainView === 'tags'" />
+      <SettingsView v-else-if="activeMainView === 'settings'" />
       <WorkspaceView v-else />
     </div>
   </div>
@@ -35,6 +36,7 @@ import AppSidebar from './components/AppSidebar.vue';
 import AppWindowFrame from './components/AppWindowFrame.vue';
 import WorkbenchView from './views/WorkbenchView.vue';
 import WorkspaceView from './views/WorkspaceView.vue';
+import SettingsView from './views/SettingsView.vue';
 import TagsView from '@renderer/features/tags/components/TagsView.vue';
 import MyFavoritesView from '@renderer/features/favorites/components/MyFavoritesView.vue';
 import { electronApi } from '@renderer/core/bridge/electronApi';
@@ -44,7 +46,7 @@ const appShellStore = useAppShellStore();
 const { activeMainView, mainViews, enabledCustomModules } = storeToRefs(appShellStore);
 const { setActiveMainView } = appShellStore;
 
-const { openSettings } = useSettings();
+const { setActiveTab, initMainProcessListeners, onOpenSettingsRequest } = useSettings();
 const { openTrash } = useTrash();
 const { openAbout } = useAbout();
 const { openSidebarManager } = useSidebarManager();
@@ -52,6 +54,8 @@ const { isGlobalSearchOpen, globalSearchInitialQuery, openGlobalSearch, closeGlo
 const { selectNote, forceFlushAutoSave } = useWorkspace();
 const isWindowMaximized = ref(false);
 let removeWindowStateListener: (() => void) | null = null;
+let removeSettingsMenuListener: (() => void) | null = null;
+let removeSettingsRequestListener: (() => void) | null = null;
 
 type SearchSelectResult = SearchResult | RagSearchResult;
 type SearchSelectMatch = SearchMatch;
@@ -83,7 +87,7 @@ async function openModule(moduleId: AppShellModuleId) {
       openGlobalSearch();
       return;
     case 'settings':
-      openSettings('general');
+      await showSettings('general');
       return;
     case 'trash':
       await openTrash();
@@ -94,6 +98,11 @@ async function openModule(moduleId: AppShellModuleId) {
     default:
       return;
   }
+}
+
+async function showSettings(tab: string = 'general'): Promise<void> {
+  setActiveTab(tab);
+  await setActiveMainView('settings');
 }
 
 async function handleSearchSelect(result: SearchSelectResult, match?: SearchSelectMatch) {
@@ -120,6 +129,12 @@ function handleBeforeUnload(): void {
 
 onMounted(async () => {
   window.addEventListener('beforeunload', handleBeforeUnload);
+  removeSettingsRequestListener = onOpenSettingsRequest((tab) => {
+    void showSettings(tab);
+  });
+  removeSettingsMenuListener = initMainProcessListeners(() => {
+    void showSettings('general');
+  });
   await syncWindowState();
 
   if (electronApi.window.isAvailable()) {
@@ -131,6 +146,10 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
+  removeSettingsMenuListener?.();
+  removeSettingsMenuListener = null;
+  removeSettingsRequestListener?.();
+  removeSettingsRequestListener = null;
   removeWindowStateListener?.();
   removeWindowStateListener = null;
 });
