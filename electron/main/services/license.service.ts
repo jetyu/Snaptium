@@ -59,6 +59,14 @@ interface ApplyResponseOptions {
   keepCurrentStatus?: boolean;
 }
 
+interface LicenseDeviceInfoPayload {
+  platform: string;
+  platform_version: string;
+  os_name: string;
+  software_version: string;
+  device_mac_hash: string | null;
+}
+
 const devicePayloadSchema = z.object({
   id: z.string().min(1),
   fingerprint: z.string().min(1),
@@ -194,6 +202,14 @@ function isDateInFuture(value: string | null): boolean {
   return Number.isFinite(timestamp) && timestamp > Date.now();
 }
 
+function normalizeMacAddress(mac: string): string | null {
+  const normalized = mac.trim().toLowerCase();
+  if (!normalized || normalized === '00:00:00:00:00:00') {
+    return null;
+  }
+  return /^[0-9a-f]{2}(?::[0-9a-f]{2}){5}$/.test(normalized) ? normalized : null;
+}
+
 function cloneState(state: LicenseState): LicenseState {
   return {
     ...state,
@@ -266,7 +282,7 @@ export class LicenseService {
         license_key: normalizedKey,
         device_fingerprint: deviceFingerprint,
         device_name: sanitizeMessage(os.hostname(), `${appEnvInfoService.getAppName()} Device`),
-        platform: process.platform,
+        ...this.getDeviceInfoPayload(),
       };
 
       const response = await this.requestJson(
@@ -823,6 +839,7 @@ export class LicenseService {
           },
           body: JSON.stringify({
             device_fingerprint: deviceFingerprint,
+            ...this.getDeviceInfoPayload(),
           }),
         },
         licenseHeartbeatResponseSchema,
@@ -879,6 +896,34 @@ export class LicenseService {
     this.deviceFingerprint = crypto
       .createHash('sha256')
       .update(`${appEnvInfoService.getAppName()}-${process.platform}-${installationUuid}`)
+      .digest('hex');
+  }
+
+  private getDeviceInfoPayload(): LicenseDeviceInfoPayload {
+    return {
+      platform: process.platform,
+      platform_version: os.release(),
+      os_name: os.version(),
+      software_version: appEnvInfoService.getAppVersion(),
+      device_mac_hash: this.getDeviceMacHash(),
+    };
+  }
+
+  private getDeviceMacHash(): string | null {
+    const macAddresses = Object.values(os.networkInterfaces())
+      .flatMap((items) => items ?? [])
+      .filter((item) => !item.internal)
+      .map((item) => normalizeMacAddress(item.mac))
+      .filter((mac): mac is string => mac !== null)
+      .sort();
+
+    if (macAddresses.length === 0) {
+      return null;
+    }
+
+    return crypto
+      .createHash('sha256')
+      .update(macAddresses.join('|'))
       .digest('hex');
   }
 
