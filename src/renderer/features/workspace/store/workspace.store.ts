@@ -119,7 +119,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (!window.__vfsListenerAdded) {
         window.addEventListener('vfs-changed', () => {
           logger.info('VFS change detected, refreshing workspace...');
-          this.initializeWorkspace(true);
+          void this.initializeWorkspace(true);
         });
         window.__vfsListenerAdded = true;
       }
@@ -425,7 +425,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (index === -1) return;
 
       try {
-        await workspaceService.deleteNode(id);
+        await workspaceService.deleteNodes([id]);
       } catch (err: unknown) {
         const message = getErrorMessage(err);
         logger.error(`Failed to delete note ${id}: ${message}`);
@@ -459,7 +459,7 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (!notebook) return;
 
       try {
-        await workspaceService.deleteNode(id);
+        await workspaceService.deleteNodes([id]);
       } catch (err: unknown) {
         const message = getErrorMessage(err);
         logger.error(`Failed to delete notebook ${id}: ${message}`);
@@ -480,6 +480,41 @@ export const useWorkspaceStore = defineStore('workspace', {
 
       logger.info(`Deleted notebook and descendants: ${id} (Total items removed: ${idsToRemove.size})`);
       window.dispatchEvent(new CustomEvent('vfs-changed'));
+    },
+
+    async deleteNodes(ids: string[]) {
+      const nodeIds = Array.from(new Set(ids));
+      if (nodeIds.length === 0) {
+        return;
+      }
+
+      try {
+        await workspaceService.deleteNodes(nodeIds);
+      } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        logger.error(`Failed to delete selected nodes: ${message}`);
+        return;
+      }
+
+      const idsToRemove = new Set<string>();
+      for (const id of nodeIds) {
+        idsToRemove.add(id);
+        for (const descendantId of getDescendantIds(this.notes, this.notebooks, id)) {
+          idsToRemove.add(descendantId);
+        }
+      }
+
+      this.notes = this.notes.filter((note) => !idsToRemove.has(note.id));
+      this.notebooks = this.notebooks.filter((candidate) => !idsToRemove.has(candidate.id));
+
+      if (idsToRemove.has(this.activeNoteId ?? '')) {
+        this.activeNoteId = this.notes[0]?.id ?? null;
+      }
+      if (idsToRemove.has(this.activeNotebookId ?? '')) {
+        this.activeNotebookId = null;
+      }
+
+      logger.info(`Deleted selected nodes and descendants: ${nodeIds.length} root candidate(s), ${idsToRemove.size} total item(s) removed.`);
     },
 
     async confirmDeleteNotebook(id: string): Promise<boolean> {
@@ -680,6 +715,73 @@ export const useWorkspaceStore = defineStore('workspace', {
         logger.info(`Imported external file as note: ${newNote.id} (from ${filePath})`);
       } catch (err: unknown) {
         logger.error(`Failed to open external file: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async importMarkdown() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        const result = await electronApi.dataTransfer.importMarkdown();
+        if (result.success && result.importedNotes! > 0) {
+          await this.initializeWorkspace(true);
+        }
+      } catch (err: unknown) {
+        logger.error(`Failed to import markdown: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async importEnex() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        const result = await electronApi.dataTransfer.importEnex();
+        // Result is MarkdownImportResult as ENEX import delegates to Markdown import
+        if (result.success && (result.importedNotes ?? 0) > 0) {
+          await this.initializeWorkspace(true);
+        }
+      } catch (err: unknown) {
+        logger.error(`Failed to import enex: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async importSppx() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        const result = await electronApi.dataTransfer.importSppx();
+        if (result.success) {
+          await this.initializeWorkspace(true);
+        }
+      } catch (err: unknown) {
+        logger.error(`Failed to import sppx: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async importNwp() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        const result = await electronApi.dataTransfer.importNwp();
+        if (result.success && (result.stats?.imported ?? 0) > 0) {
+          await this.initializeWorkspace(true);
+        }
+      } catch (err: unknown) {
+        logger.error(`Failed to import nwp: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async exportMarkdown() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        await electronApi.dataTransfer.exportMarkdown();
+      } catch (err: unknown) {
+        logger.error(`Failed to export markdown: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async exportSppx() {
+      if (!electronApi.dataTransfer.isAvailable()) return;
+      try {
+        await electronApi.dataTransfer.exportSppx();
+      } catch (err: unknown) {
+        logger.error(`Failed to export sppx: ${getErrorMessage(err)}`);
       }
     },
   },

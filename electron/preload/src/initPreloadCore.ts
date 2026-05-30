@@ -72,7 +72,7 @@ const electronAPI = Object.freeze({
     saveImage: (payload: { contentId: string; fileName?: string; mimeType: string; dataBase64: string }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_SAVE_IMAGE, payload),
     showNoteInFolder: (nodeId: string) => ipcRenderer.invoke(IPC_CHANNELS.VFS_SHOW_NOTE_IN_FOLDER, nodeId),
-    deleteNode: (nodeId: string) => ipcRenderer.invoke(IPC_CHANNELS.VFS_DELETE_NODE, nodeId),
+    deleteNodes: (nodeIds: string[]) => ipcRenderer.invoke(IPC_CHANNELS.VFS_DELETE_NODES, nodeIds),
     moveNode: (payload: { nodeId: string; parentId: string | null; index: number }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_MOVE_NODE, payload),
     toggleNodeLock: (payload: { nodeId: string; locked: boolean }) =>
@@ -138,6 +138,36 @@ const electronAPI = Object.freeze({
       ipcRenderer.on(IPC_CHANNELS.MENU_OPEN_LICENSE, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_OPEN_LICENSE, subscription);
     },
+    onImportMarkdown: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_MARKDOWN, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_IMPORT_MARKDOWN, subscription);
+    },
+    onImportEnex: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_ENEX, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_IMPORT_ENEX, subscription);
+    },
+    onImportSppx: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_SPPX, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_IMPORT_SPPX, subscription);
+    },
+    onImportNwp: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_IMPORT_NWP, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_IMPORT_NWP, subscription);
+    },
+    onExportMarkdown: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_EXPORT_MARKDOWN, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_EXPORT_MARKDOWN, subscription);
+    },
+    onExportSppx: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.MENU_EXPORT_SPPX, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_EXPORT_SPPX, subscription);
+    },
   }),
   settings: Object.freeze({
     getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_LOAD),
@@ -160,10 +190,12 @@ const electronAPI = Object.freeze({
     resetConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_RESET),
   }),
   dataTransfer: Object.freeze({
-    exportSppx: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_SPPX),
     importSppx: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_SPPX),
-    exportMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_MARKDOWN),
+    exportSppx: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_SPPX),
     importMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_MARKDOWN),
+    exportMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_MARKDOWN),
+    importNwp: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_NWP),
+    importEnex: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_ENEX),
   }),
   aiSource: Object.freeze({
     testConnection: (config: AiSourceTestConnectionPayload) => ipcRenderer.invoke(IPC_CHANNELS.AI_SOURCE_TEST_CONNECTION, config),

@@ -43,6 +43,24 @@ function handleMenuAction(action: MenuAction, mainWindow: BrowserWindow) {
     case 'openFile':
       mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_FILE);
       break;
+    case 'importMarkdown':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_IMPORT_MARKDOWN);
+      break;
+    case 'importEnex':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_IMPORT_ENEX);
+      break;
+    case 'importSppx':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_IMPORT_SPPX);
+      break;
+    case 'importNwp':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_IMPORT_NWP);
+      break;
+    case 'exportMarkdown':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_EXPORT_MARKDOWN);
+      break;
+    case 'exportSppx':
+      mainWindow.webContents.send(IPC_CHANNELS.MENU_EXPORT_SPPX);
+      break;
     case 'preferences':
       mainWindow.webContents.send(IPC_CHANNELS.MENU_OPEN_PREFERENCES);
       break;

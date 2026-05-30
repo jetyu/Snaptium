@@ -10,8 +10,8 @@
     "dev:renderer": "vite",
     "dev:main": "tsc -p tsconfig.electron.json --watch --preserveWatchOutput",
     "dev:preload": "vite build --config vite.preload.config.ts --watch",
-    "dev:electron": "wait-on http://127.0.0.1:5173/ .electron-build/electron/preload/index.js .electron-build/main.js && nodemon --watch .electron-build --ext js,json --exec electron .",
-    "dev": "concurrently \"npm:dev:renderer\" \"npm:dev:preload\" \"npm:dev:main\" \"npm:dev:electron\"",
+    "dev:electron": "wait-on http://127.0.0.1:5173/ && nodemon --watch electron --watch main.ts --watch preload.ts --watch tsconfig.electron.json --watch vite.preload.config.ts --ext ts,js,json --exec \"npm run build:main && npm run build:preload && electron .\"",
+    "dev": "concurrently \"npm:dev:renderer\" \"npm:dev:electron\"",
     "start": "npm run build:main && npm run build:preload && electron .",
     "build:main": "tsc -p tsconfig.electron.json",
     "build:preload": "vite build --config vite.preload.config.ts",
@@ -62,6 +62,7 @@
     "vue": "^3.5.32",
     "vue-i18n": "^11.3.2",
     "webdav": "^5.9.0",
+    "yarle-evernote-to-md": "^6.17.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {

@@ -266,7 +266,7 @@ declare global {
         writeContent: (payload: { contentId: string; content: string }) => Promise<boolean>;
         saveImage: (payload: { contentId: string; fileName?: string; mimeType: string; dataBase64: string }) => Promise<SavedImagePayload>;
         showNoteInFolder: (nodeId: string) => Promise<boolean>;
-        deleteNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
+        deleteNodes: (nodeIds: string[]) => Promise<WorkspaceNodePayload[]>;
         moveNode: (payload: { nodeId: string; parentId: string | null; index: number }) => Promise<WorkspaceNodePayload>;
         toggleNodeLock: (payload: { nodeId: string; locked: boolean }) => Promise<WorkspaceNodePayload>;
         updateNotebookIconColor: (payload: { nodeId: string; iconColor: NotebookIconColor | null }) => Promise<WorkspaceNodePayload>;
@@ -308,6 +308,12 @@ declare global {
         onOpenAbout: (callback: () => void) => () => void;
         onCheckForUpdates: (callback: () => void) => () => void;
         onOpenLicense: (callback: () => void) => () => void;
+        onImportMarkdown: (callback: () => void) => () => void;
+        onImportEnex: (callback: () => void) => () => void;
+        onImportSppx: (callback: () => void) => () => void;
+        onImportNwp: (callback: () => void) => () => void;
+        onExportMarkdown: (callback: () => void) => () => void;
+        onExportSppx: (callback: () => void) => () => void;
       };
 
       license?: {
@@ -354,6 +360,15 @@ declare global {
           filePath?: string;
           importedAt?: number;
         }>;
+        importNwp: () => Promise<{
+          success: boolean;
+          cancelled?: boolean;
+          stats?: {
+            imported: number;
+            skipped: number;
+            failed: number;
+          };
+        }>;
         exportMarkdown: () => Promise<{
           success: boolean;
           cancelled?: boolean;
@@ -366,6 +381,19 @@ declare global {
           failedFilePaths?: string[];
         }>;
         importMarkdown: () => Promise<{
+          success: boolean;
+          cancelled?: boolean;
+          directoryPath?: string;
+          scannedFiles?: number;
+          importedNotes?: number;
+          createdNotebooks?: number;
+          copiedImages?: number;
+          skippedFiles?: number;
+          skippedImages?: number;
+          failedFiles?: number;
+          failedFilePaths?: string[];
+        }>;
+        importEnex: () => Promise<{
           success: boolean;
           cancelled?: boolean;
           directoryPath?: string;

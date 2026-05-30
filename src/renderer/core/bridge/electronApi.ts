@@ -349,6 +349,26 @@ export interface MarkdownExportResult extends DataTransferBaseResult {
   failedFilePaths?: string[];
 }
 
+export interface NwpImportResult extends DataTransferBaseResult {
+  stats?: {
+    imported: number;
+    skipped: number;
+    failed: number;
+  };
+}
+
+export interface EnexImportResult extends DataTransferBaseResult {
+  directoryPath?: string;
+  scannedFiles?: number;
+  importedNotes?: number;
+  createdNotebooks?: number;
+  copiedImages?: number;
+  skippedFiles?: number;
+  skippedImages?: number;
+  failedFiles?: number;
+  failedFilePaths?: string[];
+}
+
 export interface MessageDialogOptions {
   type?: 'none' | 'info' | 'error' | 'question' | 'warning';
   title?: string;
@@ -413,6 +433,12 @@ export const electronApi = {
     onOpenAbout: (callback: () => void) => electronApi.menu.getApi().onOpenAbout(callback),
     onCheckForUpdates: (callback: () => void) => electronApi.menu.getApi().onCheckForUpdates(callback),
     onOpenLicense: (callback: () => void) => electronApi.menu.getApi().onOpenLicense(callback),
+    onImportMarkdown: (callback: () => void) => electronApi.menu.getApi().onImportMarkdown(callback),
+    onImportEnex: (callback: () => void) => electronApi.menu.getApi().onImportEnex(callback),
+    onImportSppx: (callback: () => void) => electronApi.menu.getApi().onImportSppx(callback),
+    onImportNwp: (callback: () => void) => electronApi.menu.getApi().onImportNwp(callback),
+    onExportMarkdown: (callback: () => void) => electronApi.menu.getApi().onExportMarkdown(callback),
+    onExportSppx: (callback: () => void) => electronApi.menu.getApi().onExportSppx(callback),
   },
 
   app: {
@@ -506,18 +532,25 @@ export const electronApi = {
       if (!api) throw new Error('Data transfer bridge is unavailable');
       return api;
     },
-    exportSppx: (): Promise<SppxExportResult> => {
-      return electronApi.dataTransfer.getApi().exportSppx();
-    },
     importSppx: (): Promise<SppxImportResult> => {
       return electronApi.dataTransfer.getApi().importSppx();
     },
-    exportMarkdown: (): Promise<MarkdownExportResult> => {
-      return electronApi.dataTransfer.getApi().exportMarkdown();
+    exportSppx: (): Promise<SppxExportResult> => {
+      return electronApi.dataTransfer.getApi().exportSppx();
     },
     importMarkdown: (): Promise<MarkdownImportResult> => {
       return electronApi.dataTransfer.getApi().importMarkdown();
     },
+    exportMarkdown: (): Promise<MarkdownExportResult> => {
+      return electronApi.dataTransfer.getApi().exportMarkdown();
+    },
+    importEnex: (): Promise<EnexImportResult> => {
+      return electronApi.dataTransfer.getApi().importEnex();
+    },
+    importNwp: (): Promise<NwpImportResult> => {
+      return electronApi.dataTransfer.getApi().importNwp();
+    },
+
   },
 
   search: {
@@ -769,8 +802,8 @@ export const electronApi = {
       return electronApi.vfs.getApi().saveImage(payload);
     },
 
-    deleteNode: (nodeId: string): Promise<WorkspaceNodePayload> => {
-      return electronApi.vfs.getApi().deleteNode(nodeId);
+    deleteNodes: (nodeIds: string[]): Promise<WorkspaceNodePayload[]> => {
+      return electronApi.vfs.getApi().deleteNodes(nodeIds);
     },
 
     moveNode: (payload: { nodeId: string; parentId: string | null; index: number }): Promise<WorkspaceNodePayload> => {

@@ -103,6 +103,7 @@
       :summary-items="summaryItems" @mouseenter="showSyncHoverCard" @mouseleave="scheduleHideSyncHoverCard" />
 
     <NotebookAppearanceDialog
+      v-if="isNotebookAppearanceDialogOpen"
       v-model="isNotebookAppearanceDialogOpen"
       :notebook-name="notebookAppearanceTarget?.name ?? ''"
       :icon-color="notebookAppearanceTarget?.iconColor"
@@ -114,7 +115,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useWorkspace } from "../composables/useWorkspace";
 import { WORKSPACE_CONSTANTS } from "../constants/workspace.constants";
@@ -135,7 +136,8 @@ import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu"
 import { Plus, Right, FileLockOne, Notes, Refresh, DoubleRight, DoubleDown } from '@icon-park/vue-next';
 import StarButton from "../../favorites/components/StarButton.vue";
 import NotebookVisualIcon from './NotebookVisualIcon.vue';
-import NotebookAppearanceDialog from './NotebookAppearanceDialog.vue';
+
+const NotebookAppearanceDialog = defineAsyncComponent(() => import('./NotebookAppearanceDialog.vue'));
 
 type WorkspaceNodeKind = "note" | "notebook";
 type MovableEntry = { id: string; kind: WorkspaceNodeKind; parentId: string | null };
@@ -663,13 +665,7 @@ async function deleteSelectedEntries() {
     return;
   }
 
-  for (const entry of entries) {
-    if (entry.kind === "note") {
-      await workspaceStore.deleteNote(entry.id);
-    } else {
-      await workspaceStore.deleteNotebook(entry.id);
-    }
-  }
+  await workspaceStore.deleteNodes(entries.map((entry) => entry.id));
 
   syncSelectionToActive();
 }

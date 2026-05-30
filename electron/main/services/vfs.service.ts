@@ -422,6 +422,40 @@ function isDescendantNode(candidateId: string, ancestorId: string): boolean {
   return false;
 }
 
+function hasTrashedAncestor(node: WorkspaceNode): boolean {
+  let parentId = node.parentId;
+
+  while (parentId) {
+    const parentNode = workspaceState.nodes.get(parentId);
+    if (!parentNode) {
+      return false;
+    }
+
+    if (parentNode.trashed) {
+      return true;
+    }
+
+    parentId = parentNode.parentId;
+  }
+
+  return false;
+}
+
+function hasSelectedAncestor(node: WorkspaceNode, selectedIds: Set<string>): boolean {
+  let parentId = node.parentId;
+
+  while (parentId) {
+    if (selectedIds.has(parentId)) {
+      return true;
+    }
+
+    const parentNode = workspaceState.nodes.get(parentId);
+    parentId = parentNode?.parentId ?? null;
+  }
+
+  return false;
+}
+
 async function ensureWorkspaceStructure(root: string): Promise<void> {
   await Promise.all([
     fs.mkdir(databaseDir(root), { recursive: true }),
@@ -811,15 +845,33 @@ export const vfsService = {
     return true;
   },
 
-  async deleteNode(nodeId: string): Promise<WorkspaceNode> {
+  async deleteNodes(nodeIds: string[]): Promise<WorkspaceNode[]> {
     const root = await this.ensureInitialized();
-    const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);
-    const node = workspaceState.nodes.get(safeNodeId);
-    if (!node || node.trashed) throw new Error(`Node not found: ${safeNodeId}`);
+    const safeNodeIds = Array.from(new Set(
+      nodeIds.map((nodeId) => assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID)),
+    ));
 
-    await deleteNodeRecursive(root, nodeId);
+    if (safeNodeIds.length === 0) {
+      return [];
+    }
+
+    const selectedIds = new Set(safeNodeIds);
+    const nodes = safeNodeIds.map((nodeId) => {
+      const node = workspaceState.nodes.get(nodeId);
+      if (!node || node.trashed) {
+        throw new Error(`Node not found: ${nodeId}`);
+      }
+
+      return node;
+    });
+    const rootNodes = nodes.filter((node) => !hasSelectedAncestor(node, selectedIds));
+
+    for (const node of rootNodes) {
+      await deleteNodeRecursive(root, node.id);
+    }
+
     await persistAllNodes(root);
-    return node;
+    return rootNodes;
   },
 
   async toggleNodeLock(nodeId: string, locked: boolean): Promise<WorkspaceNode> {
@@ -899,7 +951,7 @@ export const vfsService = {
 
   getTrashedNodes(): Array<WorkspaceNode & { childCount?: number }> {
     return Array.from(workspaceState.nodes.values())
-      .filter((node) => node.trashed)
+      .filter((node) => node.trashed && !hasTrashedAncestor(node))
       .map((node) => {
         if (node.type === VFS_CONSTANTS.NODE_TYPE_FOLDER) {
           return {
@@ -937,7 +989,9 @@ export const vfsService = {
 
   async emptyTrash(): Promise<boolean> {
     const root = await this.ensureInitialized();
-    const trashedNodes = Array.from(workspaceState.nodes.values()).filter((node) => node.trashed);
+    const trashedNodes = Array.from(workspaceState.nodes.values()).filter(
+      (node) => node.trashed && !hasTrashedAncestor(node),
+    );
 
     for (const node of trashedNodes) {
       await permanentlyDeleteNodeRecursive(root, node.id);
@@ -1044,7 +1098,7 @@ export const vfsService = {
 
       const threshold = Date.now() - (days * 24 * 60 * 60 * 1000);
       const trashedNodes = Array.from(workspaceState.nodes.values()).filter(
-        (node) => node.trashed && (node.updatedAt || node.createdAt) < threshold
+        (node) => node.trashed && !hasTrashedAncestor(node) && (node.updatedAt || node.createdAt) < threshold
       );
 
       if (trashedNodes.length === 0) return;
@@ -1061,7 +1115,7 @@ export const vfsService = {
   },
 };
 
-async function deleteNodeRecursive(root: string, nodeId: string, isRoot = true): Promise<void> {
+async function deleteNodeRecursive(root: string, nodeId: string): Promise<void> {
   const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);
   const node = workspaceState.nodes.get(safeNodeId);
   if (!node) return;
@@ -1071,7 +1125,7 @@ async function deleteNodeRecursive(root: string, nodeId: string, isRoot = true):
       (n) => n.parentId === node.id && !n.trashed,
     );
     for (const child of children) {
-      await deleteNodeRecursive(root, child.id, false);
+      await deleteNodeRecursive(root, child.id);
     }
   }
 
@@ -1081,12 +1135,9 @@ async function deleteNodeRecursive(root: string, nodeId: string, isRoot = true):
     if (await pathExists(source)) await fs.rename(source, destination);
   }
 
-  if (isRoot) {
-    node.trashed = true;
-    node.updatedAt = Date.now();
-    workspaceState.nodes.set(node.id, node);
-    logger.debug(`Marked root node ${safeNodeId} as trashed.`);
-  }
+  node.trashed = true;
+  node.updatedAt = Date.now();
+  workspaceState.nodes.set(node.id, node);
 
   logger.debug(`Processed node ${safeNodeId} for trash.`);
 }
@@ -1107,7 +1158,7 @@ async function restoreNodeRecursive(root: string, nodeId: string): Promise<void>
 
   if (node.type === VFS_CONSTANTS.NODE_TYPE_FOLDER) {
     const children = Array.from(workspaceState.nodes.values()).filter(
-      (n) => n.parentId === node.id && !n.trashed,
+      (n) => n.parentId === node.id,
     );
     for (const child of children) {
       await restoreNodeRecursive(root, child.id);

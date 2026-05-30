@@ -1,5 +1,5 @@
 // UI components
-export { default as SettingsDialog } from './components/SettingsDialog.vue';
+export { default as SettingsPanel } from './components/SettingsPanel.vue';
 
 // Composables
 export { useSettings } from './composables/useSettings';

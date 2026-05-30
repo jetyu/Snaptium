@@ -99,6 +99,24 @@ function handleAction(action?: MenuAction) {
     case 'openFile':
       void workspaceStore.openExternalFile();
       break;
+    case 'importMarkdown':
+      void workspaceStore.importMarkdown();
+      break;
+    case 'importEnex':
+      void workspaceStore.importEnex();
+      break;
+    case 'importSppx':
+      void workspaceStore.importSppx();
+      break;
+    case 'importNwp':
+      void workspaceStore.importNwp();
+      break;
+    case 'exportMarkdown':
+      void workspaceStore.exportMarkdown();
+      break;
+    case 'exportSppx':
+      void workspaceStore.exportSppx();
+      break;
     case 'reload':
       void window.electronAPI.window?.reload();
       break;
@@ -253,6 +271,7 @@ onBeforeUnmount(() => {
   font-size: 0.82rem;
   cursor: pointer;
   transition: background-color 0.12s ease;
+  white-space: nowrap;
 }
 
 .app-menu-bar__dropdown-item:hover {

@@ -8,18 +8,19 @@
       <WorkbenchView v-if="activeMainView === 'workbench'" />
       <MyFavoritesView v-else-if="activeMainView === 'favorites'" />
       <TagsView v-else-if="activeMainView === 'tags'" />
+      <SettingsView v-else-if="activeMainView === 'settings'" />
       <WorkspaceView v-else />
     </div>
   </div>
 
-  <SearchDialog :is-open="isGlobalSearchOpen" :initial-query="globalSearchInitialQuery" @close="closeGlobalSearch"
+  <SearchDialog v-if="isGlobalSearchOpen" :is-open="isGlobalSearchOpen" :initial-query="globalSearchInitialQuery" @close="closeGlobalSearch"
     @select="handleSearchSelect" />
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue';
+import { defineAsyncComponent, onBeforeUnmount, onMounted, ref } from 'vue';
 import { storeToRefs } from 'pinia';
-import { SearchDialog, useSearch } from '@renderer/features/search';
+import { useSearch } from '@renderer/features/search';
 import { useWorkspace } from '@renderer/features/workspace';
 import { createLogger } from '@renderer/features/logger';
 import { useSettings } from '@renderer/features/settings/composables/useSettings';
@@ -33,18 +34,21 @@ import { useAppShellStore } from './store/appShell.store';
 import { useSidebarManager } from './composables/useSidebarManager';
 import AppSidebar from './components/AppSidebar.vue';
 import AppWindowFrame from './components/AppWindowFrame.vue';
-import WorkbenchView from './views/WorkbenchView.vue';
-import WorkspaceView from './views/WorkspaceView.vue';
-import TagsView from '@renderer/features/tags/components/TagsView.vue';
-import MyFavoritesView from '@renderer/features/favorites/components/MyFavoritesView.vue';
 import { electronApi } from '@renderer/core/bridge/electronApi';
+
+const WorkbenchView = defineAsyncComponent(() => import('./views/WorkbenchView.vue'));
+const WorkspaceView = defineAsyncComponent(() => import('./views/WorkspaceView.vue'));
+const SettingsView = defineAsyncComponent(() => import('./views/SettingsView.vue'));
+const TagsView = defineAsyncComponent(() => import('@renderer/features/tags/components/TagsView.vue'));
+const MyFavoritesView = defineAsyncComponent(() => import('@renderer/features/favorites/components/MyFavoritesView.vue'));
+const SearchDialog = defineAsyncComponent(() => import('@renderer/features/search/components/SearchDialog.vue'));
 
 const mainLayoutLogger = createLogger('MainLayout');
 const appShellStore = useAppShellStore();
 const { activeMainView, mainViews, enabledCustomModules } = storeToRefs(appShellStore);
 const { setActiveMainView } = appShellStore;
 
-const { openSettings } = useSettings();
+const { setActiveTab, initMainProcessListeners, onOpenSettingsRequest } = useSettings();
 const { openTrash } = useTrash();
 const { openAbout } = useAbout();
 const { openSidebarManager } = useSidebarManager();
@@ -52,6 +56,8 @@ const { isGlobalSearchOpen, globalSearchInitialQuery, openGlobalSearch, closeGlo
 const { selectNote, forceFlushAutoSave } = useWorkspace();
 const isWindowMaximized = ref(false);
 let removeWindowStateListener: (() => void) | null = null;
+let removeSettingsMenuListener: (() => void) | null = null;
+let removeSettingsRequestListener: (() => void) | null = null;
 
 type SearchSelectResult = SearchResult | RagSearchResult;
 type SearchSelectMatch = SearchMatch;
@@ -83,7 +89,7 @@ async function openModule(moduleId: AppShellModuleId) {
       openGlobalSearch();
       return;
     case 'settings':
-      openSettings('general');
+      await showSettings('general');
       return;
     case 'trash':
       await openTrash();
@@ -94,6 +100,11 @@ async function openModule(moduleId: AppShellModuleId) {
     default:
       return;
   }
+}
+
+async function showSettings(tab: string = 'general'): Promise<void> {
+  setActiveTab(tab);
+  await setActiveMainView('settings');
 }
 
 async function handleSearchSelect(result: SearchSelectResult, match?: SearchSelectMatch) {
@@ -120,6 +131,12 @@ function handleBeforeUnload(): void {
 
 onMounted(async () => {
   window.addEventListener('beforeunload', handleBeforeUnload);
+  removeSettingsRequestListener = onOpenSettingsRequest((tab) => {
+    void showSettings(tab);
+  });
+  removeSettingsMenuListener = initMainProcessListeners(() => {
+    void showSettings('general');
+  });
   await syncWindowState();
 
   if (electronApi.window.isAvailable()) {
@@ -131,6 +148,10 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('beforeunload', handleBeforeUnload);
+  removeSettingsMenuListener?.();
+  removeSettingsMenuListener = null;
+  removeSettingsRequestListener?.();
+  removeSettingsRequestListener = null;
   removeWindowStateListener?.();
   removeWindowStateListener = null;
 });
