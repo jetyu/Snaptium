@@ -54,7 +54,11 @@
   transition: background 0.15s, color 0.15s;
 }
 
-.btn-new-note:hover,
+.btn-new-note:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
 .btn-search:hover {
   background: var(--panel-hover);
   color: var(--accent);
@@ -126,18 +130,19 @@
 
 .btn-create-first {
   padding: 0.4rem 0.9rem;
-  border: 1px solid var(--accent);
+  border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   background: transparent;
-  color: var(--accent);
+  color: var(--text);
   cursor: pointer;
   font-size: 0.85rem;
-  transition: background 0.15s, color 0.15s;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .btn-create-first:hover {
-  background: var(--accent);
-  color: #fff;
+  background: var(--panel-hover);
+  border-color: var(--panel-border);
+  color: var(--text);
 }
 
 /* ===== Common Column Header & Empty State ===== */

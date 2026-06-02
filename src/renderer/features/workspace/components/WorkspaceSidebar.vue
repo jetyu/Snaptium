@@ -118,6 +118,7 @@
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useWorkspace } from "../composables/useWorkspace";
+import { buildNoteTemplate, type NoteTemplateId } from "../templates";
 import { WORKSPACE_CONSTANTS } from "../constants/workspace.constants";
 import SyncHoverCard from "../../sync/components/SyncHoverCard.vue";
 import { useSyncPresentation } from "../../sync/composables/useSyncPresentation";
@@ -274,6 +275,17 @@ const notebookAppearanceTarget = computed<Notebook | null>(() => {
 function openNotebookAppearancePicker(notebook: Notebook) {
   notebookAppearanceTargetId.value = notebook.id;
   isNotebookAppearanceDialogOpen.value = true;
+}
+
+async function createNoteFromTemplate(templateId: NoteTemplateId): Promise<void> {
+  const template = buildNoteTemplate(templateId, t);
+  const note = await createNote(null, template.title, template.content);
+
+  if (!note) {
+    return;
+  }
+
+  await appShellStore.setActiveMainView('workspace');
 }
 
 async function handleNotebookIconColorSelect(iconColor: Notebook['iconColor'] | null) {
@@ -1108,6 +1120,7 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     t,
     createNote,
     createNotebook,
+    createNoteFromTemplate,
     moveNode,
     showNoteInFolder,
     deleteNote,
@@ -1429,7 +1442,13 @@ onMounted(() => {
 
 .secondary {
   background: transparent;
-  border: 1px solid var(--color-border, #d1d5db);
+  border: 1px solid var(--panel-border);
+}
+
+.btn-create-first.secondary:hover {
+  background: var(--panel-hover);
+  border-color: var(--panel-border);
+  color: var(--text);
 }
 
 .header-actions {
@@ -1453,11 +1472,11 @@ onMounted(() => {
   padding: 0 8px;
 }
 
-.btn-sync:hover,
+.btn-sync:hover:not(:disabled),
 .btn-new-note:hover,
 .btn-expand-collapse:hover {
   background: var(--panel-hover);
-  color: var(--accent);
+  color: var(--text);
 }
 
 .btn-sync:disabled {

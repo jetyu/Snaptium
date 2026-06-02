@@ -9,14 +9,14 @@
                 :placeholder="useSemanticSearch ? $t('search.semanticPlaceholder') : $t('search.placeholder')"
                 @input="onInput" @keydown.enter="handleSearch(true)" @keydown.esc="close" />
               <button v-if="searchQuery" class="btn-clear" @click="searchQuery = ''; searchInput?.focus()"
-                :title="$t('common.clear')">
+                :title="$t('button.clear')">
                 <Close theme="outline" :size="14" />
               </button>
             </div>
-            <button class="btn-search" @click="handleSearch(true)" :title="$t('search.search')">
+            <button class="btn-search" @click="handleSearch(true)" :title="$t('button.search')">
               <Search theme="outline" :size="18" />
             </button>
-            <button class="btn-close" @click="close" :title="$t('common.close')">
+            <button class="btn-close" @click="close" :title="$t('button.close')">
               <Close theme="outline" :size="18" />
             </button>
           </div>

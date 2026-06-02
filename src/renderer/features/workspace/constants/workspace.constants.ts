@@ -27,6 +27,7 @@ export const WORKSPACE_CONSTANTS = {
 
   MENU: {
     NEW_NOTE: 'contextMenu.newNote',
+    NEW_FROM_TEMPLATE: 'contextMenu.newFromTemplate',
     NEW_NOTEBOOK: 'contextMenu.newNotebook',
     RENAME: 'contextMenu.rename',
     DELETE: 'contextMenu.delete',
@@ -57,6 +58,7 @@ export const WORKSPACE_CONSTANTS = {
   },
   ACTIONS: {
     CREATE_NOTE: 'create-note',
+    CREATE_NOTE_FROM_TEMPLATE_PREFIX: 'create-note-from-template',
     CREATE_NOTEBOOK: 'create-notebook',
     RENAME: 'rename',
     DELETE: 'delete',

@@ -1,5 +1,6 @@
 import type { Note, Notebook } from '../services/workspace.service';
 import { WORKSPACE_CONSTANTS } from '../constants/workspace.constants';
+import { isNoteTemplateId, type NoteTemplateId } from '../templates';
 import {
   getCreateButtonMenu,
   getNoteContextMenu,
@@ -12,9 +13,10 @@ import {
 } from '../services/workspaceContextMenu.service';
 
 interface UseWorkspaceContextMenuOptions {
-  t: (key: string, named?: Record<string, unknown>) => string;
-  createNote: (parentId?: string | null) => Promise<void>;
+  t: (key: string, named?: Record<string, string | number>) => string;
+  createNote: (parentId?: string | null) => Promise<Note | null>;
   createNotebook: (parentId?: string | null) => Promise<void>;
+  createNoteFromTemplate: (templateId: NoteTemplateId) => Promise<void>;
   moveNode: (payload: { nodeId: string; parentId: string | null; index: number }) => Promise<void>;
   showNoteInFolder: (id: string) => Promise<void>;
   deleteNote: (id: string) => Promise<unknown>;
@@ -47,6 +49,15 @@ function parseMoveAction(action: WorkspaceContextAction | null): { parentId: str
   };
 }
 
+function parseTemplateAction(action: WorkspaceContextAction | null): NoteTemplateId | null {
+  if (!action || !action.startsWith(`${WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE_FROM_TEMPLATE_PREFIX}:`)) {
+    return null;
+  }
+
+  const templateId = action.slice(WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE_FROM_TEMPLATE_PREFIX.length + 1);
+  return isNoteTemplateId(templateId) ? templateId : null;
+}
+
 export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions) {
   async function showContextMenu(items: WorkspaceMenuItem[]) {
     return showNativeWorkspaceContextMenu(options.t, items);
@@ -68,6 +79,12 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
         parentId: moveTarget.parentId,
         index: options.resolveMoveIndex(moveTarget.parentId, nodeId),
       });
+      return;
+    }
+
+    const templateId = parseTemplateAction(action);
+    if (templateId) {
+      await options.createNoteFromTemplate(templateId);
       return;
     }
 

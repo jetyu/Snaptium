@@ -34,6 +34,8 @@ export interface WorkbenchRecommendationFeedbackEntry {
 export interface WorkbenchSettings {
   recentQuestions: WorkbenchQuestionEntry[];
   recommendationFeedback: WorkbenchRecommendationFeedbackEntry[];
+  onboardingGuideActivated: boolean;
+  onboardingGuideDismissed: boolean;
 }
 
 export interface WorkbenchModuleDefinition {
@@ -145,6 +147,8 @@ export function createDefaultWorkbenchSettings(): WorkbenchSettings {
   return {
     recentQuestions: [],
     recommendationFeedback: [],
+    onboardingGuideActivated: false,
+    onboardingGuideDismissed: false,
   };
 }
 
@@ -157,5 +161,7 @@ export function sanitizeWorkbenchSettings(value?: Partial<WorkbenchSettings> | n
   return {
     recentQuestions: sanitizeRecentQuestions(value.recentQuestions),
     recommendationFeedback: sanitizeRecommendationFeedback(value.recommendationFeedback),
+    onboardingGuideActivated: value.onboardingGuideActivated === true,
+    onboardingGuideDismissed: value.onboardingGuideDismissed === true,
   };
 }

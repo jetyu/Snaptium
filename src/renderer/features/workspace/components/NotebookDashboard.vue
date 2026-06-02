@@ -146,6 +146,12 @@ const notebookNotes = computed(() =>
   min-height: 34px;
 }
 
+.actions .action-button:hover:not(:disabled) {
+  background: var(--panel-hover);
+  border-color: var(--panel-border);
+  color: var(--text);
+}
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

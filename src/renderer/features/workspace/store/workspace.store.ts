@@ -176,16 +176,18 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
     },
 
-    async createNote(parentId: string | null = null) {
+    async createNote(parentId: string | null = null, title?: string, content?: string): Promise<Note | null> {
       try {
-        const newNote = await workspaceService.createNote(parentId);
+        const newNote = await workspaceService.createNote(parentId, title, content);
         this.notes.push(newNote);
         this.activeNoteId = newNote.id;
         this.activeNotebookId = null;
         logger.info(`Created new note: ${newNote.id} with contentId ${newNote.contentId}`);
+        return newNote;
       } catch (err: unknown) {
         const message = getErrorMessage(err);
         logger.error(`Failed to create note: ${message}`);
+        return null;
       }
     },
 

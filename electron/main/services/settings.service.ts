@@ -105,6 +105,9 @@ interface AppSettings {
   };
   workbench: {
     recentQuestions: unknown[];
+    recommendationFeedback: unknown[];
+    onboardingGuideActivated: boolean;
+    onboardingGuideDismissed: boolean;
   };
   accessControl: AccessControlConfig;
 }
@@ -131,6 +134,7 @@ type SettingsInput = Partial<AppSettings> & {
   previewAppearance?: Partial<PreviewAppearanceConfig>;
   sync?: SyncConfigInput;
   accessControl?: Partial<AccessControlConfig>;
+  workbench?: Partial<AppSettings['workbench']>;
 };
 
 const logger = loggerService.createLogger('Electron:Settings Service');
@@ -267,6 +271,18 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
       ...defaultConfig.accessControl,
       ...(incomingConfig.accessControl || {}),
     },
+    workbench: {
+      ...defaultConfig.workbench,
+      ...(incomingConfig.workbench || {}),
+      recentQuestions: Array.isArray(incomingConfig.workbench?.recentQuestions)
+        ? incomingConfig.workbench.recentQuestions
+        : defaultConfig.workbench.recentQuestions,
+      recommendationFeedback: Array.isArray(incomingConfig.workbench?.recommendationFeedback)
+        ? incomingConfig.workbench.recommendationFeedback
+        : defaultConfig.workbench.recommendationFeedback,
+      onboardingGuideActivated: incomingConfig.workbench?.onboardingGuideActivated === true,
+      onboardingGuideDismissed: incomingConfig.workbench?.onboardingGuideDismissed === true,
+    },
   };
 }
 
@@ -355,6 +371,9 @@ export const settingsService = {
       },
       workbench: {
         recentQuestions: [],
+        recommendationFeedback: [],
+        onboardingGuideActivated: false,
+        onboardingGuideDismissed: false,
       },
       accessControl: {
         enabled: false,

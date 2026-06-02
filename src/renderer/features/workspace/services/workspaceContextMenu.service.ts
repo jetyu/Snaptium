@@ -1,5 +1,6 @@
 import type { Note, Notebook } from './workspace.service';
 import { WORKSPACE_CONSTANTS } from '../constants/workspace.constants';
+import { NOTE_TEMPLATE_DEFINITIONS, NOTE_TEMPLATE_IDS } from '../templates';
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import { createLogger } from '@renderer/features/logger';
 
@@ -22,7 +23,7 @@ export interface WorkspaceMoveTarget {
 }
 
 const logger = createLogger('Workspace Context Menu');
-type Translate = (key: string, named?: Record<string, unknown>) => string;
+type Translate = (key: string, named?: Record<string, string | number>) => string;
 
 function toPayloadItem(item: WorkspaceMenuItem): WorkspaceMenuItem {
   return {
@@ -53,7 +54,9 @@ export async function showNativeWorkspaceContextMenu(t: Translate, items: Worksp
 export function createWorkspaceContextMenuLabels(t: Translate) {
   return {
     [WORKSPACE_CONSTANTS.MENU.NEW_NOTE]: t(WORKSPACE_CONSTANTS.MENU.NEW_NOTE),
+    [WORKSPACE_CONSTANTS.MENU.NEW_FROM_TEMPLATE]: t(WORKSPACE_CONSTANTS.MENU.NEW_FROM_TEMPLATE),
     [WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK]: t(WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK),
+    ...Object.fromEntries(NOTE_TEMPLATE_DEFINITIONS.map((template) => [template.titleKey, t(template.titleKey)])),
     [WORKSPACE_CONSTANTS.MENU.RENAME]: t(WORKSPACE_CONSTANTS.MENU.RENAME),
     [WORKSPACE_CONSTANTS.MENU.DELETE]: t(WORKSPACE_CONSTANTS.MENU.DELETE),
     [WORKSPACE_CONSTANTS.MENU.LOCK]: t(WORKSPACE_CONSTANTS.MENU.LOCK),
@@ -70,8 +73,20 @@ export function createWorkspaceContextMenuLabels(t: Translate) {
 }
 
 export function getCreateButtonMenu(): WorkspaceMenuItem[] {
+  const templateItems = NOTE_TEMPLATE_DEFINITIONS
+    .filter((template) => template.id !== NOTE_TEMPLATE_IDS.BLANK)
+    .map((template) => ({
+      action: `${WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE_FROM_TEMPLATE_PREFIX}:${template.id}`,
+      labelKey: template.titleKey,
+    }));
+
   return [
     { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTE, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTE },
+    {
+      type: WORKSPACE_CONSTANTS.MENU_ITEM_TYPE.SUBMENU,
+      labelKey: WORKSPACE_CONSTANTS.MENU.NEW_FROM_TEMPLATE,
+      submenu: templateItems,
+    },
     { action: WORKSPACE_CONSTANTS.ACTIONS.CREATE_NOTEBOOK, labelKey: WORKSPACE_CONSTANTS.MENU.NEW_NOTEBOOK }
   ];
 }

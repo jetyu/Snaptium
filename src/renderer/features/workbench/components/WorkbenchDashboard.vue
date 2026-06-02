@@ -294,6 +294,13 @@
       </aside>
     </div>
   </div>
+  <WorkbenchOnboardingGuide
+    v-if="shouldShowOnboardingGuide"
+    @create-template="handleOnboardingCreateTemplate"
+    @dismiss="dismissOnboardingGuide"
+    @import-markdown="handleOnboardingImportMarkdown"
+    @open-sync="handleOnboardingOpenSync"
+  />
 </template>
 
 <script setup lang="ts">
@@ -323,10 +330,19 @@ import {
   TagOne,
 } from '@icon-park/vue-next';
 import { useSearch } from '@renderer/features/search';
-import { useWorkspace, type Note } from '@renderer/features/workspace';
+import {
+  buildNoteTemplate,
+  useWorkspace,
+  useWorkspaceStore,
+  type Note,
+  type NoteTemplate,
+  type NoteTemplateId,
+} from '@renderer/features/workspace';
+import { useSettings, useSettingsStore } from '@renderer/features/settings';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useWorkbenchStore } from '@renderer/features/workbench';
 import { electronApi, type WallpaperResult } from '@renderer/core/bridge/electronApi';
+import WorkbenchOnboardingGuide from './WorkbenchOnboardingGuide.vue';
 import {
   useLocalSmartRecommendations,
   type LocalRecommendationReasonType,
@@ -395,7 +411,10 @@ const HEADING_REGEX = /^#{1,6}\s+/gm;
 const { t } = useI18n();
 const { openGlobalSearch } = useSearch();
 const { notes, notebooks, allTags, createNote, selectNote } = useWorkspace();
+const { openSettings } = useSettings();
 const appShellStore = useAppShellStore();
+const workspaceStore = useWorkspaceStore();
+const settingsStore = useSettingsStore();
 const workbenchStore = useWorkbenchStore();
 const { recentQuestions, recommendationFeedback } = storeToRefs(workbenchStore);
 const wallpaper = ref<WallpaperResult | null>(null);
@@ -403,6 +422,18 @@ const wallpaperLoading = ref<boolean>(false);
 const wallpaperSrc = ref<string>(defaultHeroUrl);
 
 const hasNotes = computed<boolean>(() => notes.value.length > 0);
+const isEmptyWorkspace = computed<boolean>(() => notes.value.length === 0 && notebooks.value.length === 0);
+const shouldShowOnboardingGuide = computed<boolean>(() => {
+  return workspaceStore.initialized
+    && (settingsStore.config.workbench.onboardingGuideActivated || isEmptyWorkspace.value)
+    && !settingsStore.config.workbench.onboardingGuideDismissed;
+});
+const shouldActivateOnboardingGuide = computed<boolean>(() => {
+  return workspaceStore.initialized
+    && isEmptyWorkspace.value
+    && !settingsStore.config.workbench.onboardingGuideActivated
+    && !settingsStore.config.workbench.onboardingGuideDismissed;
+});
 const noteMap = computed<Map<string, Note>>(() => new Map(notes.value.map((note) => [note.id, note])));
 const sortedNotesByUpdated = computed<Note[]>(() => [...notes.value].sort((a, b) => b.updatedAt - a.updatedAt));
 const recentQuestionEntries = computed<WorkbenchQuestionEntry[]>(() => recentQuestions.value);
@@ -870,6 +901,49 @@ async function createFirstNote(): Promise<void> {
   await appShellStore.setActiveMainView('workspace');
 }
 
+async function createTemplateNote(template: NoteTemplate): Promise<void> {
+  await createNote(null, template.title, template.content);
+  await appShellStore.setActiveMainView('workspace');
+}
+
+async function dismissOnboardingGuide(): Promise<void> {
+  if (settingsStore.config.workbench.onboardingGuideDismissed) {
+    return;
+  }
+
+  await settingsStore.updateSetting('workbench', {
+    ...settingsStore.config.workbench,
+    onboardingGuideActivated: true,
+    onboardingGuideDismissed: true,
+  });
+}
+
+async function activateOnboardingGuide(): Promise<void> {
+  if (settingsStore.config.workbench.onboardingGuideActivated) {
+    return;
+  }
+
+  await settingsStore.updateSetting('workbench', {
+    ...settingsStore.config.workbench,
+    onboardingGuideActivated: true,
+  });
+}
+
+async function handleOnboardingCreateTemplate(templateId: NoteTemplateId): Promise<void> {
+  await createTemplateNote(buildNoteTemplate(templateId, t));
+}
+
+async function handleOnboardingImportMarkdown(): Promise<void> {
+  await workspaceStore.importMarkdown();
+  if (notes.value.length > 0) {
+    await appShellStore.setActiveMainView('workspace');
+  }
+}
+
+async function handleOnboardingOpenSync(): Promise<void> {
+  openSettings('sync');
+}
+
 async function openNoteInWorkspace(noteId: string): Promise<void> {
   selectNote(noteId);
   await appShellStore.setActiveMainView('workspace');
@@ -997,6 +1071,16 @@ watch(
   () => notes.value.map((note) => note.id).sort().join('|'),
   () => {
     void workbenchStore.cleanupNoteReferences(notes.value.map((note) => note.id));
+  },
+  { immediate: true },
+);
+
+watch(
+  shouldActivateOnboardingGuide,
+  (shouldActivate) => {
+    if (shouldActivate) {
+      void activateOnboardingGuide();
+    }
   },
   { immediate: true },
 );
