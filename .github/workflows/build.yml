@@ -1,4 +1,4 @@
-name: NoteWizard Release
+name: Snaptium Release
 
 on:
   push:
@@ -12,13 +12,14 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
- 
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  R2_ENDPOINT: https://c682d0f655a59157a9b01ed8a07ef379.r2.cloudflarestorage.com
 
 jobs:
   prepare:
-    name: Release Preparation 
+    name: Release Preparation
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.versioning.outputs.version }}
@@ -27,6 +28,7 @@ jobs:
       release_name: ${{ steps.versioning.outputs.release_name }}
       prerelease: ${{ steps.versioning.outputs.prerelease }}
       make_latest: ${{ steps.versioning.outputs.make_latest }}
+      r2_channel: ${{ steps.versioning.outputs.r2_channel }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -60,36 +62,42 @@ jobs:
           if echo "$BRANCHES" | grep -qE "origin/main$"; then
             IS_MAIN=true
           fi
+
           if echo "$BRANCHES" | grep -qE "origin/develop$"; then
             IS_DEVELOP=true
           fi
+
           if echo "$BRANCHES" | grep -qE "origin/feature/"; then
             IS_FEATURE=true
           fi
-          
+
           if [[ "$IS_MAIN" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
             echo "Stable Release (main)"
             echo "is_dev=false" >> $GITHUB_OUTPUT
             echo "prerelease=false" >> $GITHUB_OUTPUT
             echo "make_latest=true" >> $GITHUB_OUTPUT
+            echo "r2_channel=latest" >> $GITHUB_OUTPUT
           elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[bBrR].*$ ]]; then
             echo "Beta/RC Release (develop)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
+            echo "r2_channel=beta" >> $GITHUB_OUTPUT
           elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[aA].*$ ]]; then
             echo "Alpha Release (feature)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
+            echo "r2_channel=alpha" >> $GITHUB_OUTPUT
           else
             echo "::error::Tag $TAG does not match branch release policy."
             exit 1
           fi
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "release_name=$TAG" >> $GITHUB_OUTPUT
-          
+
       - name: Upload Release Notes Template File
         uses: actions/upload-artifact@v5
         with:
@@ -113,18 +121,22 @@ jobs:
             artifact_pattern: |
               dist/*.exe
               dist/*.blockmap
+              dist/latest*.yml
           - os: ubuntu-latest
             platform: linux
             artifact_pattern: |
               dist/*.AppImage
               dist/*.deb
               dist/*.rpm
+              dist/latest*.yml
           - os: macos-latest
             platform: mac
             artifact_pattern: |
               dist/*.dmg
               dist/*.zip
               dist/*.blockmap
+              dist/latest*.yml
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -142,13 +154,46 @@ jobs:
       - name: Set Version
         run: |
           npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
+
+      - name: Set Release Channel Publish URL
+        shell: bash
+        env:
+          R2_CHANNEL: ${{ needs.prepare.outputs.r2_channel }}
+        run: |
+          set -euo pipefail
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs'
+
+          const channel = process.env.R2_CHANNEL
+
+          if (!channel) {
+            throw new Error('R2_CHANNEL is empty.')
+          }
+
+          const packageJsonPath = 'package.json'
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+
+          packageJson.build = packageJson.build || {}
+          packageJson.build.publish = [
+            {
+              provider: 'generic',
+              url: `https://file.snaptium.com/download/${channel}`
+            }
+          ]
+
+          fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
+
+          console.log(`electron-builder publish provider: generic`)
+          console.log(`electron-builder publish url: https://file.snaptium.com/download/${channel}`)
+          NODE
+
       - name: Lint
         run: npm run lint || true
 
       - name: Build for ${{ matrix.platform }}
-        run: npm run dist:${{ matrix.platform }} --verbose
+        run: npm run dist:${{ matrix.platform }} -- --publish never
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
           ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
           USE_HARD_LINKS: false
@@ -156,13 +201,13 @@ jobs:
       - name: Upload Package Artifacts
         uses: actions/upload-artifact@v5
         with:
-          name: NoteWizard-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
+          name: Snaptium-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
           path: ${{ matrix.artifact_pattern }}
           retention-days: 30
           if-no-files-found: error
 
   release:
-    name: Publishing Release 
+    name: Publishing Release
     needs: [prepare, build]
     runs-on: ubuntu-latest
 
@@ -183,6 +228,7 @@ jobs:
         run: |
           node ./src/scripts/generate-release-notes.js "${{ needs.prepare.outputs.tag }}"
           cp .github/RELEASE_TEMPLATE/release_note.md updated_note.md
+
       - name: Download artifacts
         uses: actions/download-artifact@v5
         with:
@@ -190,7 +236,7 @@ jobs:
 
       - name: Release installers for all platforms
         run: |
-          mkdir release_files
+          mkdir -p release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
 
       - name: Generate GitHub Release Page
@@ -205,3 +251,46 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install AWS CLI
+        run: |
+          set -euo pipefail
+
+          sudo apt-get update
+          sudo apt-get install -y unzip
+
+          curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip -q awscliv2.zip
+
+          sudo ./aws/install \
+            --bin-dir /usr/local/bin \
+            --install-dir /usr/local/aws-cli \
+            --update
+
+          aws --version
+
+      - name: Upload to Cloudflare R2 channel
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: true
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_CHANNEL: ${{ needs.prepare.outputs.r2_channel }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$R2_CHANNEL" ]]; then
+            echo "::error::R2 channel is empty."
+            exit 1
+          fi
+
+          echo "Uploading release files to R2 channel: download/$R2_CHANNEL/"
+
+          aws s3 sync release_files/ \
+            "s3://$R2_BUCKET/download/$R2_CHANNEL/" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --region auto \
+            --delete \
+            --no-progress
+
+          echo "R2 upload completed: download/$R2_CHANNEL/"

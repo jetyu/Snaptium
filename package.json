@@ -101,10 +101,8 @@
     "compression": "maximum",
     "publish": [
       {
-        "provider": "github",
-        "owner": "jetyu",
-        "repo": "NoteWizard",
-        "vPrefixedTagName": true
+        "provider": "generic",
+        "url": "https://file.snaptium.com/download/latest"
       }
     ],
     "win": {
