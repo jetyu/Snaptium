@@ -156,6 +156,7 @@ jobs:
           npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
 
       - name: Set Release Channel Publish URL
+        shell: bash
         env:
           R2_CHANNEL: ${{ needs.prepare.outputs.r2_channel }}
         run: |
@@ -191,7 +192,7 @@ jobs:
         run: npm run lint || true
 
       - name: Build for ${{ matrix.platform }}
-        run: npm run dist:${{ matrix.platform }} -- --publish never --verbose
+        run: npm run dist:${{ matrix.platform }} -- --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: false
           ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
@@ -233,7 +234,7 @@ jobs:
         with:
           path: artifacts
 
-      - name: Release installers for platforms
+      - name: Release installers for all platforms
         run: |
           mkdir -p release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
