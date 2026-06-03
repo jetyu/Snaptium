@@ -233,7 +233,7 @@ jobs:
         with:
           path: artifacts
 
-      - name: Release installers for all platforms
+      - name: Release installers for platforms
         run: |
           mkdir -p release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
