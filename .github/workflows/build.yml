@@ -12,13 +12,15 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
- 
+
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  R2_ENDPOINT: https://c682d0f655a59157a9b01ed8a07ef379.r2.cloudflarestorage.com
+  R2_KEEP_VERSION_COUNT: 3
 
 jobs:
   prepare:
-    name: Release Preparation 
+    name: Release Preparation
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.versioning.outputs.version }}
@@ -86,10 +88,11 @@ jobs:
             echo "::error::Tag $TAG does not match branch release policy."
             exit 1
           fi
+
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=$TAG" >> $GITHUB_OUTPUT
           echo "release_name=$TAG" >> $GITHUB_OUTPUT
-          
+
       - name: Upload Release Notes Template File
         uses: actions/upload-artifact@v5
         with:
@@ -125,6 +128,7 @@ jobs:
               dist/*.dmg
               dist/*.zip
               dist/*.blockmap
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -142,6 +146,7 @@ jobs:
       - name: Set Version
         run: |
           npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
+
       - name: Lint
         run: npm run lint || true
 
@@ -162,7 +167,7 @@ jobs:
           if-no-files-found: error
 
   release:
-    name: Publishing Release 
+    name: Publishing Release
     needs: [prepare, build]
     runs-on: ubuntu-latest
 
@@ -183,6 +188,7 @@ jobs:
         run: |
           node ./src/scripts/generate-release-notes.js "${{ needs.prepare.outputs.tag }}"
           cp .github/RELEASE_TEMPLATE/release_note.md updated_note.md
+
       - name: Download artifacts
         uses: actions/download-artifact@v5
         with:
@@ -190,7 +196,7 @@ jobs:
 
       - name: Release installers for all platforms
         run: |
-          mkdir release_files
+          mkdir -p release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
 
       - name: Generate GitHub Release Page
@@ -206,26 +212,114 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install AWS CLI
-        run: sudo apt-get install -y awscli
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+          aws --version
 
-      - name: Upload to Cloudflare R2 (latest)
+      - name: Upload to Cloudflare R2 latest
+        if: needs.prepare.outputs.make_latest == 'true'
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
           AWS_EC2_METADATA_DISABLED: true
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: |
-          aws s3 sync release_files \
-            s3://$R2_BUCKET/download/latest/ \
-            --endpoint-url https://c682d0f655a59157a9b01ed8a07ef379.r2.cloudflarestorage.com
+          set -euo pipefail
 
-      - name: Upload to Cloudflare R2 (versioned)
+          aws s3 sync release_files/ \
+            "s3://$R2_BUCKET/download/latest/" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --region auto \
+            --delete \
+            --no-progress
+
+      - name: Upload to Cloudflare R2 versioned
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
           AWS_EC2_METADATA_DISABLED: true
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: |
-          aws s3 sync release_files \
-            s3://$R2_BUCKET/download/${{ needs.prepare.outputs.tag }}/ \
-            --endpoint-url https://c682d0f655a59157a9b01ed8a07ef379.r2.cloudflarestorage.com
+          set -euo pipefail
+
+          aws s3 sync release_files/ \
+            "s3://$R2_BUCKET/download/${{ needs.prepare.outputs.tag }}/" \
+            --endpoint-url "$R2_ENDPOINT" \
+            --region auto \
+            --delete \
+            --no-progress
+
+      - name: Prune old Cloudflare R2 versioned releases
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: auto
+          AWS_EC2_METADATA_DISABLED: true
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          set -euo pipefail
+
+          KEEP_COUNT="${R2_KEEP_VERSION_COUNT:-3}"
+          TMP_FILE="$(mktemp)"
+
+          mapfile -t VERSION_PREFIXES < <(
+            aws s3api list-objects-v2 \
+              --bucket "$R2_BUCKET" \
+              --prefix "download/" \
+              --delimiter "/" \
+              --endpoint-url "$R2_ENDPOINT" \
+              --region auto \
+              --query 'CommonPrefixes[].Prefix' \
+              --output text \
+            | tr '\t' '\n' \
+            | grep -E '^download/v[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?/$' || true
+          )
+
+          if (( ${#VERSION_PREFIXES[@]} <= KEEP_COUNT )); then
+            echo "Versioned release count is ${#VERSION_PREFIXES[@]}. Nothing to prune."
+            exit 0
+          fi
+
+          for PREFIX in "${VERSION_PREFIXES[@]}"; do
+            LAST_MODIFIED="$(
+              aws s3api list-objects-v2 \
+                --bucket "$R2_BUCKET" \
+                --prefix "$PREFIX" \
+                --endpoint-url "$R2_ENDPOINT" \
+                --region auto \
+                --query 'sort_by(Contents,&LastModified)[-1].LastModified' \
+                --output text
+            )"
+
+            if [[ -n "$LAST_MODIFIED" && "$LAST_MODIFIED" != "None" ]]; then
+              printf '%s %s\n' "$LAST_MODIFIED" "$PREFIX" >> "$TMP_FILE"
+            fi
+          done
+
+          TOTAL_COUNT="$(wc -l < "$TMP_FILE" | tr -d ' ')"
+
+          if (( TOTAL_COUNT <= KEEP_COUNT )); then
+            echo "Versioned release count is $TOTAL_COUNT. Nothing to prune."
+            exit 0
+          fi
+
+          mapfile -t DELETE_PREFIXES < <(
+            sort "$TMP_FILE" \
+            | head -n "-$KEEP_COUNT" \
+            | awk '{print $2}'
+          )
+
+          for PREFIX in "${DELETE_PREFIXES[@]}"; do
+            echo "Deleting old R2 release prefix: $PREFIX"
+
+            aws s3 rm "s3://$R2_BUCKET/$PREFIX" \
+              --recursive \
+              --endpoint-url "$R2_ENDPOINT" \
+              --region auto \
+              --no-progress
+          done
+
+          echo "R2 versioned release pruning completed. Kept latest $KEEP_COUNT versioned releases."
