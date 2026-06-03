@@ -205,3 +205,27 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Install AWS CLI
+        run: sudo apt-get install -y awscli
+
+      - name: Upload to Cloudflare R2 (latest)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_EC2_METADATA_DISABLED: true
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          aws s3 sync release_files \
+            s3://$R2_BUCKET/download/latest/ \
+            --endpoint-url https://c682d0f655a59157a9b01ed8a07ef379.r2.cloudflarestorage.com
+
+      - name: Upload to Cloudflare R2 (versioned)
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          AWS_EC2_METADATA_DISABLED: true
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+        run: |
+          aws s3 sync release_files \
+            s3://$R2_BUCKET/download/${{ needs.prepare.outputs.tag }}/ \
+            --endpoint-url https://c682d0f655a59157a9b01ed8a07ef379.r2.cloudflarestorage.com
