@@ -62,9 +62,11 @@ jobs:
           if echo "$BRANCHES" | grep -qE "origin/main$"; then
             IS_MAIN=true
           fi
+
           if echo "$BRANCHES" | grep -qE "origin/develop$"; then
             IS_DEVELOP=true
           fi
+
           if echo "$BRANCHES" | grep -qE "origin/feature/"; then
             IS_FEATURE=true
           fi
@@ -119,18 +121,21 @@ jobs:
             artifact_pattern: |
               dist/*.exe
               dist/*.blockmap
+              dist/latest*.yml
           - os: ubuntu-latest
             platform: linux
             artifact_pattern: |
               dist/*.AppImage
               dist/*.deb
               dist/*.rpm
+              dist/latest*.yml
           - os: macos-latest
             platform: mac
             artifact_pattern: |
               dist/*.dmg
               dist/*.zip
               dist/*.blockmap
+              dist/latest*.yml
 
     steps:
       - name: Checkout code
@@ -150,13 +155,44 @@ jobs:
         run: |
           npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
 
+      - name: Set Release Channel Publish URL
+        env:
+          R2_CHANNEL: ${{ needs.prepare.outputs.r2_channel }}
+        run: |
+          set -euo pipefail
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs'
+
+          const channel = process.env.R2_CHANNEL
+
+          if (!channel) {
+            throw new Error('R2_CHANNEL is empty.')
+          }
+
+          const packageJsonPath = 'package.json'
+          const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'))
+
+          packageJson.build = packageJson.build || {}
+          packageJson.build.publish = [
+            {
+              provider: 'generic',
+              url: `https://file.snaptium.com/download/${channel}`
+            }
+          ]
+
+          fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
+
+          console.log(`electron-builder publish provider: generic`)
+          console.log(`electron-builder publish url: https://file.snaptium.com/download/${channel}`)
+          NODE
+
       - name: Lint
         run: npm run lint || true
 
       - name: Build for ${{ matrix.platform }}
-        run: npm run dist:${{ matrix.platform }} --verbose
+        run: npm run dist:${{ matrix.platform }} -- --publish never --verbose
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           CSC_IDENTITY_AUTO_DISCOVERY: false
           ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
           USE_HARD_LINKS: false
@@ -164,7 +200,7 @@ jobs:
       - name: Upload Package Artifacts
         uses: actions/upload-artifact@v5
         with:
-          name: NoteWizard-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
+          name: Snaptium-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
           path: ${{ matrix.artifact_pattern }}
           retention-days: 30
           if-no-files-found: error
