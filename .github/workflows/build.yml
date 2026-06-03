@@ -1,4 +1,4 @@
-name: NoteWizard Release
+name: Snaptium Release
 
 on:
   push:
@@ -16,7 +16,6 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
   R2_ENDPOINT: https://c682d0f655a59157a9b01ed8a07ef379.r2.cloudflarestorage.com
-  R2_KEEP_VERSION_COUNT: 3
 
 jobs:
   prepare:
@@ -29,6 +28,7 @@ jobs:
       release_name: ${{ steps.versioning.outputs.release_name }}
       prerelease: ${{ steps.versioning.outputs.prerelease }}
       make_latest: ${{ steps.versioning.outputs.make_latest }}
+      r2_channel: ${{ steps.versioning.outputs.r2_channel }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -68,22 +68,25 @@ jobs:
           if echo "$BRANCHES" | grep -qE "origin/feature/"; then
             IS_FEATURE=true
           fi
-          
+
           if [[ "$IS_MAIN" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
             echo "Stable Release (main)"
             echo "is_dev=false" >> $GITHUB_OUTPUT
             echo "prerelease=false" >> $GITHUB_OUTPUT
             echo "make_latest=true" >> $GITHUB_OUTPUT
+            echo "r2_channel=latest" >> $GITHUB_OUTPUT
           elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[bBrR].*$ ]]; then
             echo "Beta/RC Release (develop)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
+            echo "r2_channel=beta" >> $GITHUB_OUTPUT
           elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[aA].*$ ]]; then
             echo "Alpha Release (feature)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
+            echo "r2_channel=alpha" >> $GITHUB_OUTPUT
           else
             echo "::error::Tag $TAG does not match branch release policy."
             exit 1
@@ -228,109 +231,29 @@ jobs:
 
           aws --version
 
-      - name: Upload to Cloudflare R2 latest
-        if: needs.prepare.outputs.make_latest == 'true'
+      - name: Upload to Cloudflare R2 channel
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
           AWS_EC2_METADATA_DISABLED: true
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_CHANNEL: ${{ needs.prepare.outputs.r2_channel }}
         run: |
           set -euo pipefail
 
+          if [[ -z "$R2_CHANNEL" ]]; then
+            echo "::error::R2 channel is empty."
+            exit 1
+          fi
+
+          echo "Uploading release files to R2 channel: download/$R2_CHANNEL/"
+
           aws s3 sync release_files/ \
-            "s3://$R2_BUCKET/download/latest/" \
+            "s3://$R2_BUCKET/download/$R2_CHANNEL/" \
             --endpoint-url "$R2_ENDPOINT" \
             --region auto \
             --delete \
             --no-progress
 
-      - name: Upload to Cloudflare R2 versioned
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-          AWS_EC2_METADATA_DISABLED: true
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-        run: |
-          set -euo pipefail
-
-          aws s3 sync release_files/ \
-            "s3://$R2_BUCKET/download/${{ needs.prepare.outputs.tag }}/" \
-            --endpoint-url "$R2_ENDPOINT" \
-            --region auto \
-            --delete \
-            --no-progress
-
-      - name: Prune old Cloudflare R2 versioned releases
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          AWS_DEFAULT_REGION: auto
-          AWS_EC2_METADATA_DISABLED: true
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-        run: |
-          set -euo pipefail
-
-          KEEP_COUNT="${R2_KEEP_VERSION_COUNT:-3}"
-          TMP_FILE="$(mktemp)"
-
-          mapfile -t VERSION_PREFIXES < <(
-            aws s3api list-objects-v2 \
-              --bucket "$R2_BUCKET" \
-              --prefix "download/" \
-              --delimiter "/" \
-              --endpoint-url "$R2_ENDPOINT" \
-              --region auto \
-              --query 'CommonPrefixes[].Prefix' \
-              --output text \
-            | tr '\t' '\n' \
-            | grep -E '^download/v[0-9]+\.[0-9]+\.[0-9]+(-(alpha|beta|rc)\.[0-9]+)?/$' || true
-          )
-
-          if (( ${#VERSION_PREFIXES[@]} <= KEEP_COUNT )); then
-            echo "Versioned release count is ${#VERSION_PREFIXES[@]}. Nothing to prune."
-            exit 0
-          fi
-
-          for PREFIX in "${VERSION_PREFIXES[@]}"; do
-            LAST_MODIFIED="$(
-              aws s3api list-objects-v2 \
-                --bucket "$R2_BUCKET" \
-                --prefix "$PREFIX" \
-                --endpoint-url "$R2_ENDPOINT" \
-                --region auto \
-                --query 'sort_by(Contents,&LastModified)[-1].LastModified' \
-                --output text
-            )"
-
-            if [[ -n "$LAST_MODIFIED" && "$LAST_MODIFIED" != "None" ]]; then
-              printf '%s %s\n' "$LAST_MODIFIED" "$PREFIX" >> "$TMP_FILE"
-            fi
-          done
-
-          TOTAL_COUNT="$(wc -l < "$TMP_FILE" | tr -d ' ')"
-
-          if (( TOTAL_COUNT <= KEEP_COUNT )); then
-            echo "Versioned release count is $TOTAL_COUNT. Nothing to prune."
-            exit 0
-          fi
-
-          mapfile -t DELETE_PREFIXES < <(
-            sort "$TMP_FILE" \
-            | head -n "-$KEEP_COUNT" \
-            | awk '{print $2}'
-          )
-
-          for PREFIX in "${DELETE_PREFIXES[@]}"; do
-            echo "Deleting old R2 release prefix: $PREFIX"
-
-            aws s3 rm "s3://$R2_BUCKET/$PREFIX" \
-              --recursive \
-              --endpoint-url "$R2_ENDPOINT" \
-              --region auto \
-              --no-progress
-          done
-
-          echo "R2 versioned release pruning completed. Kept latest $KEEP_COUNT versioned releases."
+          echo "R2 upload completed: download/$R2_CHANNEL/"
