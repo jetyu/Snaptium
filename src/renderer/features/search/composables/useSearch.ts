@@ -1,27 +1,43 @@
-import { ref } from 'vue';
+import { readonly, ref } from 'vue';
+import { useAppShellStore } from '@renderer/app/store/appShell.store';
 
-const isGlobalSearchOpen = ref(false);
-const globalSearchInitialQuery = ref('');
+export type SearchMode = 'semantic';
 
-/**
- * 搜索 composable
- * 管理全局搜索对话框状态
- */
+export interface OpenSearchViewOptions {
+  query?: string;
+  mode?: SearchMode;
+  run?: boolean;
+}
+
+export interface SearchViewRequest {
+  id: number;
+  query: string;
+  mode: SearchMode;
+  run: boolean;
+}
+
+const searchViewRequest = ref<SearchViewRequest>({
+  id: 0,
+  query: '',
+  mode: 'semantic',
+  run: false,
+});
+
 export function useSearch() {
-  const openGlobalSearch = (initialQuery = '') => {
-    globalSearchInitialQuery.value = initialQuery;
-    isGlobalSearchOpen.value = true;
-  };
+  const openSearchView = async (options: OpenSearchViewOptions = {}): Promise<void> => {
+    const query = options.query ?? '';
+    searchViewRequest.value = {
+      id: searchViewRequest.value.id + 1,
+      query,
+      mode: options.mode ?? 'semantic',
+      run: options.run ?? Boolean(query.trim()),
+    };
 
-  const closeGlobalSearch = () => {
-    isGlobalSearchOpen.value = false;
-    globalSearchInitialQuery.value = '';
+    await useAppShellStore().setActiveMainView('search');
   };
 
   return {
-    isGlobalSearchOpen,
-    globalSearchInitialQuery,
-    openGlobalSearch,
-    closeGlobalSearch,
+    searchViewRequest: readonly(searchViewRequest),
+    openSearchView,
   };
 }

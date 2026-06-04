@@ -1,6 +1,6 @@
 export const APP_SHELL_MAX_CUSTOM_MODULES = 5;
 
-export const APP_SHELL_MAIN_VIEW_IDS = ['workbench', 'workspace', 'tags', 'favorites', 'settings'] as const;
+export const APP_SHELL_MAIN_VIEW_IDS = ['workbench', 'workspace', 'search', 'tags', 'favorites', 'settings'] as const;
 
 export type AppShellMainViewId = (typeof APP_SHELL_MAIN_VIEW_IDS)[number];
 
@@ -60,8 +60,9 @@ export const APP_SHELL_CUSTOM_MODULES: AppShellModuleDefinition[] = [
   },
   {
     id: 'search',
-    labelKey: 'search.searchNote',
-    presentation: 'dialog',
+    labelKey: 'search.knowledgeSearch',
+    presentation: 'view',
+    viewId: 'search',
   },
   {
     id: 'settings',

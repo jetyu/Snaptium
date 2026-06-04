@@ -88,7 +88,7 @@
 
             <div v-if="recentQuestionEntriesPreview.length > 0" class="feed-list feed-list--interactive">
               <button v-for="question in recentQuestionEntriesPreview" :key="question.id" type="button" class="feed-row"
-                :title="question.query" @click="openGlobalSearch(question.query)">
+                :title="question.query" @click="openSearchView({ query: question.query, mode: 'semantic', run: true })">
                 <span class="feed-row__icon">
                   <SearchIcon theme="outline" :size="14" />
                 </span>
@@ -409,7 +409,7 @@ const LINK_REGEX = /\[\[[^[\]]+\]\]|\[[^\]]+\]\([^)]+\)/g;
 const HEADING_REGEX = /^#{1,6}\s+/gm;
 
 const { t } = useI18n();
-const { openGlobalSearch } = useSearch();
+const { openSearchView } = useSearch();
 const { notes, notebooks, allTags, createNote, selectNote } = useWorkspace();
 const { openSettings } = useSettings();
 const appShellStore = useAppShellStore();
@@ -1055,7 +1055,7 @@ function getActivityTooltip(entry: ActivityEntry): string {
 
 async function handleActivityClick(entry: ActivityEntry): Promise<void> {
   if (entry.kind === 'questioned' && entry.question) {
-    openGlobalSearch(entry.question.query);
+    await openSearchView({ query: entry.question.query, mode: 'semantic', run: true });
     return;
   }
   if (entry.note) {

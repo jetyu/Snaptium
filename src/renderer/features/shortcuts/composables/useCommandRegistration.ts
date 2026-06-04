@@ -15,7 +15,7 @@ export function useCommandRegistration() {
   const { saveActiveNote, deleteActiveNote, renameActiveNote } = useWorkspaceActions();
   const { openSettings } = useSettings();
   const { getEditorView } = useEditor();
-  const { openGlobalSearch } = useSearch();
+  const { openSearchView } = useSearch();
 
   const registerAllCommands = () => {
     commandService.registerCommand('file.new', async () => {
@@ -52,9 +52,9 @@ export function useCommandRegistration() {
       }
     });
 
-    commandService.registerCommand('search.findInFiles', () => {
+    commandService.registerCommand('search.findInFiles', async () => {
       commandRegistrationLogger.debug('Command executed: search.findInFiles');
-      openGlobalSearch();
+      await openSearchView();
     });
 
     commandService.registerCommand('app.preferences', () => {

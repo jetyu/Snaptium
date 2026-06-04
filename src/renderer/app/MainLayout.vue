@@ -8,13 +8,11 @@
       <WorkbenchView v-if="activeMainView === 'workbench'" />
       <MyFavoritesView v-else-if="activeMainView === 'favorites'" />
       <TagsView v-else-if="activeMainView === 'tags'" />
+      <SearchView v-else-if="activeMainView === 'search'" />
       <SettingsView v-else-if="activeMainView === 'settings'" />
       <WorkspaceView v-else />
     </div>
   </div>
-
-  <SearchDialog v-if="isGlobalSearchOpen" :is-open="isGlobalSearchOpen" :initial-query="globalSearchInitialQuery" @close="closeGlobalSearch"
-    @select="handleSearchSelect" />
 </template>
 
 <script setup lang="ts">
@@ -26,8 +24,6 @@ import { createLogger } from '@renderer/features/logger';
 import { useSettings } from '@renderer/features/settings/composables/useSettings';
 import { useTrash } from '@renderer/features/trash';
 import { useAbout } from '@renderer/features/about';
-import type { RagSearchResult } from '@renderer/core/bridge/electronApi';
-import type { SearchResult, SearchMatch } from '@renderer/features/search/services/search.service';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import type { AppShellModuleId } from './constants/appShell.constants';
 import { useAppShellStore } from './store/appShell.store';
@@ -41,7 +37,7 @@ const WorkspaceView = defineAsyncComponent(() => import('./views/WorkspaceView.v
 const SettingsView = defineAsyncComponent(() => import('./views/SettingsView.vue'));
 const TagsView = defineAsyncComponent(() => import('@renderer/features/tags/components/TagsView.vue'));
 const MyFavoritesView = defineAsyncComponent(() => import('@renderer/features/favorites/components/MyFavoritesView.vue'));
-const SearchDialog = defineAsyncComponent(() => import('@renderer/features/search/components/SearchDialog.vue'));
+const SearchView = defineAsyncComponent(() => import('@renderer/features/search/components/SearchView.vue'));
 
 const mainLayoutLogger = createLogger('MainLayout');
 const appShellStore = useAppShellStore();
@@ -52,23 +48,12 @@ const { setActiveTab, initMainProcessListeners, onOpenSettingsRequest } = useSet
 const { openTrash } = useTrash();
 const { openAbout } = useAbout();
 const { openSidebarManager } = useSidebarManager();
-const { isGlobalSearchOpen, globalSearchInitialQuery, openGlobalSearch, closeGlobalSearch } = useSearch();
-const { selectNote, forceFlushAutoSave } = useWorkspace();
+const { openSearchView } = useSearch();
+const { forceFlushAutoSave } = useWorkspace();
 const isWindowMaximized = ref(false);
 let removeWindowStateListener: (() => void) | null = null;
 let removeSettingsMenuListener: (() => void) | null = null;
 let removeSettingsRequestListener: (() => void) | null = null;
-
-type SearchSelectResult = SearchResult | RagSearchResult;
-type SearchSelectMatch = SearchMatch;
-
-function isRagSearchResult(result: SearchSelectResult): result is RagSearchResult {
-  return 'chunk' in result;
-}
-
-function isSearchResult(result: SearchSelectResult): result is SearchResult {
-  return 'id' in result;
-}
 
 async function syncWindowState(): Promise<void> {
   if (!electronApi.window.isAvailable()) {
@@ -86,7 +71,7 @@ async function openModule(moduleId: AppShellModuleId) {
       await setActiveMainView('tags');
       return;
     case 'search':
-      openGlobalSearch();
+      await openSearchView();
       return;
     case 'settings':
       await showSettings('general');
@@ -105,22 +90,6 @@ async function openModule(moduleId: AppShellModuleId) {
 async function showSettings(tab: string = 'general'): Promise<void> {
   setActiveTab(tab);
   await setActiveMainView('settings');
-}
-
-async function handleSearchSelect(result: SearchSelectResult, match?: SearchSelectMatch) {
-  const noteId = isRagSearchResult(result) ? result.chunk.noteId : result.id;
-  if (!noteId) {
-    return;
-  }
-
-  await setActiveMainView('workspace');
-  selectNote(noteId);
-
-  setTimeout(() => {
-    const title = isSearchResult(result) ? result.title : result.noteTitle;
-    const detail = { noteId, match, title };
-    window.dispatchEvent(new CustomEvent('workspace-search-jump', { detail }));
-  }, 100);
 }
 
 function handleBeforeUnload(): void {

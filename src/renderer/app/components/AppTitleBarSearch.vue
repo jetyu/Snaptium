@@ -2,7 +2,7 @@
   <div class="app-search" :class="{ 'is-active': isFocused || searchQuery }" @click.stop @dblclick.stop>
     <div class="app-search__input-wrapper">
       <Search class="app-search__icon" theme="outline" :size="14" />
-      <input ref="inputRef" v-model="searchQuery" type="text" class="app-search__input" :placeholder="t('search.placeholder')"
+      <input ref="inputRef" v-model="searchQuery" type="text" class="app-search__input" :placeholder="t('search.quickPlaceholder')"
         @focus="handleFocus" @blur="handleBlur" @input="handleInput" @keydown.down.prevent="moveHighlight(1)"
         @keydown.up.prevent="moveHighlight(-1)" @keydown.enter="selectHighlighted" @keydown.esc="handleEsc" />
       <button v-if="searchQuery" class="app-search__clear" @click="clearSearch">
