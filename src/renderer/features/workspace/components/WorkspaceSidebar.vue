@@ -63,7 +63,6 @@
             v-else-if="entry.kind === 'notebook'"
             class="workspace-row__notebook-icon"
             :icon-color="entry.item.iconColor"
-            :icon-emoji="entry.item.iconEmoji"
           />
           <Notes v-else theme="outline" :size="14" />
         </div>
@@ -107,9 +106,7 @@
       v-model="isNotebookAppearanceDialogOpen"
       :notebook-name="notebookAppearanceTarget?.name ?? ''"
       :icon-color="notebookAppearanceTarget?.iconColor"
-      :icon-emoji="notebookAppearanceTarget?.iconEmoji"
       @select-color="handleNotebookIconColorSelect"
-      @select-emoji="handleNotebookIconEmojiSelect"
     />
   </aside>
 </template>
@@ -184,7 +181,6 @@ const {
   renameNotebook,
   toggleNodeLock,
   updateNotebookIconColor,
-  updateNotebookIconEmoji,
   toggleNodeStar,
   openHistoryDialog,
 } = useWorkspace();
@@ -295,15 +291,6 @@ async function handleNotebookIconColorSelect(iconColor: Notebook['iconColor'] | 
   }
 
   await updateNotebookIconColor(targetId, iconColor);
-}
-
-async function handleNotebookIconEmojiSelect(iconEmoji: Notebook['iconEmoji'] | null) {
-  const targetId = notebookAppearanceTargetId.value;
-  if (!targetId) {
-    return;
-  }
-
-  await updateNotebookIconEmoji(targetId, iconEmoji);
 }
 
 function getCurrentActiveId() {

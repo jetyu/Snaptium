@@ -38,7 +38,6 @@ export function useWorkspace() {
     updateActiveContent: store.updateActiveContent,
     toggleNodeLock: store.toggleNodeLock,
     updateNotebookIconColor: store.updateNotebookIconColor,
-    updateNotebookIconEmoji: store.updateNotebookIconEmoji,
     toggleNodeStar: store.toggleNodeStar,
     forceFlushAutoSave: store.forceFlushAutoSave,
     openHistoryDialog: store.openHistoryDialog,

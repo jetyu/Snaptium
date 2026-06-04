@@ -18,9 +18,7 @@ import { settingsService } from './settings.service.js';
 import { getErrorMessage } from '../services/error.service.js';
 import {
   isNotebookIconColor,
-  normalizeNotebookIconEmoji,
   type NotebookIconColor,
-  type NotebookIconEmoji,
 } from '../../shared/notebook-icon.constants.js';
 
 const logger = loggerService.createLogger('Electron:VFS Service');
@@ -36,7 +34,6 @@ interface WorkspaceNode {
   trashed: boolean;
   locked: boolean;
   iconColor?: NotebookIconColor;
-  iconEmoji?: NotebookIconEmoji;
   contentId?: string;
   fileName?: string;
   tags?: string[];
@@ -167,10 +164,6 @@ function normalizeNotebookIconColor(value: unknown): NotebookIconColor | undefin
   }
 
   return value;
-}
-
-function normalizeNotebookEmoji(value: unknown): NotebookIconEmoji | undefined {
-  return normalizeNotebookIconEmoji(value);
 }
 
 function assertNonNegativeInteger(value: unknown, fieldName: string): number {
@@ -495,12 +488,8 @@ async function loadAllNodes(root: string): Promise<Map<string, WorkspaceNode>> {
 
         if (normalizedNode.type === VFS_CONSTANTS.NODE_TYPE_FOLDER) {
           normalizedNode.iconColor = normalizeNotebookIconColor(node.iconColor);
-          normalizedNode.iconEmoji = normalizeNotebookEmoji(node.iconEmoji);
-        } else if ('iconColor' in normalizedNode) {
+        } else {
           delete normalizedNode.iconColor;
-          if ('iconEmoji' in normalizedNode) {
-            delete normalizedNode.iconEmoji;
-          }
         }
 
         nodes.set(node.id, {
@@ -922,30 +911,6 @@ export const vfsService = {
     workspaceState.nodes.set(node.id, node);
     await persistAllNodes(root);
     logger.debug(`Updated icon color for notebook ${node.id}: ${node.iconColor ?? 'default'}`);
-    return node;
-  },
-
-  async updateNotebookIconEmoji(nodeId: string, iconEmoji: NotebookIconEmoji | null): Promise<WorkspaceNode> {
-    const root = await this.ensureInitialized();
-    const safeNodeId = assertNonEmptyString(nodeId, VFS_CONSTANTS.FIELD_NODE_ID);
-    const node = workspaceState.nodes.get(safeNodeId);
-    if (!node || node.trashed) throw new Error(`Node not found: ${safeNodeId}`);
-    if (node.type !== VFS_CONSTANTS.NODE_TYPE_FOLDER) throw new Error(`Node is not a notebook: ${safeNodeId}`);
-
-    if (iconEmoji === null) {
-      delete node.iconEmoji;
-    } else {
-      const normalizedEmoji = normalizeNotebookEmoji(iconEmoji);
-      if (!normalizedEmoji) {
-        throw new TypeError('Invalid notebook icon emoji');
-      }
-      node.iconEmoji = normalizedEmoji;
-    }
-
-    node.updatedAt = Date.now();
-    workspaceState.nodes.set(node.id, node);
-    await persistAllNodes(root);
-    logger.debug(`Updated icon emoji for notebook ${node.id}: ${node.iconEmoji ?? 'default'}`);
     return node;
   },
 

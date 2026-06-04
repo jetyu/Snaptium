@@ -7,7 +7,6 @@
             <div class="appearance-dialog__title-wrap">
               <NotebookVisualIcon
                 :icon-color="iconColor"
-                :icon-emoji="iconEmoji"
                 :icon-size="16"
                 :box-size="22"
               />
@@ -45,10 +44,6 @@
                 <span class="swatch-button__dot" :class="`swatch-button__dot--${color}`"></span>
               </button>
             </div>
-
-            <div class="emoji-picker-container">
-              <div ref="emojiPickerHost" class="emoji-picker-host"></div>
-            </div>
           </div>
 
           <footer class="appearance-dialog__footer">
@@ -61,53 +56,26 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import {
   NOTEBOOK_ICON_COLORS,
   NOTEBOOK_ICON_COLOR_VALUES,
   type NotebookIconColor,
-  type NotebookIconEmoji,
 } from '@shared/notebook-icon.constants';
 import NotebookVisualIcon from './NotebookVisualIcon.vue';
 import { WORKSPACE_CONSTANTS } from '../constants/workspace.constants';
-import emojiData from '@emoji-mart/data/sets/15/twitter.json';
-import emojiI18nEn from '@emoji-mart/data/i18n/en.json';
-import emojiI18nZh from '@emoji-mart/data/i18n/zh.json';
-import { init, Picker } from 'emoji-mart';
-import twitterEmojiSpritesheetUrl from 'emoji-datasource-twitter/img/twitter/sheets-256/64.png?url';
-import { useI18n } from 'vue-i18n';
 
-const props = defineProps<{
+defineProps<{
   modelValue: boolean;
   notebookName: string;
   iconColor?: NotebookIconColor;
-  iconEmoji?: NotebookIconEmoji;
 }>();
 
 const emit = defineEmits<{
   (event: 'update:modelValue', value: boolean): void;
   (event: 'select-color', value: NotebookIconColor | null): void;
-  (event: 'select-emoji', value: NotebookIconEmoji | null): void;
 }>();
 
-const { locale } = useI18n();
 const notebookColors = NOTEBOOK_ICON_COLOR_VALUES as readonly NotebookIconColor[];
-const emojiPickerHost = ref<HTMLElement | null>(null);
-type EmojiPickerElement = HTMLElement & {
-  update: (props: Record<string, unknown>) => void;
-};
-let emojiPicker: EmojiPickerElement | null = null;
-
-const currentTheme = computed(() => {
-  return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
-});
-
-type EmojiMartLocale = 'en' | 'zh';
-
-const currentLocale = computed<EmojiMartLocale>(() => {
-  const lang = locale.value.toLowerCase();
-  return lang.startsWith('zh') ? 'zh' : 'en';
-});
 
 const colorLabelKeyMap = {
   [NOTEBOOK_ICON_COLORS.SLATE]: WORKSPACE_CONSTANTS.MENU.NOTEBOOK_ICON_COLOR_SLATE,
@@ -131,105 +99,8 @@ function emitColor(value: NotebookIconColor | null) {
   emit('select-color', value);
 }
 
-interface EmojiSelectEvent extends Event {
-  detail: {
-    native: string;
-    [key: string]: unknown;
-  };
-}
-
-function resolveEmojiI18n(targetLocale: EmojiMartLocale): Record<string, unknown> {
-  return targetLocale === 'zh'
-    ? (emojiI18nZh as Record<string, unknown>)
-    : (emojiI18nEn as Record<string, unknown>);
-}
-
-function handleEmojiSelect(event: EmojiSelectEvent | { native?: string }) {
-  const emoji = 'detail' in event ? event.detail : event;
-  if (emoji && emoji.native) {
-    emit('select-emoji', emoji.native);
-  }
-}
-
-async function mountEmojiPicker() {
-  const host = emojiPickerHost.value;
-  if (!host) {
-    return;
-  }
-
-  const targetLocale = currentLocale.value;
-  const i18n = resolveEmojiI18n(targetLocale);
-
-  await init({
-    data: emojiData,
-    i18n,
-    locale: targetLocale,
-    set: 'twitter',
-  });
-
-  host.innerHTML = '';
-  const picker = new Picker({
-    data: emojiData,
-    i18n,
-    locale: targetLocale,
-    theme: currentTheme.value,
-    set: 'twitter',
-    dynamicWidth: true,
-    previewPosition: 'none',
-    getSpritesheetURL: () => twitterEmojiSpritesheetUrl,
-    onEmojiSelect: handleEmojiSelect,
-  }) as unknown as EmojiPickerElement;
-
-  emojiPicker = picker;
-  host.appendChild(emojiPicker);
-}
-
-function unmountEmojiPicker() {
-  if (emojiPicker && emojiPicker.parentElement) {
-    emojiPicker.parentElement.removeChild(emojiPicker);
-  }
-  emojiPicker = null;
-}
-
-watch(
-  () => props.modelValue,
-  async (open) => {
-    if (open) {
-      await nextTick();
-      await mountEmojiPicker();
-      return;
-    }
-
-    unmountEmojiPicker();
-  },
-  { immediate: true },
-);
-
-watch(
-  () => [currentTheme.value, currentLocale.value] as const,
-  ([theme, targetLocale]) => {
-    if (!emojiPicker) {
-      return;
-    }
-
-    emojiPicker.update({
-      theme,
-      locale: targetLocale,
-      i18n: resolveEmojiI18n(targetLocale),
-      set: 'twitter',
-      getSpritesheetURL: () => twitterEmojiSpritesheetUrl,
-      onEmojiSelect: handleEmojiSelect,
-    });
-  },
-);
-
-onBeforeUnmount(() => {
-  unmountEmojiPicker();
-});
-
 function resetToDefault() {
   emit('select-color', null);
-  emit('select-emoji', null);
 }
 </script>
 
@@ -245,8 +116,8 @@ function resetToDefault() {
 }
 
 .appearance-dialog {
-  width: min(560px, calc(100vw - 28px));
-  max-height: min(680px, calc(100vh - 24px));
+  width: min(360px, calc(100vw - 28px));
+  max-height: min(360px, calc(100vh - 24px));
   overflow: hidden;
   border-radius: 16px;
   background: var(--panel);
@@ -397,28 +268,6 @@ function resetToDefault() {
   background: var(--notebook-icon-white);
 }
 
-.emoji-picker-container {
-  flex: 0 1 auto;
-  height: clamp(280px, 44vh, 360px);
-  min-height: 260px;
-  border-radius: 8px;
-  overflow: auto;
-  border: 1px solid var(--panel-border);
-}
-
-.emoji-picker-host {
-  width: 100%;
-  height: 100%;
-}
-
-/* Customize Emoji Mart */
-.emoji-picker-host :deep(em-emoji-picker) {
-  width: 100%;
-  height: 100%;
-  --border-radius: 0;
-  --rgb-accent: 59, 114, 246; /* Matches --accent #3b72f6 */
-}
-
 .appearance-dialog__footer {
   display: flex;
   justify-content: flex-end;
@@ -455,11 +304,6 @@ function resetToDefault() {
   .appearance-dialog {
     width: calc(100vw - 16px);
     max-height: calc(100vh - 16px);
-  }
-
-  .emoji-picker-container {
-    height: min(46vh, 320px);
-    min-height: 220px;
   }
 }
 </style>

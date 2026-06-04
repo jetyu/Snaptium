@@ -4,32 +4,27 @@
     :class="[colorClass, { 'notebook-visual-icon--surface': surface }]"
     :style="iconStyle"
   >
-    <span v-if="normalizedEmoji" class="notebook-visual-icon__emoji">{{ normalizedEmoji }}</span>
-    <NotebookOne v-else theme="outline" :size="iconSize" />
+    <NotebookOne theme="outline" :size="iconSize" />
   </span>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
 import { NotebookOne } from '@icon-park/vue-next';
-import { isNotebookIconColor, normalizeNotebookIconEmoji, type NotebookIconColor, type NotebookIconEmoji } from '@shared/notebook-icon.constants';
+import { isNotebookIconColor, type NotebookIconColor } from '@shared/notebook-icon.constants';
 import { NOTEBOOK_ICON_COLOR_CLASS_MAP } from '../constants/notebookIcon.constants';
 
 const props = withDefaults(defineProps<{
   iconColor?: NotebookIconColor;
-  iconEmoji?: NotebookIconEmoji;
   iconSize?: number;
   boxSize?: number;
   surface?: boolean;
 }>(), {
   iconColor: undefined,
-  iconEmoji: undefined,
   iconSize: 14,
   boxSize: 18,
   surface: true,
 });
-
-const normalizedEmoji = computed(() => normalizeNotebookIconEmoji(props.iconEmoji));
 
 const colorClass = computed(() => {
   if (!isNotebookIconColor(props.iconColor)) {
@@ -65,16 +60,6 @@ const iconStyle = computed(() => {
 .notebook-visual-icon--surface[class*="--color-"] {
   background: color-mix(in srgb, currentColor 22%, transparent);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 36%, transparent);
-}
-
-.notebook-visual-icon__emoji {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
-  font-size: var(--notebook-icon-size);
-  line-height: 1;
 }
 
 .notebook-visual-icon--color-slate {

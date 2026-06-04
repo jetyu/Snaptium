@@ -3,7 +3,7 @@ import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { vfsService } from '../../services/vfs.service.js';
 import { loggerService } from '../../services/logger.service.js';
 import { z } from 'zod';
-import { isNotebookIconColor, normalizeNotebookIconEmoji } from '../../../shared/notebook-icon.constants.js';
+import { isNotebookIconColor } from '../../../shared/notebook-icon.constants.js';
 
 const logger = loggerService.createLogger('Electron:VFS IPC');
 
@@ -14,9 +14,6 @@ const nameSchema = z.string().min(1).max(255);
 const nodeIndexSchema = z.number().int().min(0);
 const notebookIconColorSchema = z.string().refine((value) => isNotebookIconColor(value), {
   message: 'Invalid notebook icon color',
-});
-const notebookIconEmojiSchema = z.string().refine((value) => normalizeNotebookIconEmoji(value) === value, {
-  message: 'Invalid notebook icon emoji',
 });
 
 export function registerVfsIpcHandlers() {
@@ -31,7 +28,6 @@ export function registerVfsIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.VFS_DELETE_NODES);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_UPDATE_NOTEBOOK_ICON_COLOR);
-  ipcMain.removeHandler(IPC_CHANNELS.VFS_UPDATE_NOTEBOOK_ICON_EMOJI);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_UPDATE_NODE_TAGS);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_GET_TRASHED_NODES);
   ipcMain.removeHandler(IPC_CHANNELS.VFS_RESTORE_NODE);
@@ -134,15 +130,6 @@ export function registerVfsIpcHandlers() {
     });
     const data = schema.parse(payload);
     return vfsService.updateNotebookIconColor(data.nodeId, data.iconColor);
-  });
-
-  ipcMain.handle(IPC_CHANNELS.VFS_UPDATE_NOTEBOOK_ICON_EMOJI, (_event, payload = {}) => {
-    const schema = z.object({
-      nodeId: uuidSchema,
-      iconEmoji: notebookIconEmojiSchema.nullable(),
-    });
-    const data = schema.parse(payload);
-    return vfsService.updateNotebookIconEmoji(data.nodeId, data.iconEmoji);
   });
 
   ipcMain.handle(IPC_CHANNELS.VFS_UPDATE_NODE_TAGS, (_event, payload = {}) => {

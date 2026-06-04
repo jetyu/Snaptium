@@ -5,7 +5,6 @@
         <div class="title-section icon-text">
           <NotebookVisualIcon
             :icon-color="currentNotebook?.iconColor"
-            :icon-emoji="currentNotebook?.iconEmoji"
             :icon-size="22"
             :box-size="30"
           />
@@ -38,7 +37,7 @@
         <h2>{{ $t("notebookDashboardSubNotebooks") }}</h2>
         <div class="notebooks-grid">
           <div v-for="nb in subNotebooks" :key="nb.id" class="notebook-card icon-text" @click="selectNotebook(nb.id)">
-            <NotebookVisualIcon :icon-color="nb.iconColor" :icon-emoji="nb.iconEmoji" :icon-size="13" :box-size="18" />
+            <NotebookVisualIcon :icon-color="nb.iconColor" :icon-size="13" :box-size="18" />
             <div class="notebook-info">
               <span class="notebook-name" :title="nb.name">{{ nb.name }}</span>
               <span class="notebook-meta">{{ formatDate(nb.updatedAt, locale) }}</span>

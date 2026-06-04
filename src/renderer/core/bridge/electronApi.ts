@@ -250,7 +250,6 @@ export interface WorkspaceNodePayload {
   trashed?: boolean;
   locked?: boolean;
   iconColor?: import('@shared/notebook-icon.constants').NotebookIconColor;
-  iconEmoji?: import('@shared/notebook-icon.constants').NotebookIconEmoji;
   starred?: boolean;
   starredAt?: number;
   tags?: string[];
@@ -820,10 +819,6 @@ export const electronApi = {
 
     updateNotebookIconColor: (payload: { nodeId: string; iconColor: import('@shared/notebook-icon.constants').NotebookIconColor | null }): Promise<WorkspaceNodePayload> => {
       return electronApi.vfs.getApi().updateNotebookIconColor(payload);
-    },
-
-    updateNotebookIconEmoji: (payload: { nodeId: string; iconEmoji: import('@shared/notebook-icon.constants').NotebookIconEmoji | null }): Promise<WorkspaceNodePayload> => {
-      return electronApi.vfs.getApi().updateNotebookIconEmoji(payload);
     },
 
     updateNodeTags: (payload: { nodeId: string; tags: string[] }): Promise<WorkspaceNodePayload> => {
