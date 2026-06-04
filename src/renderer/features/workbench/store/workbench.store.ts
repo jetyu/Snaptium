@@ -9,6 +9,7 @@ import {
   type WorkbenchRecommendationFeedbackAction,
   type WorkbenchRecommendationFeedbackEntry,
   type WorkbenchQuestionEntry,
+  type WorkbenchQuestionSource,
   type WorkbenchSettings,
 } from '../constants/workbench.constants';
 
@@ -23,6 +24,24 @@ interface RecommendationFeedbackPayload {
 
 function trimAnswer(answer: string) {
   return answer.trim().slice(0, 240);
+}
+
+function trimFullAnswer(answer: string) {
+  return answer.trim().slice(0, 4000);
+}
+
+function sanitizeQuestionSources(sources?: WorkbenchQuestionSource[]) {
+  if (!Array.isArray(sources)) {
+    return [];
+  }
+
+  return sources
+    .map((source) => ({
+      noteId: source.noteId.trim(),
+      noteTitle: source.noteTitle.trim(),
+    }))
+    .filter((source) => source.noteId.length > 0)
+    .slice(0, 8);
 }
 
 function createQuestionId(query: string, askedAt: number) {
@@ -53,25 +72,32 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     askedAt?: number;
     answer?: string;
     sourceNoteIds?: string[];
-  }) {
+    sources?: WorkbenchQuestionSource[];
+  }): Promise<WorkbenchQuestionEntry | null> {
     const query = payload.query.trim();
     if (!query) {
-      return;
+      return null;
     }
 
     const askedAt = payload.askedAt ?? Date.now();
+    const sources = sanitizeQuestionSources(payload.sources);
     const sourceNoteIds = Array.isArray(payload.sourceNoteIds)
       ? payload.sourceNoteIds
           .map((noteId) => String(noteId ?? '').trim())
           .filter((noteId, index, items) => noteId.length > 0 && items.indexOf(noteId) === index)
-      : [];
+      : sources
+          .map((source) => source.noteId)
+          .filter((noteId, index, items) => noteId.length > 0 && items.indexOf(noteId) === index);
+    const fullAnswer = trimFullAnswer(payload.answer ?? '');
 
     const nextEntry: WorkbenchQuestionEntry = {
       id: createQuestionId(query, askedAt),
       query,
       askedAt,
-      answer: trimAnswer(payload.answer ?? ''),
+      answer: trimAnswer(fullAnswer),
+      fullAnswer: fullAnswer || undefined,
       sourceNoteIds,
+      sources,
     };
 
     const nextQuestions = [
@@ -80,6 +106,24 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     ].slice(0, WORKBENCH_LIMITS.QUESTIONS);
 
     await saveWorkbench({ recentQuestions: nextQuestions });
+    return nextEntry;
+  }
+
+  async function deleteQuestion(questionId: string): Promise<boolean> {
+    const normalizedQuestionId = questionId.trim();
+    if (!normalizedQuestionId) {
+      return false;
+    }
+
+    const nextQuestions = recentQuestions.value.filter((entry) => entry.id !== normalizedQuestionId);
+    if (nextQuestions.length === recentQuestions.value.length) {
+      return false;
+    }
+
+    await saveWorkbench({
+      recentQuestions: nextQuestions,
+    });
+    return true;
   }
 
   async function recordRecommendationFeedback(payload: RecommendationFeedbackPayload): Promise<void> {
@@ -119,6 +163,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         return {
           ...entry,
           sourceNoteIds: entry.sourceNoteIds.filter((noteId) => validNoteIdSet.has(noteId)),
+          sources: entry.sources?.filter((source) => validNoteIdSet.has(source.noteId)) ?? [],
         };
       }),
       recommendationFeedback: recommendationFeedback.value.filter((entry) => validNoteIdSet.has(entry.noteId)),
@@ -138,6 +183,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     recentQuestions,
     recommendationFeedback,
     recordQuestion,
+    deleteQuestion,
     recordRecommendationFeedback,
     cleanupNoteReferences,
   };

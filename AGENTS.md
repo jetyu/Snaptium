@@ -49,7 +49,7 @@ Do not copy the full contents of those files here. Read them when the task touch
 
 - Do not hardcode user-visible text.
 - Use the existing i18n system.
-- When adding or changing UI text, update the Chinese locale files consistently only
+- When adding or changing UI text, update the Simplified Chinese locale files consistently only
 
 ## Verification
 

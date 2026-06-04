@@ -11,7 +11,14 @@ export interface WorkbenchQuestionEntry {
   query: string;
   askedAt: number;
   answer: string;
+  fullAnswer?: string;
   sourceNoteIds: string[];
+  sources?: WorkbenchQuestionSource[];
+}
+
+export interface WorkbenchQuestionSource {
+  noteId: string;
+  noteTitle: string;
 }
 
 export const WORKBENCH_RECOMMENDATION_FEEDBACK_ACTIONS = {
@@ -45,7 +52,7 @@ export interface WorkbenchModuleDefinition {
 }
 
 export const WORKBENCH_LIMITS = {
-  QUESTIONS: 8,
+  QUESTIONS: 10,
   RECENT_ACTIVITY: 4,
   RECOMMENDATION_FEEDBACK: 80,
 } as const;
@@ -85,13 +92,26 @@ function sanitizeRecentQuestions(value: unknown): WorkbenchQuestionEntry[] {
             .map((noteId) => String(noteId ?? '').trim())
             .filter((noteId, index, items) => noteId.length > 0 && items.indexOf(noteId) === index)
         : [];
+      const sources = Array.isArray(normalized.sources)
+        ? normalized.sources
+            .map((source) => {
+              const normalizedSource = (source ?? {}) as Partial<WorkbenchQuestionSource>;
+              return {
+                noteId: String(normalizedSource.noteId ?? '').trim(),
+                noteTitle: String(normalizedSource.noteTitle ?? '').trim(),
+              };
+            })
+            .filter((source) => source.noteId.length > 0)
+        : [];
 
       return {
         id: String(normalized.id ?? '').trim(),
         query: String(normalized.query ?? '').trim(),
         askedAt: Number(normalized.askedAt ?? 0),
         answer: String(normalized.answer ?? '').trim(),
+        fullAnswer: String(normalized.fullAnswer ?? '').trim() || undefined,
         sourceNoteIds,
+        sources,
       };
     })
     .filter((entry) => entry.id.length > 0 && entry.query.length > 0 && Number.isFinite(entry.askedAt))

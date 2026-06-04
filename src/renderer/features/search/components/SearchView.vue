@@ -20,15 +20,39 @@
         </button>
       </div>
       <button type="button" class="search-view__ask-button" :disabled="!canAsk"
-        :title="canUseKnowledgeSearch ? $t('button.search') : knowledgeUnavailableReason" @click="handleAsk">
+        :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason" @click="handleAsk">
         <Search theme="outline" :size="17" />
       </button>
     </section>
 
     <main class="search-view__content">
+      <aside class="search-view__history-pane">
+        <header class="search-view__pane-header">
+          <h2>{{ $t('search.knowledgeHistory') }}</h2>
+        </header>
+        <div v-if="filteredRecentQuestions.length > 0" class="search-view__history-list">
+          <div v-for="question in filteredRecentQuestions" :key="question.id" class="search-view__history-item"
+            :class="{ 'is-active': selectedQuestion?.id === question.id }">
+            <button type="button" class="search-view__history-open" :title="question.query"
+              @click="selectQuestion(question)">
+              <span class="search-view__history-query">{{ question.query }}</span>
+              <span class="search-view__history-answer">{{ getQuestionPreview(question) }}</span>
+              <span class="search-view__history-meta">{{ formatAskedAt(question.askedAt) }}</span>
+            </button>
+            <button v-if="!isGeneratingQuestion(question)" type="button" class="search-view__history-delete" :title="$t('common.delete')"
+              @click.stop.prevent="deleteRecentQuestion(question)">
+              <Delete theme="outline" :size="14" />
+            </button>
+          </div>
+        </div>
+        <div v-else class="search-view__history-empty">
+          {{ $t('search.knowledgeHistoryEmpty') }}
+        </div>
+      </aside>
+
       <section class="search-view__answer-pane">
         <header class="search-view__pane-header">
-          <h2>{{ usedSearchFallback ? $t('search.knowledgeResults') : $t('label.aiRAGSearch') }}</h2>
+          <h2 :title="answerPaneTitle">{{ answerPaneTitle }}</h2>
         </header>
 
         <div v-if="isBusy" class="search-view__status">
@@ -41,19 +65,22 @@
         <div v-else-if="!canUseKnowledgeSearch" class="search-view__status">
           <p class="search-view__status-text">{{ knowledgeUnavailableReason }}</p>
         </div>
-        <div v-else-if="!searchQuery || !hasAsked" class="search-view__status">
+        <div v-else-if="!hasAsked && !selectedQuestion" class="search-view__status">
           <p class="search-view__status-text">{{ $t('search.semanticHint') }}</p>
         </div>
-        <article v-else-if="aiAnswer" class="search-view__answer">
-          <div v-if="usedSearchFallback" class="search-view__fallback-notice">
+        <article v-else-if="displayAnswer" class="search-view__answer">
+          <div v-if="displayFallbackNotice" class="search-view__fallback-notice">
             {{ $t('message.rag.noChatModel') }}
           </div>
           <div class="search-view__answer-content" v-html="renderedAnswer"></div>
-          <div v-if="sourceNotes.length > 0" class="search-view__source-strip">
-            <button v-for="source in sourceNotes" :key="source.noteId" type="button" class="search-view__source-chip"
-              :title="source.title" @click="openSourceNote(source)">
-              <FileText theme="outline" :size="15" />
-              <span>{{ source.title }}</span>
+          <div v-if="displaySources.length > 0" class="search-view__sources">
+            <h3>{{ $t('search.knowledgeSources') }}</h3>
+            <button v-for="source in displaySources" :key="source.noteId" type="button" class="search-view__source-card"
+              :title="source.noteTitle" @click="openSourceNote(source)">
+              <span class="search-view__source-card-head">
+                <FileText theme="outline" :size="15" />
+                <span>{{ source.noteTitle }}</span>
+              </span>
             </button>
           </div>
         </article>
@@ -68,7 +95,8 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Close, DatabaseSearch, FileText, Search } from '@icon-park/vue-next';
+import { storeToRefs } from 'pinia';
+import { Close, DatabaseSearch, Delete, FileText, Search } from '@icon-park/vue-next';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { useRAGConfig, useRAGSearch, useRAGChat } from '@renderer/features/rag';
 import { useLicenseGate } from '@renderer/features/license';
@@ -78,16 +106,13 @@ import { useWorkbenchStore } from '@renderer/features/workbench';
 import { useWorkspace } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import type { RagSearchResult } from '@renderer/core/bridge/electronApi';
+import type { WorkbenchQuestionEntry, WorkbenchQuestionSource } from '@renderer/features/workbench/constants/workbench.constants';
 import { useSearch } from '../composables/useSearch';
-
-interface SourceNote {
-  noteId: string;
-  title: string;
-}
 
 const searchViewLogger = createLogger('SearchView');
 const { t } = useI18n();
 const workbenchStore = useWorkbenchStore();
+const { recentQuestions } = storeToRefs(workbenchStore);
 const appShellStore = useAppShellStore();
 const { selectNote } = useWorkspace();
 const { searchViewRequest } = useSearch();
@@ -102,6 +127,8 @@ const isSearching = ref(false);
 const hasAsked = ref(false);
 const searchError = ref('');
 const searchInput = ref<HTMLInputElement | null>(null);
+const selectedQuestion = ref<WorkbenchQuestionEntry | null>(null);
+const generatingQuestionId = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const canUseKnowledgeSearch = computed(() => ragLicenseGate.allowed.value && ragEnabled.value && ragConfigured.value);
@@ -120,11 +147,11 @@ const knowledgeUnavailableReason = computed(() => {
   return '';
 });
 const renderedAnswer = computed(() => {
-  if (!aiAnswer.value) {
+  if (!displayAnswer.value) {
     return '';
   }
 
-  return renderMarkdown(aiAnswer.value, {
+  return renderMarkdown(displayAnswer.value, {
     allowHtml: false,
     allowInlineSvg: false,
     remoteImageMode: 'blocked',
@@ -132,22 +159,49 @@ const renderedAnswer = computed(() => {
     copyCodeButtonLabel: t('preview.copyCode'),
   });
 });
-const sourceNotes = computed<SourceNote[]>(() => {
-  const noteMap = new Map<string, SourceNote>();
+const filteredRecentQuestions = computed(() => {
+  return recentQuestions.value;
+});
+const currentSources = computed<WorkbenchQuestionSource[]>(() => {
+  const sourceMap = new Map<string, WorkbenchQuestionSource>();
 
   semanticResults.value.forEach((result) => {
     const noteId = result.chunk.noteId;
-    if (!noteId || noteMap.has(noteId)) {
+    if (!noteId || sourceMap.has(noteId)) {
       return;
     }
 
-    noteMap.set(noteId, {
+    sourceMap.set(noteId, {
       noteId,
-      title: result.noteTitle || t('common.untitledNote'),
+      noteTitle: result.noteTitle || t('common.untitledNote'),
     });
   });
 
-  return Array.from(noteMap.values());
+  return Array.from(sourceMap.values());
+});
+const displayAnswer = computed(() => {
+  if (selectedQuestion.value) {
+    return selectedQuestion.value.fullAnswer || selectedQuestion.value.answer;
+  }
+
+  return aiAnswer.value;
+});
+const displaySources = computed<WorkbenchQuestionSource[]>(() => {
+  if (selectedQuestion.value?.sources?.length) {
+    return selectedQuestion.value.sources;
+  }
+
+  return currentSources.value;
+});
+const displayFallbackNotice = computed(() => {
+  return !selectedQuestion.value && usedSearchFallback.value;
+});
+const answerPaneTitle = computed(() => {
+  if (usedSearchFallback.value && !selectedQuestion.value) {
+    return t('search.knowledgeResults');
+  }
+
+  return selectedQuestion.value?.query || t('label.aiRAGSearch');
 });
 
 function focusSearchInput(): void {
@@ -169,11 +223,12 @@ function resetAnswer(): void {
   hasAsked.value = false;
   aiAnswer.value = '';
   usedSearchFallback.value = false;
+  selectedQuestion.value = null;
+  generatingQuestionId.value = '';
 }
 
 function clearQuery(): void {
   searchQuery.value = '';
-  resetAnswer();
   focusSearchInput();
 }
 
@@ -182,7 +237,6 @@ function handleAsk(): void {
 
   const query = searchQuery.value.trim();
   if (!query) {
-    resetAnswer();
     return;
   }
 
@@ -199,12 +253,18 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
   }
 
   hasAsked.value = false;
+  selectedQuestion.value = null;
   aiAnswer.value = '';
   usedSearchFallback.value = false;
   searchError.value = '';
   isSearching.value = true;
 
   try {
+    const askedAt = Date.now();
+    const draftQuestion = await workbenchStore.recordQuestion({ query, askedAt });
+    selectedQuestion.value = draftQuestion;
+    generatingQuestionId.value = draftQuestion?.id ?? '';
+
     const ragResults = await ragSearch(query);
     semanticResults.value = ragResults;
 
@@ -219,11 +279,14 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       }
     }
 
-    await workbenchStore.recordQuestion({
+    const recordedQuestion = await workbenchStore.recordQuestion({
       query,
+      askedAt,
       answer: generatedAnswer,
       sourceNoteIds: Array.from(new Set(ragResults.map((result) => result.chunk.noteId))),
+      sources: currentSources.value,
     });
+    selectedQuestion.value = recordedQuestion;
   } catch (error) {
     const message = getErrorMessage(error);
     searchViewLogger.error(`Knowledge question failed: ${message}`);
@@ -231,6 +294,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
     semanticResults.value = [];
   } finally {
     isSearching.value = false;
+    generatingQuestionId.value = '';
     hasAsked.value = true;
   }
 }
@@ -246,8 +310,44 @@ async function openNoteResult(noteId: string, title?: string): Promise<void> {
   }, 100);
 }
 
-function openSourceNote(source: SourceNote): void {
-  void openNoteResult(source.noteId, source.title);
+function openSourceNote(source: WorkbenchQuestionSource): void {
+  void openNoteResult(source.noteId, source.noteTitle);
+}
+
+function selectQuestion(question: WorkbenchQuestionEntry): void {
+  selectedQuestion.value = question;
+  searchError.value = '';
+  semanticResults.value = [];
+  aiAnswer.value = '';
+  usedSearchFallback.value = false;
+  hasAsked.value = true;
+}
+
+async function deleteRecentQuestion(question: WorkbenchQuestionEntry): Promise<void> {
+  const deleted = await workbenchStore.deleteQuestion(question.id);
+  if (deleted && selectedQuestion.value?.id === question.id) {
+    resetAnswer();
+  }
+}
+
+function getQuestionPreview(question: WorkbenchQuestionEntry): string {
+  if (isGeneratingQuestion(question)) {
+    return t('label.aiRAGThinking');
+  }
+
+  return question.answer || t('workbench.empty.noAnswer');
+}
+
+function isGeneratingQuestion(question: WorkbenchQuestionEntry): boolean {
+  return generatingQuestionId.value === question.id;
+}
+
+function formatAskedAt(timestamp: number): string {
+  if (!Number.isFinite(timestamp) || timestamp <= 0) {
+    return '';
+  }
+
+  return new Date(timestamp).toLocaleString();
 }
 
 function applySearchRequest(): void {
@@ -441,6 +541,16 @@ onBeforeUnmount(() => {
   overflow: hidden;
 }
 
+.search-view__history-pane {
+  flex: 0 0 300px;
+  min-width: 240px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--panel) 76%, var(--bg));
+}
+
 .search-view__answer-pane {
   flex: 1;
   min-width: 0;
@@ -462,10 +572,139 @@ onBeforeUnmount(() => {
 }
 
 .search-view__pane-header h2 {
+  min-width: 0;
   margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   color: var(--text);
   font-size: 0.84rem;
   font-weight: 700;
+}
+
+.search-view__history-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+.search-view__history-item {
+  position: relative;
+  width: 100%;
+  min-height: 82px;
+  display: block;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.search-view__history-item + .search-view__history-item {
+  margin-top: 8px;
+}
+
+.search-view__history-item + .search-view__history-item::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: 10px;
+  right: 10px;
+  height: 1px;
+  background: var(--panel-border);
+}
+
+.search-view__history-item:hover,
+.search-view__history-item.is-active {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--panel-border));
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.search-view__history-open {
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  padding: 9px 44px 9px 10px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.search-view__history-delete {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  z-index: 1;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0.72;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.search-view__history-delete:hover {
+  background: color-mix(in srgb, var(--color-danger, #ef4444) 12%, transparent);
+  color: var(--color-danger, #ef4444);
+  opacity: 1;
+}
+
+.search-view__history-query,
+.search-view__history-answer,
+.search-view__history-meta {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-view__history-query {
+  color: var(--text);
+  font-size: 0.84rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.search-view__history-answer {
+  display: -webkit-box;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.42;
+  line-clamp: 2;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.search-view__history-meta {
+  color: var(--text-muted);
+  font-size: 0.68rem;
+  opacity: 0.82;
+  white-space: nowrap;
+}
+
+.search-view__history-empty {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px;
+  color: var(--text-muted);
+  text-align: center;
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 .search-view__status {
@@ -566,47 +805,82 @@ onBeforeUnmount(() => {
   color: var(--text);
 }
 
-.search-view__source-strip {
+.search-view__sources {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 8px;
   padding-top: 14px;
   border-top: 1px solid var(--panel-border);
 }
 
-.search-view__source-chip {
-  max-width: min(280px, 100%);
-  height: 30px;
+.search-view__sources h3 {
+  flex: 0 0 auto;
+  margin: 0 4px 0 0;
+  color: var(--text);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.search-view__source-card {
+  flex: 0 1 auto;
+  max-width: min(300px, 100%);
+  min-height: 34px;
   display: inline-flex;
   align-items: center;
-  gap: 7px;
   padding: 0 10px;
   border: 1px solid var(--panel-border);
   border-radius: 7px;
   background: var(--panel);
   color: var(--text);
   cursor: pointer;
-  font-size: 0.78rem;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.search-view__source-chip:hover {
+.search-view__source-card:hover {
   border-color: color-mix(in srgb, var(--accent) 30%, var(--panel-border));
   background: color-mix(in srgb, var(--accent) 8%, var(--panel));
-  color: var(--accent);
 }
 
-.search-view__source-chip span {
+.search-view__source-card-head {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+
+.search-view__source-card-head span {
+  flex: 0 1 auto;
+  max-width: 240px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--text);
+  font-weight: 650;
 }
 
 @media (max-width: 980px) {
   .search-view__header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .search-view__content {
+    flex-direction: column;
+  }
+
+  .search-view__history-pane {
+    flex: 0 0 190px;
+    min-width: 0;
+    border-right: none;
+    border-bottom: 1px solid var(--panel-border);
+  }
+
+  .search-view__history-item {
+    min-height: 70px;
   }
 }
 </style>
