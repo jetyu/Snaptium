@@ -239,6 +239,67 @@ jobs:
           mkdir -p release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
 
+      - name: Generate release health manifest
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          set -euo pipefail
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs'
+          import path from 'node:path'
+
+          const releaseDir = 'release_files'
+          const version = process.env.RELEASE_VERSION
+
+          if (!version) {
+            throw new Error('RELEASE_VERSION is empty.')
+          }
+
+          const manifestChecks = {
+            windows: 'latest.yml',
+            macos: 'latest-mac.yml',
+            linux: 'latest-linux.yml'
+          }
+
+          const platforms = Object.fromEntries(
+            Object.entries(manifestChecks).map(([platform, manifest]) => {
+              const manifestPath = path.join(releaseDir, manifest)
+              const ok = fs.existsSync(manifestPath) && fs.statSync(manifestPath).isFile() && fs.statSync(manifestPath).size > 0
+
+              return [
+                platform,
+                {
+                  manifest,
+                  ok
+                }
+              ]
+            })
+          )
+
+          const health = {
+            ok: Object.values(platforms).every((platform) => platform.ok),
+            version,
+            platforms,
+            generated_at: new Date().toISOString()
+          }
+
+          const healthPath = path.join(releaseDir, 'health.json')
+          fs.writeFileSync(healthPath, `${JSON.stringify(health, null, 2)}\n`)
+
+          console.log(`Generated ${healthPath}:`)
+          console.log(JSON.stringify(health, null, 2))
+
+          if (!health.ok) {
+            const missingManifests = Object.values(platforms)
+              .filter((platform) => !platform.ok)
+              .map((platform) => platform.manifest)
+              .join(', ')
+
+            throw new Error(`Release health check failed. Missing or empty manifests: ${missingManifests}`)
+          }
+          NODE
+
       - name: Generate GitHub Release Page
         uses: softprops/action-gh-release@v2
         with:
