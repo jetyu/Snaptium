@@ -178,14 +178,14 @@ jobs:
           packageJson.build.publish = [
             {
               provider: 'generic',
-              url: `https://file.snaptium.com/download/${channel}`
+              url: `https://update.snaptium.com/download/${channel}`
             }
           ]
 
           fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
 
           console.log(`electron-builder publish provider: generic`)
-          console.log(`electron-builder publish url: https://file.snaptium.com/download/${channel}`)
+          console.log(`electron-builder publish url: https://update.snaptium.com/download/${channel}`)
           NODE
 
       - name: Lint
