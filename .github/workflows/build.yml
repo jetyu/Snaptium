@@ -71,26 +71,26 @@ jobs:
             IS_FEATURE=true
           fi
 
-          if [[ "$IS_MAIN" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?$ ]]; then
+          if [[ "$IS_MAIN" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
             echo "Stable Release (main)"
             echo "is_dev=false" >> $GITHUB_OUTPUT
             echo "prerelease=false" >> $GITHUB_OUTPUT
             echo "make_latest=true" >> $GITHUB_OUTPUT
             echo "r2_channel=latest" >> $GITHUB_OUTPUT
-          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[bBrR].*$ ]]; then
-            echo "Beta/RC Release (develop)"
+          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]; then
+            echo "Beta Release (develop)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
             echo "r2_channel=beta" >> $GITHUB_OUTPUT
-          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}-[aA].*$ ]]; then
+          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
             echo "Alpha Release (feature)"
             echo "is_dev=true" >> $GITHUB_OUTPUT
             echo "prerelease=true" >> $GITHUB_OUTPUT
             echo "make_latest=false" >> $GITHUB_OUTPUT
             echo "r2_channel=alpha" >> $GITHUB_OUTPUT
           else
-            echo "::error::Tag $TAG does not match branch release policy."
+            echo "::error::Tag $TAG does not match branch release policy. Use vX.Y.Z on main, vX.Y.Z-beta.N on develop, or vX.Y.Z-alpha.N on feature/* branches."
             exit 1
           fi
 
@@ -121,21 +121,21 @@ jobs:
             artifact_pattern: |
               dist/*.exe
               dist/*.blockmap
-              dist/latest*.yml
+              dist/*.yml
           - os: ubuntu-latest
             platform: linux
             artifact_pattern: |
               dist/*.AppImage
               dist/*.deb
               dist/*.rpm
-              dist/latest*.yml
+              dist/*.yml
           - os: macos-latest
             platform: mac
             artifact_pattern: |
               dist/*.dmg
               dist/*.zip
               dist/*.blockmap
-              dist/latest*.yml
+              dist/*.yml
 
     steps:
       - name: Checkout code
@@ -178,14 +178,14 @@ jobs:
           packageJson.build.publish = [
             {
               provider: 'generic',
-              url: `https://file.snaptium.com/download/${channel}`
+              url: `https://update.snaptium.com/download/${channel}`
             }
           ]
 
           fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
 
           console.log(`electron-builder publish provider: generic`)
-          console.log(`electron-builder publish url: https://file.snaptium.com/download/${channel}`)
+          console.log(`electron-builder publish url: https://update.snaptium.com/download/${channel}`)
           NODE
 
       - name: Lint
@@ -238,6 +238,73 @@ jobs:
         run: |
           mkdir -p release_files
           find artifacts -type f ! -name "*.md" -exec cp {} release_files/ \;
+
+      - name: Generate release health manifest
+        env:
+          RELEASE_VERSION: ${{ needs.prepare.outputs.version }}
+          R2_CHANNEL: ${{ needs.prepare.outputs.r2_channel }}
+        run: |
+          set -euo pipefail
+
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs'
+          import path from 'node:path'
+
+          const releaseDir = 'release_files'
+          const version = process.env.RELEASE_VERSION
+          const channel = process.env.R2_CHANNEL
+
+          if (!version) {
+            throw new Error('RELEASE_VERSION is empty.')
+          }
+
+          if (!channel) {
+            throw new Error('R2_CHANNEL is empty.')
+          }
+
+          const manifestChecks = {
+            windows: `${channel}.yml`,
+            macos: `${channel}-mac.yml`,
+            linux: `${channel}-linux.yml`
+          }
+
+          const platforms = Object.fromEntries(
+            Object.entries(manifestChecks).map(([platform, manifest]) => {
+              const manifestPath = path.join(releaseDir, manifest)
+              const ok = fs.existsSync(manifestPath) && fs.statSync(manifestPath).isFile() && fs.statSync(manifestPath).size > 0
+
+              return [
+                platform,
+                {
+                  manifest,
+                  ok
+                }
+              ]
+            })
+          )
+
+          const health = {
+            ok: Object.values(platforms).every((platform) => platform.ok),
+            version,
+            platforms,
+            generated_at: new Date().toISOString()
+          }
+
+          const healthPath = path.join(releaseDir, 'health.json')
+          fs.writeFileSync(healthPath, `${JSON.stringify(health, null, 2)}\n`)
+
+          console.log(`Generated ${healthPath}:`)
+          console.log(JSON.stringify(health, null, 2))
+
+          if (!health.ok) {
+            const missingManifests = Object.values(platforms)
+              .filter((platform) => !platform.ok)
+              .map((platform) => platform.manifest)
+              .join(', ')
+
+            throw new Error(`Release health check failed. Missing or empty manifests: ${missingManifests}`)
+          }
+          NODE
 
       - name: Generate GitHub Release Page
         uses: softprops/action-gh-release@v2

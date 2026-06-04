@@ -102,7 +102,7 @@
     "publish": [
       {
         "provider": "generic",
-        "url": "https://file.snaptium.com/download/latest"
+        "url": "https://update.snaptium.com/download/latest"
       }
     ],
     "win": {
