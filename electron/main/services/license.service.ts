@@ -35,7 +35,9 @@ const API_BASE_URL = (process.env.SNAPTIUM_LICENSE_API_BASE?.trim() || 'https://
 const LICENSE_FILE_NAME = 'license.json';
 const DEVICE_FILE_NAME = 'license-device.json';
 const PERSISTED_STATE_VERSION = 1;
-const HEARTBEAT_INTERVAL_MS = 60 * 60 * 1000;
+const SERVER_SYNC_INTERVAL_MS = 24 * 60 * 60 * 1000;
+const SERVER_SYNC_RENEWAL_MARGIN_MS = 5 * 60 * 1000;
+const DEVICE_REFRESH_COOLDOWN_MS = 5 * 60 * 1000;
 const REQUEST_TIMEOUT_MS = 8_000;
 const STARTUP_VALIDATE_TIMEOUT_MS = 3_500;
 const REQUEST_MAX_RETRIES = 2;
@@ -52,6 +54,7 @@ interface LicenseRequestError extends Error {
 interface RequestOptions {
   timeoutMs?: number;
   maxRetries?: number;
+  force?: boolean;
 }
 
 interface ApplyResponseOptions {
@@ -91,6 +94,7 @@ const licenseActivationResponseSchema = z.object({
 const licenseValidationResponseSchema = z.object({
   valid: z.boolean(),
   type: z.string(),
+  token: z.string().min(1).optional(),
   expires_at: z.string().nullable(),
   grace_expires_at: z.string().nullable(),
   max_devices: z.number().int().nonnegative(),
@@ -101,6 +105,7 @@ const licenseValidationResponseSchema = z.object({
 const licenseDevicesResponseSchema = z.object({
   valid: z.boolean().optional(),
   type: z.string().optional(),
+  token: z.string().min(1).optional(),
   expires_at: z.string().nullable().optional(),
   grace_expires_at: z.string().nullable().optional(),
   max_devices: z.number().int().nonnegative(),
@@ -111,6 +116,7 @@ const licenseDevicesResponseSchema = z.object({
 const licenseHeartbeatResponseSchema = z.object({
   valid: z.boolean().optional(),
   type: z.string().optional(),
+  token: z.string().min(1).optional(),
   expires_at: z.string().nullable().optional(),
   grace_expires_at: z.string().nullable().optional(),
   max_devices: z.number().int().nonnegative().optional(),
@@ -139,6 +145,8 @@ const persistedStateSchema = z.object({
   activatedAt: z.number().int().nullable(),
   lastValidatedAt: z.number().int().nullable(),
   lastHeartbeatAt: z.number().int().nullable(),
+  lastServerSyncAt: z.number().int().nullable().optional(),
+  lastDeviceRefreshAt: z.number().int().nullable().optional(),
 });
 
 function createLicenseError(
@@ -235,8 +243,14 @@ export class LicenseService {
       return;
     }
 
-    await this.validateLicense({ timeoutMs: STARTUP_VALIDATE_TIMEOUT_MS });
-    this.startHeartbeatIfNeeded();
+    if (this.isServerSyncFresh()) {
+      this.notifyStateChange();
+      this.startHeartbeatIfNeeded();
+      return;
+    }
+
+    await this.validateLicense({ timeoutMs: STARTUP_VALIDATE_TIMEOUT_MS, force: true });
+    this.startHeartbeatIfNeeded(SERVER_SYNC_INTERVAL_MS);
   }
 
   destroy(): void {
@@ -306,10 +320,13 @@ export class LicenseService {
 
       this.token = data.token;
       this.applyLicenseResponse(data, { keepCurrentStatus: false });
+      const now = Date.now();
       this.state.status = LICENSE_STATUSES.ACTIVE;
       this.state.activated = true;
       this.state.valid = true;
-      this.state.lastValidatedAt = Date.now();
+      this.state.lastValidatedAt = now;
+      this.state.lastServerSyncAt = now;
+      this.state.lastDeviceRefreshAt = now;
       this.state.lastErrorCode = null;
       this.state.lastErrorMessage = null;
       await this.savePersistedState();
@@ -337,6 +354,10 @@ export class LicenseService {
       return this.getState();
     }
 
+    if (!options?.force && this.isServerSyncFresh()) {
+      return this.getState();
+    }
+
     const deviceFingerprint = this.requireDeviceFingerprint();
     try {
       const response = await this.requestJson(
@@ -356,8 +377,12 @@ export class LicenseService {
       );
 
       const data = response as LicenseValidationResponse;
+      this.applyIssuedToken(data);
       this.applyLicenseResponse(data, { keepCurrentStatus: false });
-      this.state.lastValidatedAt = Date.now();
+      const now = Date.now();
+      this.state.lastValidatedAt = now;
+      this.state.lastServerSyncAt = now;
+      this.state.lastDeviceRefreshAt = now;
       this.state.lastErrorCode = null;
       this.state.lastErrorMessage = null;
 
@@ -394,6 +419,10 @@ export class LicenseService {
       return this.getState();
     }
 
+    if (this.isDeviceRefreshFresh()) {
+      return this.getState();
+    }
+
     const deviceFingerprint = this.requireDeviceFingerprint();
     try {
       const response = await this.requestJson(
@@ -413,6 +442,13 @@ export class LicenseService {
 
       const data = response as LicenseDevicesResponse;
       this.applyDevicesSnapshot(data);
+      this.applyIssuedToken(data);
+      const now = Date.now();
+      this.state.lastDeviceRefreshAt = now;
+      if (typeof data.valid === 'boolean') {
+        this.state.lastValidatedAt = now;
+        this.state.lastServerSyncAt = now;
+      }
       this.state.lastErrorCode = null;
       this.state.lastErrorMessage = null;
       await this.savePersistedState();
@@ -421,7 +457,7 @@ export class LicenseService {
     } catch (error) {
       const normalizedError = this.normalizeRequestError(error, 'Refresh devices failed');
       if (normalizedError.status === 404) {
-        return await this.validateLicense();
+        return await this.validateLicense({ force: true });
       }
 
       if (normalizedError.code === LICENSE_ERROR_CODES.LICENSE_INVALID || normalizedError.code === LICENSE_ERROR_CODES.LICENSE_INACTIVE) {
@@ -474,7 +510,9 @@ export class LicenseService {
         return this.getState();
       }
 
-      this.applyDevicesSnapshot(response as LicenseDevicesResponse);
+      const data = response as LicenseDevicesResponse;
+      this.applyDevicesSnapshot(data);
+      this.applyIssuedToken(data);
       this.state.lastErrorCode = null;
       this.state.lastErrorMessage = null;
       await this.savePersistedState();
@@ -670,6 +708,7 @@ export class LicenseService {
     if (status === 403) return LICENSE_ERROR_CODES.LICENSE_INVALID;
     if (status === 404) return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;
     if (status === 409) return LICENSE_ERROR_CODES.MAX_DEVICES_REACHED;
+    if (status === 429) return LICENSE_ERROR_CODES.TOO_MANY_REQUESTS;
     return LICENSE_ERROR_CODES.UNKNOWN;
   }
 
@@ -680,6 +719,12 @@ export class LicenseService {
     }
 
     return plan;
+  }
+
+  private applyIssuedToken(response: { token?: string }): void {
+    if (typeof response.token === 'string' && response.token.trim().length > 0) {
+      this.token = response.token;
+    }
   }
 
   private applyLicenseResponse(
@@ -708,6 +753,8 @@ export class LicenseService {
   }
 
   private applyDevicesSnapshot(response: LicenseDevicesResponse): void {
+    this.state.source = 'license-api';
+
     if (typeof response.type === 'string') {
       const plan = normalizePlan(response.type);
       if (plan && isPaidPlan(plan)) {
@@ -728,6 +775,30 @@ export class LicenseService {
       .map((item) => this.mapDevice(item, response.current_device_id))
       .filter((device) => device.status === 'active');
     this.state.activatedDevices = this.state.devices.length;
+
+    if (typeof response.valid === 'boolean') {
+      this.applySnapshotValidity(response.valid);
+    }
+  }
+
+  private applySnapshotValidity(valid: boolean): void {
+    if (valid) {
+      this.state.status = LICENSE_STATUSES.ACTIVE;
+      this.state.valid = true;
+      this.state.activated = true;
+      return;
+    }
+
+    if (isDateInFuture(this.state.graceExpiresAt)) {
+      this.state.status = LICENSE_STATUSES.SESSION_GRACE;
+      this.state.valid = true;
+      this.state.activated = true;
+      return;
+    }
+
+    this.state.status = LICENSE_STATUSES.EXPIRED;
+    this.state.valid = false;
+    this.state.activated = false;
   }
 
   private mapDevice(payload: LicenseDevicePayload, currentDeviceId: string): LicenseDevice {
@@ -746,6 +817,10 @@ export class LicenseService {
   private async handleValidationError(error: LicenseRequestError): Promise<LicenseState> {
     this.state.lastErrorCode = String(error.code);
     this.state.lastErrorMessage = error.message;
+
+    if (error.code === LICENSE_ERROR_CODES.TOO_MANY_REQUESTS) {
+      return this.getState();
+    }
 
     if (error.code === LICENSE_ERROR_CODES.LICENSE_INVALID || error.code === LICENSE_ERROR_CODES.LICENSE_INACTIVE) {
       await this.clearLicenseInternal(LICENSE_STATUSES.INVALID, {
@@ -789,9 +864,40 @@ export class LicenseService {
     return this.getState();
   }
 
-  private startHeartbeatIfNeeded(): void {
+  private isTimestampFresh(value: number | null, maxAgeMs: number): boolean {
+    if (!value) {
+      return false;
+    }
+
+    const ageMs = Date.now() - value;
+    return Number.isFinite(ageMs) && ageMs >= 0 && ageMs < maxAgeMs;
+  }
+
+  private isServerSyncFresh(): boolean {
+    return this.isTimestampFresh(this.state.lastServerSyncAt, SERVER_SYNC_INTERVAL_MS - SERVER_SYNC_RENEWAL_MARGIN_MS);
+  }
+
+  private isDeviceRefreshFresh(): boolean {
+    return this.isTimestampFresh(this.state.lastDeviceRefreshAt, DEVICE_REFRESH_COOLDOWN_MS);
+  }
+
+  private getNextServerSyncDelay(): number {
+    if (!this.state.lastServerSyncAt) {
+      return 0;
+    }
+
+    const elapsedMs = Date.now() - this.state.lastServerSyncAt;
+    if (!Number.isFinite(elapsedMs) || elapsedMs < 0) {
+      return SERVER_SYNC_INTERVAL_MS;
+    }
+
+    return Math.max(0, SERVER_SYNC_INTERVAL_MS - SERVER_SYNC_RENEWAL_MARGIN_MS - elapsedMs);
+  }
+
+  private startHeartbeatIfNeeded(minimumDelayMs = 0): void {
+    this.stopHeartbeat();
+
     if (!this.token || !isPaidPlan(this.state.plan)) {
-      this.stopHeartbeat();
       return;
     }
 
@@ -800,17 +906,14 @@ export class LicenseService {
       && this.state.status !== LICENSE_STATUSES.OFFLINE_GRACE
       && this.state.status !== LICENSE_STATUSES.SESSION_GRACE
     ) {
-      this.stopHeartbeat();
       return;
     }
 
-    if (this.heartbeatTimer) {
-      return;
-    }
-
-    this.heartbeatTimer = setInterval(() => {
+    const delayMs = Math.max(this.getNextServerSyncDelay(), minimumDelayMs);
+    this.heartbeatTimer = setTimeout(() => {
+      this.heartbeatTimer = null;
       void this.sendHeartbeat();
-    }, HEARTBEAT_INTERVAL_MS);
+    }, delayMs);
   }
 
   private stopHeartbeat(): void {
@@ -850,7 +953,10 @@ export class LicenseService {
       );
 
       const data = response as LicenseHeartbeatResponse;
-      this.state.lastHeartbeatAt = Date.now();
+      this.applyIssuedToken(data);
+      const now = Date.now();
+      this.state.lastHeartbeatAt = now;
+      this.state.lastServerSyncAt = now;
 
       if (Array.isArray(data.devices) && data.max_devices !== undefined && typeof data.current_device_id === 'string') {
         this.applyDevicesSnapshot({
@@ -862,11 +968,10 @@ export class LicenseService {
           expires_at: data.expires_at,
           grace_expires_at: data.grace_expires_at,
         });
-        void this.savePersistedState();
-      } else {
-        void this.savePersistedState();
+        this.state.lastDeviceRefreshAt = now;
       }
 
+      await this.savePersistedState();
       this.notifyStateChange();
     } catch (error) {
       const normalizedError = this.normalizeRequestError(error, 'License heartbeat failed');
@@ -874,6 +979,8 @@ export class LicenseService {
         code: normalizedError.code,
         status: normalizedError.status,
       });
+    } finally {
+      this.startHeartbeatIfNeeded(SERVER_SYNC_INTERVAL_MS);
     }
   }
 
@@ -950,6 +1057,8 @@ export class LicenseService {
       }
 
       const plan = parsed.plan ?? LICENSE_PLANS.FREE;
+      const lastServerSyncAt = parsed.lastServerSyncAt ?? parsed.lastValidatedAt ?? parsed.lastHeartbeatAt;
+      const lastDeviceRefreshAt = parsed.lastDeviceRefreshAt ?? parsed.lastValidatedAt ?? parsed.lastHeartbeatAt;
       this.state = {
         ...this.state,
         plan,
@@ -965,6 +1074,8 @@ export class LicenseService {
         activatedDevices: parsed.devices.filter((device) => device.status === 'active').length,
         lastValidatedAt: parsed.lastValidatedAt,
         lastHeartbeatAt: parsed.lastHeartbeatAt,
+        lastServerSyncAt,
+        lastDeviceRefreshAt,
         lastErrorCode: null,
         lastErrorMessage: null,
       };
@@ -1001,6 +1112,8 @@ export class LicenseService {
       activatedAt: this.state.lastValidatedAt,
       lastValidatedAt: this.state.lastValidatedAt,
       lastHeartbeatAt: this.state.lastHeartbeatAt,
+      lastServerSyncAt: this.state.lastServerSyncAt,
+      lastDeviceRefreshAt: this.state.lastDeviceRefreshAt,
     };
 
     await fs.writeFile(filePath, JSON.stringify(persistedState, null, 2), 'utf8');

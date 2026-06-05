@@ -56,6 +56,8 @@ export interface LicenseState {
   devices: LicenseDevice[];
   lastValidatedAt: number | null;
   lastHeartbeatAt: number | null;
+  lastServerSyncAt: number | null;
+  lastDeviceRefreshAt: number | null;
   lastErrorCode: string | null;
   lastErrorMessage: string | null;
 }
@@ -74,6 +76,8 @@ export const DEFAULT_LICENSE_STATE: LicenseState = {
   devices: [],
   lastValidatedAt: null,
   lastHeartbeatAt: null,
+  lastServerSyncAt: null,
+  lastDeviceRefreshAt: null,
   lastErrorCode: null,
   lastErrorMessage: null,
 };
@@ -92,6 +96,8 @@ export interface PersistedLicenseState {
   activatedAt: number | null;
   lastValidatedAt: number | null;
   lastHeartbeatAt: number | null;
+  lastServerSyncAt: number | null;
+  lastDeviceRefreshAt: number | null;
 }
 
 export interface LicenseDevicePayload {
@@ -118,6 +124,7 @@ export interface LicenseActivationResponse {
 export interface LicenseValidationResponse {
   valid: boolean;
   type: string;
+  token?: string;
   expires_at: string | null;
   grace_expires_at: string | null;
   max_devices: number;
@@ -128,6 +135,7 @@ export interface LicenseValidationResponse {
 export interface LicenseDevicesResponse {
   valid?: boolean;
   type?: string;
+  token?: string;
   expires_at?: string | null;
   grace_expires_at?: string | null;
   max_devices: number;
@@ -149,6 +157,7 @@ export const LICENSE_ERROR_CODES = {
   MAX_DEVICES_REACHED: 'max_devices_reached',
   DEVICE_NOT_FOUND: 'device_not_found',
   CANNOT_DEACTIVATE_CURRENT_DEVICE: 'cannot_deactivate_current_device',
+  TOO_MANY_REQUESTS: 'too_many_requests',
   NETWORK_TIMEOUT: 'network_timeout',
   NETWORK_ERROR: 'network_error',
   UNKNOWN: 'unknown',
