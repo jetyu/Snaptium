@@ -79,8 +79,6 @@ const electronAPI = Object.freeze({
       ipcRenderer.invoke(IPC_CHANNELS.VFS_TOGGLE_NODE_LOCK, payload),
     updateNotebookIconColor: (payload: { nodeId: string; iconColor: string | null }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_UPDATE_NOTEBOOK_ICON_COLOR, payload),
-    updateNotebookIconEmoji: (payload: { nodeId: string; iconEmoji: string | null }) =>
-      ipcRenderer.invoke(IPC_CHANNELS.VFS_UPDATE_NOTEBOOK_ICON_EMOJI, payload),
     updateNodeTags: (payload: { nodeId: string; tags: string[] }) =>
       ipcRenderer.invoke(IPC_CHANNELS.VFS_UPDATE_NODE_TAGS, payload),
     getTrashedNodes: () => ipcRenderer.invoke(IPC_CHANNELS.VFS_GET_TRASHED_NODES),

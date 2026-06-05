@@ -47,7 +47,6 @@
                 <NotebookVisualIcon
                   v-else
                   :icon-color="item.iconColor"
-                  :icon-emoji="item.iconEmoji"
                   :icon-size="13"
                   :box-size="18"
                 />

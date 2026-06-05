@@ -136,7 +136,6 @@ export const IPC_CHANNELS = {
   VFS_TOGGLE_NODE_STAR: 'vfs:toggle-node-star',
   VFS_UPDATE_NODE_TAGS: 'vfs:update-node-tags',
   VFS_UPDATE_NOTEBOOK_ICON_COLOR: 'vfs:update-notebook-icon-color',
-  VFS_UPDATE_NOTEBOOK_ICON_EMOJI: 'vfs:update-notebook-icon-emoji',
   VFS_WRITE_CONTENT: 'vfs:write-content',
   WINDOW_CLOSE: 'window:close',
   WINDOW_FORCE_RELOAD: 'window:force-reload',

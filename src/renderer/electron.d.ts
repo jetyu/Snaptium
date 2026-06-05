@@ -1,7 +1,6 @@
 export { };
 
 type NotebookIconColor = import('@shared/notebook-icon.constants').NotebookIconColor;
-type NotebookIconEmoji = import('@shared/notebook-icon.constants').NotebookIconEmoji;
 
 interface WorkspaceNodePayload {
   id: string;
@@ -15,7 +14,6 @@ interface WorkspaceNodePayload {
   trashed?: boolean;
   locked?: boolean;
   iconColor?: NotebookIconColor;
-  iconEmoji?: NotebookIconEmoji;
   starred?: boolean;
   starredAt?: number;
   tags?: string[];
@@ -270,7 +268,6 @@ declare global {
         moveNode: (payload: { nodeId: string; parentId: string | null; index: number }) => Promise<WorkspaceNodePayload>;
         toggleNodeLock: (payload: { nodeId: string; locked: boolean }) => Promise<WorkspaceNodePayload>;
         updateNotebookIconColor: (payload: { nodeId: string; iconColor: NotebookIconColor | null }) => Promise<WorkspaceNodePayload>;
-        updateNotebookIconEmoji: (payload: { nodeId: string; iconEmoji: NotebookIconEmoji | null }) => Promise<WorkspaceNodePayload>;
         updateNodeTags: (payload: { nodeId: string; tags: string[] }) => Promise<WorkspaceNodePayload>;
         getTrashedNodes: () => Promise<WorkspaceNodePayload[]>;
         restoreNode: (nodeId: string) => Promise<WorkspaceNodePayload>;
