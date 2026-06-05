@@ -69,6 +69,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
   async function recordQuestion(payload: {
     query: string;
+    threadId?: string;
     askedAt?: number;
     answer?: string;
     sourceNoteIds?: string[];
@@ -80,6 +81,8 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     }
 
     const askedAt = payload.askedAt ?? Date.now();
+    const entryId = createQuestionId(query, askedAt);
+    const threadId = payload.threadId?.trim() || entryId;
     const sources = sanitizeQuestionSources(payload.sources);
     const sourceNoteIds = Array.isArray(payload.sourceNoteIds)
       ? payload.sourceNoteIds
@@ -91,7 +94,8 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     const fullAnswer = trimFullAnswer(payload.answer ?? '');
 
     const nextEntry: WorkbenchQuestionEntry = {
-      id: createQuestionId(query, askedAt),
+      id: entryId,
+      threadId,
       query,
       askedAt,
       answer: trimAnswer(fullAnswer),
@@ -102,7 +106,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
     const nextQuestions = [
       nextEntry,
-      ...recentQuestions.value.filter((entry) => entry.query !== query),
+      ...recentQuestions.value.filter((entry) => entry.id !== nextEntry.id),
     ].slice(0, WORKBENCH_LIMITS.QUESTIONS);
 
     await saveWorkbench({ recentQuestions: nextQuestions });

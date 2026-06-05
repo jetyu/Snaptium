@@ -8,6 +8,7 @@ export type WorkbenchModuleId = (typeof WORKBENCH_MODULE_IDS)[number];
 
 export interface WorkbenchQuestionEntry {
   id: string;
+  threadId: string;
   query: string;
   askedAt: number;
   answer: string;
@@ -106,6 +107,7 @@ function sanitizeRecentQuestions(value: unknown): WorkbenchQuestionEntry[] {
 
       return {
         id: String(normalized.id ?? '').trim(),
+        threadId: String(normalized.threadId ?? normalized.id ?? '').trim(),
         query: String(normalized.query ?? '').trim(),
         askedAt: Number(normalized.askedAt ?? 0),
         answer: String(normalized.answer ?? '').trim(),
