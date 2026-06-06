@@ -28,7 +28,7 @@
               <span class="search-view__history-answer">{{ thread.preview }}</span>
               <span class="search-view__history-meta">{{ formatAskedAt(thread.askedAt) }}</span>
             </button>
-            <button v-if="!thread.isDraft && !isGeneratingThread(thread)" type="button" class="search-view__history-delete"
+            <button v-if="!isGeneratingThread(thread)" type="button" class="search-view__history-delete"
               :title="$t('common.delete')" @click.stop.prevent="deleteQuestionThread(thread)">
               <Delete theme="outline" :size="14" />
             </button>
@@ -40,11 +40,8 @@
       </aside>
 
       <section class="search-view__answer-pane">
-        <header class="search-view__pane-header search-view__pane-header--chat">
-          <div v-if="activeThread" class="search-view__active-chat-heading">
-            <h2 :title="activeThread.title">{{ activeThread.title }}</h2>
-          </div>
-          <h2 v-else>{{ $t('label.aiRAGSearch') }}</h2>
+        <header class="search-view__pane-header">
+          <h2>{{ $t('label.aiRAGSearch') }}</h2>
         </header>
 
         <div ref="messageListRef" class="search-view__chat-scroll">
@@ -242,13 +239,6 @@ const chatQuestions = computed<WorkbenchQuestionEntry[]>(() => {
   }
 
   return questionThreads.value.find((thread) => thread.id === activeThreadId.value)?.questions ?? [];
-});
-const activeThread = computed(() => {
-  if (!activeThreadId.value) {
-    return null;
-  }
-
-  return questionThreads.value.find((thread) => thread.id === activeThreadId.value) ?? null;
 });
 const hasChatMessages = computed(() => chatQuestions.value.length > 0);
 const currentSources = computed<WorkbenchQuestionSource[]>(() => {
@@ -832,28 +822,6 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.search-view__pane-header--chat {
-  justify-content: flex-start;
-}
-
-.search-view__active-chat-heading {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.search-view__active-chat-heading span {
-  color: var(--accent);
-  font-size: 0.68rem;
-  font-weight: 700;
-  line-height: 1;
-}
-
-.search-view__active-chat-heading h2 {
-  max-width: min(680px, 72vw);
-}
-
 .search-view__new-thread {
   flex: 0 0 auto;
   height: 28px;
@@ -1064,17 +1032,6 @@ onBeforeUnmount(() => {
   font-size: 0.68rem;
   opacity: 0.82;
   white-space: nowrap;
-}
-
-.search-view__history-current {
-  align-self: flex-start;
-  padding: 2px 6px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent);
-  font-size: 0.66rem;
-  font-weight: 700;
-  line-height: 1.3;
 }
 
 .search-view__history-empty {
