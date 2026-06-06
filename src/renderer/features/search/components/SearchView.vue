@@ -636,6 +636,11 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .search-view {
+  --search-chat-max-width: 960px;
+  --search-chat-surface: color-mix(in srgb, var(--panel) 94%, var(--bg));
+  --search-chat-border: color-mix(in srgb, var(--panel-border) 84%, var(--panel));
+  --search-chat-accent-border: color-mix(in srgb, var(--accent) 18%, var(--panel-border));
+  --search-chat-accent-fill: color-mix(in srgb, var(--accent) 5%, var(--panel));
   flex: 1;
   min-width: 0;
   height: 100%;
@@ -687,6 +692,7 @@ onBeforeUnmount(() => {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
+  justify-content: center;
   padding: 12px 22px 14px;
   border-top: 1px solid var(--panel-border);
   background: color-mix(in srgb, var(--panel) 88%, var(--bg));
@@ -694,15 +700,16 @@ onBeforeUnmount(() => {
 
 .search-view__input-shell {
   position: relative;
-  width: min(820px, 100%);
-  flex: 0 1 820px;
+  width: 100%;
+  max-width: var(--search-chat-max-width);
+  flex: 0 1 var(--search-chat-max-width);
   min-width: 0;
   display: flex;
   align-items: flex-end;
   min-height: 42px;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--search-chat-border);
   border-radius: 10px;
-  background: var(--panel);
+  background: color-mix(in srgb, var(--panel) 96%, var(--bg));
   transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
@@ -839,7 +846,9 @@ onBeforeUnmount(() => {
 }
 
 .search-view__chat-inner {
-  width: min(820px, 100%);
+  width: 100%;
+  max-width: var(--search-chat-max-width);
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -853,8 +862,8 @@ onBeforeUnmount(() => {
 }
 
 .search-view__chat-turn.is-active .search-view__assistant-card {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--panel-border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--search-chat-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 6%, transparent);
 }
 
 .search-view__message {
@@ -874,9 +883,9 @@ onBeforeUnmount(() => {
 .search-view__user-bubble {
   max-width: min(620px, 76%);
   padding: 9px 12px;
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--panel-border));
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--panel-border));
   border-radius: 12px 12px 4px 12px;
-  background: color-mix(in srgb, var(--accent) 9%, var(--panel));
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
   color: var(--text);
   font-size: 0.9rem;
   line-height: 1.52;
@@ -893,8 +902,8 @@ onBeforeUnmount(() => {
   justify-content: center;
   border-radius: 8px;
   color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--accent) 16%, var(--panel-border));
+  background: color-mix(in srgb, var(--panel-hover) 78%, var(--panel));
+  border: 1px solid var(--search-chat-border);
 }
 
 .search-view__assistant-card {
@@ -902,9 +911,10 @@ onBeforeUnmount(() => {
   min-width: 0;
   max-width: 100%;
   padding: 12px 14px;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--search-chat-border);
   border-radius: 12px 12px 12px 4px;
-  background: var(--panel);
+  background: var(--search-chat-surface);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--panel-border) 22%, transparent);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -1093,8 +1103,10 @@ onBeforeUnmount(() => {
   margin-bottom: 10px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-  color: var(--text);
+  border: 1px solid var(--search-chat-accent-border);
+  border-left-width: 3px;
+  background: var(--search-chat-surface);
+  color: var(--text-muted);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -1146,14 +1158,14 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   padding-top: 14px;
-  border-top: 1px solid var(--panel-border);
+  border-top: 1px solid var(--search-chat-border);
 }
 
 .search-view__sources h3 {
   flex: 0 0 auto;
   margin: 0 4px 0 0;
-  color: var(--text);
-  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.76rem;
   font-weight: 700;
 }
 
@@ -1164,17 +1176,17 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   padding: 0 10px;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--search-chat-border);
   border-radius: 7px;
-  background: var(--panel);
+  background: var(--search-chat-surface);
   color: var(--text);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .search-view__source-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--panel-border));
-  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--search-chat-border));
+  background: color-mix(in srgb, var(--panel-hover) 74%, var(--accent) 4%);
 }
 
 .search-view__source-card-head {
@@ -1182,8 +1194,12 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 7px;
   min-width: 0;
-  color: var(--accent);
+  color: var(--text-muted);
   font-size: 0.78rem;
+}
+
+.search-view__source-card:hover .search-view__source-card-head {
+  color: var(--accent-hover);
 }
 
 .search-view__source-card-head span {
