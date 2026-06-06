@@ -57,9 +57,9 @@ class LicenseService {
     }
   }
 
-  async validate(): Promise<LicenseState> {
+  async validate(force?: boolean): Promise<LicenseState> {
     try {
-      const state = await electronApi.license.validate();
+      const state = await electronApi.license.validate(force);
       this.getStore().updateState(state);
       return state;
     } catch (error) {
@@ -69,8 +69,8 @@ class LicenseService {
     }
   }
 
-  async refreshDevices(): Promise<LicenseState> {
-    const state = await electronApi.license.refreshDevices();
+  async refreshDevices(force?: boolean): Promise<LicenseState> {
+    const state = await electronApi.license.refreshDevices(force);
     this.getStore().updateState(state);
     return state;
   }

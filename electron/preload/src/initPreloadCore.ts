@@ -304,8 +304,8 @@ const electronAPI = Object.freeze({
   license: Object.freeze({
     getState: () => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_GET_STATE),
     activate: (licenseKey: string) => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_ACTIVATE, licenseKey),
-    validate: () => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_VALIDATE),
-    refreshDevices: () => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_REFRESH_DEVICES),
+    validate: (force?: boolean) => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_VALIDATE, force),
+    refreshDevices: (force?: boolean) => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_REFRESH_DEVICES, force),
     deactivateDevice: (deviceId: string) => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_DEACTIVATE_DEVICE, deviceId),
     clear: () => ipcRenderer.invoke(IPC_CHANNELS.LICENSE_CLEAR),
     onStateChanged: (callback: DataCallback) => {

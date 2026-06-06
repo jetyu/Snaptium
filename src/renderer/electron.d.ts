@@ -316,8 +316,8 @@ declare global {
       license?: {
         getState: () => Promise<import('@shared/license.constants').LicenseState>;
         activate: (licenseKey: string) => Promise<import('@shared/license.constants').LicenseState>;
-        validate: () => Promise<import('@shared/license.constants').LicenseState>;
-        refreshDevices: () => Promise<import('@shared/license.constants').LicenseState>;
+        validate: (force?: boolean) => Promise<import('@shared/license.constants').LicenseState>;
+        refreshDevices: (force?: boolean) => Promise<import('@shared/license.constants').LicenseState>;
         deactivateDevice: (deviceId: string) => Promise<import('@shared/license.constants').LicenseState>;
         clear: () => Promise<import('@shared/license.constants').LicenseState>;
         onStateChanged: (callback: (state: import('@shared/license.constants').LicenseState) => void) => () => void;

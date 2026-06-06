@@ -5,6 +5,7 @@ import { licenseService } from '../../services/license.service.js';
 
 const licenseKeySchema = z.string().trim().min(1);
 const deviceIdSchema = z.string().trim().min(1);
+const forceFlagSchema = z.boolean().optional();
 
 export function registerLicenseIpcHandlers(): void {
   ipcMain.removeHandler(IPC_CHANNELS.LICENSE_GET_STATE);
@@ -23,12 +24,14 @@ export function registerLicenseIpcHandlers(): void {
     return await licenseService.activate(licenseKey);
   });
 
-  ipcMain.handle(IPC_CHANNELS.LICENSE_VALIDATE, async () => {
-    return await licenseService.validateLicense();
+  ipcMain.handle(IPC_CHANNELS.LICENSE_VALIDATE, async (_event, rawForce: unknown) => {
+    const force = forceFlagSchema.parse(rawForce);
+    return await licenseService.validateLicense({ force });
   });
 
-  ipcMain.handle(IPC_CHANNELS.LICENSE_REFRESH_DEVICES, async () => {
-    return await licenseService.refreshDevices();
+  ipcMain.handle(IPC_CHANNELS.LICENSE_REFRESH_DEVICES, async (_event, rawForce: unknown) => {
+    const force = forceFlagSchema.parse(rawForce);
+    return await licenseService.refreshDevices({ force });
   });
 
   ipcMain.handle(IPC_CHANNELS.LICENSE_DEACTIVATE_DEVICE, async (_event, rawDeviceId: unknown) => {

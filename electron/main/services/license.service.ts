@@ -414,12 +414,12 @@ export class LicenseService {
     }
   }
 
-  async refreshDevices(): Promise<LicenseState> {
+  async refreshDevices(options?: RequestOptions): Promise<LicenseState> {
     if (!this.token) {
       return this.getState();
     }
 
-    if (this.isDeviceRefreshFresh()) {
+    if (!options?.force && this.isDeviceRefreshFresh()) {
       return this.getState();
     }
 
@@ -438,6 +438,7 @@ export class LicenseService {
           }),
         },
         licenseDevicesResponseSchema,
+        options,
       );
 
       const data = response as LicenseDevicesResponse;

@@ -669,11 +669,11 @@ export const electronApi = {
     activate: (licenseKey: string): Promise<import('@shared/license.constants').LicenseState> => {
       return electronApi.license.getApi().activate(licenseKey);
     },
-    validate: (): Promise<import('@shared/license.constants').LicenseState> => {
-      return electronApi.license.getApi().validate();
+    validate: (force?: boolean): Promise<import('@shared/license.constants').LicenseState> => {
+      return electronApi.license.getApi().validate(force);
     },
-    refreshDevices: (): Promise<import('@shared/license.constants').LicenseState> => {
-      return electronApi.license.getApi().refreshDevices();
+    refreshDevices: (force?: boolean): Promise<import('@shared/license.constants').LicenseState> => {
+      return electronApi.license.getApi().refreshDevices(force);
     },
     deactivateDevice: (deviceId: string): Promise<import('@shared/license.constants').LicenseState> => {
       return electronApi.license.getApi().deactivateDevice(deviceId);
