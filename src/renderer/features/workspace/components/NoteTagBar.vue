@@ -1,6 +1,6 @@
 <template>
   <div ref="rootRef" class="note-tag-bar">
-    <span class="note-tag-bar__label">{{ t('tags.label') }}</span>
+    <span class="note-tag-bar__label">{{ t('tags.title') }}</span>
     <div class="note-tag-bar__list">
       <span v-for="tag in activeTags" :key="tag" class="note-tag-bar__pill">
         <TagOne theme="outline" :size="13" />
