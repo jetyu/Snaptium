@@ -22,21 +22,6 @@ interface NwpImportResult {
   };
 }
 
-interface WorkspaceNode {
-  id: string;
-  type: string;
-  name: string;
-  parentId: string | null;
-  order: number;
-  createdAt: number;
-  updatedAt: number;
-  trashed: boolean;
-  locked: boolean;
-  contentId?: string;
-  tags?: string[];
-  [key: string]: unknown;
-}
-
 function getFocusedWindow(): BrowserWindow | null {
   return BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 }
