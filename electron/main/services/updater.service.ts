@@ -1,6 +1,11 @@
 import updaterPkg from 'electron-updater';
 const { autoUpdater } = updaterPkg;
 import { app, BrowserWindow } from 'electron';
+import {
+  buildUpdateFeedUrl,
+  resolveUpdateTargetChannel,
+  type UpdateChannel,
+} from '../../shared/updater.constants.js';
 import { loggerService } from './logger.service.js';
 import { settingsService } from './settings.service.js';
 import { trayService } from './tray.service.js';
@@ -12,11 +17,13 @@ const logger = loggerService.createLogger('Software Updater');
 class UpdaterService {
   private mainWindow: BrowserWindow | null;
   private updateCheckInterval: ReturnType<typeof setInterval> | null;
+  private initialCheckTimeout: ReturnType<typeof setTimeout> | null;
   private isChecking: boolean;
 
   constructor() {
     this.mainWindow = null;
     this.updateCheckInterval = null;
+    this.initialCheckTimeout = null;
     this.isChecking = false;
 
     autoUpdater.autoDownload = false;
@@ -30,6 +37,7 @@ class UpdaterService {
 
     try {
       const config = await settingsService.loadConfig();
+      this.applyUpdateSource(config.updateChannel);
 
       if (config.autoCheckUpdates) {
         this.startAutoCheck(config.updateCheckInterval || UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL);
@@ -39,6 +47,23 @@ class UpdaterService {
     } catch (error: unknown) {
       logger.error('Failed to initialize updater service', { error: getErrorMessage(error) });
     }
+  }
+
+  private applyUpdateSource(channel: UpdateChannel): void {
+    const targetChannel = resolveUpdateTargetChannel(channel);
+    const feedUrl = buildUpdateFeedUrl(channel);
+
+    autoUpdater.channel = targetChannel;
+    autoUpdater.setFeedURL({
+      provider: 'generic',
+      url: feedUrl,
+    });
+
+    logger.debug('Configured update feed', {
+      channel,
+      targetChannel,
+      feedUrl,
+    });
   }
 
   setupEventListeners(): void {
@@ -158,7 +183,7 @@ class UpdaterService {
 
     logger.debug('Starting auto update check', { interval });
 
-    setTimeout(() => {
+    this.initialCheckTimeout = setTimeout(() => {
       this.checkForUpdates(true);
     }, UPDATER_CONSTANTS.INITIAL_CHECK_DELAY);
 
@@ -168,6 +193,11 @@ class UpdaterService {
   }
 
   stopAutoCheck(): void {
+    if (this.initialCheckTimeout) {
+      clearTimeout(this.initialCheckTimeout);
+      this.initialCheckTimeout = null;
+    }
+
     if (this.updateCheckInterval) {
       clearInterval(this.updateCheckInterval);
       this.updateCheckInterval = null;
@@ -175,7 +205,9 @@ class UpdaterService {
     }
   }
 
-  async updateConfig(config: { autoCheckUpdates: boolean; updateCheckInterval: number }): Promise<void> {
+  async updateConfig(config: { autoCheckUpdates: boolean; updateCheckInterval: number; updateChannel: UpdateChannel }): Promise<void> {
+    this.applyUpdateSource(config.updateChannel);
+
     if (config.autoCheckUpdates) {
       this.startAutoCheck(config.updateCheckInterval || UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL);
     } else {

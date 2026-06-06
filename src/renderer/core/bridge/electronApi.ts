@@ -208,6 +208,12 @@ export interface UpdaterErrorPayload {
   code: string;
 }
 
+export interface UpdaterConfigPayload {
+  autoCheckUpdates: boolean;
+  updateCheckInterval: number;
+  updateChannel: 'stable' | 'beta' | 'dev';
+}
+
 export interface WorkspaceContextMenuItemPayload {
   action?: string | null;
   labelKey?: string;
@@ -912,7 +918,7 @@ export const electronApi = {
     download: () => electronApi.updater.getApi().download(),
     install: () => electronApi.updater.getApi().install(),
     getVersion: () => electronApi.updater.getApi().getVersion(),
-    updateConfig: (config: { autoCheckUpdates: boolean; updateCheckInterval: number }) => electronApi.updater.getApi().updateConfig(config),
+    updateConfig: (config: UpdaterConfigPayload) => electronApi.updater.getApi().updateConfig(config),
     onChecking: (callback: () => void) => electronApi.updater.getApi().onChecking(callback),
     onAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => electronApi.updater.getApi().onAvailable(callback),
     onNotAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => electronApi.updater.getApi().onNotAvailable(callback),

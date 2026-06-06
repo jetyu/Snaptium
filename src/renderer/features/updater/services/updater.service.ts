@@ -1,4 +1,5 @@
 import { electronApi } from '@renderer/core/bridge/electronApi';
+import { normalizeUpdateChannel, type UpdateChannel } from '@shared/updater.constants';
 
 const MIN_UPDATE_INTERVAL = 60 * 60 * 1000;
 
@@ -24,6 +25,7 @@ export interface ErrorInfo {
 export interface UpdaterConfig {
   autoCheckUpdates: boolean;
   updateCheckInterval: number;
+  updateChannel: UpdateChannel;
 }
 
 export interface UpdateEventHandlers {
@@ -74,6 +76,7 @@ function normalizeUpdaterConfig(config: UpdaterConfig): UpdaterConfig {
   return {
     autoCheckUpdates: Boolean(config.autoCheckUpdates),
     updateCheckInterval: Math.max(MIN_UPDATE_INTERVAL, Math.trunc(config.updateCheckInterval || MIN_UPDATE_INTERVAL)),
+    updateChannel: normalizeUpdateChannel(config.updateChannel),
   };
 }
 

@@ -36,6 +36,7 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettings } from '../composables/useSettings';
 import GeneralSettings from './tabs/GeneralSettings.vue';
+import SoftwareUpdateSettings from './tabs/SoftwareUpdateSettings.vue';
 import PreviewSettings from './tabs/PreviewSettings.vue';
 import EditorSettings from './tabs/EditorSettings.vue';
 import AISourceSettings from './tabs/AISourceSettings.vue';
@@ -57,6 +58,7 @@ type TabItem =
 
 const tabs: TabItem[] = [
   { id: 'general', labelKey: 'pref.pane.general', component: GeneralSettings },
+
   { id: 'preview', labelKey: 'pref.pane.preview', component: PreviewSettings },
   { id: 'editor', labelKey: 'pref.pane.editor', component: EditorSettings },
   { id: 'sep-1', type: 'separator' },
@@ -72,6 +74,7 @@ const tabs: TabItem[] = [
   { id: 'sep-4', type: 'separator' },
   { id: 'shortcuts', labelKey: 'pref.pane.shortcuts', component: ShortcutSettings },
   { id: 'log', labelKey: 'pref.pane.log', component: LogSettings },
+    { id: 'software-update', labelKey: 'label.softwareAutoUpdate', component: SoftwareUpdateSettings }
 ];
 
 const currentComponent = computed(() => {

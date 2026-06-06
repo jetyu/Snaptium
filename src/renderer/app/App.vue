@@ -31,11 +31,13 @@ import { AccessControlOverlay } from '@renderer/features/security';
 import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
 import { LicenseDialog } from '@renderer/features/license';
 import { electronApi } from '@renderer/core/bridge/electronApi';
+import { useUpdaterStore } from '@renderer/features/updater';
 
 const settingsStore = useSettingsStore();
 const shortcutsStore = useShortcutsStore();
 const workspaceStore = useWorkspaceStore();
 const favoritesStore = useFavoritesStore();
+const updaterStore = useUpdaterStore();
 const { initializeRAG, setupAutoIndexOnSave } = useRAGInitialization();
 const { initializeSync, setupAutoSync } = useSyncLifecycle();
 
@@ -47,6 +49,7 @@ useCommandRegistration();
 const unsubscribers: Array<(() => void)> = [];
 
 onMounted(async () => {
+  updaterStore.initialize();
   await settingsStore.loadSettings();
   await shortcutsStore.initialize();
   
@@ -104,6 +107,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  updaterStore.dispose();
   unsubscribers.forEach((unsub) => unsub());
 });
 </script>

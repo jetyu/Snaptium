@@ -241,7 +241,7 @@ const electronAPI = Object.freeze({
     download: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_DOWNLOAD),
     install: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_INSTALL),
     getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_GET_VERSION),
-    updateConfig: (config: { autoCheckUpdates: boolean; updateCheckInterval: number }) =>
+    updateConfig: (config: { autoCheckUpdates: boolean; updateCheckInterval: number; updateChannel: 'stable' | 'beta' | 'dev' }) =>
       ipcRenderer.invoke(IPC_CHANNELS.UPDATER_UPDATE_CONFIG, config),
     onChecking: (callback: VoidCallback) => {
       const subscription = () => callback();

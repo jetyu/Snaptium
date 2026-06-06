@@ -12,7 +12,6 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from 'vue';
 import UpdateNotification from './UpdateNotification.vue';
 import UpdateProgressDialog from './UpdateProgressDialog.vue';
 import UpdateInstallDialog from './UpdateInstallDialog.vue';
@@ -29,7 +28,6 @@ const {
   checkForUpdates,
   downloadUpdate,
   installUpdate,
-  initMainProcessListeners,
 } = useUpdater();
 
 const handleDownloadClick = () => {
@@ -48,13 +46,4 @@ const handleRetry = () => {
 const handleInstall = () => {
   installUpdate();
 };
-
-let removeMenuListener = () => { };
-onMounted(() => {
-  removeMenuListener = initMainProcessListeners();
-});
-
-onUnmounted(() => {
-  removeMenuListener();
-});
 </script>

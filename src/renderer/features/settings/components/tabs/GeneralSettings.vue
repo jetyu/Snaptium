@@ -60,35 +60,6 @@
         </label>
       </section>
 
-
-      <div :class="{ 'settings-row-grid': settingsStore.config.autoCheckUpdates }">
-        <section class="setting-card">
-          <div class="setting-copy">
-            <p class="setting-label">{{ t('label.softwareAutoUpdate') }}</p>
-            <p class="setting-description">{{ t('text.softwareAutoUpdate') }}</p>
-          </div>
-          <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.autoCheckUpdates }"
-            :aria-pressed="settingsStore.config.autoCheckUpdates" @click="handleAutoUpdateToggle">
-            <span class="startup-switch-track">
-              <span class="startup-switch-thumb" />
-            </span>
-            <span class="startup-switch-text">
-              {{ settingsStore.config.autoCheckUpdates ? t('checkbox.status.enabled') : t('checkbox.status.disabled') }}
-            </span>
-          </button>
-        </section>
-        <section v-if="settingsStore.config.autoCheckUpdates" class="setting-card">
-          <div class="setting-copy">
-            <p class="setting-label">{{ t('label.updateCheckInterval') }}</p>
-            <p class="setting-description">{{ t('text.updateCheckInterval') }}</p>
-          </div>
-          <div class="number-input-container">
-            <input type="number" class="settings-input number-input" :value="updateIntervalHours" min="1" max="168"
-              @change="handleIntervalChange" />
-          </div>
-        </section>
-      </div>
-
       <section class="setting-card">
         <div class="setting-copy">
           <p class="setting-label">{{ t('label.importExportSettings') }}</p>
@@ -111,10 +82,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { languageOptions } from '@renderer/features/i18n';
-import { updaterService } from '@renderer/features/updater/services/updater.service';
 import { type AppShellMainViewId } from '@renderer/app/constants/appShell.constants';
 import { useSettingsStore } from '../../store/settings.store';
 
@@ -149,36 +118,6 @@ const handleStartupViewChange = async (event: Event) => {
     ...settingsStore.config.appShell,
     activeMainView: value,
   });
-};
-
-const handleAutoUpdateToggle = async () => {
-  const newValue = !settingsStore.config.autoCheckUpdates;
-  await settingsStore.updateSetting('autoCheckUpdates', newValue);
-
-  await updaterService.updateConfig({
-    autoCheckUpdates: newValue,
-    updateCheckInterval: settingsStore.config.updateCheckInterval
-  });
-};
-
-const updateIntervalHours = computed({
-  get: () => Math.round(settingsStore.config.updateCheckInterval / (60 * 60 * 1000)),
-  set: (val: number) => {
-    const ms = val * 60 * 60 * 1000;
-    settingsStore.updateSetting('updateCheckInterval', ms);
-    updaterService.updateConfig({
-      autoCheckUpdates: settingsStore.config.autoCheckUpdates,
-      updateCheckInterval: ms
-    });
-  }
-});
-
-const handleIntervalChange = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  const val = parseInt(target.value, 10);
-  if (!isNaN(val) && val > 0) {
-    updateIntervalHours.value = val;
-  }
 };
 
 const handleThemeChange = async (event: Event) => {

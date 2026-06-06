@@ -216,6 +216,12 @@ interface UpdaterErrorPayload {
   code: string;
 }
 
+interface UpdaterConfigPayload {
+  autoCheckUpdates: boolean;
+  updateCheckInterval: number;
+  updateChannel: 'stable' | 'beta' | 'dev';
+}
+
 // ---------------------------------------------------------------------------
 // Global window augmentation
 // ---------------------------------------------------------------------------
@@ -538,7 +544,7 @@ declare global {
         download: () => Promise<{ success: boolean }>;
         install: () => Promise<{ success: boolean }>;
         getVersion: () => Promise<string>;
-        updateConfig: (config: { autoCheckUpdates: boolean; updateCheckInterval: number }) => Promise<{ success: boolean }>;
+        updateConfig: (config: UpdaterConfigPayload) => Promise<{ success: boolean }>;
         onChecking: (callback: () => void) => () => void;
         onAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onNotAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;

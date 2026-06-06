@@ -27,6 +27,7 @@ import { useI18n } from 'vue-i18n';
 import { useSettings } from '@renderer/features/settings/composables/useSettings';
 import { useAbout } from '@renderer/features/about';
 import { useLicenseDialog } from '@renderer/features/license';
+import { useUpdaterStore } from '@renderer/features/updater';
 import { MENU_CONFIG, type MenuAction } from '@shared/menu.config';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 
@@ -35,6 +36,7 @@ const { openSettings } = useSettings();
 const { openAbout } = useAbout();
 const { openLicenseDialog } = useLicenseDialog();
 const workspaceStore = useWorkspaceStore();
+const updaterStore = useUpdaterStore();
 
 const activeMenu = ref<string | null>(null);
 const isMenuOpen = ref(false);
@@ -148,7 +150,7 @@ function handleAction(action?: MenuAction) {
       window.close();
       break;
     case 'update':
-      window.electronAPI.updater?.check(false);
+      void updaterStore.checkForUpdates(false);
       break;
     case 'feedback':
       window.open('https://github.com/jetyu/NoteWizard/issues');
