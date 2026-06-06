@@ -82,7 +82,7 @@ export const previewPolicyService = {
     const cspDirectives = [
       "default-src 'self'",
       "script-src 'self'",
-      "style-src 'unsafe-inline'",
+      "style-src 'self' 'unsafe-inline'",
       `img-src ${imageSources.join(' ')}`,
       "font-src 'self' data:",
       "connect-src 'self'",
