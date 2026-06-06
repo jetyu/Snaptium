@@ -8,39 +8,28 @@
         <h1 class="search-view__title">{{ $t('search.knowledgeSearch') }}</h1>
       </div>
     </header>
-    <section class="search-view__query">
-      <div class="search-view__input-shell" :class="{ 'is-disabled': !canUseKnowledgeSearch }">
-        <Search class="search-view__input-icon" theme="outline" :size="16" />
-        <input ref="searchInput" v-model="searchQuery" type="text" class="search-view__input"
-          :disabled="!canUseKnowledgeSearch" :placeholder="$t('search.semanticPlaceholder')"
-          @keydown.enter.prevent="handleAsk" />
-        <button v-if="searchQuery" type="button" class="search-view__icon-button" :title="$t('button.clear')"
-          @click="clearQuery">
-          <Close theme="outline" :size="14" />
-        </button>
-      </div>
-      <button type="button" class="search-view__ask-button" :disabled="!canAsk"
-        :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason" @click="handleAsk">
-        <Search theme="outline" :size="17" />
-      </button>
-    </section>
 
     <main class="search-view__content">
       <aside class="search-view__history-pane">
         <header class="search-view__pane-header">
           <h2>{{ $t('search.knowledgeHistory') }}</h2>
+          <button type="button" class="search-view__new-thread icon-action-button" :disabled="isBusy"
+            :title="$t('search.newKnowledgeChat')" @click="startNewThread">
+            <Plus theme="outline" :size="14" />
+            <span>{{ $t('search.newKnowledgeChat') }}</span>
+          </button>
         </header>
-        <div v-if="filteredRecentQuestions.length > 0" class="search-view__history-list">
-          <div v-for="question in filteredRecentQuestions" :key="question.id" class="search-view__history-item"
-            :class="{ 'is-active': selectedQuestion?.id === question.id }">
-            <button type="button" class="search-view__history-open" :title="question.query"
-              @click="selectQuestion(question)">
-              <span class="search-view__history-query">{{ question.query }}</span>
-              <span class="search-view__history-answer">{{ getQuestionPreview(question) }}</span>
-              <span class="search-view__history-meta">{{ formatAskedAt(question.askedAt) }}</span>
+        <div v-if="questionThreads.length > 0" class="search-view__history-list">
+          <div v-for="thread in questionThreads" :key="thread.id" class="search-view__history-item"
+            :class="{ 'is-active': activeThreadId === thread.id, 'is-draft': thread.isDraft }">
+            <button type="button" class="search-view__history-open" :title="thread.title"
+              @click="selectThread(thread)">
+              <span class="search-view__history-query">{{ thread.title }}</span>
+              <span class="search-view__history-answer">{{ thread.preview }}</span>
+              <span class="search-view__history-meta">{{ formatAskedAt(thread.askedAt) }}</span>
             </button>
-            <button v-if="!isGeneratingQuestion(question)" type="button" class="search-view__history-delete" :title="$t('common.delete')"
-              @click.stop.prevent="deleteRecentQuestion(question)">
+            <button v-if="!isGeneratingThread(thread)" type="button" class="search-view__history-delete"
+              :title="$t('common.delete')" @click.stop.prevent="deleteQuestionThread(thread)">
               <Delete theme="outline" :size="14" />
             </button>
           </div>
@@ -52,41 +41,78 @@
 
       <section class="search-view__answer-pane">
         <header class="search-view__pane-header">
-          <h2 :title="answerPaneTitle">{{ answerPaneTitle }}</h2>
+          <h2>{{ $t('label.aiRAGSearch') }}</h2>
         </header>
 
-        <div v-if="isBusy" class="search-view__status">
-          <div class="search-view__spinner"></div>
-          <p class="search-view__status-text">{{ $t('label.aiRAGThinking') }}</p>
-        </div>
-        <div v-else-if="searchError" class="search-view__status">
-          <p class="search-view__status-text search-view__status-text--error">{{ searchError }}</p>
-        </div>
-        <div v-else-if="!canUseKnowledgeSearch" class="search-view__status">
-          <p class="search-view__status-text">{{ knowledgeUnavailableReason }}</p>
-        </div>
-        <div v-else-if="!hasAsked && !selectedQuestion" class="search-view__status">
-          <p class="search-view__status-text">{{ $t('search.semanticHint') }}</p>
-        </div>
-        <article v-else-if="displayAnswer" class="search-view__answer">
-          <div v-if="displayFallbackNotice" class="search-view__fallback-notice">
-            {{ $t('message.rag.noChatModel') }}
+        <div ref="messageListRef" class="search-view__chat-scroll">
+          <div v-if="searchError && !hasChatMessages" class="search-view__status">
+            <p class="search-view__status-text search-view__status-text--error">{{ searchError }}</p>
           </div>
-          <div class="search-view__answer-content" v-html="renderedAnswer"></div>
-          <div v-if="displaySources.length > 0" class="search-view__sources">
-            <h3>{{ $t('search.knowledgeSources') }}</h3>
-            <button v-for="source in displaySources" :key="source.noteId" type="button" class="search-view__source-card"
-              :title="source.noteTitle" @click="openSourceNote(source)">
-              <span class="search-view__source-card-head">
-                <FileText theme="outline" :size="15" />
-                <span>{{ source.noteTitle }}</span>
-              </span>
+          <div v-else-if="!canUseKnowledgeSearch && !hasChatMessages" class="search-view__status">
+            <p class="search-view__status-text">{{ knowledgeUnavailableReason }}</p>
+          </div>
+          <div v-else-if="!hasChatMessages" class="search-view__status">
+            <p class="search-view__status-text">{{ $t('search.semanticHint') }}</p>
+          </div>
+          <div v-else class="search-view__chat-inner">
+            <article v-for="question in chatQuestions" :key="question.id" class="search-view__chat-turn"
+              :class="{ 'is-active': selectedQuestion?.id === question.id }" :data-question-id="question.id">
+              <div class="search-view__message search-view__message--user">
+                <div class="search-view__user-bubble">
+                  {{ question.query }}
+                </div>
+              </div>
+              <div class="search-view__message search-view__message--assistant">
+                <span class="search-view__assistant-avatar">
+                  <DatabaseSearch theme="outline" :size="15" />
+                </span>
+                <div class="search-view__assistant-card">
+                  <div v-if="isGeneratingQuestion(question)" class="search-view__thinking">
+                    <div class="search-view__spinner"></div>
+                    <span>{{ $t('label.aiRAGThinking') }}</span>
+                  </div>
+                  <p v-else-if="getQuestionError(question)" class="search-view__status-text search-view__status-text--error">
+                    {{ getQuestionError(question) }}
+                  </p>
+                  <template v-else>
+                    <div v-if="shouldDisplayFallbackNotice(question)" class="search-view__fallback-notice">
+                      {{ $t('message.rag.noChatModel') }}
+                    </div>
+                    <div v-if="getQuestionAnswer(question)" class="search-view__answer-content"
+                      v-html="renderQuestionAnswer(question)"></div>
+                    <p v-else class="search-view__status-text">{{ $t('search.noResultsSemantic') }}</p>
+                    <div v-if="getQuestionSources(question).length > 0" class="search-view__sources">
+                      <h3>{{ $t('search.knowledgeSources') }}</h3>
+                      <button v-for="source in getQuestionSources(question)" :key="source.noteId" type="button"
+                        class="search-view__source-card" :title="source.noteTitle" @click="openSourceNote(source)">
+                        <span class="search-view__source-card-head">
+                          <FileText theme="outline" :size="15" />
+                          <span>{{ source.noteTitle }}</span>
+                        </span>
+                      </button>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <section class="search-view__query">
+          <div class="search-view__input-shell" :class="{ 'is-disabled': !canUseKnowledgeSearch }">
+            <textarea ref="searchInput" v-model="searchQuery" class="search-view__input" rows="1"
+              :disabled="!canUseKnowledgeSearch" :placeholder="$t('search.semanticPlaceholder')"
+              @input="resizeComposer" @keydown="handleComposerKeydown" />
+            <button v-if="searchQuery" type="button" class="search-view__icon-button" :title="$t('button.clear')"
+              @click="clearQuery">
+              <Close theme="outline" :size="14" />
+            </button>
+            <button type="button" class="search-view__ask-button icon-action-button" :disabled="!canAsk"
+              :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason" @click="handleAsk">
+              <span>{{ $t('search.knowledgeAskShortcut') }}</span>
             </button>
           </div>
-        </article>
-        <div v-else class="search-view__status">
-          <p class="search-view__status-text">{{ $t('search.noResultsSemantic') }}</p>
-        </div>
+        </section>
       </section>
     </main>
   </div>
@@ -96,7 +122,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { Close, DatabaseSearch, Delete, FileText, Search } from '@icon-park/vue-next';
+import { Close, DatabaseSearch, Delete, FileText, Plus } from '@icon-park/vue-next';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { useRAGConfig, useRAGSearch, useRAGChat } from '@renderer/features/rag';
 import { useLicenseGate } from '@renderer/features/license';
@@ -109,6 +135,16 @@ import type { RagSearchResult } from '@renderer/core/bridge/electronApi';
 import type { WorkbenchQuestionEntry, WorkbenchQuestionSource } from '@renderer/features/workbench/constants/workbench.constants';
 import { useSearch } from '../composables/useSearch';
 
+interface QuestionThread {
+  id: string;
+  title: string;
+  preview: string;
+  askedAt: number;
+  questions: WorkbenchQuestionEntry[];
+  latestQuestion: WorkbenchQuestionEntry | null;
+  isDraft: boolean;
+}
+
 const searchViewLogger = createLogger('SearchView');
 const { t } = useI18n();
 const workbenchStore = useWorkbenchStore();
@@ -118,17 +154,23 @@ const { selectNote } = useWorkspace();
 const { searchViewRequest } = useSearch();
 const { search: ragSearch } = useRAGSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
-const { askQuestion, isGenerating: isAIGenerating, answer: aiAnswer, usedSearchFallback } = useRAGChat();
+const { askQuestion, isGenerating: isAIGenerating, usedSearchFallback } = useRAGChat();
 const ragLicenseGate = useLicenseGate('rag');
 
 const searchQuery = ref('');
 const semanticResults = ref<RagSearchResult[]>([]);
 const isSearching = ref(false);
-const hasAsked = ref(false);
 const searchError = ref('');
-const searchInput = ref<HTMLInputElement | null>(null);
+const searchInput = ref<HTMLTextAreaElement | null>(null);
+const messageListRef = ref<HTMLElement | null>(null);
 const selectedQuestion = ref<WorkbenchQuestionEntry | null>(null);
+const activeThreadId = ref<string | null>(null);
+const draftThreadId = ref<string | null>(null);
+const draftThreadCreatedAt = ref(0);
 const generatingQuestionId = ref('');
+const activeFallbackQuestionId = ref('');
+const activeErrorQuestionId = ref('');
+const activeErrorMessage = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const canUseKnowledgeSearch = computed(() => ragLicenseGate.allowed.value && ragEnabled.value && ragConfigured.value);
@@ -146,22 +188,59 @@ const knowledgeUnavailableReason = computed(() => {
   }
   return '';
 });
-const renderedAnswer = computed(() => {
-  if (!displayAnswer.value) {
-    return '';
+const questionThreads = computed<QuestionThread[]>(() => {
+  const threadMap = new Map<string, WorkbenchQuestionEntry[]>();
+
+  recentQuestions.value.forEach((question) => {
+    const threadId = getQuestionThreadId(question);
+    const threadQuestions = threadMap.get(threadId) ?? [];
+    threadQuestions.push(question);
+    threadMap.set(threadId, threadQuestions);
+  });
+
+  const threads = Array.from(threadMap.entries())
+    .map(([threadId, questions]) => {
+      const sortedQuestions = [...questions].sort((left, right) => left.askedAt - right.askedAt);
+      const firstQuestion = sortedQuestions[0];
+      const latestQuestion = sortedQuestions[sortedQuestions.length - 1];
+
+      return {
+        id: threadId,
+        title: firstQuestion.query,
+        preview: getQuestionPreview(latestQuestion),
+        askedAt: latestQuestion.askedAt,
+        questions: sortedQuestions,
+        latestQuestion,
+        isDraft: false,
+      };
+    })
+    .sort((left, right) => right.askedAt - left.askedAt);
+
+  if (draftThreadId.value && !threads.some((thread) => thread.id === draftThreadId.value)) {
+    return [
+      {
+        id: draftThreadId.value,
+        title: t('search.newKnowledgeChat'),
+        preview: t('search.newKnowledgeChatPreview'),
+        askedAt: draftThreadCreatedAt.value,
+        questions: [],
+        latestQuestion: null,
+        isDraft: true,
+      },
+      ...threads,
+    ];
   }
 
-  return renderMarkdown(displayAnswer.value, {
-    allowHtml: false,
-    allowInlineSvg: false,
-    remoteImageMode: 'blocked',
-    blockedImageLabel: t('preview.remoteImageBlocked'),
-    copyCodeButtonLabel: t('preview.copyCode'),
-  });
+  return threads;
 });
-const filteredRecentQuestions = computed(() => {
-  return recentQuestions.value;
+const chatQuestions = computed<WorkbenchQuestionEntry[]>(() => {
+  if (!activeThreadId.value) {
+    return [];
+  }
+
+  return questionThreads.value.find((thread) => thread.id === activeThreadId.value)?.questions ?? [];
 });
+const hasChatMessages = computed(() => chatQuestions.value.length > 0);
 const currentSources = computed<WorkbenchQuestionSource[]>(() => {
   const sourceMap = new Map<string, WorkbenchQuestionSource>();
 
@@ -179,34 +258,52 @@ const currentSources = computed<WorkbenchQuestionSource[]>(() => {
 
   return Array.from(sourceMap.values());
 });
-const displayAnswer = computed(() => {
-  if (selectedQuestion.value) {
-    return selectedQuestion.value.fullAnswer || selectedQuestion.value.answer;
-  }
-
-  return aiAnswer.value;
-});
-const displaySources = computed<WorkbenchQuestionSource[]>(() => {
-  if (selectedQuestion.value?.sources?.length) {
-    return selectedQuestion.value.sources;
-  }
-
-  return currentSources.value;
-});
-const displayFallbackNotice = computed(() => {
-  return !selectedQuestion.value && usedSearchFallback.value;
-});
-const answerPaneTitle = computed(() => {
-  if (usedSearchFallback.value && !selectedQuestion.value) {
-    return t('search.knowledgeResults');
-  }
-
-  return selectedQuestion.value?.query || t('label.aiRAGSearch');
-});
 
 function focusSearchInput(): void {
   void nextTick(() => {
     searchInput.value?.focus();
+  });
+}
+
+function createThreadId(askedAt: number): string {
+  return `${askedAt}:thread`;
+}
+
+function getQuestionThreadId(question: WorkbenchQuestionEntry): string {
+  return question.threadId || question.id;
+}
+
+function resizeComposer(): void {
+  const textarea = searchInput.value;
+  if (!textarea) {
+    return;
+  }
+
+  textarea.style.height = 'auto';
+  textarea.style.height = `${Math.min(textarea.scrollHeight, 96)}px`;
+}
+
+function scrollChatToBottom(): void {
+  void nextTick(() => {
+    const messageList = messageListRef.value;
+    if (!messageList) {
+      return;
+    }
+
+    messageList.scrollTop = messageList.scrollHeight;
+  });
+}
+
+function scrollQuestionIntoView(questionId: string): void {
+  void nextTick(() => {
+    const messageList = messageListRef.value;
+    if (!messageList) {
+      return;
+    }
+
+    const target = Array.from(messageList.querySelectorAll<HTMLElement>('[data-question-id]'))
+      .find((element) => element.dataset.questionId === questionId);
+    target?.scrollIntoView({ block: 'center' });
   });
 }
 
@@ -220,16 +317,45 @@ function clearPendingSearch(): void {
 function resetAnswer(): void {
   semanticResults.value = [];
   searchError.value = '';
-  hasAsked.value = false;
-  aiAnswer.value = '';
   usedSearchFallback.value = false;
   selectedQuestion.value = null;
   generatingQuestionId.value = '';
+  activeFallbackQuestionId.value = '';
+  activeErrorQuestionId.value = '';
+  activeErrorMessage.value = '';
+}
+
+function startNewThread(): void {
+  if (isBusy.value) {
+    return;
+  }
+
+  clearPendingSearch();
+
+  if (!draftThreadId.value) {
+    draftThreadCreatedAt.value = Date.now();
+    draftThreadId.value = createThreadId(draftThreadCreatedAt.value);
+  }
+
+  activeThreadId.value = draftThreadId.value;
+  resetAnswer();
+  void nextTick(resizeComposer);
+  focusSearchInput();
 }
 
 function clearQuery(): void {
   searchQuery.value = '';
+  void nextTick(resizeComposer);
   focusSearchInput();
+}
+
+function handleComposerKeydown(event: KeyboardEvent): void {
+  if (event.key !== 'Enter' || event.shiftKey || event.isComposing) {
+    return;
+  }
+
+  event.preventDefault();
+  handleAsk();
 }
 
 function handleAsk(): void {
@@ -240,6 +366,18 @@ function handleAsk(): void {
     return;
   }
 
+  if (!canUseKnowledgeSearch.value) {
+    searchError.value = knowledgeUnavailableReason.value;
+    return;
+  }
+
+  if (isBusy.value) {
+    return;
+  }
+
+  searchQuery.value = '';
+  void nextTick(resizeComposer);
+
   searchTimeout = setTimeout(() => {
     void askKnowledgeQuestion(query);
   }, 0);
@@ -248,22 +386,34 @@ function handleAsk(): void {
 async function askKnowledgeQuestion(query: string): Promise<void> {
   if (!canUseKnowledgeSearch.value) {
     searchError.value = knowledgeUnavailableReason.value;
-    hasAsked.value = true;
     return;
   }
 
-  hasAsked.value = false;
   selectedQuestion.value = null;
-  aiAnswer.value = '';
   usedSearchFallback.value = false;
   searchError.value = '';
+  activeFallbackQuestionId.value = '';
+  activeErrorQuestionId.value = '';
+  activeErrorMessage.value = '';
   isSearching.value = true;
+  let draftQuestion: WorkbenchQuestionEntry | null = null;
 
   try {
     const askedAt = Date.now();
-    const draftQuestion = await workbenchStore.recordQuestion({ query, askedAt });
+    const threadId = activeThreadId.value ?? createThreadId(askedAt);
+    activeThreadId.value = threadId;
+    draftQuestion = await workbenchStore.recordQuestion({ query, threadId, askedAt });
+    if (draftThreadId.value === threadId) {
+      draftThreadId.value = null;
+      draftThreadCreatedAt.value = 0;
+    }
     selectedQuestion.value = draftQuestion;
     generatingQuestionId.value = draftQuestion?.id ?? '';
+    if (draftQuestion) {
+      scrollQuestionIntoView(draftQuestion.id);
+    } else {
+      scrollChatToBottom();
+    }
 
     const ragResults = await ragSearch(query);
     semanticResults.value = ragResults;
@@ -275,27 +425,45 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       } catch (error) {
         const message = getErrorMessage(error);
         searchViewLogger.error(`Knowledge answer generation failed: ${message}`);
-        searchError.value = message;
+        if (draftQuestion) {
+          activeErrorQuestionId.value = draftQuestion.id;
+          activeErrorMessage.value = message;
+        } else {
+          searchError.value = message;
+        }
       }
+    }
+
+    if (draftQuestion && usedSearchFallback.value) {
+      activeFallbackQuestionId.value = draftQuestion.id;
     }
 
     const recordedQuestion = await workbenchStore.recordQuestion({
       query,
+      threadId,
       askedAt,
       answer: generatedAnswer,
       sourceNoteIds: Array.from(new Set(ragResults.map((result) => result.chunk.noteId))),
       sources: currentSources.value,
     });
     selectedQuestion.value = recordedQuestion;
+    if (recordedQuestion) {
+      scrollQuestionIntoView(recordedQuestion.id);
+    }
   } catch (error) {
     const message = getErrorMessage(error);
     searchViewLogger.error(`Knowledge question failed: ${message}`);
-    searchError.value = message;
+    if (draftQuestion) {
+      activeErrorQuestionId.value = draftQuestion.id;
+      activeErrorMessage.value = message;
+    } else {
+      searchError.value = message;
+    }
     semanticResults.value = [];
   } finally {
     isSearching.value = false;
     generatingQuestionId.value = '';
-    hasAsked.value = true;
+    focusSearchInput();
   }
 }
 
@@ -314,18 +482,43 @@ function openSourceNote(source: WorkbenchQuestionSource): void {
   void openNoteResult(source.noteId, source.noteTitle);
 }
 
-function selectQuestion(question: WorkbenchQuestionEntry): void {
-  selectedQuestion.value = question;
+function selectThread(thread: QuestionThread): void {
+  activeThreadId.value = thread.id;
+  selectedQuestion.value = thread.latestQuestion;
   searchError.value = '';
   semanticResults.value = [];
-  aiAnswer.value = '';
   usedSearchFallback.value = false;
-  hasAsked.value = true;
+  activeFallbackQuestionId.value = '';
+  activeErrorQuestionId.value = '';
+  activeErrorMessage.value = '';
+  if (thread.latestQuestion) {
+    scrollQuestionIntoView(thread.latestQuestion.id);
+  } else {
+    scrollChatToBottom();
+    focusSearchInput();
+  }
 }
 
-async function deleteRecentQuestion(question: WorkbenchQuestionEntry): Promise<void> {
-  const deleted = await workbenchStore.deleteQuestion(question.id);
-  if (deleted && selectedQuestion.value?.id === question.id) {
+async function deleteQuestionThread(thread: QuestionThread): Promise<void> {
+  if (thread.isDraft) {
+    draftThreadId.value = null;
+    draftThreadCreatedAt.value = 0;
+    if (activeThreadId.value === thread.id) {
+      activeThreadId.value = null;
+      resetAnswer();
+    }
+    return;
+  }
+
+  let hasDeleted = false;
+
+  for (const question of thread.questions) {
+    const deleted = await workbenchStore.deleteQuestion(question.id);
+    hasDeleted = hasDeleted || deleted;
+  }
+
+  if (hasDeleted && activeThreadId.value === thread.id) {
+    activeThreadId.value = null;
     resetAnswer();
   }
 }
@@ -338,8 +531,51 @@ function getQuestionPreview(question: WorkbenchQuestionEntry): string {
   return question.answer || t('workbench.empty.noAnswer');
 }
 
+function getQuestionAnswer(question: WorkbenchQuestionEntry): string {
+  return question.fullAnswer || question.answer;
+}
+
+function getQuestionSources(question: WorkbenchQuestionEntry): WorkbenchQuestionSource[] {
+  if (question.sources?.length) {
+    return question.sources;
+  }
+
+  return [];
+}
+
+function getQuestionError(question: WorkbenchQuestionEntry): string {
+  if (activeErrorQuestionId.value !== question.id) {
+    return '';
+  }
+
+  return activeErrorMessage.value;
+}
+
+function shouldDisplayFallbackNotice(question: WorkbenchQuestionEntry): boolean {
+  return activeFallbackQuestionId.value === question.id;
+}
+
+function renderQuestionAnswer(question: WorkbenchQuestionEntry): string {
+  const answer = getQuestionAnswer(question);
+  if (!answer) {
+    return '';
+  }
+
+  return renderMarkdown(answer, {
+    allowHtml: false,
+    allowInlineSvg: false,
+    remoteImageMode: 'blocked',
+    blockedImageLabel: t('preview.remoteImageBlocked'),
+    copyCodeButtonLabel: t('preview.copyCode'),
+  });
+}
+
 function isGeneratingQuestion(question: WorkbenchQuestionEntry): boolean {
   return generatingQuestionId.value === question.id;
+}
+
+function isGeneratingThread(thread: QuestionThread): boolean {
+  return thread.questions.some((question) => isGeneratingQuestion(question));
 }
 
 function formatAskedAt(timestamp: number): string {
@@ -352,9 +588,13 @@ function formatAskedAt(timestamp: number): string {
 
 function applySearchRequest(): void {
   const request = searchViewRequest.value;
+  activeThreadId.value = null;
+  draftThreadId.value = null;
+  draftThreadCreatedAt.value = 0;
   searchQuery.value = request.query;
   resetAnswer();
   focusSearchInput();
+  void nextTick(resizeComposer);
 
   if (request.run && request.query.trim()) {
     handleAsk();
@@ -372,9 +612,21 @@ watch(canUseKnowledgeSearch, () => {
   resetAnswer();
 });
 
+watch(questionThreads, (threads) => {
+  if (!activeThreadId.value) {
+    return;
+  }
+
+  if (!threads.some((thread) => thread.id === activeThreadId.value)) {
+    activeThreadId.value = null;
+    selectedQuestion.value = null;
+  }
+});
+
 onMounted(() => {
   applySearchRequest();
   focusSearchInput();
+  scrollChatToBottom();
 });
 
 onBeforeUnmount(() => {
@@ -384,6 +636,11 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .search-view {
+  --search-chat-max-width: 960px;
+  --search-chat-surface: color-mix(in srgb, var(--panel) 94%, var(--bg));
+  --search-chat-border: color-mix(in srgb, var(--panel-border) 84%, var(--panel));
+  --search-chat-accent-border: color-mix(in srgb, var(--accent) 18%, var(--panel-border));
+  --search-chat-accent-fill: color-mix(in srgb, var(--accent) 5%, var(--panel));
   flex: 1;
   min-width: 0;
   height: 100%;
@@ -435,22 +692,24 @@ onBeforeUnmount(() => {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 20px;
-  border-bottom: 1px solid var(--panel-border);
-  background: color-mix(in srgb, var(--panel) 72%, var(--bg));
+  justify-content: center;
+  padding: 12px 22px 14px;
+  border-top: 1px solid var(--panel-border);
+  background: color-mix(in srgb, var(--panel) 88%, var(--bg));
 }
 
 .search-view__input-shell {
   position: relative;
-  flex: 1;
+  width: 100%;
+  max-width: var(--search-chat-max-width);
+  flex: 0 1 var(--search-chat-max-width);
   min-width: 0;
   display: flex;
-  align-items: center;
-  height: 40px;
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
-  background: var(--panel);
+  align-items: flex-end;
+  min-height: 42px;
+  border: 1px solid var(--search-chat-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--panel) 96%, var(--bg));
   transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
@@ -463,22 +722,21 @@ onBeforeUnmount(() => {
   opacity: 0.64;
 }
 
-.search-view__input-icon {
-  flex: 0 0 auto;
-  margin-left: 12px;
-  color: var(--text-muted);
-}
-
 .search-view__input {
   flex: 1;
   min-width: 0;
-  height: 100%;
-  padding: 0 10px;
+  height: auto;
+  max-height: 96px;
+  padding: 10px 8px 9px 12px;
   border: none;
   outline: none;
+  resize: none;
   background: transparent;
   color: var(--text);
+  font: inherit;
   font-size: 0.9rem;
+  line-height: 1.45;
+  overflow-y: auto;
 }
 
 .search-view__input:disabled {
@@ -495,43 +753,32 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: none;
   border-radius: 7px;
   cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
 }
 
 .search-view__icon-button {
   width: 28px;
   height: 28px;
-  margin-right: 6px;
+  margin: 0 2px 6px 0;
+  border: none;
   background: transparent;
   color: var(--text-muted);
 }
 
 .search-view__ask-button {
-  width: 40px;
-  height: 40px;
-  background: var(--accent);
-  color: #fff;
+  min-width: 52px;
+  height: 32px;
+  padding: 0 10px;
+  margin: 0 5px 5px 0;
+  font-size: 0.76rem;
+  font-weight: 700;
 }
 
 .search-view__icon-button:hover {
   background: var(--panel-hover);
   color: var(--text);
-}
-
-.search-view__ask-button:hover:not(:disabled) {
-  background: var(--accent-hover);
-}
-
-.search-view__ask-button:active:not(:disabled) {
-  transform: scale(0.97);
-}
-
-.search-view__ask-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.48;
 }
 
 .search-view__content {
@@ -582,6 +829,103 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
+.search-view__new-thread {
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 9px;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 650;
+}
+
+.search-view__chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 22px;
+}
+
+.search-view__chat-inner {
+  width: 100%;
+  max-width: var(--search-chat-max-width);
+  margin-inline: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.search-view__chat-turn {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scroll-margin: 18px;
+}
+
+.search-view__chat-turn.is-active .search-view__assistant-card {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--search-chat-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.search-view__message {
+  min-width: 0;
+  display: flex;
+}
+
+.search-view__message--user {
+  justify-content: flex-end;
+}
+
+.search-view__message--assistant {
+  align-items: flex-start;
+  gap: 9px;
+}
+
+.search-view__user-bubble {
+  max-width: min(620px, 76%);
+  padding: 9px 12px;
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--panel-border));
+  border-radius: 12px 12px 4px 12px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.52;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.search-view__assistant-avatar {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--panel-hover) 78%, var(--panel));
+  border: 1px solid var(--search-chat-border);
+}
+
+.search-view__assistant-card {
+  flex: 1;
+  min-width: 0;
+  max-width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--search-chat-border);
+  border-radius: 12px 12px 12px 4px;
+  background: var(--search-chat-surface);
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--panel-border) 22%, transparent);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-view__thinking {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--text-muted);
+  font-size: 0.86rem;
+}
+
 .search-view__history-list {
   flex: 1;
   min-height: 0;
@@ -620,6 +964,12 @@ onBeforeUnmount(() => {
 .search-view__history-item.is-active {
   border-color: color-mix(in srgb, var(--accent) 24%, var(--panel-border));
   background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+
+
+.search-view__history-item.is-draft .search-view__history-query {
+  color: var(--accent);
 }
 
 .search-view__history-open {
@@ -719,6 +1069,10 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
+.search-view__chat-scroll > .search-view__status {
+  min-height: 100%;
+}
+
 .search-view__status-text {
   margin: 0;
   color: var(--text-muted);
@@ -745,21 +1099,14 @@ onBeforeUnmount(() => {
   }
 }
 
-.search-view__answer {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 18px 22px;
-  overflow-y: auto;
-}
-
 .search-view__fallback-notice {
+  margin-bottom: 10px;
   padding: 10px 12px;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-  color: var(--text);
+  border: 1px solid var(--search-chat-accent-border);
+  border-left-width: 3px;
+  background: var(--search-chat-surface);
+  color: var(--text-muted);
   font-size: 0.82rem;
   line-height: 1.5;
 }
@@ -811,14 +1158,14 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 8px;
   padding-top: 14px;
-  border-top: 1px solid var(--panel-border);
+  border-top: 1px solid var(--search-chat-border);
 }
 
 .search-view__sources h3 {
   flex: 0 0 auto;
   margin: 0 4px 0 0;
-  color: var(--text);
-  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-size: 0.76rem;
   font-weight: 700;
 }
 
@@ -829,17 +1176,17 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   padding: 0 10px;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--search-chat-border);
   border-radius: 7px;
-  background: var(--panel);
+  background: var(--search-chat-surface);
   color: var(--text);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .search-view__source-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--panel-border));
-  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--search-chat-border));
+  background: color-mix(in srgb, var(--panel-hover) 74%, var(--accent) 4%);
 }
 
 .search-view__source-card-head {
@@ -847,8 +1194,12 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 7px;
   min-width: 0;
-  color: var(--accent);
+  color: var(--text-muted);
   font-size: 0.78rem;
+}
+
+.search-view__source-card:hover .search-view__source-card-head {
+  color: var(--accent-hover);
 }
 
 .search-view__source-card-head span {

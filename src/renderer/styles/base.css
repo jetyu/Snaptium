@@ -150,3 +150,34 @@ button.icon-text svg,
   display: block;
   flex-shrink: 0;
 }
+
+.icon-action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+  background: var(--panel);
+  color: var(--accent);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
+}
+
+.icon-action-button:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--panel-border));
+  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
+  color: var(--accent-hover);
+}
+
+.icon-action-button:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.icon-action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.48;
+}
+
+.icon-action-button svg {
+  display: block;
+}

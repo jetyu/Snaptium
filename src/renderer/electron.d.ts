@@ -216,6 +216,12 @@ interface UpdaterErrorPayload {
   code: string;
 }
 
+interface UpdaterConfigPayload {
+  autoCheckUpdates: boolean;
+  updateCheckInterval: number;
+  updateChannel: 'stable' | 'beta' | 'dev';
+}
+
 // ---------------------------------------------------------------------------
 // Global window augmentation
 // ---------------------------------------------------------------------------
@@ -316,8 +322,8 @@ declare global {
       license?: {
         getState: () => Promise<import('@shared/license.constants').LicenseState>;
         activate: (licenseKey: string) => Promise<import('@shared/license.constants').LicenseState>;
-        validate: () => Promise<import('@shared/license.constants').LicenseState>;
-        refreshDevices: () => Promise<import('@shared/license.constants').LicenseState>;
+        validate: (force?: boolean) => Promise<import('@shared/license.constants').LicenseState>;
+        refreshDevices: (force?: boolean) => Promise<import('@shared/license.constants').LicenseState>;
         deactivateDevice: (deviceId: string) => Promise<import('@shared/license.constants').LicenseState>;
         clear: () => Promise<import('@shared/license.constants').LicenseState>;
         onStateChanged: (callback: (state: import('@shared/license.constants').LicenseState) => void) => () => void;
@@ -538,7 +544,7 @@ declare global {
         download: () => Promise<{ success: boolean }>;
         install: () => Promise<{ success: boolean }>;
         getVersion: () => Promise<string>;
-        updateConfig: (config: { autoCheckUpdates: boolean; updateCheckInterval: number }) => Promise<{ success: boolean }>;
+        updateConfig: (config: UpdaterConfigPayload) => Promise<{ success: boolean }>;
         onChecking: (callback: () => void) => () => void;
         onAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onNotAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;

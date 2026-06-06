@@ -8,6 +8,7 @@ import {
   normalizeTrustedRemoteImageHosts,
 } from '../../shared/preview-security.constants.js';
 import { DEFAULT_SYNC_SETTINGS, SYNC_INTERVALS, SYNC_PROVIDERS } from '../../shared/sync.constants.js';
+import { DEFAULT_UPDATE_CHANNEL, normalizeUpdateChannel, type UpdateChannel } from '../../shared/updater.constants.js';
 import { getErrorCode, getErrorMessage } from '../../shared/utils/error.utils.js';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { UPDATER_CONSTANTS } from '../constants/updater.constants.js';
@@ -95,6 +96,7 @@ interface AppSettings {
   noteSavePath: string;
   autoCheckUpdates: boolean;
   updateCheckInterval: number;
+  updateChannel: UpdateChannel;
   maxHistoryVersions: number;
   trashAutoClearDays: number;
   snapshotInterval: number;
@@ -253,6 +255,13 @@ function normalizePreviewAppearanceConfig(config: Partial<PreviewAppearanceConfi
   };
 }
 
+function normalizeUpdateCheckInterval(value: unknown): number {
+  const normalizedValue = Math.trunc(Number(value));
+  return Number.isFinite(normalizedValue) && normalizedValue >= 60 * 60 * 1000
+    ? normalizedValue
+    : UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL;
+}
+
 function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: SettingsInput = {}): AppSettings {
   return {
     ...defaultConfig,
@@ -267,6 +276,9 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
     },
     previewAppearance: normalizePreviewAppearanceConfig(incomingConfig.previewAppearance),
     sync: normalizeSyncConfig(incomingConfig.sync),
+    autoCheckUpdates: incomingConfig.autoCheckUpdates ?? defaultConfig.autoCheckUpdates,
+    updateCheckInterval: normalizeUpdateCheckInterval(incomingConfig.updateCheckInterval),
+    updateChannel: normalizeUpdateChannel(incomingConfig.updateChannel ?? defaultConfig.updateChannel),
     accessControl: {
       ...defaultConfig.accessControl,
       ...(incomingConfig.accessControl || {}),
@@ -361,6 +373,7 @@ export const settingsService = {
       noteSavePath: path.join(app.getPath(VFS_CONSTANTS.DOCUMENTS_FOLDER), VFS_CONSTANTS.CURRENT_WORKSPACE_NAME),
       autoCheckUpdates: true,
       updateCheckInterval: UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL,
+      updateChannel: DEFAULT_UPDATE_CHANNEL,
       maxHistoryVersions: 50,
       trashAutoClearDays: 30,
       snapshotInterval: 15,

@@ -11,6 +11,7 @@ import {
 
 import { DEFAULT_RAG_CONFIG } from '@renderer/features/rag/constants/rag.constants';
 import { DEFAULT_SYNC_SETTINGS, type SyncProvider } from '@shared/sync.constants';
+import { DEFAULT_UPDATE_CHANNEL, type UpdateChannel } from '@shared/updater.constants';
 import { UPDATER_CONSTANTS } from '@renderer/features/updater/constants/updater.constants';
 import {
   APP_SHELL_MAX_CUSTOM_MODULES,
@@ -130,6 +131,7 @@ export interface AppSettings {
   noteSavePath: string;
   autoCheckUpdates: boolean;
   updateCheckInterval: number;
+  updateChannel: UpdateChannel;
   maxHistoryVersions: number;
   trashAutoClearDays: number;
   snapshotInterval: number;
@@ -188,6 +190,7 @@ function createDefaultConfig(): AppSettings {
     noteSavePath: '',
     autoCheckUpdates: true,
     updateCheckInterval: UPDATER_CONSTANTS.DEFAULT_CHECK_INTERVAL,
+    updateChannel: DEFAULT_UPDATE_CHANNEL,
     maxHistoryVersions: 50,
     trashAutoClearDays: 30,
     snapshotInterval: 15,

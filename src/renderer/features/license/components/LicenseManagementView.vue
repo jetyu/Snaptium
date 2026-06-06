@@ -91,7 +91,7 @@ async function handleRefresh(): Promise<void> {
 
   isRefreshing.value = true;
   try {
-    await licenseService.refreshDevices();
+    await licenseService.refreshDevices(true);
   } finally {
     isRefreshing.value = false;
   }
@@ -104,7 +104,7 @@ async function handleValidate(): Promise<void> {
 
   isRefreshing.value = true;
   try {
-    await licenseService.validate();
+    await licenseService.validate(true);
   } finally {
     isRefreshing.value = false;
   }
