@@ -40,6 +40,7 @@ const DATABASE_REMOTE_ROOT = VFS_CONSTANTS.DATABASE_FOLDER;
 const MANIFEST_REMOTE_PATH = path.posix.join(SYNC_REMOTE_METADATA.DIRECTORY, SYNC_REMOTE_METADATA.MANIFEST_FILE);
 const KEY_SLOTS_REMOTE_PATH = path.posix.join(SYNC_REMOTE_METADATA.DIRECTORY, SYNC_REMOTE_METADATA.KEY_SLOTS_FILE);
 const LOCK_REMOTE_PATH = path.posix.join(SYNC_REMOTE_METADATA.DIRECTORY, SYNC_REMOTE_METADATA.LOCK_FILE);
+const TRANSFER_CONCURRENCY = 4;
 
 type SyncProviderType = (typeof SYNC_PROVIDERS)[keyof typeof SYNC_PROVIDERS];
 
@@ -242,6 +243,50 @@ function createSyncError(code: string, message: string): SyncServiceError {
   return error;
 }
 
+async function runWithConcurrency<T>(tasks: Array<() => Promise<T>>, concurrency: number): Promise<T[]> {
+  if (tasks.length === 0) {
+    return [];
+  }
+
+  const safeConcurrency = Math.min(tasks.length, Math.max(1, Math.trunc(concurrency)));
+  const results = new Array<T>(tasks.length);
+  let nextIndex = 0;
+  let hasFailure = false;
+  let firstError: unknown = null;
+
+  const workers = Array.from({ length: safeConcurrency }, async () => {
+    while (!hasFailure) {
+      const currentIndex = nextIndex;
+      nextIndex += 1;
+
+      if (currentIndex >= tasks.length) {
+        break;
+      }
+
+      try {
+        results[currentIndex] = await tasks[currentIndex]();
+      } catch (error: unknown) {
+        if (!hasFailure) {
+          hasFailure = true;
+          firstError = error;
+        }
+      }
+    }
+  });
+
+  await Promise.all(workers);
+
+  if (hasFailure) {
+    throw firstError;
+  }
+
+  return results;
+}
+
+async function runTransferTasks(tasks: Array<() => Promise<void>>): Promise<void> {
+  await runWithConcurrency(tasks, TRANSFER_CONCURRENCY);
+}
+
 async function loadRemoteManifest(provider: SyncProviderClient): Promise<SyncManifest | null> {
   const manifestText = await provider.readText(MANIFEST_REMOTE_PATH);
   if (!manifestText) {
@@ -258,26 +303,27 @@ async function loadRemoteManifest(provider: SyncProviderClient): Promise<SyncMan
 
 async function scanRemoteManifest(provider: SyncProviderClient): Promise<SyncManifest> {
   const files = await provider.listFiles(DATABASE_REMOTE_ROOT);
-  const entries: ManifestEntry[] = [];
   const dek = keyManagerService.isUnlocked() ? keyManagerService.getDEK() : null;
 
-  for (const file of files) {
-    if (!file.path.startsWith(`${DATABASE_REMOTE_ROOT}/`)) {
-      continue;
-    }
+  const entries = await runWithConcurrency(
+    files.map((file) => async (): Promise<ManifestEntry | null> => {
+      if (!file.path.startsWith(`${DATABASE_REMOTE_ROOT}/`)) {
+        return null;
+      }
 
-    const relativePath = file.path.slice(DATABASE_REMOTE_ROOT.length + 1);
-    const ciphertext = await provider.readText(file.path);
-    if (ciphertext === null) {
-      continue;
-    }
+      const relativePath = file.path.slice(DATABASE_REMOTE_ROOT.length + 1);
+      const ciphertext = await provider.readText(file.path);
+      if (ciphertext === null) {
+        return null;
+      }
 
-    // Decrypt content to calculate SHA256 of the plaintext
-    const plaintext = dek ? cryptoService.decryptContent(ciphertext, dek) : ciphertext;
-    entries.push(createManifestEntry(relativePath, plaintext, file.modifiedAt));
-  }
+      const plaintext = dek ? cryptoService.decryptContent(ciphertext, dek) : ciphertext;
+      return createManifestEntry(relativePath, plaintext, file.modifiedAt);
+    }),
+    TRANSFER_CONCURRENCY,
+  );
 
-  return createManifestFromEntries(entries);
+  return createManifestFromEntries(entries.filter((entry): entry is ManifestEntry => entry !== null));
 }
 
 async function loadRemoteManifestOrScan(provider: SyncProviderClient): Promise<SyncManifest> {
@@ -466,9 +512,11 @@ async function applyBootstrap(
       throw createSyncError(SYNC_ERROR_CODES.CANCELLED, $t('sync.error.cancelled'));
     }
 
-    for (const relativePath of Object.keys(remoteManifest.files)) {
-      await downloadFile(provider, workspaceRoot, relativePath, summary);
-    }
+    await runTransferTasks(
+      Object.keys(remoteManifest.files).map((relativePath) => async () => {
+        await downloadFile(provider, workspaceRoot, relativePath, summary);
+      }),
+    );
 
     return summary;
   }
@@ -479,9 +527,11 @@ async function applyBootstrap(
       throw createSyncError(SYNC_ERROR_CODES.CANCELLED, $t('sync.error.cancelled'));
     }
 
-    for (const relativePath of Object.keys(localManifest.files)) {
-      await uploadFile(provider, workspaceRoot, relativePath, summary);
-    }
+    await runTransferTasks(
+      Object.keys(localManifest.files).map((relativePath) => async () => {
+        await uploadFile(provider, workspaceRoot, relativePath, summary);
+      }),
+    );
 
     return summary;
   }
@@ -502,6 +552,7 @@ async function applyIncrementalSync(
   const remoteChanges = diffManifest(baseManifest, remoteManifest);
   const paths = new Set([...localChanges.keys(), ...remoteChanges.keys()]);
   const nonNodePaths = [...paths].filter((relativePath) => relativePath !== NODES_RELATIVE_PATH);
+  const transferTasks: Array<() => Promise<void>> = [];
 
   for (const relativePath of nonNodePaths) {
     const localEntry = localManifest.files[relativePath] ?? null;
@@ -511,18 +562,18 @@ async function applyIncrementalSync(
 
     if (localChanged && !remoteChanged) {
       if (localEntry) {
-        await uploadFile(provider, workspaceRoot, relativePath, summary);
+        transferTasks.push(async () => uploadFile(provider, workspaceRoot, relativePath, summary));
       } else {
-        await deleteRemoteFile(provider, relativePath, summary);
+        transferTasks.push(async () => deleteRemoteFile(provider, relativePath, summary));
       }
       continue;
     }
 
     if (!localChanged && remoteChanged) {
       if (remoteEntry) {
-        await downloadFile(provider, workspaceRoot, relativePath, summary);
+        transferTasks.push(async () => downloadFile(provider, workspaceRoot, relativePath, summary));
       } else {
-        await deleteLocalDatabaseFile(workspaceRoot, relativePath, summary);
+        transferTasks.push(async () => deleteLocalDatabaseFile(workspaceRoot, relativePath, summary));
       }
       continue;
     }
@@ -540,19 +591,21 @@ async function applyIncrementalSync(
 
     if (winner === 'local') {
       if (localEntry) {
-        await uploadFile(provider, workspaceRoot, relativePath, summary);
+        transferTasks.push(async () => uploadFile(provider, workspaceRoot, relativePath, summary));
       } else if (remoteEntry) {
-        await downloadFile(provider, workspaceRoot, relativePath, summary);
+        transferTasks.push(async () => downloadFile(provider, workspaceRoot, relativePath, summary));
       }
       continue;
     }
 
     if (remoteEntry) {
-      await downloadFile(provider, workspaceRoot, relativePath, summary);
+      transferTasks.push(async () => downloadFile(provider, workspaceRoot, relativePath, summary));
     } else if (localEntry) {
-      await uploadFile(provider, workspaceRoot, relativePath, summary);
+      transferTasks.push(async () => uploadFile(provider, workspaceRoot, relativePath, summary));
     }
   }
+
+  await runTransferTasks(transferTasks);
 
   const localNodesChanged = localChanges.has(NODES_RELATIVE_PATH);
   const remoteNodesChanged = remoteChanges.has(NODES_RELATIVE_PATH);
