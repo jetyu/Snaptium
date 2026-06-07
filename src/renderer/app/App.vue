@@ -2,7 +2,6 @@
   <MainLayout />
   <SidebarManagerDialog />
   <AboutDialog />
-  <UpdateDialog />
   <TrashDialog />
   <HistoryDialog />
   <AccessControlOverlay />
@@ -16,7 +15,6 @@ import MainLayout from './MainLayout.vue';
 import SidebarManagerDialog from './components/SidebarManagerDialog.vue';
 import { useSettingsStore } from '@renderer/features/settings';
 import { AboutDialog } from '@renderer/features/about';
-import { UpdateDialog } from '@renderer/features/updater';
 import { TrashDialog } from '@renderer/features/trash';
 import { useEditorSettings } from '@renderer/features/settings/composables/useEditorSettings';
 
