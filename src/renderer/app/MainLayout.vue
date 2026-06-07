@@ -24,6 +24,7 @@ import { createLogger } from '@renderer/features/logger';
 import { useSettings } from '@renderer/features/settings/composables/useSettings';
 import { useTrash } from '@renderer/features/trash';
 import { useAbout } from '@renderer/features/about';
+import { useUpdaterStore } from '@renderer/features/updater';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import type { AppShellModuleId } from './constants/appShell.constants';
 import { useAppShellStore } from './store/appShell.store';
@@ -43,6 +44,7 @@ const mainLayoutLogger = createLogger('MainLayout');
 const appShellStore = useAppShellStore();
 const { activeMainView, mainViews, enabledCustomModules } = storeToRefs(appShellStore);
 const { setActiveMainView } = appShellStore;
+const updaterStore = useUpdaterStore();
 
 const { setActiveTab, initMainProcessListeners, onOpenSettingsRequest } = useSettings();
 const { openTrash } = useTrash();
@@ -54,6 +56,7 @@ const isWindowMaximized = ref(false);
 let removeWindowStateListener: (() => void) | null = null;
 let removeSettingsMenuListener: (() => void) | null = null;
 let removeSettingsRequestListener: (() => void) | null = null;
+let removeUpdateMenuListener: (() => void) | null = null;
 
 async function syncWindowState(): Promise<void> {
   if (!electronApi.window.isAvailable()) {
@@ -92,6 +95,11 @@ async function showSettings(tab: string = 'general'): Promise<void> {
   await setActiveMainView('settings');
 }
 
+async function showSoftwareUpdateAndCheck(): Promise<void> {
+  await showSettings('software-update');
+  await updaterStore.checkForUpdates(false);
+}
+
 function handleBeforeUnload(): void {
   forceFlushAutoSave().catch((err) => {
     mainLayoutLogger.error(`Failed to save before unload: ${getErrorMessage(err)}`);
@@ -106,6 +114,11 @@ onMounted(async () => {
   removeSettingsMenuListener = initMainProcessListeners(() => {
     void showSettings('general');
   });
+  if (electronApi.menu.isAvailable()) {
+    removeUpdateMenuListener = electronApi.menu.onCheckForUpdates(() => {
+      void showSoftwareUpdateAndCheck();
+    });
+  }
   await syncWindowState();
 
   if (electronApi.window.isAvailable()) {
@@ -121,6 +134,8 @@ onBeforeUnmount(() => {
   removeSettingsMenuListener = null;
   removeSettingsRequestListener?.();
   removeSettingsRequestListener = null;
+  removeUpdateMenuListener?.();
+  removeUpdateMenuListener = null;
   removeWindowStateListener?.();
   removeWindowStateListener = null;
 });

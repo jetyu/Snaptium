@@ -150,6 +150,7 @@ function handleAction(action?: MenuAction) {
       window.close();
       break;
     case 'update':
+      openSettings('software-update');
       void updaterStore.checkForUpdates(false);
       break;
     case 'feedback':

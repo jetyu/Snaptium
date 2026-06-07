@@ -6,6 +6,14 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rendererChunkTargetSize = 480 * 1024;
+const codeMirrorVendorSegments = [
+  '/node_modules/@codemirror/',
+  '/node_modules/@lezer/',
+  '/node_modules/@marijn/find-cluster-break/',
+  '/node_modules/crelt/',
+  '/node_modules/style-mod/',
+  '/node_modules/w3c-keyname/',
+];
 
 function normalizeModuleId(id: string): string {
   return id.replace(/\\/g, '/');
@@ -24,6 +32,11 @@ function isRendererVendorModule(id: string): boolean {
   return id.includes('node_modules');
 }
 
+function isRendererCodeMirrorModule(id: string): boolean {
+  const normalizedId = normalizeModuleId(id);
+  return codeMirrorVendorSegments.some((segment) => normalizedId.includes(segment));
+}
+
 function getRendererVendorChunkName(id: string): string | null {
   if (!id.includes('node_modules')) {
     return null;
@@ -37,7 +50,7 @@ function getRendererVendorChunkName(id: string): string | null {
     return 'vendor-emoji-core';
   }
 
-  if (id.includes('@codemirror')) {
+  if (isRendererCodeMirrorModule(id)) {
     return 'vendor-codemirror';
   }
 
@@ -92,6 +105,12 @@ export default defineConfig({
               name: getRendererLocaleChunkName,
               test: isRendererLocaleModule,
               priority: 20,
+            },
+            {
+              name: 'vendor-codemirror',
+              test: isRendererCodeMirrorModule,
+              priority: 30,
+              maxSize: 1024 * 1024,
             },
             {
               name: getRendererVendorChunkName,

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import i18n from '@renderer/features/i18n/services/i18n.service';
 import {
   updaterService,
@@ -9,7 +9,14 @@ import {
   type UpdaterConfig,
 } from '../services/updater.service';
 
-type UpdaterNotificationState = 'available' | 'not-available' | 'error';
+export type UpdatePanelState =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'downloading'
+  | 'ready-to-install'
+  | 'error'
+  | 'up-to-date';
 
 function translate(key: string): string {
   return i18n.global.t(key) as string;
@@ -36,6 +43,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   const isChecking = ref(false);
   const isDownloading = ref(false);
   const updateAvailable = ref(false);
+  const isUpdateDownloaded = ref(false);
   const updateInfo = ref<UpdateInfo | null>(null);
   const downloadProgress = ref<ProgressInfo>({
     percent: 0,
@@ -44,15 +52,59 @@ export const useUpdaterStore = defineStore('updater', () => {
     total: 0,
   });
   const error = ref<ErrorInfo | null>(null);
-  const showNotification = ref(false);
-  const showProgressDialog = ref(false);
-  const showInstallDialog = ref(false);
-  const notificationState = ref<UpdaterNotificationState>('available');
+  const availableActionsDismissed = ref(false);
+  const installActionsDismissed = ref(false);
+  const showNoUpdateResult = ref(false);
   const isSilentCheck = ref(true);
 
   let cleanupListeners: (() => void) | null = null;
-  let removeMenuListener: (() => void) | null = null;
   let initialized = false;
+
+  const showAvailableUpdateActions = computed(() =>
+    updateAvailable.value &&
+    Boolean(updateInfo.value) &&
+    !isChecking.value &&
+    !isDownloading.value &&
+    !isUpdateDownloaded.value &&
+    !availableActionsDismissed.value &&
+    !error.value
+  );
+
+  const showInstallActions = computed(() =>
+    isUpdateDownloaded.value &&
+    Boolean(updateInfo.value) &&
+    !isChecking.value &&
+    !installActionsDismissed.value &&
+    !error.value
+  );
+
+  const updatePanelState = computed<UpdatePanelState>(() => {
+    if (error.value) {
+      return 'error';
+    }
+
+    if (isDownloading.value) {
+      return 'downloading';
+    }
+
+    if (isChecking.value) {
+      return 'checking';
+    }
+
+    if (isUpdateDownloaded.value) {
+      return 'ready-to-install';
+    }
+
+    if (updateAvailable.value && updateInfo.value) {
+      return 'available';
+    }
+
+    if (showNoUpdateResult.value) {
+      return 'up-to-date';
+    }
+
+    return 'idle';
+  });
 
   async function getCurrentVersion(): Promise<void> {
     try {
@@ -64,31 +116,38 @@ export const useUpdaterStore = defineStore('updater', () => {
 
   function clearDiscoveredUpdate(): void {
     updateAvailable.value = false;
+    isUpdateDownloaded.value = false;
     updateInfo.value = null;
     error.value = null;
-    showNotification.value = false;
+    availableActionsDismissed.value = false;
+    installActionsDismissed.value = false;
+    showNoUpdateResult.value = false;
   }
 
   function handleUpdateChecking(): void {
     isChecking.value = true;
+    error.value = null;
+    showNoUpdateResult.value = false;
   }
 
   function handleUpdateAvailable(info: UpdateInfo): void {
     isChecking.value = false;
     updateAvailable.value = true;
+    isUpdateDownloaded.value = false;
     updateInfo.value = info;
-    notificationState.value = 'available';
-    showNotification.value = true;
+    availableActionsDismissed.value = false;
+    installActionsDismissed.value = false;
+    showNoUpdateResult.value = false;
   }
 
   function handleUpdateNotAvailable(): void {
     isChecking.value = false;
     updateAvailable.value = false;
+    isUpdateDownloaded.value = false;
     updateInfo.value = null;
-    notificationState.value = 'not-available';
-    if (!isSilentCheck.value) {
-      showNotification.value = true;
-    }
+    availableActionsDismissed.value = false;
+    installActionsDismissed.value = false;
+    showNoUpdateResult.value = !isSilentCheck.value;
   }
 
   function handleDownloadProgress(progress: ProgressInfo): void {
@@ -97,21 +156,18 @@ export const useUpdaterStore = defineStore('updater', () => {
 
   function handleUpdateDownloaded(info: UpdateInfo): void {
     isDownloading.value = false;
-    showProgressDialog.value = false;
     updateAvailable.value = true;
+    isUpdateDownloaded.value = true;
     updateInfo.value = info;
-    showInstallDialog.value = true;
+    availableActionsDismissed.value = true;
+    installActionsDismissed.value = false;
   }
 
   function handleUpdateError(errorInfo: ErrorInfo): void {
     isChecking.value = false;
     isDownloading.value = false;
     error.value = errorInfo;
-
-    if (!showProgressDialog.value) {
-      notificationState.value = 'error';
-      showNotification.value = true;
-    }
+    showNoUpdateResult.value = false;
   }
 
   async function checkForUpdates(silent = false): Promise<void> {
@@ -120,6 +176,8 @@ export const useUpdaterStore = defineStore('updater', () => {
     isSilentCheck.value = silent;
     isChecking.value = true;
     error.value = null;
+    availableActionsDismissed.value = false;
+    showNoUpdateResult.value = false;
 
     try {
       await updaterService.check(silent);
@@ -128,11 +186,8 @@ export const useUpdaterStore = defineStore('updater', () => {
         message: getErrorMessage(err as Error | { message?: string }, translate('updater.checkFailed')),
         code: 'CHECK_FAILED',
       };
-      if (!silent) {
-        notificationState.value = 'error';
-        showNotification.value = true;
-      }
       isChecking.value = false;
+      showNoUpdateResult.value = false;
     }
   }
 
@@ -140,9 +195,16 @@ export const useUpdaterStore = defineStore('updater', () => {
     if (isDownloading.value) return;
 
     isDownloading.value = true;
-    showNotification.value = false;
-    showProgressDialog.value = true;
+    isUpdateDownloaded.value = false;
+    availableActionsDismissed.value = true;
+    installActionsDismissed.value = false;
     error.value = null;
+    downloadProgress.value = {
+      percent: 0,
+      bytesPerSecond: 0,
+      transferred: 0,
+      total: 0,
+    };
 
     try {
       await updaterService.download();
@@ -161,6 +223,14 @@ export const useUpdaterStore = defineStore('updater', () => {
     } catch (err) {
       console.error('Failed to install update:', err);
     }
+  }
+
+  function dismissAvailableUpdateActions(): void {
+    availableActionsDismissed.value = true;
+  }
+
+  function dismissInstallActions(): void {
+    installActionsDismissed.value = true;
   }
 
   async function updateConfig(config: UpdaterConfig): Promise<void> {
@@ -186,16 +256,11 @@ export const useUpdaterStore = defineStore('updater', () => {
       onDownloaded: handleUpdateDownloaded,
       onError: handleUpdateError,
     });
-    removeMenuListener = updaterService.onCheckForUpdates(() => {
-      void checkForUpdates(false);
-    });
   }
 
   function dispose(): void {
     cleanupListeners?.();
-    removeMenuListener?.();
     cleanupListeners = null;
-    removeMenuListener = null;
     initialized = false;
   }
 
@@ -204,16 +269,19 @@ export const useUpdaterStore = defineStore('updater', () => {
     isChecking,
     isDownloading,
     updateAvailable,
+    isUpdateDownloaded,
     updateInfo,
     downloadProgress,
     error,
-    showNotification,
-    showProgressDialog,
-    showInstallDialog,
-    notificationState,
+    showNoUpdateResult,
+    updatePanelState,
+    showAvailableUpdateActions,
+    showInstallActions,
     checkForUpdates,
     downloadUpdate,
     installUpdate,
+    dismissAvailableUpdateActions,
+    dismissInstallActions,
     getCurrentVersion,
     updateConfig,
     clearDiscoveredUpdate,
