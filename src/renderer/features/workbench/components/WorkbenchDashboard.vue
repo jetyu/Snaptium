@@ -203,39 +203,41 @@
       </main>
 
       <aside class="workbench-side">
-        <section class="side-card side-card--stats">
-          <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--stats">
-                <ChartHistogram theme="outline" :size="14" />
-              </span>
-              {{ t('workbench.sidebar.todayStats') }}
-            </h3>
-          </header>
-          <div class="stats-list">
-            <div v-for="item in todayStatItems" :key="item.label" class="stats-row">
-              <Dot theme="outline" :size="12" class="stats-row__icon" />
-              <span>{{ item.label }}</span>
-              <strong>{{ item.value }}</strong>
+        <section class="side-card side-card--insights">
+          <div class="insights-block">
+            <header class="side-card__header side-card__header--compact">
+              <h3>
+                <span class="side-card__title-icon side-card__title-icon--stats">
+                  <ChartHistogram theme="outline" :size="14" />
+                </span>
+                {{ t('workbench.sidebar.todayStats') }}
+              </h3>
+            </header>
+            <div class="stats-list stats-list--compact">
+              <div v-for="item in todayStatItems" :key="item.label" class="stats-row">
+                <Dot theme="outline" :size="12" class="stats-row__icon" />
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </div>
             </div>
           </div>
-        </section>
 
-        <section class="side-card side-card--growth">
-          <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--growth">
-                <RadarChart theme="outline" :size="14" />
-              </span>
-              {{ t('workbench.sidebar.growth') }}
-            </h3>
-          </header>
-          <div class="growth-chart">
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-              <polyline :points="growthPolyline" />
-            </svg>
+          <div class="insights-block insights-block--growth">
+            <header class="side-card__header side-card__header--compact">
+              <h3>
+                <span class="side-card__title-icon side-card__title-icon--growth">
+                  <RadarChart theme="outline" :size="14" />
+                </span>
+                {{ t('workbench.sidebar.growth') }}
+              </h3>
+            </header>
+            <div class="growth-chart growth-chart--compact">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                <polyline :points="growthPolyline" />
+              </svg>
+            </div>
+            <p class="side-card__muted side-card__muted--compact">{{ growthLabel }}</p>
           </div>
-          <p class="side-card__muted">{{ growthLabel }}</p>
         </section>
 
         <section class="side-card side-card--tags">
@@ -1119,7 +1121,7 @@ watch(
   --workbench-feed-row-min-height: 60px;
   --workbench-overview-card-padding: 7px 12px;
   --workbench-side-card-padding: 18px 20px;
-  --workbench-growth-chart-height: 100px;
+  --workbench-growth-chart-height: 68px;
   flex: 1;
   min-height: 0;
   padding: var(--workbench-page-padding);
@@ -1152,9 +1154,9 @@ watch(
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(var(--workbench-sidebar-min), 1fr);
   grid-template-areas:
-    "hero stats"
-    "hero growth"
-    "overview growth"
+    "hero insights"
+    "hero insights"
+    "overview insights"
     "recent tags"
     "smart topic";
   grid-template-rows:
@@ -2054,6 +2056,10 @@ watch(
   gap: 9px;
 }
 
+.side-card__header--compact h3 {
+  font-size: 0.88rem;
+}
+
 .side-card__header h3 {
   min-width: 0;
   display: inline-flex;
@@ -2130,6 +2136,16 @@ watch(
   line-height: 1.58;
 }
 
+.side-card__muted--compact {
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.76rem;
+  line-height: 1.42;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
 .side-card__action {
   height: 40px;
   border: 1px solid var(--workbench-border-strong);
@@ -2196,6 +2212,10 @@ watch(
   gap: 10px;
 }
 
+.stats-list--compact {
+  gap: 7px;
+}
+
 .stats-row {
   display: grid;
   grid-template-columns: 15px minmax(0, 1fr) auto;
@@ -2204,6 +2224,12 @@ watch(
   color: var(--workbench-muted);
   font-size: 0.82rem;
   font-weight: 630;
+}
+
+.stats-list--compact .stats-row {
+  grid-template-columns: 13px minmax(0, 1fr) auto;
+  gap: 7px;
+  font-size: 0.76rem;
 }
 
 .stats-row__icon {
@@ -2223,6 +2249,20 @@ watch(
   font-size: 0.9rem;
   font-weight: 780;
   letter-spacing: -0.02em;
+}
+
+.stats-list--compact .stats-row strong {
+  font-size: 0.82rem;
+}
+
+.insights-block {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.insights-block--growth {
+  min-height: 0;
 }
 
 .growth-chart {
@@ -2245,6 +2285,14 @@ watch(
   width: 100%;
   height: 100%;
   padding: 16px 14px 12px;
+}
+
+.growth-chart--compact {
+  border-radius: 12px;
+}
+
+.growth-chart--compact svg {
+  padding: 11px 12px 9px;
 }
 
 .growth-chart polyline {
@@ -2417,12 +2465,12 @@ watch(
   background: rgba(255, 255, 255, 0.36);
 }
 
-.side-card--stats {
-  grid-area: stats;
-}
-
-.side-card--growth {
-  grid-area: growth;
+.side-card--insights {
+  grid-area: insights;
+  align-self: stretch;
+  gap: 13px;
+  align-content: start;
+  padding: 14px 16px;
 }
 
 .side-card--tags {
@@ -2518,8 +2566,7 @@ watch(
   .overview-section,
   .panel-row--recent,
   .panel--smart,
-  .side-card--stats,
-  .side-card--growth,
+  .side-card--insights,
   .side-card--tags,
   .side-card--topic {
     grid-area: auto;
