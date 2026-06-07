@@ -967,9 +967,9 @@
   "workspace.dashboard.subNotebooks": "子笔记本数",
   "workspace.dashboard.title": "笔记本概览",
   "workspace.dashboard.totalNotes": "笔记总数",
+  "workspace.dialog.confirm": "确认删除吗？此操作无法撤销。",
   "workspace.iconPicker.reset": "重置颜色",
   "workspace.iconPicker.tabColor": "颜色",
   "workspace.iconPicker.title": "笔记本图标颜色",
-  "workspace.dialog.confirm": "确认删除吗？此操作无法撤销。",
   "workspace.nodesList.emptyState": "创建笔记或者笔记本"
 }
