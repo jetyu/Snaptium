@@ -73,7 +73,7 @@ Supports integration with multiple AI services for:
 - Content polishing
 - Intelligent Q&A
 - Document summarization
-- Knowledge base Q&A (RAG)
+- Ask Knowledge Copilot (RAG)
 - Semantic search
 
 Supports custom models and APIs:
@@ -164,9 +164,19 @@ Currently supported:
 
 ## Edit Mode
 
-![Snaptium Edit Mode](./docs/Screenshots/v2/zh-CN/Edit-mode.jpg)
+![Snaptium Edit Mode](./docs/Screenshots/v2/en-US/EditorDemo.png)
 
----
+## Preferences
+
+![Snaptium Preferences](./docs/Screenshots/v2/en-US/Preferences.png)
+
+## Preview Only
+
+![Snaptium Preview](./docs/Screenshots/v2/en-US/PreviewOnly.png)
+
+## Knowledge Copilot
+
+![Snaptium Knowledge Copilot](./docs/Screenshots/v2/en-US/KnowledgeCopilot.png)
 
 # 🧩 Tech Stack
 
