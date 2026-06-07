@@ -203,26 +203,8 @@
       </main>
 
       <aside class="workbench-side">
-        <section class="side-card side-card--stats">
-          <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--stats">
-                <ChartHistogram theme="outline" :size="14" />
-              </span>
-              {{ t('workbench.sidebar.todayStats') }}
-            </h3>
-          </header>
-          <div class="stats-list">
-            <div v-for="item in todayStatItems" :key="item.label" class="stats-row">
-              <Dot theme="outline" :size="12" class="stats-row__icon" />
-              <span>{{ item.label }}</span>
-              <strong>{{ item.value }}</strong>
-            </div>
-          </div>
-        </section>
-
-        <section class="side-card side-card--growth">
-          <header class="side-card__header">
+        <section class="side-card side-card--insights">
+          <header class="side-card__header side-card__header--compact side-card__header--insights">
             <h3>
               <span class="side-card__title-icon side-card__title-icon--growth">
                 <RadarChart theme="outline" :size="14" />
@@ -230,12 +212,25 @@
               {{ t('workbench.sidebar.growth') }}
             </h3>
           </header>
-          <div class="growth-chart">
-            <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-              <polyline :points="growthPolyline" />
-            </svg>
+
+          <div class="insights-block insights-block--stats">
+            <div class="stats-list stats-list--compact">
+              <div v-for="item in todayStatItems" :key="item.label" class="stats-row">
+                <Dot theme="outline" :size="12" class="stats-row__icon" />
+                <span>{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </div>
+            </div>
           </div>
-          <p class="side-card__muted">{{ growthLabel }}</p>
+
+          <div class="insights-block insights-block--growth">
+            <div class="growth-chart growth-chart--compact">
+              <svg viewBox="0 0 100 100" preserveAspectRatio="none">
+                <polyline :points="growthPolyline" />
+              </svg>
+            </div>
+            <p class="side-card__muted side-card__muted--compact">{{ growthLabel }}</p>
+          </div>
         </section>
 
         <section class="side-card side-card--tags">
@@ -1111,16 +1106,15 @@ watch(
   --workbench-card-radius: 16px;
   --workbench-sidebar-min: 300px;
   --workbench-hero-min-height: clamp(188px, 13vw, 248px);
-  --workbench-overview-card-min-height: 72px;
+  --workbench-overview-card-min-height: 52px;
   --workbench-feed-card-height: clamp(344px, 19vw, 420px);
   --workbench-recommendation-card-height: var(--workbench-feed-card-height);
   --workbench-panel-header-padding: 16px 20px 10px;
   --workbench-panel-body-padding: 0 20px 16px;
   --workbench-feed-row-min-height: 60px;
-  --workbench-overview-gap: var(--workbench-gap);
-  --workbench-overview-card-padding: 10px 11px;
+  --workbench-overview-card-padding: 7px 12px;
   --workbench-side-card-padding: 18px 20px;
-  --workbench-growth-chart-height: 100px;
+  --workbench-growth-chart-height: 110px;
   flex: 1;
   min-height: 0;
   padding: var(--workbench-page-padding);
@@ -1153,9 +1147,9 @@ watch(
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(var(--workbench-sidebar-min), 1fr);
   grid-template-areas:
-    "hero stats"
-    "hero growth"
-    "overview growth"
+    "hero insights"
+    "hero insights"
+    "overview insights"
     "recent tags"
     "smart topic";
   grid-template-rows:
@@ -1457,6 +1451,7 @@ watch(
   grid-area: overview;
   display: grid;
   gap: 12px;
+  align-self: start;
 }
 
 .panel__header h2 {
@@ -1469,35 +1464,42 @@ watch(
 
 .overview-grid {
   display: grid;
+  width: 100%;
+  overflow: hidden;
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: var(--workbench-overview-gap);
+  align-items: stretch;
+  border: 1px solid var(--workbench-border);
+  border-radius: 12px;
+  background: var(--workbench-card);
+  box-shadow: var(--workbench-shadow-soft);
+  backdrop-filter: blur(16px);
 }
 
 .overview-card {
   min-width: 0;
   min-height: var(--workbench-overview-card-min-height);
   display: grid;
-  grid-template-rows: auto auto;
-  align-content: center;
-  justify-items: start;
-  gap: 4px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
   padding: var(--workbench-overview-card-padding);
-  border: 1px solid var(--workbench-border);
-  border-radius: 12px;
-  background: var(--workbench-card);
-  box-shadow: var(--workbench-shadow-soft);
+  background: transparent;
   cursor: default;
-  backdrop-filter: blur(16px);
-  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.overview-card + .overview-card {
+  border-left: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
 }
 
 .overview-card__head {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  min-width: 0;
   color: var(--workbench-blue);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 720;
+  line-height: 1.1;
   white-space: nowrap;
 }
 
@@ -1511,12 +1513,14 @@ watch(
 .overview-card__content {
   margin: 0;
   color: var(--workbench-ink);
-  font-size: 0.9rem;
+  font-size: 0.82rem;
   font-weight: 680;
   letter-spacing: -0.02em;
-  line-height: 1.2;
+  line-height: 1.08;
   min-width: 0;
+  justify-self: end;
   overflow: hidden;
+  text-align: right;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2045,6 +2049,14 @@ watch(
   gap: 9px;
 }
 
+.side-card__header--compact h3 {
+  font-size: 0.88rem;
+}
+
+.side-card__header--insights {
+  align-items: flex-start;
+}
+
 .side-card__header h3 {
   min-width: 0;
   display: inline-flex;
@@ -2072,7 +2084,6 @@ watch(
   color: color-mix(in srgb, var(--workbench-blue) 90%, #1e3a8a);
 }
 
-.side-card__title-icon--stats,
 .side-card__title-icon--growth,
 .side-card__title-icon--tags,
 .side-card__title-icon--topic {
@@ -2119,6 +2130,17 @@ watch(
   font-size: 0.84rem;
   font-weight: 560;
   line-height: 1.58;
+}
+
+.side-card__muted--compact {
+  align-self: end;
+  display: -webkit-box;
+  overflow: hidden;
+  font-size: 0.76rem;
+  line-height: 1.42;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .side-card__action {
@@ -2187,6 +2209,10 @@ watch(
   gap: 10px;
 }
 
+.stats-list--compact {
+  gap: 7px;
+}
+
 .stats-row {
   display: grid;
   grid-template-columns: 15px minmax(0, 1fr) auto;
@@ -2195,6 +2221,12 @@ watch(
   color: var(--workbench-muted);
   font-size: 0.82rem;
   font-weight: 630;
+}
+
+.stats-list--compact .stats-row {
+  grid-template-columns: 13px minmax(0, 1fr) auto;
+  gap: 7px;
+  font-size: 0.76rem;
 }
 
 .stats-row__icon {
@@ -2214,6 +2246,22 @@ watch(
   font-size: 0.9rem;
   font-weight: 780;
   letter-spacing: -0.02em;
+}
+
+.stats-list--compact .stats-row strong {
+  font-size: 0.82rem;
+}
+
+.insights-block {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.insights-block--growth {
+  height: 100%;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .growth-chart {
@@ -2236,6 +2284,14 @@ watch(
   width: 100%;
   height: 100%;
   padding: 16px 14px 12px;
+}
+
+.growth-chart--compact {
+  border-radius: 12px;
+}
+
+.growth-chart--compact svg {
+  padding: 11px 12px 9px;
 }
 
 .growth-chart polyline {
@@ -2408,12 +2464,12 @@ watch(
   background: rgba(255, 255, 255, 0.36);
 }
 
-.side-card--stats {
-  grid-area: stats;
-}
-
-.side-card--growth {
-  grid-area: growth;
+.side-card--insights {
+  grid-area: insights;
+  align-self: stretch;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 11px;
+  padding: 14px 16px;
 }
 
 .side-card--tags {
@@ -2471,12 +2527,12 @@ watch(
   .workbench-dashboard {
     --workbench-page-padding: 14px 18px 22px;
     --workbench-sidebar-min: 276px;
-    --workbench-overview-gap: 10px;
-    --workbench-overview-card-padding: 9px 10px;
+    --workbench-overview-card-min-height: 50px;
+    --workbench-overview-card-padding: 6px 10px;
   }
 
   .overview-card__content {
-    font-size: 0.86rem;
+    font-size: 0.8rem;
   }
 }
 
@@ -2509,8 +2565,7 @@ watch(
   .overview-section,
   .panel-row--recent,
   .panel--smart,
-  .side-card--stats,
-  .side-card--growth,
+  .side-card--insights,
   .side-card--tags,
   .side-card--topic {
     grid-area: auto;
@@ -2561,8 +2616,7 @@ watch(
   }
 
   .overview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
 
   .smart-grid {
@@ -2616,7 +2670,23 @@ watch(
   }
 
   .overview-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .overview-card + .overview-card {
+    border-left: 0;
+  }
+
+  .overview-card {
+    border-top: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
+  }
+
+  .overview-card:nth-child(-n + 2) {
+    border-top: 0;
+  }
+
+  .overview-card:nth-child(even) {
+    border-left: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
   }
 
   .panel__header,

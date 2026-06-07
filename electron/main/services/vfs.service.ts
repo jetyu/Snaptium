@@ -1011,7 +1011,7 @@ export const vfsService = {
       cancelId: 0,
       noLink: true,
       title: $t('common.deleteNode'),
-      message: interpolateMessage($t('dialog.deleteConfirm'), { name: displayName }),
+      message: interpolateMessage($t('workspace.dialog.confirm'), { name: displayName }),
     });
     // selectedButtonIndex is zero-based and follows the order of buttons[]
     const selectedButtonIndex = dialogResult.response;
