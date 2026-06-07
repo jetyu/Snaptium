@@ -553,7 +553,7 @@ export const settingsService = {
       cancelId: 0,
       noLink: true,
       title: $t('common.delete'),
-      message: interpolateMessage($t('dialog.deleteConfirm'), { name: String(name) }),
+      message: interpolateMessage($t('workspace.dialog.confirm'), { name: String(name) }),
     });
     // selectedButtonIndex is zero-based and follows the order of buttons[]
     const selectedButtonIndex = dialogResult.response;

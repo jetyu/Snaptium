@@ -204,15 +204,16 @@
 
       <aside class="workbench-side">
         <section class="side-card side-card--insights">
-          <div class="insights-block">
-            <header class="side-card__header side-card__header--compact">
-              <h3>
-                <span class="side-card__title-icon side-card__title-icon--stats">
-                  <ChartHistogram theme="outline" :size="14" />
-                </span>
-                {{ t('workbench.sidebar.todayStats') }}
-              </h3>
-            </header>
+          <header class="side-card__header side-card__header--compact side-card__header--insights">
+            <h3>
+              <span class="side-card__title-icon side-card__title-icon--growth">
+                <RadarChart theme="outline" :size="14" />
+              </span>
+              {{ t('workbench.sidebar.growth') }}
+            </h3>
+          </header>
+
+          <div class="insights-block insights-block--stats">
             <div class="stats-list stats-list--compact">
               <div v-for="item in todayStatItems" :key="item.label" class="stats-row">
                 <Dot theme="outline" :size="12" class="stats-row__icon" />
@@ -223,14 +224,6 @@
           </div>
 
           <div class="insights-block insights-block--growth">
-            <header class="side-card__header side-card__header--compact">
-              <h3>
-                <span class="side-card__title-icon side-card__title-icon--growth">
-                  <RadarChart theme="outline" :size="14" />
-                </span>
-                {{ t('workbench.sidebar.growth') }}
-              </h3>
-            </header>
             <div class="growth-chart growth-chart--compact">
               <svg viewBox="0 0 100 100" preserveAspectRatio="none">
                 <polyline :points="growthPolyline" />
@@ -1121,7 +1114,7 @@ watch(
   --workbench-feed-row-min-height: 60px;
   --workbench-overview-card-padding: 7px 12px;
   --workbench-side-card-padding: 18px 20px;
-  --workbench-growth-chart-height: 68px;
+  --workbench-growth-chart-height: 110px;
   flex: 1;
   min-height: 0;
   padding: var(--workbench-page-padding);
@@ -2060,6 +2053,10 @@ watch(
   font-size: 0.88rem;
 }
 
+.side-card__header--insights {
+  align-items: flex-start;
+}
+
 .side-card__header h3 {
   min-width: 0;
   display: inline-flex;
@@ -2087,7 +2084,6 @@ watch(
   color: color-mix(in srgb, var(--workbench-blue) 90%, #1e3a8a);
 }
 
-.side-card__title-icon--stats,
 .side-card__title-icon--growth,
 .side-card__title-icon--tags,
 .side-card__title-icon--topic {
@@ -2137,6 +2133,7 @@ watch(
 }
 
 .side-card__muted--compact {
+  align-self: end;
   display: -webkit-box;
   overflow: hidden;
   font-size: 0.76rem;
@@ -2262,7 +2259,9 @@ watch(
 }
 
 .insights-block--growth {
+  height: 100%;
   min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
 }
 
 .growth-chart {
@@ -2468,8 +2467,8 @@ watch(
 .side-card--insights {
   grid-area: insights;
   align-self: stretch;
-  gap: 13px;
-  align-content: start;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 11px;
   padding: 14px 16px;
 }
 
