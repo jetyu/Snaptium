@@ -9,6 +9,15 @@ import {
   type UpdaterConfig,
 } from '../services/updater.service';
 
+export type UpdatePanelState =
+  | 'idle'
+  | 'checking'
+  | 'available'
+  | 'downloading'
+  | 'ready-to-install'
+  | 'error'
+  | 'up-to-date';
+
 function translate(key: string): string {
   return i18n.global.t(key) as string;
 }
@@ -54,6 +63,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   const showAvailableUpdateActions = computed(() =>
     updateAvailable.value &&
     Boolean(updateInfo.value) &&
+    !isChecking.value &&
     !isDownloading.value &&
     !isUpdateDownloaded.value &&
     !availableActionsDismissed.value &&
@@ -63,9 +73,38 @@ export const useUpdaterStore = defineStore('updater', () => {
   const showInstallActions = computed(() =>
     isUpdateDownloaded.value &&
     Boolean(updateInfo.value) &&
+    !isChecking.value &&
     !installActionsDismissed.value &&
     !error.value
   );
+
+  const updatePanelState = computed<UpdatePanelState>(() => {
+    if (error.value) {
+      return 'error';
+    }
+
+    if (isDownloading.value) {
+      return 'downloading';
+    }
+
+    if (isChecking.value) {
+      return 'checking';
+    }
+
+    if (isUpdateDownloaded.value) {
+      return 'ready-to-install';
+    }
+
+    if (updateAvailable.value && updateInfo.value) {
+      return 'available';
+    }
+
+    if (showNoUpdateResult.value) {
+      return 'up-to-date';
+    }
+
+    return 'idle';
+  });
 
   async function getCurrentVersion(): Promise<void> {
     try {
@@ -235,6 +274,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     downloadProgress,
     error,
     showNoUpdateResult,
+    updatePanelState,
     showAvailableUpdateActions,
     showInstallActions,
     checkForUpdates,

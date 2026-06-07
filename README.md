@@ -10,11 +10,11 @@
   <img src="electron/assets/logo/app-logo-128.png" alt="Snaptium Logo" width="88">
 
 # Snaptium
-[官方网站](https://snaptium.com) [官方文档](https://snaptium.com/docs) [下载地址](https://snaptium.com/#download)
-### 本地优先的 Markdown 智能写作与知识管理工作空间
+[Official Website](https://snaptium.com) [Official Docs](https://snaptium.com/docs) [Download](https://snaptium.com/#download)
+### Local-first Markdown Intelligent Writing & Knowledge Management Workspace
 
-一款基于 Electron + Vue 3 构建的现代化跨平台 Markdown 智能工作空间。  
-专注于深度写作、知识管理与本地优先体验，支持 AI 辅助写作、知识库、端到端加密同步与多端协作。
+A modern cross-platform Markdown intelligent workspace built with Electron + Vue 3.  
+Focused on deep writing, knowledge management, and a local-first experience, supporting AI-assisted writing, knowledge bases, end-to-end encrypted sync, and multi-device collaboration.
 
 [![Latest Release](https://img.shields.io/github/v/release/jetyu/Snaptium?style=flat&logo=github)](https://github.com/jetyu/Snaptium/releases/latest)
 ![GitHub Pre-release](https://img.shields.io/github/v/release/jetyu/Snaptium?include_prereleases&label=pre-release&logo=github)
@@ -35,142 +35,142 @@
 
 ---
 
-# ✨ 项目定位
+# ✨ Project Positioning
 
-Snaptium 并不仅仅是一款 Markdown 笔记工具。  
-它更像是一个围绕「长期写作、知识沉淀与本地 AI 工作流」构建的智能写作空间。
+Snaptium is not just another Markdown note-taking tool.  
+It is an intelligent writing space built around "long-term writing, knowledge accumulation, and local AI workflows."
 
-项目强调：
+The project emphasizes:
 
-- 本地优先（Local First）
-- 数据自主可控
-- 长期可持续存储
-- AI 辅助而非 AI 绑定
-- 可离线使用
-- 多平台一致体验
-
----
-
-# 🚀 核心特性
-
-## 📝 Markdown 智能写作
-
-- 基于 CodeMirror 的现代化编辑器
-- 实时 Markdown 渲染预览
-- 编辑器 / 预览同步滚动
-- 数学公式（KaTeX）支持
-- 代码高亮支持
-- 任务列表 / 表格 / 脚注 / 标记语法支持
-- 深色模式与沉浸式写作体验
+- **Local First**
+- **Data Sovereignty**
+- **Long-term Sustainable Storage**
+- **AI-Assisted, Not AI-Locked**
+- **Offline Usability**
+- **Consistent Multi-platform Experience**
 
 ---
 
-## 🤖 AI 智能辅助
+# 🚀 Core Features
 
-支持接入多种 AI 服务，用于：
+## 📝 Markdown Intelligent Writing
 
-- AI 辅助写作
-- 内容润色
-- 智能问答
-- 文档总结
-- 知识库问答（RAG）
-- 语义检索
+- Modern editor based on CodeMirror
+- Real-time Markdown rendering preview
+- Synchronized scrolling between editor and preview
+- Math formula (KaTeX) support
+- Code highlighting support
+- Task lists / Tables / Footnotes / Markup syntax support
+- Dark mode and immersive writing experience
 
-支持自定义模型与 API：
+---
+
+## 🤖 AI Intelligent Assistance
+
+Supports integration with multiple AI services for:
+
+- AI-assisted writing
+- Content polishing
+- Intelligent Q&A
+- Document summarization
+- Knowledge base Q&A (RAG)
+- Semantic search
+
+Supports custom models and APIs:
 
 - OpenAI
 - OpenRouter
 - DeepSeek
 - Gemini
 - Claude
-- Ollama（本地模型）
-- 兼容 OpenAI API 的第三方服务
+- Ollama (Local models)
+- Third-party services compatible with OpenAI API
 
-> 默认情况下 AI 功能为关闭状态，所有 AI 能力由用户主动配置。
-
----
-
-## 🔒 本地优先与隐私安全
-
-Snaptium 采用 Local First 架构设计：
-
-- 默认本地存储
-- 不强制登录
-- 不依赖中心化服务器
-- 用户完全掌控数据
-
-支持：
-
-- AES-256-GCM 本地加密
-- Workspace Password 工作区密码
-- Recovery Key 恢复密钥
-- 端到端加密同步（E2EE）
-即使使用对象存储同步，云端也仅保存加密后的数据。
+> By default, AI features are disabled. All AI capabilities are manually configured by the user.
 
 ---
 
-## ☁️ 云同步支持
+## 🔒 Local-first & Privacy Security
 
-支持多种同步方式：
+Snaptium is designed with a Local First architecture:
+
+- Local storage by default
+- No mandatory login
+- No dependence on centralized servers
+- Full user control over data
+
+Supports:
+
+- AES-256-GCM local encryption
+- Workspace Password
+- Recovery Key
+- End-to-End Encrypted Sync (E2EE)
+Even when using object storage for sync, only encrypted data is stored in the cloud.
+
+---
+
+## ☁️ Cloud Sync Support
+
+Supports multiple synchronization methods:
 
 - S3 Compatible Object Storage
 - Cloudflare R2
 - WebDAV
 - MinIO
-- NAS 私有存储
+- NAS Private Storage
 
-支持完全自托管与私有化同步。
+Supports full self-hosting and private synchronization.
 
 ---
 
-## 🧠 本地知识库（RAG）
+## 🧠 Local Knowledge Base (RAG)
 
-内置向量知识库能力：
+Built-in vector knowledge base capabilities:
 
-- 文档切片（Chunk）
-- 向量嵌入
-- 语义检索
-- 本地知识索引
-- AI 基于知识库问答
+- Document Chunking
+- Vector Embedding
+- Semantic Search
+- Local Knowledge Indexing
+- AI-based Q&A based on knowledge base
 
-项目已集成：
+Integrated with:
 
 - LanceDB
 - Apache Arrow
 
-支持未来扩展本地 Embedding 模型与离线 AI 工作流。
+Future support for local Embedding models and offline AI workflows.
 
 ---
 
-## 🌍 国际化
+## 🌍 Internationalization
 
-支持18种多语言与地区设置。
+Supports 18 languages and regional settings.
 
-目前已支持：
+Currently supported:
 
-- 简体中文
+- Simplified Chinese
 - English
-- 日本語
-- 한국어
-- Deutsch
-- Français
-- Español
-- Русский
-- 更多语言持续增加中...
+- Japanese
+- Korean
+- German
+- French
+- Spanish
+- Russian
+- More languages are being added...
 
 ---
 
-# 🖼️ 界面预览
+# 🖼️ Preview
 
-## 编辑模式
+## Edit Mode
 
 ![Snaptium Edit Mode](./docs/Screenshots/v2/zh-CN/Edit-mode.jpg)
 
 ---
 
-# 🧩 技术栈
+# 🧩 Tech Stack
 
-## 前端
+## Frontend
 
 - Vue 3
 - TypeScript
@@ -179,19 +179,19 @@ Snaptium 采用 Local First 架构设计：
 - Vue I18n
 - CodeMirror 6
 
-## 桌面端
+## Desktop
 
 - Electron
 - Electron Builder
 - Electron Updater
 
-## Markdown 生态
+## Markdown Ecosystem
 
 - markdown-it
 - KaTeX
 - highlight.js
 
-## AI / 数据能力
+## AI / Data Capabilities
 
 - LanceDB
 - Apache Arrow
@@ -200,19 +200,19 @@ Snaptium 采用 Local First 架构设计：
 
 ---
 
-# 💻 支持平台
+# 💻 Supported Platforms
 
-| 操作系统 | 支持版本 | 架构 | 安装包格式 |
+| OS | Supported Version | Architecture | Installation Format |
 |------|------|------|------|
-| Windows | Windows 10 及以上 | x64 | `.exe` |
+| Windows | Windows 10 and above | x64 | `.exe` |
 | macOS | macOS 11+ | x64 / arm64 | `.dmg` `.zip` |
-| Linux | Ubuntu / Debian / Fedora 等主流发行版 | x64 | `.deb` `.rpm` `.AppImage` |
+| Linux | Ubuntu / Debian / Fedora, etc. | x64 | `.deb` `.rpm` `.AppImage` |
 
-> 请根据对应平台下载适合的安装包。
+> Please download the appropriate installer for your platform.
 
 ---
 
-# 📦 下载
+# 📦 Download
 
 ## Windows
 
@@ -252,25 +252,25 @@ Snaptium 采用 Local First 架构设计：
 
 ---
 
-> [查看全部版本](https://github.com/jetyu/Snaptium/releases)
+> [View All Releases](https://github.com/jetyu/Snaptium/releases)
 
 ---
 
-# 🛠️ 本地开发
+# 🛠️ Local Development
 
-## 安装依赖
+## Install Dependencies
 
 ```bash
 npm install
 ```
 
-## 启动开发环境
+## Start Development Environment
 
 ```bash
 npm run dev
 ```
 
-## 构建应用
+## Build Application
 
 ```bash
 npm run dist
@@ -278,32 +278,32 @@ npm run dist
 
 ---
 
-# 📚 文档与 Wiki
+# 📚 Docs & Wiki
 
-- Wiki：https://github.com/jetyu/Snaptium/wiki
-- Docs：https://github.com/jetyu/Snaptium/tree/feature/snaptive/docs
-
----
-
-# 📌 项目路线
-
-未来计划包括：
-
-- 本地 AI 模型集成
-- AI Agent 工作流
-- 多工作区管理
-- 协作编辑
-- 插件系统
-- 移动端支持
-- 更完整的离线知识库能力
+- Wiki: https://github.com/jetyu/Snaptium/wiki
+- Docs: https://github.com/jetyu/Snaptium/tree/feature/snaptive/docs
 
 ---
 
-# 📄 开源协议
+# 📌 Roadmap
 
-本项目采用 Apache License 2.0 开源协议。
+Future plans include:
 
-详情请参阅：
+- Integration of local AI models
+- AI Agent workflows
+- Multi-workspace management
+- Collaborative editing
+- Plugin system
+- Mobile support
+- More complete offline knowledge base capabilities
+
+---
+
+# 📄 License
+
+This project is licensed under the Apache License 2.0.
+
+For details, please refer to:
 
 ```text
 LICENSE
@@ -311,9 +311,9 @@ LICENSE
 
 ---
 
-# ❤️ 致谢
+# ❤️ Acknowledgments
 
-感谢以下优秀开源项目：
+Thanks to the following excellent open-source projects:
 
 - Electron
 - Vue
@@ -323,11 +323,10 @@ LICENSE
 - LanceDB
 - Apache Arrow
 
-以及所有为 Snaptium 提交 Issue、PR 与建议的开发者与用户。
+And to all developers and users who have submitted Issues, PRs, and suggestions for Snaptium.
 
 ---
 
 # ⭐ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=jetyu/Snaptium&type=Date)](https://star-history.com/#jetyu/Snaptium&Date)
-

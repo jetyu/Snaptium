@@ -58,29 +58,31 @@
         </section>
       </div>
 
-      <section class="setting-card update-status-card">
+      <section class="setting-card">
         <div class="setting-copy">
           <p class="setting-label">{{ t('label.currentVersion') }}</p>
           <div class="update-version-stack">
             <span class="update-version-value">v{{ currentVersion }}</span>
-            <span v-if="updateAvailable && updateInfo" class="update-version-note">
-              {{ t('label.latestVersion') }}: v{{ updateInfo.version }}
-            </span>
-            <span v-if="isUpdateDownloaded && updateInfo" class="update-version-note">
-              {{ t('updater.readyToInstall') }}
-            </span>
-            <span v-else-if="isDownloading" class="update-version-note">
-              {{ t('updater.downloadingUpdate') }}
-            </span>
-            <span v-if="showNoUpdateResult" class="update-version-success">
-              {{ t('updater.upToDate') }}
-            </span>
-            <span v-if="error" class="update-version-error">
-              {{ error.message }}
-            </span>
           </div>
+        </div>
+        <button
+          type="button"
+          class="action-button"
+          :disabled="isChecking || isDownloading"
+          @click="handleCheckForUpdates"
+        >
+          {{ isChecking ? t('button.checkingForUpdates') : t('menu.help.update') }}
+        </button>
+      </section>
 
-          <div v-if="isDownloading" class="update-progress">
+      <section class="setting-card update-state-card">
+        <div class="setting-copy update-state-copy">
+          <p class="setting-label">{{ updateStateTitle }}</p>
+          <span class="update-state-message" :class="updateStateToneClass">
+            {{ updateStateMessage }}
+          </span>
+
+          <div v-if="updatePanelState === 'downloading'" class="update-progress">
             <div class="update-progress-header">
               <span>{{ t('updater.progress') }}</span>
               <span>{{ progressPercent }}%</span>
@@ -111,14 +113,6 @@
           <button v-if="showRetryAction" type="button" class="action-button secondary" @click="handleRetryUpdate">
             {{ t('updater.retry') }}
           </button>
-          <button
-            type="button"
-            class="action-button"
-            :disabled="isChecking || isDownloading"
-            @click="handleCheckForUpdates"
-          >
-            {{ isChecking ? t('button.checkingForUpdates') : t('menu.help.update') }}
-          </button>
         </div>
       </section>
     </div>
@@ -141,11 +135,10 @@ const {
   isChecking,
   isDownloading,
   updateAvailable,
-  isUpdateDownloaded,
   updateInfo,
   downloadProgress,
   error,
-  showNoUpdateResult,
+  updatePanelState,
   showAvailableUpdateActions,
   showInstallActions,
 } = storeToRefs(updaterStore);
@@ -159,6 +152,53 @@ const channelOptions = computed(() => [
 const updateIntervalHours = computed(() => Math.round(settingsStore.config.updateCheckInterval / (60 * 60 * 1000)));
 const progressPercent = computed(() => Math.min(100, Math.max(0, Math.round(downloadProgress.value.percent || 0))));
 const showRetryAction = computed(() => Boolean(error.value) && !isChecking.value && !isDownloading.value);
+const updateStateTitle = computed(() => {
+  switch (updatePanelState.value) {
+    case 'checking':
+      return t('button.checkingForUpdates');
+    case 'available':
+      return t('updater.newVersionAvailable');
+    case 'downloading':
+      return t('updater.downloadingUpdate');
+    case 'ready-to-install':
+      return t('updater.readyToInstall');
+    case 'error':
+      return t('updater.updateError');
+    case 'up-to-date':
+      return t('updater.upToDate');
+    case 'idle':
+    default:
+      return t('updater.waitingToCheck');
+  }
+});
+const updateStateMessage = computed(() => {
+  switch (updatePanelState.value) {
+    case 'checking':
+      return t('updater.checkingMessage');
+    case 'available':
+      return updateInfo.value
+        ? t('updater.newVersionMessage', { version: updateInfo.value.version })
+        : t('updater.newVersionAvailable');
+    case 'downloading':
+      return t('updater.progress');
+    case 'ready-to-install':
+      return updateInfo.value
+        ? t('updater.installMessage', { version: updateInfo.value.version })
+        : t('updater.readyToInstall');
+    case 'error':
+      return error.value?.message ?? t('updater.unknownError');
+    case 'up-to-date':
+      return t('updater.upToDateMessage');
+    case 'idle':
+    default:
+      return t('updater.waitingToCheckMessage');
+  }
+});
+const updateStateToneClass = computed(() => ({
+  'is-success': updatePanelState.value === 'up-to-date',
+  'is-error': updatePanelState.value === 'error',
+  'is-info': updatePanelState.value === 'available' || updatePanelState.value === 'ready-to-install',
+}));
 
 async function syncUpdaterConfig(): Promise<void> {
   await updaterStore.updateConfig({
@@ -240,19 +280,33 @@ const handleChannelChange = async (event: Event) => {
   color: #111827;
 }
 
-.update-version-note {
-  font-size: 0.78rem;
+.update-state-card {
+  align-items: stretch;
+  min-height: 92px;
+}
+
+.update-state-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.update-state-message {
+  color: #5f6b7a;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.update-state-message.is-info {
   color: #2563eb;
 }
 
-.update-version-error {
-  font-size: 0.78rem;
-  color: #dc2626;
+.update-state-message.is-success {
+  color: #15803d;
 }
 
-.update-version-success {
-  font-size: 0.78rem;
-  color: #15803d;
+.update-state-message.is-error {
+  color: #dc2626;
 }
 
 .update-actions {
