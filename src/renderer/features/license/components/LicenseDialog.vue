@@ -26,12 +26,12 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
+import { nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Close } from '@icon-park/vue-next';
-import { useLicenseDialog } from '../composables/useLicenseDialog';
 import { useLicenseStore } from '../store/license.store';
 import { licenseService } from '../services/license.service';
+import { useLicenseDialog } from '../composables/useLicenseDialog';
 import LicenseActivationView from './LicenseActivationView.vue';
 import LicenseManagementView from './LicenseManagementView.vue';
 
@@ -39,10 +39,9 @@ type LicensePanelMode = 'management' | 'activation';
 
 const { t } = useI18n();
 const store = useLicenseStore();
-const { isVisible, closeLicenseDialog, initMainProcessListeners } = useLicenseDialog();
+const { isVisible, closeLicenseDialog } = useLicenseDialog();
 const overlayRef = ref<HTMLElement | null>(null);
 const panelMode = ref<LicensePanelMode>('activation');
-let removeMainMenuListener: (() => void) | null = null;
 
 watch(isVisible, async (visible) => {
   if (!visible) {
@@ -65,21 +64,12 @@ watch(
     }
     if (canManage) {
       panelMode.value = 'management';
+      return;
     }
+
+    panelMode.value = 'activation';
   },
 );
-onMounted(async () => {
-  await licenseService.initialize();
-  removeMainMenuListener = initMainProcessListeners();
-});
-
-onUnmounted(() => {
-  licenseService.dispose();
-  if (removeMainMenuListener) {
-    removeMainMenuListener();
-    removeMainMenuListener = null;
-  }
-});
 </script>
 
 <style scoped>

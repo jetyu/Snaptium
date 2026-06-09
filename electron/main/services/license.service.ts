@@ -5,6 +5,7 @@ import path from 'node:path';
 import { promises as fs } from 'node:fs';
 import { z } from 'zod';
 import {
+  canUseLicensedFeature,
   DEFAULT_LICENSE_STATE,
   LICENSE_ERROR_CODES,
   LICENSE_FEATURES,
@@ -23,7 +24,6 @@ import {
   type LicenseValidationResponse,
   type PersistedLicenseState,
   PAID_LICENSE_PLANS,
-  PLAN_FEATURES,
   isPaidPlan,
 } from '../../shared/license.constants.js';
 import { loggerService } from './logger.service.js';
@@ -42,6 +42,7 @@ const REQUEST_TIMEOUT_MS = 8_000;
 const STARTUP_VALIDATE_TIMEOUT_MS = 3_500;
 const REQUEST_MAX_RETRIES = 2;
 const REQUEST_RETRY_DELAYS_MS = [350, 900] as const;
+const FEATURE_REVALIDATION_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
 interface LicenseRequestError extends Error {
   code: LicenseErrorCode | string;
@@ -55,11 +56,6 @@ interface RequestOptions {
   timeoutMs?: number;
   maxRetries?: number;
   force?: boolean;
-}
-
-interface ApplyResponseOptions {
-  allowUnknownType?: boolean;
-  keepCurrentStatus?: boolean;
 }
 
 interface LicenseDeviceInfoPayload {
@@ -230,6 +226,7 @@ export class LicenseService {
   private token: string | null = null;
   private deviceFingerprint: string | null = null;
   private heartbeatTimer: NodeJS.Timeout | null = null;
+  private featureRevalidationPromise: Promise<LicenseState> | null = null;
   private listeners = new Set<(state: LicenseState) => void>();
   private warnedPlaintextFallback = false;
 
@@ -263,14 +260,8 @@ export class LicenseService {
   }
 
   canUse(feature: LicensedFeature): boolean {
-    const enabledInPlan = PLAN_FEATURES[this.state.plan][feature];
-    if (!enabledInPlan || !isPaidPlan(this.state.plan)) {
-      return false;
-    }
-
-    return this.state.status === LICENSE_STATUSES.ACTIVE
-      || this.state.status === LICENSE_STATUSES.OFFLINE_GRACE
-      || this.state.status === LICENSE_STATUSES.SESSION_GRACE;
+    this.maybeTriggerFeatureRevalidation();
+    return canUseLicensedFeature(this.state, feature);
   }
 
   ensureFeatureEnabled(feature: LicensedFeature): void {
@@ -319,7 +310,7 @@ export class LicenseService {
       }
 
       this.token = data.token;
-      this.applyLicenseResponse(data, { keepCurrentStatus: false });
+      this.applyLicenseResponse(data);
       const now = Date.now();
       this.state.status = LICENSE_STATUSES.ACTIVE;
       this.state.activated = true;
@@ -378,7 +369,7 @@ export class LicenseService {
 
       const data = response as LicenseValidationResponse;
       this.applyIssuedToken(data);
-      this.applyLicenseResponse(data, { keepCurrentStatus: false });
+      this.applyLicenseResponse(data);
       const now = Date.now();
       this.state.lastValidatedAt = now;
       this.state.lastServerSyncAt = now;
@@ -550,11 +541,6 @@ export class LicenseService {
     return this.getState();
   }
 
-  setStateChangeListener(callback: (state: LicenseState) => void): void {
-    this.listeners.clear();
-    this.listeners.add(callback);
-  }
-
   addStateChangeListener(callback: (state: LicenseState) => void): () => void {
     this.listeners.add(callback);
     return () => {
@@ -598,7 +584,7 @@ export class LicenseService {
         if (!response.ok) {
           const body = await response.json().catch(() => ({}));
           const errorPayload = parseApiError(body);
-          const mappedCode = this.mapHttpErrorCode(response.status, errorPayload.code);
+          const mappedCode = this.mapHttpErrorCode(route, response.status, errorPayload.code);
           throw createLicenseError(
             mappedCode,
             sanitizeMessage(errorPayload.message ?? '', `HTTP ${response.status}`),
@@ -700,14 +686,14 @@ export class LicenseService {
     return createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, fallbackMessage);
   }
 
-  private mapHttpErrorCode(status: number, serverCode?: string): LicenseErrorCode | string {
+  private mapHttpErrorCode(route: string, status: number, serverCode?: string): LicenseErrorCode | string {
     if (serverCode && serverCode.trim().length > 0) {
       return serverCode.trim();
     }
 
     if (status === 401) return LICENSE_ERROR_CODES.LICENSE_INVALID;
     if (status === 403) return LICENSE_ERROR_CODES.LICENSE_INVALID;
-    if (status === 404) return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;
+    if (status === 404 && route === '/license/deactivate-device') return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;
     if (status === 409) return LICENSE_ERROR_CODES.MAX_DEVICES_REACHED;
     if (status === 429) return LICENSE_ERROR_CODES.TOO_MANY_REQUESTS;
     return LICENSE_ERROR_CODES.UNKNOWN;
@@ -730,10 +716,9 @@ export class LicenseService {
 
   private applyLicenseResponse(
     response: LicenseActivationResponse | LicenseValidationResponse,
-    options?: ApplyResponseOptions,
   ): void {
     const plan = this.resolvePlanOrThrow(response.type);
-    if (!options?.allowUnknownType && !isPaidPlan(plan)) {
+    if (!isPaidPlan(plan)) {
       throw createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, 'License type must be a paid plan for activated users.');
     }
 
@@ -747,10 +732,7 @@ export class LicenseService {
       .map((item) => this.mapDevice(item, response.current_device_id))
       .filter((device) => device.status === 'active');
     this.state.activatedDevices = this.state.devices.length;
-
-    if (!options?.keepCurrentStatus) {
-      this.state.status = response.valid ? LICENSE_STATUSES.ACTIVE : LICENSE_STATUSES.EXPIRED;
-    }
+    this.state.status = response.valid ? LICENSE_STATUSES.ACTIVE : LICENSE_STATUSES.EXPIRED;
   }
 
   private applyDevicesSnapshot(response: LicenseDevicesResponse): void {
@@ -878,6 +860,43 @@ export class LicenseService {
     return this.isTimestampFresh(this.state.lastServerSyncAt, SERVER_SYNC_INTERVAL_MS - SERVER_SYNC_RENEWAL_MARGIN_MS);
   }
 
+  private shouldRevalidateForFeatureAccess(): boolean {
+    if (!this.token || !isPaidPlan(this.state.plan)) {
+      return false;
+    }
+
+    if (
+      this.state.status !== LICENSE_STATUSES.ACTIVE
+      && this.state.status !== LICENSE_STATUSES.OFFLINE_GRACE
+      && this.state.status !== LICENSE_STATUSES.SESSION_GRACE
+    ) {
+      return false;
+    }
+
+    return !this.isTimestampFresh(this.state.lastServerSyncAt, FEATURE_REVALIDATION_INTERVAL_MS);
+  }
+
+  private maybeTriggerFeatureRevalidation(): void {
+    if (this.featureRevalidationPromise || !this.shouldRevalidateForFeatureAccess()) {
+      return;
+    }
+
+    this.featureRevalidationPromise = this.validateLicense({
+      force: true,
+      maxRetries: 0,
+      timeoutMs: STARTUP_VALIDATE_TIMEOUT_MS,
+    })
+      .catch((error: unknown) => {
+        logger.warn('Feature access license revalidation failed', {
+          message: error instanceof Error ? error.message : String(error),
+        });
+        throw error;
+      })
+      .finally(() => {
+        this.featureRevalidationPromise = null;
+      });
+  }
+
   private isDeviceRefreshFresh(): boolean {
     return this.isTimestampFresh(this.state.lastDeviceRefreshAt, DEVICE_REFRESH_COOLDOWN_MS);
   }
@@ -922,7 +941,7 @@ export class LicenseService {
       return;
     }
 
-    clearInterval(this.heartbeatTimer);
+    clearTimeout(this.heartbeatTimer);
     this.heartbeatTimer = null;
   }
 
@@ -1065,7 +1084,7 @@ export class LicenseService {
         plan,
         activated: Boolean(this.token && isPaidPlan(plan)),
         valid: Boolean(this.token && isPaidPlan(plan)),
-        status: this.token && isPaidPlan(plan) ? LICENSE_STATUSES.ACTIVE : LICENSE_STATUSES.FREE,
+        status: this.token && isPaidPlan(plan) ? LICENSE_STATUSES.OFFLINE_GRACE : LICENSE_STATUSES.FREE,
         source: this.token ? 'license-api' : 'default',
         expiresAt: parsed.expiresAt,
         graceExpiresAt: parsed.graceExpiresAt,

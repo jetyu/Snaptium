@@ -45,9 +45,8 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { getErrorMessage } from '@shared/utils/error.utils';
 import type { LicenseDevice } from '@shared/license.constants';
-import { licenseService } from '../services/license.service';
+import { licenseService, normalizeLicenseErrorMessage } from '../services/license.service';
 
 interface Props {
   devices: LicenseDevice[];
@@ -97,7 +96,7 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
   try {
     await licenseService.deactivateDevice(deviceId);
   } catch (error) {
-    errorMessage.value = getErrorMessage(error, t('license.activation.failed'));
+    errorMessage.value = normalizeLicenseErrorMessage(error);
   } finally {
     processingDeviceId.value = null;
   }

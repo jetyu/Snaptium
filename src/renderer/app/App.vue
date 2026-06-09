@@ -27,15 +27,17 @@ import { HistoryDialog } from '@renderer/features/workspace';
 import { useSyncLifecycle } from '@renderer/features/sync';
 import { AccessControlOverlay } from '@renderer/features/security';
 import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
-import { LicenseDialog } from '@renderer/features/license';
+import { LicenseDialog, useLicenseDialog } from '@renderer/features/license';
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import { useUpdaterStore } from '@renderer/features/updater';
+import { licenseService } from '@renderer/features/license/services/license.service';
 
 const settingsStore = useSettingsStore();
 const shortcutsStore = useShortcutsStore();
 const workspaceStore = useWorkspaceStore();
 const favoritesStore = useFavoritesStore();
 const updaterStore = useUpdaterStore();
+const { initMainProcessListeners } = useLicenseDialog();
 const { initializeRAG, setupAutoIndexOnSave } = useRAGInitialization();
 const { initializeSync, setupAutoSync } = useSyncLifecycle();
 
@@ -48,6 +50,11 @@ const unsubscribers: Array<(() => void)> = [];
 
 onMounted(async () => {
   updaterStore.initialize();
+  await licenseService.initialize();
+  const removeLicenseMenuListener = initMainProcessListeners();
+  if (removeLicenseMenuListener) {
+    unsubscribers.push(removeLicenseMenuListener);
+  }
   await settingsStore.loadSettings();
   await shortcutsStore.initialize();
   
@@ -106,6 +113,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   updaterStore.dispose();
+  licenseService.dispose();
   unsubscribers.forEach((unsub) => unsub());
 });
 </script>

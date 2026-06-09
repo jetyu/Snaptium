@@ -1,12 +1,61 @@
-import { getErrorMessage } from '@shared/utils/error.utils';
+import { getErrorCode, getErrorMessage } from '@shared/utils/error.utils';
 import { createLogger } from '@renderer/features/logger';
 import { electronApi } from '@renderer/core/bridge/electronApi';
-import type { LicenseState } from '@shared/license.constants';
+import { i18n } from '@renderer/features/i18n';
+import { LICENSE_ERROR_CODES, type LicenseState } from '@shared/license.constants';
 import { useLicenseStore } from '../store/license.store';
 
 const licenseLogger = createLogger('Renderer:LicenseService');
 
 type LicenseStore = ReturnType<typeof useLicenseStore>;
+
+export interface LicenseErrorInfo {
+  code: string;
+  message: string;
+}
+
+function resolveLicenseErrorMessage(code: string): string {
+  const t = i18n.global.t.bind(i18n.global);
+  const fallbackMessages: Record<string, string> = {
+    [LICENSE_ERROR_CODES.LICENSE_INVALID]: t('license.error.invalid'),
+    [LICENSE_ERROR_CODES.LICENSE_EXPIRED]: t('license.error.expired'),
+    [LICENSE_ERROR_CODES.LICENSE_INACTIVE]: t('license.error.inactive'),
+    [LICENSE_ERROR_CODES.MAX_DEVICES_REACHED]: t('license.error.maxDevicesReached'),
+    [LICENSE_ERROR_CODES.DEVICE_NOT_FOUND]: t('license.error.deviceNotFound'),
+    [LICENSE_ERROR_CODES.CANNOT_DEACTIVATE_CURRENT_DEVICE]: t('license.error.cannotDeactivateCurrentDevice'),
+    [LICENSE_ERROR_CODES.TOO_MANY_REQUESTS]: t('license.error.tooManyRequests'),
+    [LICENSE_ERROR_CODES.NETWORK_TIMEOUT]: t('license.error.networkTimeout'),
+    [LICENSE_ERROR_CODES.NETWORK_ERROR]: t('license.error.network'),
+    [LICENSE_ERROR_CODES.UNKNOWN]: t('license.error.unknown'),
+  };
+
+  return fallbackMessages[code] ?? t('license.error.unknown');
+}
+
+export function normalizeLicenseError(error: unknown): LicenseErrorInfo {
+  const code = getErrorCode(error) ?? LICENSE_ERROR_CODES.UNKNOWN;
+
+  return {
+    code,
+    message: resolveLicenseErrorMessage(code),
+  };
+}
+
+export function normalizeLicenseErrorMessage(error: unknown): string {
+  return normalizeLicenseError(error).message;
+}
+
+export function normalizeLicenseStateError(code: string | null, message: string | null): string | null {
+  if (!code && !message) {
+    return null;
+  }
+
+  if (code) {
+    return resolveLicenseErrorMessage(code);
+  }
+
+  return getErrorMessage(message, resolveLicenseErrorMessage(LICENSE_ERROR_CODES.UNKNOWN));
+}
 
 class LicenseService {
   private removeStateListener: (() => void) | null = null;
@@ -16,15 +65,13 @@ class LicenseService {
   }
 
   async initialize(): Promise<LicenseState> {
-    const store = this.getStore();
     if (!electronApi.license.isAvailable()) {
-      store.setInitialized(true);
-      return store.state;
+      return this.getStore().state;
     }
 
     this.bindStateListener();
     const state = await electronApi.license.getState();
-    store.updateState(state);
+    this.getStore().updateState(state);
     return state;
   }
 

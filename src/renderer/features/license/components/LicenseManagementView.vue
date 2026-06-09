@@ -5,7 +5,7 @@
         <h2 class="title">{{ t('license.management.planType') }}: {{ t(`license.badge.${store.plan}`) }}</h2>
         <p class="status-text">
           {{ t('license.devices.status') }}: {{ t(store.getStatusTextKey(store.status)) }}
-          <span v-if="!store.canManage && store.lastErrorMessage" class="status-inline-reason"> {{ store.lastErrorMessage }}</span>
+          <span v-if="!store.canManage && localizedErrorMessage" class="status-inline-reason"> {{ localizedErrorMessage }}</span>
         </p>
       </div>
       <div class="actions">
@@ -53,9 +53,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { licenseService } from '../services/license.service';
+import { licenseService, normalizeLicenseStateError } from '../services/license.service';
 import { useLicenseStore } from '../store/license.store';
 import LicenseDeviceList from './LicenseDeviceList.vue';
 
@@ -63,6 +63,7 @@ const { t } = useI18n();
 const store = useLicenseStore();
 const isRefreshing = ref(false);
 const isClearing = ref(false);
+const localizedErrorMessage = computed(() => normalizeLicenseStateError(store.lastErrorCode, store.lastErrorMessage));
 
 function formatDate(value: string | null): string {
   if (!value) {
