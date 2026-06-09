@@ -71,6 +71,8 @@ export function createWebDavProvider(config: WebDavProviderConfig): {
   deleteFile(relativePath: string): Promise<void>;
 } {
   const basePath = joinRemotePath(config.remotePath);
+  const ensuredDirectories = new Set<string>();
+  const pendingDirectoryEnsures = new Map<string, Promise<void>>();
   const client = createClient(normalizeEndpoint(config.url), {
     username: String(config.username ?? ''),
     password: String(config.password ?? ''),
@@ -78,13 +80,33 @@ export function createWebDavProvider(config: WebDavProviderConfig): {
 
   async function ensureRemoteDirectory(relativePath = ''): Promise<void> {
     const targetPath = joinRemotePath(basePath, relativePath);
-    await client.createDirectory(targetPath, { recursive: true }).catch((error: unknown) => {
-      const errorRecord = error as { status?: number };
-      if (errorRecord.status === 405 || errorRecord.status === 409) {
-        return;
-      }
-      throw error;
-    });
+    if (ensuredDirectories.has(targetPath)) {
+      return;
+    }
+
+    const pendingEnsure = pendingDirectoryEnsures.get(targetPath);
+    if (pendingEnsure) {
+      await pendingEnsure;
+      return;
+    }
+
+    const ensurePromise = client.createDirectory(targetPath, { recursive: true })
+      .catch((error: unknown) => {
+        const errorRecord = error as { status?: number };
+        if (errorRecord.status === 405 || errorRecord.status === 409) {
+          return;
+        }
+        throw error;
+      })
+      .then(() => {
+        ensuredDirectories.add(targetPath);
+      })
+      .finally(() => {
+        pendingDirectoryEnsures.delete(targetPath);
+      });
+
+    pendingDirectoryEnsures.set(targetPath, ensurePromise);
+    await ensurePromise;
   }
 
   return {

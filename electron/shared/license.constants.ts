@@ -82,6 +82,12 @@ export const DEFAULT_LICENSE_STATE: LicenseState = {
   lastErrorMessage: null,
 };
 
+const LICENSE_ACCESSIBLE_STATUSES = new Set<LicenseStatus>([
+  LICENSE_STATUSES.ACTIVE,
+  LICENSE_STATUSES.OFFLINE_GRACE,
+  LICENSE_STATUSES.SESSION_GRACE,
+]);
+
 type PersistedLicensePlan = Exclude<LicensePlan, 'free'>;
 
 export interface PersistedLicenseState {
@@ -214,4 +220,16 @@ export const PLAN_FEATURES: Record<LicensePlan, Record<LicensedFeature, boolean>
 
 export function isPaidPlan(plan: LicensePlan): boolean {
   return plan !== LICENSE_PLANS.FREE;
+}
+
+export function canManageLicense(state: LicenseState): boolean {
+  return isPaidPlan(state.plan) && LICENSE_ACCESSIBLE_STATUSES.has(state.status);
+}
+
+export function canUseLicensedFeature(state: LicenseState, feature: LicensedFeature): boolean {
+  if (!PLAN_FEATURES[state.plan][feature]) {
+    return false;
+  }
+
+  return LICENSE_ACCESSIBLE_STATUSES.has(state.status);
 }
