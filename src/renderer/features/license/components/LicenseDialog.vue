@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <Teleport to="body">
     <Transition name="fade">
       <div
@@ -96,41 +96,51 @@ watch(
 }
 
 .license-modal {
-  width: min(760px, calc(100vw - 32px));
+  width: min(680px, calc(100vw - 32px));
   max-height: calc(100vh - 40px);
-  overflow: auto;
-  background: #ffffff;
-  border: 1px solid #dbe3ef;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
   border-radius: 16px;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.28);
+  box-shadow: 
+    0 10px 25px -5px rgba(0, 0, 0, 0.1),
+    0 25px 50px -12px rgba(0, 0, 0, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   position: relative;
 }
 
 .license-modal-header {
   display: flex;
   justify-content: flex-end;
-  padding: 10px 10px 0 10px;
+  padding: 14px 14px 0 14px;
+  z-index: 15;
 }
 
 .license-close-btn {
-  width: 30px;
-  height: 30px;
-  border: 1px solid #c7d3e3;
-  border-radius: 9px;
-  background: #ffffff;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel);
   padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   line-height: 0;
   cursor: pointer;
-  color: #334155;
-  transition: border-color 0.16s ease, background-color 0.16s ease;
+  color: var(--text-muted);
+  transition: 
+    border-color 0.15s ease, 
+    background-color 0.15s ease, 
+    color 0.15s ease;
 }
 
 .license-close-btn:hover {
-  border-color: #8fb6f1;
-  background: #eef5ff;
+  border-color: var(--accent);
+  background: var(--panel-hover);
+  color: var(--accent);
 }
 
 .license-close-btn :deep(svg) {
@@ -138,17 +148,45 @@ watch(
 }
 
 .license-content {
-  padding: 12px 20px 18px 20px;
+  padding: 8px 24px 24px 24px;
+  overflow-y: auto;
+  flex: 1;
 }
 
+
+
 :deep(.license-btn) {
-  min-width: 118px;
-  min-height: 34px;
-  height: 34px;
+  min-width: 120px;
+  min-height: 36px;
+  height: 36px;
   border-radius: 8px;
-  padding: 0 14px;
-  font-size: 0.86rem;
+  padding: 0 16px;
+  font-size: 0.88rem;
   font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  color: var(--text);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+:deep(.license-btn:hover:not(:disabled)) {
+  background: var(--panel-hover);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+:deep(.license-btn:active:not(:disabled)) {
+  transform: scale(0.98);
+}
+
+:deep(.license-btn:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 @media (max-width: 640px) {
@@ -159,7 +197,7 @@ watch(
   }
 
   .license-content {
-    padding: 10px 16px 16px 16px;
+    padding: 8px 16px 16px 16px;
   }
 }
 
