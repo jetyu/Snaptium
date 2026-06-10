@@ -513,14 +513,14 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 
 .active-tag {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: -1px;
+  right: -1px;
   font-size: 0.65rem;
   font-weight: 700;
   background: #4a90e2;
   color: #ffffff;
   padding: 3px 10px 4px;
-  border-radius: 0 11px 0 10px;
+  border-radius: 0 10px 0 10px;
   line-height: 1;
   z-index: 10;
   box-shadow: -1px 1px 4px rgba(0, 0, 0, 0.05);
