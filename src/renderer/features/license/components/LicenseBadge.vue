@@ -6,23 +6,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { IconCrown, IconTimeDuration0, IconSparkle2, IconSparkles2, IconBuilding } from '@tabler/icons-vue';
+import { IconBuilding, IconCrown, IconSparkle2, IconSparkles2, IconTimeDuration0 } from '@tabler/icons-vue';
+import { LICENSE_PLANS, type LicensePlan } from '@shared/license.constants';
 import { useLicenseStore } from '../store/license.store';
 import { useLicenseDialog } from '../composables/useLicenseDialog';
-import type { LicensePlan } from '@shared/license.constants';
 
 const { t } = useI18n();
 const store = useLicenseStore();
 const { openLicenseDialog } = useLicenseDialog();
 
-const PLAN_ICONS: Partial<Record<LicensePlan, unknown>> = {
-  trial: IconTimeDuration0,
-  insider: IconSparkle2,
-  pro: IconSparkles2,
-  ultimate: IconCrown,
-  enterprise: IconBuilding,
+const PLAN_ICONS: Partial<Record<LicensePlan, Component>> = {
+  [LICENSE_PLANS.TRIAL]: IconTimeDuration0,
+  [LICENSE_PLANS.INSIDER]: IconSparkle2,
+  [LICENSE_PLANS.PRO]: IconSparkles2,
+  [LICENSE_PLANS.ULTIMATE]: IconCrown,
+  [LICENSE_PLANS.ENTERPRISE]: IconBuilding,
 };
 
 const planIcon = computed(() => PLAN_ICONS[store.plan] ?? null);

@@ -32,7 +32,7 @@
         <div class="device-actions">
           <span class="status-pill" :class="getStatusToneClass(device.status)">
             <span class="status-indicator-dot"></span>
-            {{ device.status }}
+            {{ getStatusLabel(device.status) }}
           </span>
 
           <button type="button" class="deactivate-btn" :disabled="processingDeviceId === device.id"
@@ -63,7 +63,7 @@ interface Props {
 
 defineProps<Props>();
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const processingDeviceId = ref<string | null>(null);
 const errorMessage = ref('');
 
@@ -118,6 +118,12 @@ function getStatusToneClass(value: string): string {
   if (status === 'inactive') return 'is-inactive';
   if (status === 'revoked') return 'is-revoked';
   return 'is-default';
+}
+
+function getStatusLabel(value: string): string {
+  const status = value.trim().toLowerCase();
+  const key = `license.deviceStatus.${status}`;
+  return te(key) ? t(key) : value;
 }
 
 async function handleDeactivate(deviceId: string, current: boolean): Promise<void> {

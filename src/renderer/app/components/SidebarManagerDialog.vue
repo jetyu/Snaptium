@@ -45,7 +45,7 @@
                           <button type="button" class="sidebar-manager-dialog__preview-remove"
                             :aria-label="t('appShell.sidebarManager.removeModule', { module: t(module.labelKey) })"
                             @click="removeFromPreview(module.id)">
-                            <IconMinus :size="14" />
+                            <IconMinus :size="16" stroke="3" />
                           </button>
                           <button type="button" class="sidebar-manager-dialog__preview-button is-module">
                             <component :is="getModuleIcon(module.id)" :size="18" />
@@ -334,7 +334,7 @@ watch(isSidebarManagerOpen, async (open) => {
 
 .sidebar-manager-dialog__preview-rail {
   width: 68px;
-  height: 360px;
+  height: 376px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -363,7 +363,7 @@ watch(isSidebarManagerOpen, async (open) => {
 }
 
 .sidebar-manager-dialog__preview-group--grow {
-  flex: 1;
+  flex: 0 0 auto;
   justify-content: flex-start;
 }
 
@@ -432,18 +432,22 @@ watch(isSidebarManagerOpen, async (open) => {
 .sidebar-manager-dialog__preview-remove {
   position: absolute;
   top: -6px;
-  right: 4px;
-  width: 16px;
-  height: 16px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 999px;
-  background: #fff1f2;
-  color: #be123c;
+  border-radius: 6px;
+  background: rgba(244, 63, 94, 0.08);
+  color: #e11d48;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.sidebar-manager-dialog__preview-remove:hover {
+  background: rgba(244, 63, 94, 0.14);
 }
 
 .sidebar-manager-dialog__preview-label {
@@ -475,11 +479,10 @@ watch(isSidebarManagerOpen, async (open) => {
   border: 1px solid var(--panel-border);
   border-radius: 12px;
   background: color-mix(in srgb, var(--panel) 92%, white);
-  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
 }
 
 .sidebar-manager-dialog__module-card:hover {
-  transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--accent) 18%, var(--panel-border));
 }
 
@@ -529,13 +532,12 @@ watch(isSidebarManagerOpen, async (open) => {
   background: color-mix(in srgb, var(--accent) 14%, var(--panel));
   color: var(--accent-hover);
   cursor: pointer;
-  transition: opacity 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
-  align-self: flex-end;
+  transition: opacity 0.18s ease, background-color 0.18s ease;
+  align-self: center;
   flex-shrink: 0;
 }
 
 .sidebar-manager-dialog__module-action:hover:not(:disabled) {
-  transform: translateY(-1px);
   background: color-mix(in srgb, var(--accent) 20%, var(--panel));
 }
 
