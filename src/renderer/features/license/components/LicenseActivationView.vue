@@ -18,6 +18,7 @@
     <label class="field">
       <span class="field-label">{{ t('license.activation.inputLabel') }}</span>
       <input
+        ref="licenseKeyInputRef"
         v-model="licenseKey"
         type="text"
         class="settings-input license-key-input"
@@ -51,15 +52,30 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { nextTick, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { licenseService, normalizeLicenseErrorMessage } from '../services/license.service';
 
 const { t } = useI18n();
 const LICENSE_PURCHASE_URL = 'https://snaptium.com';
 const licenseKey = ref('');
+const licenseKeyInputRef = ref<HTMLInputElement | null>(null);
 const isSubmitting = ref(false);
 const errorMessage = ref('');
+
+async function focusInput(): Promise<void> {
+  await nextTick();
+  licenseKeyInputRef.value?.focus();
+  licenseKeyInputRef.value?.select();
+}
+
+defineExpose({
+  focusInput,
+});
+
+onMounted(() => {
+  void focusInput();
+});
 
 async function handleActivate(): Promise<void> {
   if (isSubmitting.value || licenseKey.value.trim().length === 0) {
@@ -73,6 +89,7 @@ async function handleActivate(): Promise<void> {
     licenseKey.value = '';
   } catch (error) {
     errorMessage.value = normalizeLicenseErrorMessage(error);
+    await focusInput();
   } finally {
     isSubmitting.value = false;
   }

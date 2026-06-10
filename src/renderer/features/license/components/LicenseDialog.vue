@@ -17,7 +17,7 @@
 
           <div class="license-content">
             <LicenseManagementView v-if="panelMode === 'management'" />
-            <LicenseActivationView v-else />
+            <LicenseActivationView v-else ref="activationViewRef" />
           </div>
         </div>
       </div>
@@ -36,12 +36,19 @@ import LicenseActivationView from './LicenseActivationView.vue';
 import LicenseManagementView from './LicenseManagementView.vue';
 
 type LicensePanelMode = 'management' | 'activation';
+type LicenseActivationViewInstance = InstanceType<typeof LicenseActivationView>;
 
 const { t } = useI18n();
 const store = useLicenseStore();
 const { isVisible, closeLicenseDialog } = useLicenseDialog();
 const overlayRef = ref<HTMLElement | null>(null);
+const activationViewRef = ref<LicenseActivationViewInstance | null>(null);
 const panelMode = ref<LicensePanelMode>('activation');
+
+async function focusActivationInput(): Promise<void> {
+  await nextTick();
+  await activationViewRef.value?.focusInput();
+}
 
 watch(isVisible, async (visible) => {
   if (!visible) {
@@ -53,12 +60,15 @@ watch(isVisible, async (visible) => {
   overlayRef.value?.focus();
   if (store.canManage) {
     await licenseService.refreshDevices().catch(() => undefined);
+    return;
   }
+
+  await focusActivationInput();
 });
 
 watch(
   () => store.canManage,
-  (canManage) => {
+  async (canManage) => {
     if (!isVisible.value) {
       return;
     }
@@ -68,6 +78,7 @@ watch(
     }
 
     panelMode.value = 'activation';
+    await focusActivationInput();
   },
 );
 </script>

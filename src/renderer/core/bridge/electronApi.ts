@@ -96,6 +96,16 @@ export interface E2eeErrorResult {
   message: string;
 }
 
+export interface LicenseErrorResult {
+  success: false;
+  code: string;
+  message: string;
+}
+
+export type LicenseBridgeResult<T> =
+  | { success: true; data: T }
+  | LicenseErrorResult;
+
 export interface E2eeOperationResult {
   success: true;
 }
@@ -669,22 +679,22 @@ export const electronApi = {
       if (!api) throw new Error('License bridge is unavailable');
       return api;
     },
-    getState: (): Promise<import('@shared/license.constants').LicenseState> => {
+    getState: (): Promise<LicenseBridgeResult<import('@shared/license.constants').LicenseState>> => {
       return electronApi.license.getApi().getState();
     },
-    activate: (licenseKey: string): Promise<import('@shared/license.constants').LicenseState> => {
+    activate: (licenseKey: string): Promise<LicenseBridgeResult<import('@shared/license.constants').LicenseState>> => {
       return electronApi.license.getApi().activate(licenseKey);
     },
-    validate: (force?: boolean): Promise<import('@shared/license.constants').LicenseState> => {
+    validate: (force?: boolean): Promise<LicenseBridgeResult<import('@shared/license.constants').LicenseState>> => {
       return electronApi.license.getApi().validate(force);
     },
-    refreshDevices: (force?: boolean): Promise<import('@shared/license.constants').LicenseState> => {
+    refreshDevices: (force?: boolean): Promise<LicenseBridgeResult<import('@shared/license.constants').LicenseState>> => {
       return electronApi.license.getApi().refreshDevices(force);
     },
-    deactivateDevice: (deviceId: string): Promise<import('@shared/license.constants').LicenseState> => {
+    deactivateDevice: (deviceId: string): Promise<LicenseBridgeResult<import('@shared/license.constants').LicenseState>> => {
       return electronApi.license.getApi().deactivateDevice(deviceId);
     },
-    clear: (): Promise<import('@shared/license.constants').LicenseState> => {
+    clear: (): Promise<LicenseBridgeResult<import('@shared/license.constants').LicenseState>> => {
       return electronApi.license.getApi().clear();
     },
     onStateChanged: (callback: (state: import('@shared/license.constants').LicenseState) => void): (() => void) => {
