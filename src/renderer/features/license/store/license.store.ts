@@ -22,12 +22,18 @@ export const useLicenseStore = defineStore('license', () => {
 
   const plan = computed(() => state.value.plan);
   const status = computed(() => state.value.status);
+  const displayStatus = computed<LicenseStatus>(() => {
+    if (state.value.status === 'offline_grace' || state.value.status === 'session_grace') {
+      return 'active';
+    }
+
+    return state.value.status;
+  });
   const activated = computed(() => state.value.activated);
   const valid = computed(() => state.value.valid);
   const devices = computed(() => state.value.devices);
   const activatedDevices = computed(() => state.value.activatedDevices);
   const maxDevices = computed(() => state.value.maxDevices);
-  const lastValidatedAt = computed(() => state.value.lastValidatedAt);
   const lastErrorCode = computed(() => state.value.lastErrorCode);
   const lastErrorMessage = computed(() => state.value.lastErrorMessage);
 
@@ -58,12 +64,12 @@ export const useLicenseStore = defineStore('license', () => {
     dialogVisible,
     plan,
     status,
+    displayStatus,
     activated,
     valid,
     devices,
     activatedDevices,
     maxDevices,
-    lastValidatedAt,
     lastErrorCode,
     lastErrorMessage,
     canManage,

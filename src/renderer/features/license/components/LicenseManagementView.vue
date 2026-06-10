@@ -4,7 +4,7 @@
       <div class="summary-main">
         <h2 class="title">{{ t('license.management.planType') }}: {{ t(`license.badge.${store.plan}`) }}</h2>
         <p class="status-text">
-          {{ t('license.devices.status') }}: {{ t(store.getStatusTextKey(store.status)) }}
+          {{ t('license.devices.status') }}: {{ t(store.getStatusTextKey(store.displayStatus)) }}
           <span v-if="!store.canManage && localizedErrorMessage" class="status-inline-reason"> {{ localizedErrorMessage }}</span>
         </p>
       </div>
@@ -33,16 +33,8 @@
         <span class="value">{{ formatDate(store.state.expiresAt) }}</span>
       </article>
       <article class="meta-item">
-        <span class="label">{{ t('license.management.graceExpiresAt') }}</span>
-        <span class="value">{{ formatDate(store.state.graceExpiresAt) }}</span>
-      </article>
-      <article class="meta-item">
         <span class="label">{{ t('license.management.activatedDevices') }}</span>
         <span class="value">{{ store.activatedDevices }} / {{ store.maxDevices ?? '-' }}</span>
-      </article>
-      <article class="meta-item">
-        <span class="label">{{ t('license.management.lastValidatedAt') }}</span>
-        <span class="value">{{ formatTimestamp(store.lastValidatedAt) }}</span>
       </article>
     </section>
 
@@ -76,13 +68,6 @@ function formatDate(value: string | null): string {
   }
 
   return new Date(timestamp).toLocaleString();
-}
-
-function formatTimestamp(value: number | null): string {
-  if (!value) {
-    return '-';
-  }
-  return new Date(value).toLocaleString();
 }
 
 async function handleRefresh(): Promise<void> {

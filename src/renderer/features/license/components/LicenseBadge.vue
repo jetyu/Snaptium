@@ -1,8 +1,6 @@
 <template>
   <button type="button" class="license-badge" :class="[store.plan, toneClass]" @click="openLicenseDialog">
     <span class="label">{{ t(`license.badge.${store.plan}`) }}</span>
-    <span v-if="store.status === 'offline_grace'" class="hint">{{ t('license.badge.offline') }}</span>
-    <span v-else-if="store.status === 'session_grace'" class="hint">{{ t('license.badge.grace') }}</span>
   </button>
 </template>
 
@@ -17,12 +15,8 @@ const store = useLicenseStore();
 const { openLicenseDialog } = useLicenseDialog();
 
 const toneClass = computed(() => {
-  if (store.status === 'expired' || store.status === 'invalid') {
+  if (store.displayStatus === 'expired' || store.displayStatus === 'invalid') {
     return 'is-expired';
-  }
-
-  if (store.status === 'offline_grace' || store.status === 'session_grace') {
-    return 'is-grace';
   }
 
   return 'is-normal';
@@ -87,10 +81,5 @@ const toneClass = computed(() => {
   background: #fff1f2;
   border-color: #fecdd3;
   color: #be123c;
-}
-
-.hint {
-  opacity: 0.76;
-  font-size: 0.7rem;
 }
 </style>
