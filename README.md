@@ -10,6 +10,8 @@
   <img src="electron/assets/logo/app-logo-128.png" alt="Snaptium Logo" width="88">
 
 # Snaptium
+**Tips:NoteWizard has been fully upgraded to Snaptium. If you need to use the previous NoteWizard version, please download it from [here](https://github.com/jetyu/Snaptium/releases/tag/v1.2.1).**
+
 [Official Website](https://snaptium.com) [Official Docs](https://snaptium.com/docs) [Download](https://snaptium.com/#download)
 ### Local-first Markdown Intelligent Writing & Knowledge Management Workspace
 
@@ -32,7 +34,6 @@ Focused on deep writing, knowledge management, and a local-first experience, sup
 [![License](https://img.shields.io/github/license/jetyu/Snaptium?style=flat)]()
 
 </div>
-
 ---
 
 # ✨ Project Positioning

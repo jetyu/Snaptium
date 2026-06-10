@@ -10,7 +10,11 @@
   <img src="electron/assets/logo/app-logo-128.png" alt="Snaptium Logo" width="88">
 
 # Snaptium
+**提示: NoteWizard 已全面升级为 Snaptium，如需使用 NoteWizard，请前往 [NoteWizard](https://github.com/jetyu/Snaptium/releases/tag/v1.2.1)
+下载**
+
 [官方网站](https://snaptium.com) [官方文档](https://snaptium.com/docs) [下载地址](https://snaptium.com/#download)
+
 ### 本地优先的 Markdown 智能写作与知识管理工作空间
 
 一款基于 Electron + Vue 3 构建的现代化跨平台 Markdown 智能工作空间。  
