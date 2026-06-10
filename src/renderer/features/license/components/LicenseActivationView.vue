@@ -3,7 +3,7 @@
     <div class="activation-header">
       <div class="header-icon-container">
         <div class="icon-glow-ring"></div>
-        <Key theme="filled" size="28" class="header-icon" />
+        <IconKey size="28" class="header-icon" />
       </div>
       <div class="title-group">
         <h2 class="title">{{ t('license.activation.title') }}</h2>
@@ -17,28 +17,28 @@
       <div class="feature-grid">
         <div class="feature-card src-card">
           <div class="feature-icon-wrapper">
-            <Cpu theme="outline" size="18" />
+            <IconCpu :size="18" />
           </div>
           <span class="feature-name">{{ t('license.feature.aiSources') }}</span>
         </div>
 
         <div class="feature-card assistant-card">
           <div class="feature-icon-wrapper">
-            <Edit theme="outline" size="18" />
+            <IconPencil :size="18" />
           </div>
           <span class="feature-name">{{ t('license.feature.aiAssistant') }}</span>
         </div>
 
         <div class="feature-card rag-card">
           <div class="feature-icon-wrapper">
-            <Brain theme="outline" size="18" />
+            <IconBrain :size="18" />
           </div>
           <span class="feature-name">{{ t('license.feature.rag') }}</span>
         </div>
 
         <div class="feature-card sync-card">
           <div class="feature-icon-wrapper">
-            <DatabaseSync theme="outline" size="18" />
+            <IconDatabase :size="18" />
           </div>
           <span class="feature-name">{{ t('license.feature.sync') }}</span>
         </div>
@@ -49,7 +49,7 @@
       <div class="field">
         <span class="field-label">{{ t('license.activation.inputLabel') }}</span>
         <div class="input-container">
-          <Key theme="outline" size="16" class="input-key-icon" />
+          <IconKey :size="16" class="input-key-icon" />
           <input
             ref="licenseKeyInputRef"
             v-model="licenseKey"
@@ -79,7 +79,7 @@
           rel="noopener noreferrer nofollow"
         >
           <span>{{ t('license.activation.purchase') }}</span>
-          <LinkOne theme="outline" size="14" />
+          <IconLink :size="14" />
         </a>
       </div>
     </div>
@@ -93,7 +93,7 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Key, Cpu, Edit, Brain, DatabaseSync, LinkOne } from '@icon-park/vue-next';
+import { IconKey, IconCpu, IconPencil, IconBrain, IconDatabase, IconLink } from '@tabler/icons-vue';
 import { licenseService, normalizeLicenseErrorMessage } from '../services/license.service';
 
 const { t } = useI18n();

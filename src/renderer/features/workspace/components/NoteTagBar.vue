@@ -3,12 +3,12 @@
     <span class="note-tag-bar__label">{{ t('tags.title') }}</span>
     <div class="note-tag-bar__list">
       <span v-for="tag in activeTags" :key="tag" class="note-tag-bar__pill">
-        <TagOne theme="outline" :size="13" />
+        <IconTag :size="13" />
         <span class="note-tag-bar__pill-text">#{{ tag }}</span>
         <button type="button" class="note-tag-bar__remove" :title="t('tags.remove', { tag })"
           :aria-label="t('tags.remove', { tag })" @click="removeTag(tag)">
           <span class="note-tag-bar__icon note-tag-bar__icon--remove">
-            <CloseSmall theme="outline" :size="13" />
+            <IconX :size="13" />
           </span>
         </button>
       </span>
@@ -16,7 +16,7 @@
       <button type="button" class="note-tag-bar__add" :title="addButtonTitle" :aria-label="addButtonTitle"
         :disabled="hasReachedTagLimit" @click="togglePicker">
         <span class="note-tag-bar__icon note-tag-bar__icon--add">
-          <Plus theme="outline" :size="14" />
+          <IconPlus :size="14" />
         </span>
       </button>
     </div>
@@ -44,7 +44,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { CloseSmall, Plus, TagOne } from '@icon-park/vue-next';
+import { IconX, IconPlus, IconTag } from '@tabler/icons-vue';
 import {
   MAX_TAGS_PER_NOTE,
   normalizeNoteTag,

@@ -4,7 +4,7 @@
       <header class="tags-view__header">
         <div class="tags-view__title-wrap">
           <span class="tags-view__title-icon">
-            <TagOne theme="outline" :size="16" />
+            <IconTag :size="16" />
           </span>
           <h1 class="tags-view__title">{{ t('tags.title') }}</h1>
         </div>
@@ -19,7 +19,7 @@
         <button type="button" class="tags-view__filter" :class="{ 'is-active': selectedFilter.kind === 'tagged' }"
           @click="selectedFilter = { kind: 'tagged' }">
           <span class="tags-view__filter-icon">
-            <TagOne theme="outline" :size="15" />
+            <IconTag :size="15" />
           </span>
           <span class="tags-view__filter-name">{{ t('tags.allTagged') }}</span>
           <span class="tags-view__filter-count">{{ taggedNotes.length }}</span>
@@ -28,7 +28,7 @@
         <button type="button" class="tags-view__filter" :class="{ 'is-active': selectedFilter.kind === 'untagged' }"
           @click="selectedFilter = { kind: 'untagged' }">
           <span class="tags-view__filter-icon">
-            <TagOne theme="outline" :size="16" />
+            <IconTag :size="16" />
           </span>
           <span class="tags-view__filter-name">{{ t('tags.untagged') }}</span>
           <span class="tags-view__filter-count">{{ untaggedNotes.length }}</span>
@@ -52,7 +52,7 @@
     <main class="tags-view__main">
       <header class="tags-view__main-header">
         <div class="tags-view__title-stack">
-          <TagOne theme="outline" :size="16" />
+          <IconTag :size="16" />
           <h2 class="tags-view__heading">{{ t('tags.notesTitle', { selectedTitle: selectedTitle }) }}
           </h2>
         </div>
@@ -65,8 +65,8 @@
             <button v-for="note in selectedNotes" :key="note.id" type="button" class="tags-view__note"
               @click="openNote(note.id)">
               <div class="tags-view__note-icon">
-                <FileLockOne v-if="note.locked" theme="outline" :size="17" />
-                <Notes v-else theme="outline" :size="17" />
+                <IconFileCheck v-if="note.locked" :size="17" />
+                <IconFileText v-else :size="17" />
               </div>
               <div class="tags-view__note-body">
                 <div class="tags-view__note-row">
@@ -95,7 +95,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { TagOne, Notes, FileLockOne } from '@icon-park/vue-next';
+import { IconTag, IconFileText, IconFileCheck } from '@tabler/icons-vue';
 import { formatDate } from '@renderer/core/utils/date.utils';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';

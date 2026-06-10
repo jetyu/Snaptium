@@ -5,17 +5,12 @@
     </div>
 
     <div v-else class="device-cards">
-      <article 
-        v-for="device in devices" 
-        :key="device.id" 
-        class="device-card" 
-        :class="{ 'is-current': device.current }"
-      >
+      <article v-for="device in devices" :key="device.id" class="device-card" :class="{ 'is-current': device.current }">
         <div class="device-main">
           <div class="device-hardware-icon" :class="{ 'is-current-icon': device.current }">
             <component :is="getDeviceIcon(device.platform)" size="20" />
           </div>
-          
+
           <div class="device-details">
             <div class="device-title-row">
               <span class="device-name" :title="device.name">{{ device.name }}</span>
@@ -23,7 +18,7 @@
                 {{ t('license.devices.current') }}
               </span>
             </div>
-            
+
             <div class="device-sub-row">
               <span class="device-platform">{{ device.platform || t('common.unknown') }}</span>
               <span class="device-dot-separator">•</span>
@@ -40,12 +35,8 @@
             {{ device.status }}
           </span>
 
-          <button
-            type="button"
-            class="deactivate-btn"
-            :disabled="processingDeviceId === device.id"
-            @click="handleDeactivate(device.id, device.current)"
-          >
+          <button type="button" class="deactivate-btn" :disabled="processingDeviceId === device.id"
+            @click="handleDeactivate(device.id, device.current)">
             <span v-if="processingDeviceId === device.id" class="spinner small"></span>
             <span v-else>{{ t('license.devices.deactivate') }}</span>
           </button>
@@ -62,7 +53,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Computer, Laptop, Iphone } from '@icon-park/vue-next';
+import { IconDeviceDesktop, IconBrandWindows, IconBrandApple, IconDeviceMobile } from '@tabler/icons-vue';
 import type { LicenseDevice } from '@shared/license.constants';
 import { licenseService, normalizeLicenseErrorMessage } from '../services/license.service';
 
@@ -78,19 +69,19 @@ const errorMessage = ref('');
 
 function getDeviceIcon(platform: string | null) {
   if (!platform) {
-    return Computer;
+    return IconDeviceDesktop;
   }
   const p = platform.toLowerCase();
   if (p.includes('win') || p.includes('windows')) {
-    return Computer;
+    return IconBrandWindows;
   }
   if (p.includes('mac') || p.includes('os x') || p.includes('darwin')) {
-    return Laptop;
+    return IconBrandApple;
   }
   if (p.includes('phone') || p.includes('android') || p.includes('ios') || p.includes('iphone')) {
-    return Iphone;
+    return IconDeviceMobile;
   }
-  return Computer;
+  return IconDeviceDesktop;
 }
 
 function formatDate(value: string | null): string {
@@ -117,7 +108,7 @@ function formatRelativeTime(value: string | null): string {
   if (diffHour < 24) return t('statusBar.savedHoursAgo', `${diffHour}小时前`); // Fallback formatting
   if (diffDay === 1) return '昨天';
   if (diffDay < 30) return `${diffDay}天前`;
-  
+
   return new Date(timestamp).toLocaleDateString();
 }
 
@@ -302,14 +293,17 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
   background: #ecfdf3;
   border-color: #bbf7d0;
 }
+
 [data-theme='dark'] .status-pill.is-active {
   color: #4ade80;
   background: rgba(22, 101, 52, 0.2);
   border-color: rgba(74, 222, 128, 0.3);
 }
+
 .status-pill.is-active .status-indicator-dot {
   background: #166534;
 }
+
 [data-theme='dark'] .status-pill.is-active .status-indicator-dot {
   background: #4ade80;
 }
@@ -319,6 +313,7 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
   background: var(--panel-hover);
   border-color: var(--panel-border);
 }
+
 .status-pill.is-inactive .status-indicator-dot {
   background: var(--text-muted);
 }
@@ -328,14 +323,17 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
   background: #fff1f2;
   border-color: #fecdd3;
 }
+
 [data-theme='dark'] .status-pill.is-revoked {
   color: #fb7185;
   background: rgba(159, 18, 57, 0.2);
   border-color: rgba(251, 113, 133, 0.3);
 }
+
 .status-pill.is-revoked .status-indicator-dot {
   background: #9f1239;
 }
+
 [data-theme='dark'] .status-pill.is-revoked .status-indicator-dot {
   background: #fb7185;
 }
@@ -345,6 +343,7 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
   background: var(--panel-hover);
   border-color: var(--panel-border);
 }
+
 .status-pill.is-default .status-indicator-dot {
   background: var(--text-muted);
 }
@@ -401,7 +400,7 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
     align-items: flex-start;
     gap: 12px;
   }
-  
+
   .device-actions {
     width: 100%;
     justify-content: space-between;

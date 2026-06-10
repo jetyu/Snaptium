@@ -7,7 +7,7 @@
           <div class="history-header">
             <h2>{{ $t('history.title') }}</h2>
             <button @click="closeDialog" class="btn-close">
-              <Close theme="outline" :size="18" />
+              <IconX :size="18" />
             </button>
           </div>
 
@@ -60,7 +60,7 @@ import { workspaceService } from '../services/workspace.service';
 import { useSettingsStore } from '@renderer/features/settings';
 import { PreviewPane } from '@renderer/features/preview';
 import { useI18n } from 'vue-i18n';
-import { Close } from '@icon-park/vue-next';
+import { IconX } from '@tabler/icons-vue';
 
 const { t } = useI18n();
 const workspaceStore = useWorkspaceStore();

@@ -4,22 +4,22 @@
       <button v-for="view in mainViews" :key="view.id" type="button" class="app-shell-sidebar__button"
         :class="{ 'is-active': activeMainView === view.id }" :title="t(view.labelKey)" :aria-label="t(view.labelKey)"
         @click="$emit('select-main-view', view.id)">
-        <component :is="getMainViewIcon(view.id)" theme="outline" :size="18" />
+        <component :is="getMainViewIcon(view.id)" :size="18" />
       </button>
     </div>
 
     <div class="app-shell-sidebar__stack app-shell-sidebar__stack--grow">
       <button v-for="module in customModules" :key="module.id" type="button" class="app-shell-sidebar__button"
-        :class="{ 'is-active': isModuleActive(module) }"
-        :title="t(module.labelKey)" :aria-label="t(module.labelKey)" @click="$emit('open-module', module.id)">
-        <component :is="getModuleIcon(module.id)" theme="outline" :size="18" />
+        :class="{ 'is-active': isModuleActive(module) }" :title="t(module.labelKey)" :aria-label="t(module.labelKey)"
+        @click="$emit('open-module', module.id)">
+        <component :is="getModuleIcon(module.id)" :size="18" />
       </button>
     </div>
 
     <button type="button" class="app-shell-sidebar__button app-shell-sidebar__button--manage"
       :title="t('appShell.sidebarManager.title')" :aria-label="t('appShell.sidebarManager.title')"
       @click="$emit('manage-sidebar')">
-      <SettingConfig theme="outline" :size="18" />
+      <IconAdjustmentsHorizontal :size="18" />
     </button>
   </aside>
 </template>
@@ -28,16 +28,15 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  ApplicationOne,
-  NotebookOne,
-  Search,
-  SettingTwo,
-  Delete,
-  Info,
-  SettingConfig,
-  Star,
-  TagOne,
-} from '@icon-park/vue-next';
+  IconLayoutDashboard,
+  IconNotebook,
+  IconSearch,
+  IconSettings, IconAdjustmentsHorizontal,
+  IconTrash,
+  IconInfoCircle,
+  IconStar,
+  IconTag,
+} from '@tabler/icons-vue';
 import type { AppShellMainViewId, AppShellModuleDefinition, AppShellMainViewDefinition, AppShellModuleId } from '../constants/appShell.constants';
 
 const props = defineProps<{
@@ -55,29 +54,29 @@ defineEmits<{
 const { t } = useI18n();
 
 const mainViewIconMap = computed(() => ({
-  workbench: ApplicationOne,
-  workspace: NotebookOne,
-  tags: TagOne,
-  favorites: Star,
-  search: Search,
-  settings: SettingTwo,
+  workbench: IconLayoutDashboard,
+  workspace: IconNotebook,
+  tags: IconTag,
+  favorites: IconStar,
+  search: IconSearch,
+  settings: IconSettings,
 }));
 
 const moduleIconMap = computed(() => ({
-  favorites: Star,
-  tags: TagOne,
-  search: Search,
-  settings: SettingTwo,
-  trash: Delete,
-  about: Info,
+  favorites: IconStar,
+  tags: IconTag,
+  search: IconSearch,
+  settings: IconSettings,
+  trash: IconTrash,
+  about: IconInfoCircle,
 }));
 
 function getMainViewIcon(viewId: AppShellMainViewId) {
-  return mainViewIconMap.value[viewId] ?? NotebookOne;
+  return mainViewIconMap.value[viewId] ?? IconNotebook;
 }
 
 function getModuleIcon(moduleId: AppShellModuleId) {
-  return moduleIconMap.value[moduleId] ?? NotebookOne;
+  return moduleIconMap.value[moduleId] ?? IconNotebook;
 }
 
 function isModuleActive(module: AppShellModuleDefinition) {

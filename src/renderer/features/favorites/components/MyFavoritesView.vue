@@ -3,7 +3,7 @@
     <header class="dashboard-header">
       <div class="dashboard-title-wrap">
         <span class="dashboard-title-icon">
-          <Star theme="outline" :size="16" />
+          <IconStar :size="16" />
         </span>
         <h1 class="dashboard-title">{{ $t('favorites.listTitle') }}</h1>
       </div>
@@ -42,14 +42,9 @@
             <tr v-for="item in allFavorites" :key="`${item.kind}-${item.id}`" class="favorite-row"
               @click="jumpToWorkspace(item.id, item.kind)">
               <td class="col-icon">
-                <FileLockOne v-if="item.kind === 'note' && item.locked" theme="outline" :size="16" />
-                <Notes v-else-if="item.kind === 'note'" theme="outline" :size="16" />
-                <NotebookVisualIcon
-                  v-else
-                  :icon-color="item.iconColor"
-                  :icon-size="13"
-                  :box-size="18"
-                />
+                <IconFileCheck v-if="item.kind === 'note' && item.locked" :size="16" />
+                <IconFileText v-else-if="item.kind === 'note'" :size="16" />
+                <NotebookVisualIcon v-else :icon-color="item.iconColor" :icon-size="13" :box-size="18" />
               </td>
               <td class="col-name">{{ item.nameOrTitle }}</td>
               <td class="col-type">
@@ -65,7 +60,7 @@
               <td class="col-actions">
                 <button class="action-btn is-active" :title="t('contextMenu.unstar')"
                   @click.stop="favoritesStore.toggleStar(item.id, item.kind, false)">
-                  <Star theme="filled" :size="16" />
+                  <IconFileStar fill="currentColor" :size="16" />
                 </button>
               </td>
             </tr>
@@ -84,7 +79,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
-import { Notes, FileLockOne, Star } from '@icon-park/vue-next';
+import { IconFileText, IconFileCheck, IconFileStar } from '@tabler/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { formatDate as formatTime } from '@renderer/core/utils/date.utils';
 import NotebookVisualIcon from '@renderer/features/workspace/components/NotebookVisualIcon.vue';

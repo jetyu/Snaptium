@@ -9,18 +9,18 @@
           @focusout="scheduleHideSyncHoverCard">
           <button class="btn-sync icon-wrapper" :title="$t('tooltip.syncNow')" :disabled="!canTriggerSync"
             @click="handleManualSync">
-            <Refresh theme="outline" :size="16" :class="{ 'is-spinning': syncStore.isSyncing }" />
+            <IconRefresh :size="16" :class="{ 'is-spinning': syncStore.isSyncing }" />
           </button>
         </div>
 
         <button class="btn-new-note icon-wrapper" :title="$t('tooltip.newNoteOrNotebook')"
           @click="openCreateButtonMenu">
-          <Plus theme="outline" :size="16" />
+          <IconFolderPlus :stroke-width="3" :size="20" />
         </button>
         <button v-if="hasCollapsibleNotebooks" class="btn-expand-collapse icon-wrapper" :title="expandCollapseTitle"
           @click="toggleExpandCollapseAll">
-          <DoubleRight v-if="isAnyNotebookCollapsed" theme="outline" :size="16" />
-          <DoubleDown v-else theme="outline" :size="16" />
+          <IconChevronsRight v-if="isAnyNotebookCollapsed" :size="16" />
+          <IconChevronsDown v-else :size="16" />
         </button>
 
 
@@ -53,32 +53,28 @@
         <button v-if="entry.kind === 'notebook'" class="workspace-row__chevron icon-wrapper"
           :class="{ 'is-expanded': !collapsedIds.has(entry.id) }" :disabled="!entry.hasChildren"
           @click.stop="toggleCollapse(entry)">
-          <Right v-if="entry.hasChildren" theme="outline" :size="14" />
+          <IconChevronRight v-if="entry.hasChildren" :size="14" />
         </button>
         <span v-else class="workspace-row__chevron workspace-row__chevron--placeholder" />
 
         <div class="workspace-row__icon icon-wrapper">
-          <FileLockOne v-if="entry.kind === 'note' && entry.item.locked" theme="outline" :size="14" />
-          <NotebookVisualIcon
-            v-else-if="entry.kind === 'notebook'"
-            class="workspace-row__notebook-icon"
-            :icon-color="entry.item.iconColor"
-          />
-          <Notes v-else theme="outline" :size="14" />
+          <IconFileCheck v-if="entry.kind === 'note' && entry.item.locked" :size="14" />
+          <NotebookVisualIcon v-else-if="entry.kind === 'notebook'" class="workspace-row__notebook-icon"
+            :icon-color="entry.item.iconColor" />
+          <IconFileText v-else :size="14" />
         </div>
         <div class="workspace-row__content">
           <input v-if="isEditing(entry)" ref="renameInput" v-model="renameDraft" class="workspace-row__rename-input"
             @click.stop @keydown.enter.prevent="commitRename" @keydown.esc.prevent="cancelRename"
             @blur="commitRename" />
           <template v-else>
-            <span class="workspace-row__title" :title="entry.kind === 'notebook' ? entry.item.name : entry.item.title">{{
-              entry.kind === "notebook" ? entry.item.name : entry.item.title
-            }}</span>
+            <span class="workspace-row__title"
+              :title="entry.kind === 'notebook' ? entry.item.name : entry.item.title">{{
+                entry.kind === "notebook" ? entry.item.name : entry.item.title
+              }}</span>
             <div class="workspace-row__actions" v-show="!isEditing(entry)">
-              <StarButton 
-                :model-value="entry.item.starred" 
-                @update:model-value="toggleNodeStar(entry.id, entry.kind, $event)" 
-              />
+              <StarButton :model-value="entry.item.starred"
+                @update:model-value="toggleNodeStar(entry.id, entry.kind, $event)" />
             </div>
           </template>
         </div>
@@ -101,13 +97,9 @@
       :status-label="statusLabel" :status-tone-class="statusToneClass" :formatted-last-synced="formattedLastSynced"
       :summary-items="summaryItems" @mouseenter="showSyncHoverCard" @mouseleave="scheduleHideSyncHoverCard" />
 
-    <NotebookAppearanceDialog
-      v-if="isNotebookAppearanceDialogOpen"
-      v-model="isNotebookAppearanceDialogOpen"
-      :notebook-name="notebookAppearanceTarget?.name ?? ''"
-      :icon-color="notebookAppearanceTarget?.iconColor"
-      @select-color="handleNotebookIconColorSelect"
-    />
+    <NotebookAppearanceDialog v-if="isNotebookAppearanceDialogOpen" v-model="isNotebookAppearanceDialogOpen"
+      :notebook-name="notebookAppearanceTarget?.name ?? ''" :icon-color="notebookAppearanceTarget?.iconColor"
+      @select-color="handleNotebookIconColorSelect" />
   </aside>
 </template>
 
@@ -131,7 +123,7 @@ import {
   type WorkspaceMoveTarget,
 } from "../services/workspaceContextMenu.service";
 import { useWorkspaceContextMenu } from "../composables/useWorkspaceContextMenu";
-import { Plus, Right, FileLockOne, Notes, Refresh, DoubleRight, DoubleDown } from '@icon-park/vue-next';
+import { IconFolderPlus, IconChevronRight, IconFileCheck, IconFileText, IconRefresh, IconChevronsRight, IconChevronsDown } from '@tabler/icons-vue';
 import StarButton from "../../favorites/components/StarButton.vue";
 import NotebookVisualIcon from './NotebookVisualIcon.vue';
 

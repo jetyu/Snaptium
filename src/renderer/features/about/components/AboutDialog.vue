@@ -5,7 +5,7 @@
         <div class="about-modal" @click.stop>
           <div class="about-close-btn-wrapper">
             <button @click="closeAbout" class="about-close-btn" :aria-label="t('close')">
-              <close theme="outline" size="16" />
+              <IconX :size="16" />
             </button>
           </div>
 
@@ -64,7 +64,7 @@
 import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAbout } from '../composables/useAbout';
-import { Close } from '@icon-park/vue-next';
+import { IconX } from '@tabler/icons-vue';
 
 const { t } = useI18n();
 const { isOpen, appVersion, appName, envVersion, closeAbout, loadVersionInfo, initMainProcessListeners } = useAbout();

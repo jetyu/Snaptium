@@ -3,7 +3,7 @@
     <div class="subpage-actions">
       <div class="add-host-bar">
         <div class="input-wrapper">
-          <link-one class="input-icon" theme="outline" size="16" />
+          <IconLink class="input-icon" :size="16" />
           <input v-model="newHost" class="inline-input" :placeholder="t('placeholder.hostName')"
             @keyup.enter="handleAddHost" />
         </div>
@@ -20,19 +20,19 @@
             class="host-row">
             <div class="host-info">
               <div class="host-avatar">
-                <browser theme="outline" size="14" />
+                <IconBrowser :size="14" />
               </div>
               <span class="host-text">{{ host }}</span>
             </div>
             <button class="row-action-btn delete" @click="handleDeleteHost(index)" :title="t('common.delete')">
-              <delete theme="outline" size="14" />
+              <IconTrash :size="14" />
             </button>
           </div>
         </div>
       </div>
       <div class="subpage-footer">
         <p class="footer-hint">
-          <info theme="filled" size="14" class="hint-icon" />
+          <IconInfoCircle :size="14" class="hint-icon" />
           {{ t('text.previewTrustedSourcesHint') }}
         </p>
       </div>
@@ -43,7 +43,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { LinkOne, Browser, Delete, Info } from '@icon-park/vue-next';
+import { IconLink, IconBrowser, IconTrash, IconInfoCircle } from '@tabler/icons-vue';
 import { useSettingsStore } from '../../../store/settings.store';
 import { normalizeTrustedRemoteImageHost } from '@shared/preview-security.constants';
 

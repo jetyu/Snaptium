@@ -1,6 +1,6 @@
 <template>
   <button type="button" class="license-badge" :class="[store.plan, toneClass]" @click="openLicenseDialog">
-    <component :is="planIcon" v-if="planIcon" theme="filled" size="12" class="badge-icon" />
+    <component :is="planIcon" v-if="planIcon" :size="12" class="badge-icon" />
     <span class="label">{{ t(`license.badge.${store.plan}`) }}</span>
   </button>
 </template>
@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Crown, Timer, Star, Rocket, BuildingOne } from '@icon-park/vue-next';
+import { IconCrown, IconTimeDuration0, IconSparkle2, IconSparkles2, IconBuilding } from '@tabler/icons-vue';
 import { useLicenseStore } from '../store/license.store';
 import { useLicenseDialog } from '../composables/useLicenseDialog';
 import type { LicensePlan } from '@shared/license.constants';
@@ -18,11 +18,11 @@ const store = useLicenseStore();
 const { openLicenseDialog } = useLicenseDialog();
 
 const PLAN_ICONS: Partial<Record<LicensePlan, unknown>> = {
-  trial: Timer,
-  insider: Star,
-  pro: Rocket,
-  ultimate: Crown,
-  enterprise: BuildingOne,
+  trial: IconTimeDuration0,
+  insider: IconSparkle2,
+  pro: IconSparkles2,
+  ultimate: IconCrown,
+  enterprise: IconBuilding,
 };
 
 const planIcon = computed(() => PLAN_ICONS[store.plan] ?? null);

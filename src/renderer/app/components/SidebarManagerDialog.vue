@@ -11,7 +11,7 @@
             </div>
             <button type="button" class="sidebar-manager-dialog__close" :aria-label="t('common.close')"
               @click="closeSidebarManager">
-              <Close theme="outline" :size="18" />
+              <IconX :size="18" />
             </button>
           </header>
 
@@ -31,7 +31,7 @@
                       <div class="sidebar-manager-dialog__preview-group">
                         <button v-for="view in mainViews" :key="view.id" type="button"
                           class="sidebar-manager-dialog__preview-button sidebar-manager-dialog__preview-button--view is-active">
-                          <component :is="getMainViewIcon(view.id)" theme="outline" :size="18" />
+                          <component :is="getMainViewIcon(view.id)" :size="18" />
                         </button>
                       </div>
 
@@ -45,10 +45,10 @@
                           <button type="button" class="sidebar-manager-dialog__preview-remove"
                             :aria-label="t('appShell.sidebarManager.removeModule', { module: t(module.labelKey) })"
                             @click="removeFromPreview(module.id)">
-                            <Minus theme="outline" :size="14" />
+                            <IconMinus :size="14" />
                           </button>
                           <button type="button" class="sidebar-manager-dialog__preview-button is-module">
-                            <component :is="getModuleIcon(module.id)" theme="outline" :size="18" />
+                            <component :is="getModuleIcon(module.id)" :size="18" />
                           </button>
                         </div>
                         <div v-for="slot in previewPlaceholderCount" :key="`placeholder-${slot}`"
@@ -62,7 +62,7 @@
                       <!-- 底部管理按钮 -->
                       <button type="button"
                         class="sidebar-manager-dialog__preview-button sidebar-manager-dialog__preview-button--manage">
-                        <SettingConfig theme="outline" :size="18" />
+                        <IconAdjustmentsHorizontal :size="18" />
                       </button>
                     </div>
                   </div>
@@ -83,7 +83,7 @@
                     <article v-for="module in customModules" :key="module.id"
                       class="sidebar-manager-dialog__module-card" :class="{ 'is-active': isModuleEnabled(module.id) }">
                       <div class="sidebar-manager-dialog__module-icon">
-                        <component :is="getModuleIcon(module.id)" theme="outline" :size="18" />
+                        <component :is="getModuleIcon(module.id)" :size="18" />
                       </div>
                       <div class="sidebar-manager-dialog__module-copy">
                         <strong>{{ t(module.labelKey) }}</strong>
@@ -92,12 +92,12 @@
                         class="sidebar-manager-dialog__module-action" :disabled="hasReachedCustomModuleLimit"
                         :aria-label="t('appShell.sidebarManager.addModule', { module: t(module.labelKey) })"
                         @click="addToPreview(module.id)">
-                        <Plus theme="outline" :size="16" />
+                        <IconPlus :size="16" />
                       </button>
                       <button v-else type="button" class="sidebar-manager-dialog__module-action is-remove"
                         :aria-label="t('appShell.sidebarManager.removeModule', { module: t(module.labelKey) })"
                         @click="removeFromPreview(module.id)">
-                        <Minus theme="outline" :size="16" />
+                        <IconMinus :size="16" />
                       </button>
                     </article>
                   </div>
@@ -114,7 +114,20 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Close, ApplicationOne, Plus, Minus, Search, SettingTwo, Delete, Info, NotebookOne, SettingConfig, Star, TagOne } from '@icon-park/vue-next';
+import {
+  IconX,
+  IconLayoutDashboard,
+  IconPlus,
+  IconMinus,
+  IconSearch,
+  IconSettings,
+  IconAdjustmentsHorizontal,
+  IconTrash,
+  IconInfoCircle,
+  IconNotebook,
+  IconStar,
+  IconTag,
+} from '@tabler/icons-vue';
 import { useI18n } from 'vue-i18n';
 import type { AppShellMainViewId, AppShellModuleId } from '../constants/appShell.constants';
 import { useSidebarManager } from '../composables/useSidebarManager';
@@ -138,30 +151,30 @@ const previewPlaceholderCount = computed(() => {
   return Math.max(0, maxCustomModules.value - enabledCustomModules.value.length);
 });
 
-const mainViewIconMap: Record<AppShellMainViewId, typeof NotebookOne> = {
-  workbench: ApplicationOne,
-  workspace: NotebookOne,
-  tags: TagOne,
-  favorites: Star,
-  search: Search,
-  settings: SettingTwo,
+const mainViewIconMap: Record<AppShellMainViewId, typeof IconNotebook> = {
+  workbench: IconLayoutDashboard,
+  workspace: IconNotebook,
+  tags: IconTag,
+  favorites: IconStar,
+  search: IconSearch,
+  settings: IconSettings,
 };
 
-const moduleIconMap: Record<AppShellModuleId, typeof Search> = {
-  favorites: Star,
-  tags: TagOne,
-  search: Search,
-  settings: SettingTwo,
-  trash: Delete,
-  about: Info,
+const moduleIconMap: Record<AppShellModuleId, typeof IconSearch> = {
+  favorites: IconStar,
+  tags: IconTag,
+  search: IconSearch,
+  settings: IconSettings,
+  trash: IconTrash,
+  about: IconInfoCircle,
 };
 
 function getMainViewIcon(viewId: AppShellMainViewId) {
-  return mainViewIconMap[viewId] ?? NotebookOne;
+  return mainViewIconMap[viewId] ?? IconNotebook;
 }
 
 function getModuleIcon(moduleId: AppShellModuleId) {
-  return moduleIconMap[moduleId] ?? Search;
+  return moduleIconMap[moduleId] ?? IconSearch;
 }
 
 function isModuleEnabled(moduleId: AppShellModuleId) {

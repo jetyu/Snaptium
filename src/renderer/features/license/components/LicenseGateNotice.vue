@@ -2,7 +2,7 @@
   <div class="license-gate-notice">
     <div class="notice-main">
       <div class="notice-icon-wrapper">
-        <Lock theme="filled" size="18" />
+        <IconLock :size="18" />
       </div>
       <div class="notice-copy">
         <h4 class="notice-title">{{ t(titleKey) }}</h4>
@@ -22,7 +22,7 @@
 
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { Lock } from '@icon-park/vue-next';
+import { IconLock } from '@tabler/icons-vue';
 import { useLicenseDialog } from '../composables/useLicenseDialog';
 
 interface Props {

@@ -11,7 +11,7 @@
         <div class="license-modal" @click.stop>
           <div class="license-modal-header">
             <button type="button" class="license-close-btn" :aria-label="t('button.close')" @click="closeLicenseDialog">
-              <Close theme="outline" size="18" />
+              <IconX :size="18" />
             </button>
           </div>
 
@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Close } from '@icon-park/vue-next';
+import { IconX } from '@tabler/icons-vue';
 import { useLicenseStore } from '../store/license.store';
 import { licenseService } from '../services/license.service';
 import { useLicenseDialog } from '../composables/useLicenseDialog';

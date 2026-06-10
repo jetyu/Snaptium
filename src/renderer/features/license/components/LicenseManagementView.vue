@@ -24,20 +24,19 @@
     <!-- Management Toolbar Actions -->
     <div class="management-toolbar">
       <button type="button" class="toolbar-btn" :disabled="isRefreshing || !store.canManage" @click="handleRefresh">
-        <Refresh theme="outline" size="14" :class="{ 'animate-spin': isRefreshing }" />
+        <IconRefresh :size="14" :class="{ 'animate-spin': isRefreshing }" />
         <span>{{ t('license.management.refresh') }}</span>
       </button>
 
       <button type="button" class="toolbar-btn" :disabled="isRefreshing || !store.canManage" @click="handleValidate">
-        <Shield theme="outline" size="14" />
+        <IconDeviceDesktopCheck :size="14" />
         <span>{{ t('license.management.validate') }}</span>
       </button>
 
-      <div class="toolbar-divider"></div>
 
       <button type="button" class="toolbar-btn danger-btn" :disabled="isClearing || !store.canManage"
         @click="handleClear">
-        <Delete theme="outline" size="14" />
+        <IconTrash :size="14" />
         <span>{{ t('license.management.clear') }}</span>
       </button>
     </div>
@@ -46,7 +45,7 @@
     <div class="metrics-grid">
       <div class="metric-card">
         <div class="metric-header">
-          <Calendar theme="outline" size="18" class="metric-icon time" />
+          <IconCalendarClock :size="18" class="metric-icon time" />
           <span class="metric-label">{{ t('license.management.expiresAt') }}</span>
         </div>
         <div class="metric-value">{{ formatDate(store.state.expiresAt) }}</div>
@@ -54,7 +53,7 @@
 
       <div class="metric-card">
         <div class="metric-header">
-          <Laptop theme="outline" size="18" class="metric-icon device" />
+          <IconDevices :size="18" class="metric-icon device" />
           <span class="metric-label">{{ t('license.management.activatedDevicesCount') }}</span>
         </div>
         <div class="metric-value-container">
@@ -83,7 +82,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Refresh, Shield, Delete, Calendar, Laptop } from '@icon-park/vue-next';
+import { IconRefresh, IconDeviceDesktopCheck, IconTrash, IconCalendarClock, IconDevices } from '@tabler/icons-vue';
 import { licenseService, normalizeLicenseStateError } from '../services/license.service';
 import { useLicenseStore } from '../store/license.store';
 import LicenseDeviceList from './LicenseDeviceList.vue';

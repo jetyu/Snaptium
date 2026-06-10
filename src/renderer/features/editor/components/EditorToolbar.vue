@@ -14,7 +14,7 @@
           :disabled="!isEditorReady"
           @click="executeCommand(action.name)"
         >
-          <component :is="getIconComponent(action.icon)" theme="outline" :size="16" />
+          <component :is="getIconComponent(action.icon)" :size="16" />
         </button>
       </div>
       <div v-if="groupName !== 'insert'" class="toolbar-separator"></div>
@@ -29,10 +29,10 @@ import type { Component } from 'vue';
 import type { EditorView } from '@codemirror/view';
 import { useEditorToolbar } from '../composables/useEditorToolbar';
 import { 
-  H1, H2, TextBold, TextItalic, Strikethrough, 
-  ListBottom, OrderedList, CheckCorrect, Quote, Code, 
-  LinkOne, Pic, InsertTable 
-} from '@icon-park/vue-next';
+  IconH1, IconH2, IconBold, IconItalic, IconStrikethrough, 
+  IconList, IconListNumbers, IconListCheck, IconQuote, IconCode, 
+  IconLink, IconPhoto, IconTable 
+} from '@tabler/icons-vue';
 
 const { t } = useI18n();
 
@@ -44,22 +44,22 @@ const editorViewRef = toRef(props, 'editorView');
 const { executeCommand, toolbarGroups, isEditorReady } = useEditorToolbar(editorViewRef);
 
 const iconMap: Record<string, Component> = {
-  'heading-1': H1,
-  'heading-2': H2,
-  'bold': TextBold,
-  'italic': TextItalic,
-  'strikethrough': Strikethrough,
-  'list-bullet': ListBottom,
-  'list-numbered': OrderedList,
-  'list-check': CheckCorrect,
-  'quote': Quote,
-  'code': Code,
-  'link': LinkOne,
-  'image': Pic,
-  'table': InsertTable,
+  'heading-1': IconH1,
+  'heading-2': IconH2,
+  'bold': IconBold,
+  'italic': IconItalic,
+  'strikethrough': IconStrikethrough,
+  'list-bullet': IconList,
+  'list-numbered': IconListNumbers,
+  'list-check': IconListCheck,
+  'quote': IconQuote,
+  'code': IconCode,
+  'link': IconLink,
+  'image': IconPhoto,
+  'table': IconTable,
 };
 
-const getIconComponent = (iconName: string) => iconMap[iconName] || H1;
+const getIconComponent = (iconName: string) => iconMap[iconName] || IconH1;
 </script>
 
 <style scoped>

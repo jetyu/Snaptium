@@ -4,13 +4,13 @@
     :class="[colorClass, { 'notebook-visual-icon--surface': surface }]"
     :style="iconStyle"
   >
-    <NotebookOne theme="outline" :size="iconSize" />
+    <IconNotebook :size="iconSize" />
   </span>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue';
-import { NotebookOne } from '@icon-park/vue-next';
+import { IconNotebook } from '@tabler/icons-vue';
 import { isNotebookIconColor, type NotebookIconColor } from '@shared/notebook-icon.constants';
 import { NOTEBOOK_ICON_COLOR_CLASS_MAP } from '../constants/notebookIcon.constants';
 
