@@ -153,7 +153,7 @@ import {
   IconFolderOpen,
   IconFileImport,
   IconFileText,
-  IconSearch,
+  IconDatabaseSearch,
   IconShield,
   IconTag,
 } from '@tabler/icons-vue';
@@ -292,7 +292,7 @@ const workspaceMapItems = computed<Array<OnboardingCard<string>>>(() => [
     id: 'search',
     title: t('workbench.onboarding.map.search.title'),
     description: t('workbench.onboarding.map.search.description'),
-    icon: IconSearch,
+    icon: IconDatabaseSearch,
     toneClass: 'tone-deep',
   },
 ]);
@@ -309,7 +309,7 @@ const finishItems = computed<Array<OnboardingCard<string>>>(() => [
     id: 'review',
     title: t('workbench.onboarding.finish.review.title'),
     description: t('workbench.onboarding.finish.review.description'),
-    icon: IconSearch,
+    icon: IconDatabaseSearch,
     toneClass: 'tone-primary',
   },
 ]);

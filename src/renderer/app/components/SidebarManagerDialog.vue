@@ -116,10 +116,10 @@ import { computed, nextTick, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
 import {
   IconX,
-  IconLayoutDashboard,
+  IconDashboard,
   IconPlus,
   IconMinus,
-  IconSearch,
+  IconDatabaseSearch,
   IconSettings,
   IconAdjustmentsHorizontal,
   IconTrash,
@@ -152,18 +152,18 @@ const previewPlaceholderCount = computed(() => {
 });
 
 const mainViewIconMap: Record<AppShellMainViewId, typeof IconNotebook> = {
-  workbench: IconLayoutDashboard,
+  workbench: IconDashboard,
   workspace: IconNotebook,
   tags: IconTag,
   favorites: IconStar,
-  search: IconSearch,
+  search: IconDatabaseSearch,
   settings: IconSettings,
 };
 
-const moduleIconMap: Record<AppShellModuleId, typeof IconSearch> = {
+const moduleIconMap: Record<AppShellModuleId, typeof IconDatabaseSearch> = {
   favorites: IconStar,
   tags: IconTag,
-  search: IconSearch,
+  search: IconDatabaseSearch,
   settings: IconSettings,
   trash: IconTrash,
   about: IconInfoCircle,
@@ -174,7 +174,7 @@ function getMainViewIcon(viewId: AppShellMainViewId) {
 }
 
 function getModuleIcon(moduleId: AppShellModuleId) {
-  return moduleIconMap[moduleId] ?? IconSearch;
+  return moduleIconMap[moduleId] ?? IconDatabaseSearch;
 }
 
 function isModuleEnabled(moduleId: AppShellModuleId) {

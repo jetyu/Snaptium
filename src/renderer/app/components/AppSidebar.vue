@@ -28,10 +28,11 @@
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  IconLayoutDashboard,
+  IconDashboard,
   IconNotebook,
-  IconSearch,
-  IconSettings, IconAdjustmentsHorizontal,
+  IconDatabaseSearch,
+  IconSettings,
+  IconAdjustmentsHorizontal,
   IconTrash,
   IconInfoCircle,
   IconStar,
@@ -54,18 +55,18 @@ defineEmits<{
 const { t } = useI18n();
 
 const mainViewIconMap = computed(() => ({
-  workbench: IconLayoutDashboard,
+  workbench: IconDashboard,
   workspace: IconNotebook,
   tags: IconTag,
   favorites: IconStar,
-  search: IconSearch,
+  search: IconDatabaseSearch,
   settings: IconSettings,
 }));
 
 const moduleIconMap = computed(() => ({
   favorites: IconStar,
   tags: IconTag,
-  search: IconSearch,
+  search: IconDatabaseSearch,
   settings: IconSettings,
   trash: IconTrash,
   about: IconInfoCircle,

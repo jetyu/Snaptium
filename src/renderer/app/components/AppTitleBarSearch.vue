@@ -2,9 +2,10 @@
   <div class="app-search" :class="{ 'is-active': isFocused || searchQuery }" @click.stop @dblclick.stop>
     <div class="app-search__input-wrapper">
       <IconSearch class="app-search__icon" :size="14" />
-      <input ref="inputRef" v-model="searchQuery" type="text" class="app-search__input" :placeholder="t('search.quickPlaceholder')"
-        @focus="handleFocus" @blur="handleBlur" @input="handleInput" @keydown.down.prevent="moveHighlight(1)"
-        @keydown.up.prevent="moveHighlight(-1)" @keydown.enter="selectHighlighted" @keydown.esc="handleEsc" />
+      <input ref="inputRef" v-model="searchQuery" type="text" class="app-search__input"
+        :placeholder="t('search.quickPlaceholder')" @focus="handleFocus" @blur="handleBlur" @input="handleInput"
+        @keydown.down.prevent="moveHighlight(1)" @keydown.up.prevent="moveHighlight(-1)"
+        @keydown.enter="selectHighlighted" @keydown.esc="handleEsc" />
       <button v-if="searchQuery" class="app-search__clear" @click="clearSearch">
         <IconX :size="12" />
       </button>
@@ -128,7 +129,7 @@ function selectHighlighted() {
 async function selectResult(result: SearchResult) {
   await appShellStore.setActiveMainView('workspace');
   selectNote(result.id);
-  
+
   // Dispatch jump event for highlighting if match exists
   if (result.matches.length > 0) {
     setTimeout(() => {
@@ -136,7 +137,7 @@ async function selectResult(result: SearchResult) {
       window.dispatchEvent(new CustomEvent('workspace-search-jump', { detail }));
     }, 100);
   }
-  
+
   showDropdown.value = false;
   searchQuery.value = '';
 }

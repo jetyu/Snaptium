@@ -90,7 +90,7 @@
               <button v-for="question in recentQuestionEntriesPreview" :key="question.id" type="button" class="feed-row"
                 :title="question.query" @click="openSearchView({ query: question.query, mode: 'semantic', run: true })">
                 <span class="feed-row__icon">
-                  <IconSearch :size="14" />
+                  <IconDatabaseSearch :size="14" />
                 </span>
                 <span class="feed-row__main">
                   <span class="feed-row__title">{{ question.query }}</span>
@@ -299,7 +299,6 @@ import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import defaultHeroUrl from '@assets/images/default-hero.png';
 import {
-  IconSearch,
   IconPencil,
   IconPlus,
   IconPhoto,

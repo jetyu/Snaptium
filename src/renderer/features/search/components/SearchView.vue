@@ -22,8 +22,7 @@
         <div v-if="questionThreads.length > 0" class="search-view__history-list">
           <div v-for="thread in questionThreads" :key="thread.id" class="search-view__history-item"
             :class="{ 'is-active': activeThreadId === thread.id, 'is-draft': thread.isDraft }">
-            <button type="button" class="search-view__history-open" :title="thread.title"
-              @click="selectThread(thread)">
+            <button type="button" class="search-view__history-open" :title="thread.title" @click="selectThread(thread)">
               <span class="search-view__history-query">{{ thread.title }}</span>
               <span class="search-view__history-answer">{{ thread.preview }}</span>
               <span class="search-view__history-meta">{{ formatAskedAt(thread.askedAt) }}</span>
@@ -71,7 +70,8 @@
                     <div class="search-view__spinner"></div>
                     <span>{{ $t('label.aiRAGThinking') }}</span>
                   </div>
-                  <p v-else-if="getQuestionError(question)" class="search-view__status-text search-view__status-text--error">
+                  <p v-else-if="getQuestionError(question)"
+                    class="search-view__status-text search-view__status-text--error">
                     {{ getQuestionError(question) }}
                   </p>
                   <template v-else>
@@ -101,14 +101,15 @@
         <section class="search-view__query">
           <div class="search-view__input-shell" :class="{ 'is-disabled': !canUseKnowledgeSearch }">
             <textarea ref="searchInput" v-model="searchQuery" class="search-view__input" rows="1"
-              :disabled="!canUseKnowledgeSearch" :placeholder="$t('search.semanticPlaceholder')"
-              @input="resizeComposer" @keydown="handleComposerKeydown" />
+              :disabled="!canUseKnowledgeSearch" :placeholder="$t('search.semanticPlaceholder')" @input="resizeComposer"
+              @keydown="handleComposerKeydown" />
             <button v-if="searchQuery" type="button" class="search-view__icon-button" :title="$t('button.clear')"
               @click="clearQuery">
               <IconX :size="14" />
             </button>
             <button type="button" class="search-view__ask-button icon-action-button" :disabled="!canAsk"
-              :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason" @click="handleAsk">
+              :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason"
+              @click="handleAsk">
               <span>{{ $t('search.knowledgeAskShortcut') }}</span>
             </button>
           </div>
@@ -946,11 +947,11 @@ onBeforeUnmount(() => {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.search-view__history-item + .search-view__history-item {
+.search-view__history-item+.search-view__history-item {
   margin-top: 8px;
 }
 
-.search-view__history-item + .search-view__history-item::before {
+.search-view__history-item+.search-view__history-item::before {
   content: '';
   position: absolute;
   top: -5px;
@@ -1069,7 +1070,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.search-view__chat-scroll > .search-view__status {
+.search-view__chat-scroll>.search-view__status {
   min-height: 100%;
 }
 
