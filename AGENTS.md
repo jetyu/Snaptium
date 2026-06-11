@@ -65,5 +65,5 @@ After changes, run the smallest relevant verification command:
 If verification cannot be run, say why and state what should be run manually.
 
 ## Skills
-
-* When polishing website or frontend UI, read and apply `.codex/skills/ui-polish/SKILL.md`.
+User-level skills may be available from `~/.codex/skills`.
+Do not load or apply unrelated skills.
