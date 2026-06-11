@@ -1,8 +1,8 @@
 <template>
   <div class="management-view">
-    <div class="license-summary-card" :class="store.displayStatus">
+    <div class="license-summary-card" :class="[store.displayStatus, `plan-${store.plan}`]">
       <div class="summary-top">
-        <div class="summary-plan">
+        <div class="summary-plan" :class="`plan-${store.plan}`">
           <span v-if="planIcon" class="plan-icon" :class="store.plan" aria-hidden="true">
             <component :is="planIcon" :size="22" :stroke="1.8" />
           </span>
@@ -15,7 +15,7 @@
         </div>
 
         <div class="summary-side">
-          <div class="summary-status" :class="store.displayStatus">
+          <div class="summary-status" :class="[store.displayStatus, `plan-${store.plan}`]">
             <span class="status-dot"></span>
             <span>{{ t(store.getStatusTextKey(store.displayStatus)) }}</span>
           </div>
@@ -112,6 +112,7 @@ import {
   IconCrown,
   IconDeviceDesktopCheck,
   IconDevices,
+  IconNotebook,
   IconRefresh,
   IconSparkle2,
   IconSparkles2,
@@ -132,6 +133,7 @@ const isRefreshing = ref(false);
 const isClearing = ref(false);
 const localizedErrorMessage = computed(() => normalizeLicenseStateError(store.lastErrorCode, store.lastErrorMessage));
 const PLAN_ICONS: Partial<Record<LicensePlan, Component>> = {
+  [LICENSE_PLANS.FREE]: IconNotebook,
   [LICENSE_PLANS.TRIAL]: IconTimeDuration0,
   [LICENSE_PLANS.INSIDER]: IconSparkle2,
   [LICENSE_PLANS.PRO]: IconSparkles2,
@@ -229,6 +231,18 @@ async function handleClear(): Promise<void> {
   border-color: color-mix(in srgb, var(--danger) 22%, var(--panel-border));
 }
 
+.license-summary-card.plan-free {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--panel-hover) 80%, white), var(--panel));
+}
+
+.license-summary-card.plan-pro {
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.7), var(--panel));
+}
+
+.license-summary-card.plan-ultimate {
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.82), var(--panel));
+}
+
 .summary-top {
   display: flex;
   justify-content: space-between;
@@ -258,6 +272,12 @@ async function handleClear(): Promise<void> {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.78),
     0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.plan-icon.free {
+  color: #6b7280;
+  background: linear-gradient(180deg, rgba(249, 250, 251, 0.98), rgba(229, 231, 235, 0.92));
+  border-color: rgba(107, 114, 128, 0.16);
 }
 
 .plan-icon.trial {
@@ -312,6 +332,21 @@ async function handleClear(): Promise<void> {
   letter-spacing: -0.01em;
 }
 
+.summary-plan.plan-free .plan-kicker,
+.summary-plan.plan-free .plan-title {
+  color: #4b5563;
+}
+
+.summary-plan.plan-pro .plan-kicker,
+.summary-plan.plan-pro .plan-title {
+  color: #245ea8;
+}
+
+.summary-plan.plan-ultimate .plan-kicker,
+.summary-plan.plan-ultimate .plan-title {
+  color: #8b5a00;
+}
+
 .summary-side {
   display: flex;
   flex-direction: column;
@@ -332,11 +367,41 @@ async function handleClear(): Promise<void> {
   color: var(--text);
 }
 
+.summary-status.plan-free {
+  background: rgba(107, 114, 128, 0.08);
+  border-color: rgba(107, 114, 128, 0.18);
+  color: #4b5563;
+}
+
+.summary-status.plan-pro {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.18);
+  color: #245ea8;
+}
+
+.summary-status.plan-ultimate {
+  background: rgba(202, 138, 4, 0.1);
+  border-color: rgba(202, 138, 4, 0.22);
+  color: #8b5a00;
+}
+
 .status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
   background: #10b981;
+}
+
+.summary-status.plan-free .status-dot {
+  background: #6b7280;
+}
+
+.summary-status.plan-pro .status-dot {
+  background: #3b82f6;
+}
+
+.summary-status.plan-ultimate .status-dot {
+  background: #ca8a04;
 }
 
 [data-theme='dark'] .status-dot {

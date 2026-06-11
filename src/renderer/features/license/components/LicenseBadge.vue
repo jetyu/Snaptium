@@ -55,8 +55,6 @@ const toneClass = computed(() => {
 }
 
 .license-badge:hover {
-  border-color: var(--accent);
-  color: var(--accent);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
@@ -71,7 +69,13 @@ const toneClass = computed(() => {
 .license-badge.free {
   border-color: var(--panel-border);
   background: var(--panel-hover);
-  color: var(--text-muted);
+  color: #6b7280;
+}
+
+.license-badge.free:hover {
+  border-color: rgba(107, 114, 128, 0.28);
+  background: rgba(107, 114, 128, 0.08);
+  color: #4b5563;
 }
 
 /* Insider Plan */
@@ -89,15 +93,21 @@ const toneClass = computed(() => {
 
 /* Pro Plan */
 .license-badge.pro {
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.25);
-  color: #10b981;
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #245ea8;
 }
 
 [data-theme='dark'] .license-badge.pro {
-  background: rgba(16, 185, 129, 0.15);
-  border-color: rgba(16, 185, 129, 0.35);
-  color: #34d399;
+  background: rgba(37, 99, 235, 0.16);
+  border-color: rgba(96, 165, 250, 0.35);
+  color: #7db5ff;
+}
+
+.license-badge.pro:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4f91;
 }
 
 /* Trial Plan */
@@ -115,15 +125,21 @@ const toneClass = computed(() => {
 
 /* Ultimate Plan */
 .license-badge.ultimate {
-  background: rgba(236, 72, 153, 0.08);
-  border-color: rgba(236, 72, 153, 0.25);
-  color: #ec4899;
+  background: rgba(202, 138, 4, 0.1);
+  border-color: rgba(202, 138, 4, 0.25);
+  color: #8b5a00;
 }
 
 [data-theme='dark'] .license-badge.ultimate {
-  background: rgba(236, 72, 153, 0.15);
-  border-color: rgba(236, 72, 153, 0.35);
-  color: #f472b6;
+  background: rgba(202, 138, 4, 0.16);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f5c96b;
+}
+
+.license-badge.ultimate:hover {
+  border-color: rgba(202, 138, 4, 0.36);
+  background: rgba(202, 138, 4, 0.14);
+  color: #7a5200;
 }
 
 /* Enterprise Plan */
