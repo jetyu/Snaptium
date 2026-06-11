@@ -1,27 +1,29 @@
 <template>
   <div class="management-view">
-    <!-- Premium Membership Hero Card -->
-    <div class="membership-card" :class="store.displayStatus">
-      <div class="card-top">
-        <div class="card-plan">
+    <div class="license-summary-card" :class="store.displayStatus">
+      <div class="summary-top">
+        <div class="summary-plan">
           <span v-if="planIcon" class="plan-icon" :class="store.plan" aria-hidden="true">
-            <component :is="planIcon" :size="24" :stroke="1.8" />
+            <component :is="planIcon" :size="22" :stroke="1.8" />
           </span>
-          <div class="card-info">
-            <span class="card-label">{{ t('license.management.planType') }}</span>
+          <div class="plan-copy">
+            <span class="plan-kicker">
+              {{ audienceKey ? t(audienceKey) : t('license.management.planType') }}
+            </span>
             <h2 class="plan-title">{{ t(`license.badge.${store.plan}`) }}</h2>
           </div>
         </div>
-        <div class="card-status-stack">
-          <div class="card-status" :class="store.displayStatus">
+
+        <div class="summary-side">
+          <div class="summary-status" :class="store.displayStatus">
             <span class="status-dot"></span>
-            <span class="status-name">{{ t(store.getStatusTextKey(store.displayStatus)) }}</span>
+            <span>{{ t(store.getStatusTextKey(store.displayStatus)) }}</span>
           </div>
-          <span v-if="audienceKey" class="audience-pill">{{ t(audienceKey) }}</span>
-          <div class="card-actions">
+
+          <div class="summary-actions">
             <button
               type="button"
-              class="card-action-btn"
+              class="summary-action-btn"
               :disabled="isRefreshing || !store.canManage"
               :title="t('license.management.refresh')"
               :aria-label="t('license.management.refresh')"
@@ -32,7 +34,7 @@
 
             <button
               type="button"
-              class="card-action-btn"
+              class="summary-action-btn"
               :disabled="isRefreshing || !store.canManage"
               :title="t('license.management.validate')"
               :aria-label="t('license.management.validate')"
@@ -43,7 +45,7 @@
 
             <button
               type="button"
-              class="card-action-btn danger-btn"
+              class="summary-action-btn danger-btn"
               :disabled="isClearing || !store.canManage"
               :title="t('license.management.clear')"
               :aria-label="t('license.management.clear')"
@@ -55,27 +57,9 @@
         </div>
       </div>
 
-      <div class="card-benefits">
-        <div class="card-benefits-title">{{ t('license.management.benefitsTitle') }}</div>
-        <div class="benefit-list">
-          <div
-            v-for="benefitKey in benefitKeys"
-            :key="benefitKey"
-            class="benefit-chip"
-            :title="t(benefitKey)"
-          >
-            <IconCircleCheck :size="16" class="benefit-icon" />
-            <span>{{ t(benefitKey) }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card-bottom">
-
-        <span v-if="!store.canManage && localizedErrorMessage" class="card-error-msg">
-          {{ localizedErrorMessage }}
-        </span>
-      </div>
+      <span v-if="!store.canManage && localizedErrorMessage" class="summary-error-msg">
+        {{ localizedErrorMessage }}
+      </span>
     </div>
 
     <!-- Key Metrics Grid -->
@@ -122,7 +106,6 @@ import { useI18n } from 'vue-i18n';
 import {
   IconBuilding,
   IconCalendarClock,
-  IconCircleCheck,
   IconCrown,
   IconDeviceDesktopCheck,
   IconDevices,
@@ -153,36 +136,12 @@ const PLAN_ICONS: Partial<Record<LicensePlan, Component>> = {
   [LICENSE_PLANS.ENTERPRISE]: IconBuilding,
 };
 const planIcon = computed(() => PLAN_ICONS[store.plan] ?? null);
-const COMMON_BENEFIT_KEYS = [
-  'license.management.benefits.aiWriting',
-  'license.management.benefits.knowledgeQa',
-  'license.management.benefits.encryptedSync',
-] as const;
-const PLAN_BENEFIT_KEYS: Partial<Record<LicensePlan, readonly string[]>> = {
-  [LICENSE_PLANS.INSIDER]: [
-    ...COMMON_BENEFIT_KEYS,
-    'license.management.benefits.insiderDeviceLimit',
-  ],
-  [LICENSE_PLANS.PRO]: [
-    ...COMMON_BENEFIT_KEYS,
-    'license.management.benefits.proDeviceLimit',
-  ],
-  [LICENSE_PLANS.TRIAL]: [
-    ...COMMON_BENEFIT_KEYS,
-    'license.management.benefits.trialDeviceLimit',
-  ],
-  [LICENSE_PLANS.ULTIMATE]: [
-    ...COMMON_BENEFIT_KEYS,
-    'license.management.benefits.ultimateDeviceLimit',
-  ],
-};
 const AUDIENCE_KEYS: Partial<Record<LicensePlan, string>> = {
   [LICENSE_PLANS.INSIDER]: 'license.management.audience.insider',
   [LICENSE_PLANS.PRO]: 'license.management.audience.pro',
   [LICENSE_PLANS.TRIAL]: 'license.management.audience.trial',
   [LICENSE_PLANS.ULTIMATE]: 'license.management.audience.ultimate',
 };
-const benefitKeys = computed(() => PLAN_BENEFIT_KEYS[store.plan] ?? []);
 const audienceKey = computed(() => AUDIENCE_KEYS[store.plan] ?? null);
 
 function formatDate(value: string | null): string {
@@ -249,124 +208,125 @@ async function handleClear(): Promise<void> {
   gap: 20px;
 }
 
-/* Membership Hero Card */
-.membership-card {
+.license-summary-card {
   position: relative;
-  background: var(--panel-hover);
+  background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-left: 4px solid var(--accent);
   border-radius: 12px;
-  padding: 20px 24px;
+  padding: 18px 20px;
   color: var(--text);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  min-height: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  gap: 16px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
-.membership-card.expired,
-.membership-card.invalid {
-  border-left-color: var(--danger);
+.license-summary-card.expired,
+.license-summary-card.invalid {
+  border-color: color-mix(in srgb, var(--danger) 22%, var(--panel-border));
 }
 
-.card-top {
+.summary-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  z-index: 2;
+  gap: 16px;
 }
 
-.card-info {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.card-plan {
+.summary-plan {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
 
 .plan-icon {
-  width: 42px;
-  height: 42px;
+  width: 50px;
+  height: 50px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  border-radius: 10px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel);
-  color: var(--accent);
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 88%, white);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 246, 250, 0.9));
+  color: var(--text-muted);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.78),
+    0 1px 2px rgba(15, 23, 42, 0.06);
 }
 
 .plan-icon.trial {
-  color: #d97706;
-  background: rgba(245, 158, 11, 0.1);
-  border-color: rgba(245, 158, 11, 0.26);
+  color: #b45309;
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(254, 243, 199, 0.9));
+  border-color: rgba(217, 119, 6, 0.18);
 }
 
 .plan-icon.insider {
-  color: #0f4b8a;
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.24);
+  color: #245ea8;
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.98), rgba(219, 234, 254, 0.9));
+  border-color: rgba(37, 99, 235, 0.18);
 }
 
 .plan-icon.pro {
-  color: #2f6b0f;
-  background: rgba(34, 197, 94, 0.1);
-  border-color: rgba(34, 197, 94, 0.24);
+  color: #1d5f8f;
+  background: linear-gradient(180deg, rgba(245, 249, 255, 0.98), rgba(222, 235, 255, 0.92));
+  border-color: rgba(59, 130, 246, 0.2);
 }
 
 .plan-icon.ultimate {
-  color: #9d174d;
-  background: rgba(236, 72, 153, 0.1);
-  border-color: rgba(236, 72, 153, 0.24);
+  color: #8b5a00;
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(254, 240, 198, 0.92));
+  border-color: rgba(202, 138, 4, 0.22);
 }
 
 .plan-icon.enterprise {
-  color: #155e75;
-  background: rgba(6, 182, 212, 0.1);
-  border-color: rgba(6, 182, 212, 0.24);
+  color: #0f766e;
+  background: linear-gradient(180deg, rgba(240, 253, 250, 0.98), rgba(204, 251, 241, 0.9));
+  border-color: rgba(13, 148, 136, 0.18);
 }
 
-.card-label {
-  font-size: 0.74rem;
+.plan-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.plan-kicker {
+  font-size: 0.78rem;
   color: var(--text-muted);
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  line-height: 1.2;
 }
 
 .plan-title {
   margin: 0;
-  font-size: 1.4rem;
-  font-weight: 750;
+  font-size: 1.34rem;
+  font-weight: 720;
   color: var(--text);
   letter-spacing: -0.01em;
 }
 
-.card-status-stack {
+.summary-side {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 6px;
+  gap: 8px;
 }
 
-.card-status {
-  display: flex;
+.summary-status {
+  display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--panel);
+  background: var(--panel-hover);
   border: 1px solid var(--panel-border);
   border-radius: 999px;
   padding: 4px 12px;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--text);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .status-dot {
@@ -380,38 +340,24 @@ async function handleClear(): Promise<void> {
   background: #34d399;
 }
 
-.card-status.expired .status-dot,
-.card-status.invalid .status-dot {
+.summary-status.expired .status-dot,
+.summary-status.invalid .status-dot {
   background: var(--danger);
 }
 
-.audience-pill {
-  display: inline-flex;
-  align-items: center;
-  min-height: 24px;
-  border: 1px solid color-mix(in srgb, var(--accent) 22%, var(--panel-border));
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--accent) 7%, var(--panel));
-  color: var(--accent);
-  padding: 3px 10px;
-  font-size: 0.74rem;
-  font-weight: 650;
-  white-space: nowrap;
-}
-
-.card-actions {
+.summary-actions {
   display: flex;
   justify-content: flex-end;
   gap: 6px;
 }
 
-.card-action-btn {
+.summary-action-btn {
   width: 30px;
   height: 30px;
   padding: 0;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
-  background: var(--panel);
+  background: var(--panel-hover);
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
@@ -420,90 +366,29 @@ async function handleClear(): Promise<void> {
   transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
 }
 
-.card-action-btn:hover:not(:disabled) {
+.summary-action-btn:hover:not(:disabled) {
   border-color: var(--accent);
-  background: var(--panel-hover);
+  background: var(--panel);
   color: var(--accent);
 }
 
-.card-action-btn:disabled {
+.summary-action-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.card-action-btn.danger-btn {
+.summary-action-btn.danger-btn {
   border-color: color-mix(in srgb, var(--danger) 28%, var(--panel-border));
   color: var(--danger);
 }
 
-.card-action-btn.danger-btn:hover:not(:disabled) {
+.summary-action-btn.danger-btn:hover:not(:disabled) {
   border-color: var(--danger);
   background: color-mix(in srgb, var(--danger) 10%, var(--panel));
   color: var(--danger);
 }
 
-.card-benefits {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 18px;
-  z-index: 2;
-}
-
-.card-benefits-title {
-  color: var(--text-muted);
-  font-size: 0.78rem;
-  font-weight: 650;
-}
-
-.benefit-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.benefit-chip {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  min-width: 0;
-  min-height: 34px;
-  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--panel-border));
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
-  color: var(--text);
-  padding: 7px 10px;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-
-.benefit-chip span {
-  min-width: 0;
-  line-height: 1.35;
-}
-
-.benefit-icon {
-  flex: 0 0 auto;
-  color: var(--accent);
-  margin-top: 1px;
-}
-
-.card-bottom {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-top: 12px;
-  z-index: 2;
-}
-
-.card-serial {
-  font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, monospace;
-  font-size: 0.84rem;
-  color: var(--text-muted);
-  letter-spacing: 0.08em;
-}
-
-.card-error-msg {
+.summary-error-msg {
   font-size: 0.8rem;
   color: var(--danger);
   font-weight: 500;
@@ -637,12 +522,21 @@ async function handleClear(): Promise<void> {
 }
 
 @media (max-width: 800px) {
-  .metrics-grid {
-    grid-template-columns: 1fr;
+  .summary-top {
+    flex-direction: column;
   }
 
-  .benefit-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .summary-side {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .summary-plan {
+    align-items: flex-start;
+  }
+
+  .metrics-grid {
+    grid-template-columns: 1fr;
   }
 }
 </style>
