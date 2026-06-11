@@ -368,6 +368,7 @@
   "license.activation.inputLabel": "激活码/许可证",
   "license.activation.placeholder": "SNPX-XXXX-XXXX-XXXX-XXXX",
   "license.activation.purchase": "购买许可证",
+  "license.activation.purchaseHint": "还没有许可证？可以先前往官网购买。",
   "license.activation.title": "激活许可证",
   "license.badge.enterprise": "Enterprise",
   "license.badge.free": "Free",

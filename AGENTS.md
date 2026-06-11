@@ -66,4 +66,16 @@ If verification cannot be run, say why and state what should be run manually.
 
 ## Skills
 User-level skills may be available from `~/.codex/skills`.
-Do not load or apply unrelated skills.
+
+Use relevant skills only:
+
+Vue / frontend: vue3, vue-router, vue-router-v4, pinia, vant-vue3
+UI / design: design, design-system, ui-styling, ui-ux-pro-max, banner-design, brand
+Electron: electron
+Cloudflare / Workers / R2: cloudflare, workers-best-practices, wrangler, durable-objects, cloudflare-email-service
+Performance: web-perf
+Release / update links: upgradelink
+SDK / agent work: agents-sdk, sandbox-sdk
+Unsure which skill to use: find-skills
+
+Do not use every skill automatically. Only read and apply skills that are clearly relevant to the task.

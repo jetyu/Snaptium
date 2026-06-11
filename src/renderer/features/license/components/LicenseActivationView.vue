@@ -2,13 +2,21 @@
   <div class="activation-view">
     <div class="activation-header">
       <div class="header-icon-container">
-        <div class="icon-glow-ring"></div>
         <IconKey size="28" class="header-icon" />
       </div>
       <div class="title-group">
         <h2 class="title">{{ t('license.activation.title') }}</h2>
         <p class="description">{{ t('license.activation.description') }}</p>
       </div>
+      <a
+        class="header-purchase-link"
+        :href="LICENSE_PURCHASE_URL"
+        target="_blank"
+        rel="noopener noreferrer nofollow"
+      >
+        <span>{{ t('license.activation.purchase') }}</span>
+        <IconLink :size="14" />
+      </a>
     </div>
 
     <div class="comparison-section">
@@ -58,22 +66,13 @@
       <div class="action-row">
         <button
           type="button"
-          class="action-button primary-btn activate-btn"
+          class="action-button activate-btn"
           :disabled="isSubmitting || licenseKey.trim().length === 0"
           @click="handleActivate"
         >
           <span v-if="isSubmitting" class="spinner small"></span>
           <span v-else>{{ t('license.activation.button') }}</span>
         </button>
-        <a
-          class="action-button secondary-btn buy-btn"
-          :href="LICENSE_PURCHASE_URL"
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-        >
-          <span>{{ t('license.activation.purchase') }}</span>
-          <IconLink :size="14" />
-        </a>
       </div>
     </div>
 
@@ -192,7 +191,7 @@ async function handleActivate(): Promise<void> {
   display: flex;
   align-items: center;
   gap: 16px;
-  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 8%, var(--panel)), var(--panel));
+  background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: 12px;
   padding: 16px;
@@ -205,31 +204,23 @@ async function handleActivate(): Promise<void> {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: color-mix(in srgb, var(--accent) 15%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--panel-border));
+  background: var(--panel-hover);
+  border: 1px solid var(--panel-border);
   border-radius: 12px;
-  color: var(--accent);
+  color: var(--text-muted);
   flex-shrink: 0;
 }
 
-.icon-glow-ring {
-  position: absolute;
-  inset: -4px;
-  border-radius: 16px;
-  background: var(--accent);
-  opacity: 0.12;
-  filter: blur(4px);
-}
-
 .header-icon {
-  z-index: 2;
-  filter: drop-shadow(0 2px 4px rgba(var(--accent-hover), 0.2));
+  z-index: 1;
 }
 
 .title-group {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  min-width: 0;
+  flex: 1;
 }
 
 .title {
@@ -244,6 +235,32 @@ async function handleActivate(): Promise<void> {
   color: var(--text-muted);
   font-size: 0.88rem;
   line-height: 1.4;
+}
+
+.header-purchase-link {
+  flex: 0 0 auto;
+  min-width: 80px;
+  min-height: 32px;
+  padding: 0.4rem 1rem;
+  border: 1px solid #e8c98f;
+  border-radius: 8px;
+  background: #fff8eb;
+  color: #9a6700;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.header-purchase-link:hover {
+  background: #fff2d6;
+  border-color: #d9b46b;
+  color: #7a5200;
 }
 
 .comparison-section {
@@ -272,23 +289,23 @@ async function handleActivate(): Promise<void> {
   gap: 10px;
   padding: 12px;
   border: 1px solid var(--panel-border);
-  background: var(--panel);
+  background: var(--panel-hover);
   border-radius: 8px;
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .comparison-card.plan-pro {
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--panel-border));
-  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
+  border-color: rgba(66, 133, 244, 0.22);
+  background: rgba(66, 133, 244, 0.05);
 }
 
 .comparison-card.plan-ultimate {
-  border-color: rgba(236, 72, 153, 0.24);
-  background: rgba(236, 72, 153, 0.05);
+  border-color: rgba(217, 180, 107, 0.28);
+  background: rgba(217, 180, 107, 0.08);
 }
 
 .comparison-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 45%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--panel-border));
 }
 
 .comparison-heading {
@@ -305,23 +322,23 @@ async function handleActivate(): Promise<void> {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: color-mix(in srgb, var(--accent) 10%, var(--panel-hover));
-  color: var(--accent);
+  background: var(--panel);
+  color: var(--text-muted);
 }
 
 .plan-free .comparison-icon-wrapper {
-  background: rgba(59, 130, 246, 0.1);
-  color: #2563eb;
+  background: rgba(148, 163, 184, 0.12);
+  color: #64748b;
 }
 
 .plan-pro .comparison-icon-wrapper {
-  background: rgba(34, 197, 94, 0.1);
-  color: #2f6b0f;
+  background: rgba(66, 133, 244, 0.12);
+  color: #356ac3;
 }
 
 .plan-ultimate .comparison-icon-wrapper {
-  background: rgba(236, 72, 153, 0.1);
-  color: #9d174d;
+  background: rgba(217, 180, 107, 0.16);
+  color: #9a6700;
 }
 
 .comparison-title {
@@ -355,14 +372,22 @@ async function handleActivate(): Promise<void> {
 .comparison-check {
   flex: 0 0 auto;
   margin-top: 1px;
-  color: var(--accent);
+  color: color-mix(in srgb, var(--text-muted) 88%, var(--text));
+}
+
+.plan-pro .comparison-check {
+  color: #356ac3;
+}
+
+.plan-ultimate .comparison-check {
+  color: #9a6700;
 }
 
 .activation-form {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  background: var(--panel-hover);
+  background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: 12px;
   padding: 16px;
@@ -416,64 +441,51 @@ async function handleActivate(): Promise<void> {
 }
 
 .license-key-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent);
+  border-color: #7aa7ff;
+  box-shadow: 0 0 0 3px rgba(122, 167, 255, 0.12);
   background: var(--panel);
 }
 
 .action-row {
   display: flex;
-  gap: 10px;
+  gap: 0;
 }
 
 .action-button {
-  flex: 1;
-  height: 38px;
+  min-width: 80px;
+  min-height: 32px;
+  padding: 0.4rem 1rem;
+  border: 1px solid #c9d1dc;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  border-radius: 8px;
-  font-size: 0.88rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
-  text-decoration: none;
-  border: 1px solid transparent;
+  gap: 0.5rem;
 }
 
-.primary-btn {
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%);
-  color: #ffffff;
+.action-button:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #7aa7ff;
+  color: #0f6cbd;
 }
 
-.primary-btn:hover:not(:disabled) {
-  background: linear-gradient(135deg, var(--accent-hover) 0%, var(--accent) 100%);
+.action-button:active:not(:disabled) {
+  background: #e5e7eb;
 }
 
-.primary-btn:active:not(:disabled) {
-  opacity: 0.9;
-}
-
-.primary-btn:disabled {
+.action-button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.secondary-btn {
-  background: var(--panel);
-  border-color: var(--panel-border);
-  color: var(--text);
-}
-
-.secondary-btn:hover {
-  background: var(--panel-hover);
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.secondary-btn:active {
-  opacity: 0.9;
+.activate-btn {
+  width: 100%;
 }
 
 .error-banner {
@@ -491,12 +503,17 @@ async function handleActivate(): Promise<void> {
 }
 
 @media (max-width: 640px) {
+  .activation-header {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
   .comparison-grid {
     grid-template-columns: 1fr;
   }
-  
-  .action-row {
-    flex-direction: column;
+
+  .header-purchase-link {
+    width: 100%;
   }
 }
 
