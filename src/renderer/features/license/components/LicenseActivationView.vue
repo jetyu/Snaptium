@@ -11,37 +11,30 @@
       </div>
     </div>
 
-    <div class="feature-section">
-      <p class="feature-title">{{ t('license.activation.featuresTitle') }}</p>
-      
-      <div class="feature-grid">
-        <div class="feature-card src-card">
-          <div class="feature-icon-wrapper">
-            <IconCpu :size="18" />
-          </div>
-          <span class="feature-name">{{ t('license.feature.aiSources') }}</span>
-        </div>
+    <div class="comparison-section">
+      <p class="comparison-section-title">{{ t('license.activation.compareTitle') }}</p>
 
-        <div class="feature-card assistant-card">
-          <div class="feature-icon-wrapper">
-            <IconPencil :size="18" />
+      <div class="comparison-grid">
+        <article
+          v-for="plan in comparisonPlans"
+          :key="plan.id"
+          class="comparison-card"
+          :class="`plan-${plan.id}`"
+        >
+          <div class="comparison-heading">
+            <span class="comparison-icon-wrapper" aria-hidden="true">
+              <component :is="plan.icon" :size="18" :stroke="1.8" />
+            </span>
+            <h3 class="comparison-title">{{ t(plan.titleKey) }}</h3>
           </div>
-          <span class="feature-name">{{ t('license.feature.aiAssistant') }}</span>
-        </div>
 
-        <div class="feature-card rag-card">
-          <div class="feature-icon-wrapper">
-            <IconBrain :size="18" />
-          </div>
-          <span class="feature-name">{{ t('license.feature.rag') }}</span>
-        </div>
-
-        <div class="feature-card sync-card">
-          <div class="feature-icon-wrapper">
-            <IconDatabase :size="18" />
-          </div>
-          <span class="feature-name">{{ t('license.feature.sync') }}</span>
-        </div>
+          <ul class="comparison-list">
+            <li v-for="featureKey in plan.featureKeys" :key="featureKey" class="comparison-feature">
+              <IconCircleCheck :size="14" class="comparison-check" />
+              <span>{{ t(featureKey) }}</span>
+            </li>
+          </ul>
+        </article>
       </div>
     </div>
 
@@ -91,13 +84,65 @@
 </template>
 
 <script setup lang="ts">
-import { nextTick, onMounted, ref } from 'vue';
+import { nextTick, onMounted, ref, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { IconKey, IconCpu, IconPencil, IconBrain, IconDatabase, IconLink } from '@tabler/icons-vue';
+import {
+  IconCircleCheck,
+  IconCrown,
+  IconKey,
+  IconLink,
+  IconNotebook,
+  IconSparkles2,
+} from '@tabler/icons-vue';
 import { licenseService, normalizeLicenseErrorMessage } from '../services/license.service';
+
+interface ComparisonPlan {
+  id: 'free' | 'pro' | 'ultimate';
+  titleKey: string;
+  icon: Component;
+  featureKeys: readonly string[];
+}
 
 const { t } = useI18n();
 const LICENSE_PURCHASE_URL = 'https://snaptium.com';
+const comparisonPlans: readonly ComparisonPlan[] = [
+  {
+    id: 'free',
+    titleKey: 'license.activation.compare.free.title',
+    icon: IconNotebook,
+    featureKeys: [
+      'license.activation.compare.free.markdown',
+      'license.activation.compare.free.workbench',
+      'license.activation.compare.free.history',
+      'license.activation.compare.free.security',
+      'license.activation.compare.free.backup',
+    ],
+  },
+  {
+    id: 'pro',
+    titleKey: 'license.activation.compare.pro.title',
+    icon: IconSparkles2,
+    featureKeys: [
+      'license.activation.compare.pro.includesFree',
+      'license.activation.compare.pro.aiWriting',
+      'license.activation.compare.pro.knowledgeQa',
+      'license.activation.compare.pro.encryptedSync',
+      'license.activation.compare.pro.deviceLimit',
+    ],
+  },
+  {
+    id: 'ultimate',
+    titleKey: 'license.activation.compare.ultimate.title',
+    icon: IconCrown,
+    featureKeys: [
+      'license.activation.compare.ultimate.includesPro',
+      'license.activation.compare.ultimate.lifetimeLicense',
+      'license.activation.compare.ultimate.updates',
+      'license.activation.compare.ultimate.support',
+      'license.activation.compare.ultimate.deviceLimit',
+    ],
+  },
+] as const;
 const licenseKey = ref('');
 const licenseKeyInputRef = ref<HTMLInputElement | null>(null);
 const isSubmitting = ref(false);
@@ -201,13 +246,13 @@ async function handleActivate(): Promise<void> {
   line-height: 1.4;
 }
 
-.feature-section {
+.comparison-section {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.feature-title {
+.comparison-section-title {
   margin: 0;
   font-weight: 650;
   color: var(--text);
@@ -215,59 +260,102 @@ async function handleActivate(): Promise<void> {
   padding-left: 2px;
 }
 
-.feature-grid {
+.comparison-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 10px;
 }
 
-.feature-card {
+.comparison-card {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 10px;
   padding: 12px;
   border: 1px solid var(--panel-border);
   background: var(--panel);
-  border-radius: 10px;
+  border-radius: 8px;
   transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
-.feature-card:hover {
-  border-color: var(--accent);
+.comparison-card.plan-pro {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--panel-border));
+  background: color-mix(in srgb, var(--accent) 5%, var(--panel));
 }
 
-.feature-icon-wrapper {
-  width: 32px;
-  height: 32px;
+.comparison-card.plan-ultimate {
+  border-color: rgba(236, 72, 153, 0.24);
+  background: rgba(236, 72, 153, 0.05);
+}
+
+.comparison-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--panel-border));
+}
+
+.comparison-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.comparison-icon-wrapper {
+  width: 30px;
+  height: 30px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel-hover));
+  color: var(--accent);
 }
 
-/* Individual Icon Colors */
-.src-card .feature-icon-wrapper {
+.plan-free .comparison-icon-wrapper {
   background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-.assistant-card .feature-icon-wrapper {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
-}
-.rag-card .feature-icon-wrapper {
-  background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
-}
-.sync-card .feature-icon-wrapper {
-  background: rgba(236, 72, 153, 0.1);
-  color: #ec4899;
+  color: #2563eb;
 }
 
-.feature-name {
-  font-size: 0.85rem;
-  font-weight: 500;
+.plan-pro .comparison-icon-wrapper {
+  background: rgba(34, 197, 94, 0.1);
+  color: #2f6b0f;
+}
+
+.plan-ultimate .comparison-icon-wrapper {
+  background: rgba(236, 72, 153, 0.1);
+  color: #9d174d;
+}
+
+.comparison-title {
+  margin: 0;
+  min-width: 0;
   color: var(--text);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.comparison-list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comparison-feature {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.comparison-check {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: var(--accent);
 }
 
 .activation-form {
@@ -403,7 +491,7 @@ async function handleActivate(): Promise<void> {
 }
 
 @media (max-width: 640px) {
-  .feature-grid {
+  .comparison-grid {
     grid-template-columns: 1fr;
   }
   

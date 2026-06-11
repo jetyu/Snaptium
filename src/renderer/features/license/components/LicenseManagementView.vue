@@ -18,6 +18,40 @@
             <span class="status-name">{{ t(store.getStatusTextKey(store.displayStatus)) }}</span>
           </div>
           <span v-if="audienceKey" class="audience-pill">{{ t(audienceKey) }}</span>
+          <div class="card-actions">
+            <button
+              type="button"
+              class="card-action-btn"
+              :disabled="isRefreshing || !store.canManage"
+              :title="t('license.management.refresh')"
+              :aria-label="t('license.management.refresh')"
+              @click="handleRefresh"
+            >
+              <IconRefresh :size="15" :class="{ 'animate-spin': isRefreshing }" />
+            </button>
+
+            <button
+              type="button"
+              class="card-action-btn"
+              :disabled="isRefreshing || !store.canManage"
+              :title="t('license.management.validate')"
+              :aria-label="t('license.management.validate')"
+              @click="handleValidate"
+            >
+              <IconDeviceDesktopCheck :size="15" />
+            </button>
+
+            <button
+              type="button"
+              class="card-action-btn danger-btn"
+              :disabled="isClearing || !store.canManage"
+              :title="t('license.management.clear')"
+              :aria-label="t('license.management.clear')"
+              @click="handleClear"
+            >
+              <IconTrash :size="15" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -42,26 +76,6 @@
           {{ localizedErrorMessage }}
         </span>
       </div>
-    </div>
-
-    <!-- Management Toolbar Actions -->
-    <div class="management-toolbar">
-      <button type="button" class="toolbar-btn" :disabled="isRefreshing || !store.canManage" @click="handleRefresh">
-        <IconRefresh :size="14" :class="{ 'animate-spin': isRefreshing }" />
-        <span>{{ t('license.management.refresh') }}</span>
-      </button>
-
-      <button type="button" class="toolbar-btn" :disabled="isRefreshing || !store.canManage" @click="handleValidate">
-        <IconDeviceDesktopCheck :size="14" />
-        <span>{{ t('license.management.validate') }}</span>
-      </button>
-
-
-      <button type="button" class="toolbar-btn danger-btn" :disabled="isClearing || !store.canManage"
-        @click="handleClear">
-        <IconTrash :size="14" />
-        <span>{{ t('license.management.clear') }}</span>
-      </button>
     </div>
 
     <!-- Key Metrics Grid -->
@@ -385,6 +399,49 @@ async function handleClear(): Promise<void> {
   white-space: nowrap;
 }
 
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.card-action-btn {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--panel-border);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+}
+
+.card-action-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--panel-hover);
+  color: var(--accent);
+}
+
+.card-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.card-action-btn.danger-btn {
+  border-color: color-mix(in srgb, var(--danger) 28%, var(--panel-border));
+  color: var(--danger);
+}
+
+.card-action-btn.danger-btn:hover:not(:disabled) {
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 10%, var(--panel));
+  color: var(--danger);
+}
+
 .card-benefits {
   display: flex;
   flex-direction: column;
@@ -454,64 +511,6 @@ async function handleClear(): Promise<void> {
   border: 1px solid color-mix(in srgb, var(--danger) 15%, var(--panel-border));
   padding: 4px 10px;
   border-radius: 6px;
-}
-
-/* Management Toolbar */
-.management-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--panel-hover);
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  padding: 8px;
-}
-
-.toolbar-btn {
-  height: 32px;
-  padding: 0 12px;
-  border-radius: 8px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel);
-  color: var(--text);
-  font-size: 0.8rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
-}
-
-.toolbar-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: var(--panel-hover);
-  color: var(--accent);
-}
-
-.toolbar-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.toolbar-divider {
-  width: 1px;
-  height: 18px;
-  background: var(--panel-border);
-  margin: 0 4px;
-}
-
-.danger-btn {
-  border-color: color-mix(in srgb, var(--danger) 30%, var(--panel-border));
-  background: color-mix(in srgb, var(--danger) 8%, var(--panel));
-  color: var(--danger);
-  margin-left: auto;
-}
-
-.danger-btn:hover:not(:disabled) {
-  border-color: var(--danger);
-  background: color-mix(in srgb, var(--danger) 15%, var(--panel));
-  color: var(--danger);
 }
 
 /* Metrics Grid */
@@ -644,10 +643,6 @@ async function handleClear(): Promise<void> {
 
   .benefit-list {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .management-toolbar {
-    flex-wrap: wrap;
   }
 }
 </style>
