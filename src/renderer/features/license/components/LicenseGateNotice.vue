@@ -10,9 +10,9 @@
       </div>
     </div>
     
-    <button 
-      type="button" 
-      class="notice-action-btn" 
+    <button
+      type="button"
+      class="action-button notice-action-btn"
       @click="openLicenseDialog"
     >
       {{ t('license.gate.action') }}
@@ -102,29 +102,8 @@ const { openLicenseDialog } = useLicenseDialog();
 }
 
 .notice-action-btn {
-  height: 32px;
-  padding: 0 14px;
-  border-radius: 8px;
-  border: 1px solid var(--accent);
-  background: color-mix(in srgb, var(--accent) 8%, var(--panel));
-  color: var(--accent);
-  font-size: 0.8rem;
-  font-weight: 650;
-  cursor: pointer;
   white-space: nowrap;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
-}
-
-.notice-action-btn:hover {
-  background: var(--accent);
-  color: #ffffff;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(var(--accent-hover), 0.25);
-}
-
-.notice-action-btn:active {
-  transform: translateY(0);
 }
 
 @media (max-width: 960px) {

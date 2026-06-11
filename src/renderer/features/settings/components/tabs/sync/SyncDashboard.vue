@@ -151,7 +151,7 @@
           <button
             type="button"
             class="action-button primary"
-            :disabled="syncStore.isSyncing || !settingsStore.config.sync.enabled || !isConfigReady"
+            :disabled="isLicenseLocked || syncStore.isSyncing || !settingsStore.config.sync.enabled || !isConfigReady"
             @click="handleSyncNow"
           >
             <span v-if="syncStore.isSyncing" class="spinner small"></span>

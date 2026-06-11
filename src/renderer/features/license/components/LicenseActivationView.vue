@@ -8,15 +8,18 @@
         <h2 class="title">{{ t('license.activation.title') }}</h2>
         <p class="description">{{ t('license.activation.description') }}</p>
       </div>
-      <a
-        class="header-purchase-link"
-        :href="LICENSE_PURCHASE_URL"
-        target="_blank"
-        rel="noopener noreferrer nofollow"
-      >
-        <span>{{ t('license.activation.purchase') }}</span>
-        <IconLink :size="14" />
-      </a>
+      <div class="header-purchase">
+        <a
+          class="header-purchase-link"
+          :href="LICENSE_PURCHASE_URL"
+          target="_blank"
+          rel="noopener noreferrer nofollow"
+        >
+          <span>{{ t('license.activation.purchase') }}</span>
+          <IconLink :size="14" />
+        </a>
+        <p class="header-purchase-hint">{{ t('license.activation.purchaseHint') }}</p>
+      </div>
     </div>
 
     <div class="comparison-section">
@@ -237,8 +240,15 @@ async function handleActivate(): Promise<void> {
   line-height: 1.4;
 }
 
-.header-purchase-link {
+.header-purchase {
   flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.header-purchase-link {
   min-width: 80px;
   min-height: 32px;
   padding: 0.4rem 1rem;
@@ -255,6 +265,15 @@ async function handleActivate(): Promise<void> {
   justify-content: center;
   gap: 0.5rem;
   text-decoration: none;
+}
+
+.header-purchase-hint {
+  margin: 0;
+  max-width: 210px;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.35;
+  text-align: right;
 }
 
 .header-purchase-link:hover {
@@ -451,39 +470,6 @@ async function handleActivate(): Promise<void> {
   gap: 0;
 }
 
-.action-button {
-  min-width: 80px;
-  min-height: 32px;
-  padding: 0.4rem 1rem;
-  border: 1px solid #c9d1dc;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #111827;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-}
-
-.action-button:hover:not(:disabled) {
-  background: #f3f4f6;
-  border-color: #7aa7ff;
-  color: #0f6cbd;
-}
-
-.action-button:active:not(:disabled) {
-  background: #e5e7eb;
-}
-
-.action-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .activate-btn {
   width: 100%;
 }
@@ -514,6 +500,16 @@ async function handleActivate(): Promise<void> {
 
   .header-purchase-link {
     width: 100%;
+  }
+
+  .header-purchase {
+    width: 100%;
+    align-items: stretch;
+  }
+
+  .header-purchase-hint {
+    max-width: none;
+    text-align: left;
   }
 }
 
