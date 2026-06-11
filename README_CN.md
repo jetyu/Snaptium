@@ -26,10 +26,9 @@
 ![GitHub Repo stars](https://img.shields.io/github/stars/jetyu/Snaptium?style=flat)
 ![GitHub forks](https://img.shields.io/github/forks/jetyu/Snaptium?style=flat)
 
-![Platform](https://img.shields.io/badge/Platform-Windows%20|%20macOS%20|%20Linux-blue?style=flat)
-![Electron](https://img.shields.io/badge/Electron-41+-47848F?style=flat&logo=electron&logoColor=white)
-![Vue](https://img.shields.io/badge/Vue-3.x-42b883?style=flat&logo=vue.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat&logo=typescript&logoColor=white)
+![Electron](https://img.shields.io/badge/Electron-41.2.1-47848F?style=flat&logo=electron&logoColor=white)
+![Vue](https://img.shields.io/badge/Vue-3.5.32-42b883?style=flat&logo=vuedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6.0.3-3178C6?style=flat&logo=typescript&logoColor=white)
 
 [![Open Issues](https://img.shields.io/github/issues/jetyu/Snaptium?style=flat&color=orange)]()
 [![Closed Issues](https://img.shields.io/github/issues-closed/jetyu/Snaptium?style=flat&color=brightgreen)]()
