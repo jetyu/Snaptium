@@ -30,6 +30,7 @@
               @click="handleRefresh"
             >
               <IconRefresh :size="15" :class="{ 'animate-spin': isRefreshing }" />
+              <span>{{ t('license.management.refresh') }}</span>
             </button>
 
             <button
@@ -41,6 +42,7 @@
               @click="handleValidate"
             >
               <IconDeviceDesktopCheck :size="15" />
+              <span>{{ t('license.management.validate') }}</span>
             </button>
 
             <button
@@ -52,6 +54,7 @@
               @click="handleClear"
             >
               <IconTrash :size="15" />
+              <span>{{ t('license.management.clear') }}</span>
             </button>
           </div>
         </div>
@@ -313,7 +316,7 @@ async function handleClear(): Promise<void> {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 8px;
+  gap: 10px;
 }
 
 .summary-status {
@@ -348,13 +351,13 @@ async function handleClear(): Promise<void> {
 .summary-actions {
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .summary-action-btn {
-  width: 30px;
-  height: 30px;
-  padding: 0;
+  min-height: 32px;
+  padding: 0 12px;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   background: var(--panel-hover);
@@ -362,8 +365,12 @@ async function handleClear(): Promise<void> {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  gap: 6px;
   cursor: pointer;
   transition: border-color 0.15s ease, background-color 0.15s ease, color 0.15s ease;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .summary-action-btn:hover:not(:disabled) {
@@ -533,6 +540,10 @@ async function handleClear(): Promise<void> {
 
   .summary-plan {
     align-items: flex-start;
+  }
+
+  .summary-actions {
+    width: 100%;
   }
 
   .metrics-grid {
