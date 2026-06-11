@@ -802,7 +802,6 @@
   "workbench.action.configure": "配置功能模块",
   "workbench.action.continueWriting": "继续写",
   "workbench.action.dismissRecommendation": "不再推荐",
-  "workbench.action.newDocument": "新建文档",
   "workbench.action.nextWallpaper": "更换上一张 Bing 壁纸",
   "workbench.action.snoozeRecommendation": "忽略",
   "workbench.action.viewAllTags": "全部标签",

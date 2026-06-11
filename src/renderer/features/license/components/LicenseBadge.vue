@@ -80,15 +80,21 @@ const toneClass = computed(() => {
 
 /* Insider Plan */
 .license-badge.insider {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.25);
-  color: #3b82f6;
+  background: rgba(13, 148, 136, 0.08);
+  border-color: rgba(13, 148, 136, 0.25);
+  color: #0f766e;
 }
 
 [data-theme='dark'] .license-badge.insider {
-  background: rgba(59, 130, 246, 0.15);
-  border-color: rgba(59, 130, 246, 0.35);
-  color: #60a5fa;
+  background: rgba(13, 148, 136, 0.16);
+  border-color: rgba(45, 212, 191, 0.35);
+  color: #5eead4;
+}
+
+.license-badge.insider:hover {
+  border-color: rgba(13, 148, 136, 0.35);
+  background: rgba(13, 148, 136, 0.12);
+  color: #0f766e;
 }
 
 /* Pro Plan */
@@ -112,15 +118,21 @@ const toneClass = computed(() => {
 
 /* Trial Plan */
 .license-badge.trial {
-  background: rgba(245, 158, 11, 0.08);
-  border-color: rgba(245, 158, 11, 0.25);
-  color: #f59e0b;
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #245ea8;
 }
 
 [data-theme='dark'] .license-badge.trial {
-  background: rgba(245, 158, 11, 0.15);
-  border-color: rgba(245, 158, 11, 0.35);
-  color: #fbbf24;
+  background: rgba(37, 99, 235, 0.16);
+  border-color: rgba(96, 165, 250, 0.35);
+  color: #7db5ff;
+}
+
+.license-badge.trial:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4f91;
 }
 
 /* Ultimate Plan */

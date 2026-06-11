@@ -16,13 +16,8 @@
             </div>
             <div class="hero-actions">
               <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
-                <IconPencil v-if="hasNotes" :size="14" />
-                <IconPlus v-else :size="14" />
-                <span>{{ hasNotes ? t('workbench.action.continueWriting') : t('workbench.action.newDocument') }}</span>
-              </button>
-              <button v-if="hasNotes" type="button" class="hero-action" @click="createFirstNote">
-                <IconPlus :size="14" />
-                <span>{{ t('workbench.action.newDocument') }}</span>
+                <IconPencil :size="14" />
+                <span>{{ t('workbench.action.continueWriting') }}</span>
               </button>
             </div>
           </div>
@@ -300,7 +295,6 @@ import { storeToRefs } from 'pinia';
 import defaultHeroUrl from '@assets/images/default-hero.png';
 import {
   IconPencil,
-  IconPlus,
   IconPhoto,
   IconBrain,
   IconLink,
@@ -1292,35 +1286,69 @@ watch(
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   padding-top: 0;
 }
 
 .hero-action {
-  min-width: 112px;
-  min-height: 36px;
+  min-width: 88px;
+  min-height: 34px;
+  padding: 0.42rem 1rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0 14px;
-  border: 1px solid var(--workbench-border-strong);
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--workbench-ink);
-  box-shadow: 0 6px 16px rgba(43, 52, 82, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  gap: 0.48rem;
+  border: 1px solid color-mix(in srgb, var(--workbench-border-strong) 82%, #c9d1dc);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: color-mix(in srgb, var(--workbench-ink) 92%, #111827);
   cursor: pointer;
   font: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  font-size: 0.86rem;
+  font-weight: 500;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.18s ease,
+    color 0.15s ease,
+    box-shadow 0.18s ease;
+}
+
+.hero-action:hover,
+.hero-action:focus-visible {
+  background: rgba(243, 244, 246, 0.96);
+  border-color: rgba(122, 167, 255, 0.72);
+  color: var(--workbench-ink);
+}
+
+.hero-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(122, 167, 255, 0.16);
+}
+
+.hero-action:active {
+  background: rgba(229, 231, 235, 0.96);
 }
 
 .hero-action--primary {
-  border-color: rgba(61, 124, 255, 0.26);
-  background: linear-gradient(150deg, #56a2ff 0%, #3d7cff 54%, #2f68e6 100%);
-  color: #ffffff;
-  box-shadow: 0 12px 24px rgba(61, 124, 255, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.06);
+}
+
+:global([data-theme='dark']) .hero-action {
+  background: rgba(37, 45, 58, 0.92);
+  border-color: rgba(108, 125, 156, 0.34);
+  color: rgba(238, 242, 249, 0.94);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+:global([data-theme='dark']) .hero-action:hover,
+:global([data-theme='dark']) .hero-action:focus-visible {
+  background: rgba(44, 54, 69, 0.96);
+  border-color: rgba(122, 167, 255, 0.56);
+  color: rgba(245, 247, 252, 0.98);
+}
+
+:global([data-theme='dark']) .hero-action:active {
+  background: rgba(31, 39, 52, 0.96);
 }
 
 .hero-art {

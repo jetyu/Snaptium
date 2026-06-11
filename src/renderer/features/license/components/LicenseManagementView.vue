@@ -67,17 +67,17 @@
 
     <!-- Key Metrics Grid -->
     <div class="metrics-grid">
-      <div class="metric-card">
+      <div class="metric-card" :class="`plan-${store.plan}`">
         <div class="metric-header">
-          <IconCalendarClock :size="18" class="metric-icon time" />
+          <IconCalendarClock :size="18" class="metric-icon time" :class="`plan-${store.plan}`" />
           <span class="metric-label">{{ t('license.management.expiresAt') }}</span>
         </div>
         <div class="metric-value">{{ formatDate(store.state.expiresAt) }}</div>
       </div>
 
-      <div class="metric-card">
+      <div class="metric-card" :class="`plan-${store.plan}`">
         <div class="metric-header">
-          <IconDevices :size="18" class="metric-icon device" />
+          <IconDevices :size="18" class="metric-icon device" :class="`plan-${store.plan}`" />
           <span class="metric-label">{{ t('license.management.activatedDevicesCount') }}</span>
         </div>
         <div class="metric-value-container">
@@ -85,9 +85,9 @@
             {{ store.activatedDevices }} <span class="metric-divider">/</span> {{ store.maxDevices ?? '-' }}
           </div>
 
-          <div class="device-progress" v-if="store.maxDevices">
-            <div class="device-progress-bar"
-              :style="{ width: `${Math.min(100, (store.activatedDevices / store.maxDevices) * 100)}%` }"></div>
+          <div class="device-progress" v-if="store.maxDevices" :class="`plan-${store.plan}`">
+            <div class="device-progress-bar" :class="`plan-${store.plan}`"
+               :style="{ width: `${Math.min(100, (store.activatedDevices / store.maxDevices) * 100)}%` }"></div>
           </div>
         </div>
       </div>
@@ -239,6 +239,10 @@ async function handleClear(): Promise<void> {
   background: linear-gradient(180deg, rgba(239, 246, 255, 0.7), var(--panel));
 }
 
+.license-summary-card.plan-trial {
+  background: linear-gradient(180deg, rgba(239, 246, 255, 0.7), var(--panel));
+}
+
 .license-summary-card.plan-ultimate {
   background: linear-gradient(180deg, rgba(255, 251, 235, 0.82), var(--panel));
 }
@@ -280,19 +284,19 @@ async function handleClear(): Promise<void> {
   border-color: rgba(107, 114, 128, 0.16);
 }
 
-.plan-icon.trial {
-  color: #b45309;
-  background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(254, 243, 199, 0.9));
-  border-color: rgba(217, 119, 6, 0.18);
-}
-
 .plan-icon.insider {
-  color: #245ea8;
-  background: linear-gradient(180deg, rgba(239, 246, 255, 0.98), rgba(219, 234, 254, 0.9));
-  border-color: rgba(37, 99, 235, 0.18);
+  color: #0f766e;
+  background: linear-gradient(180deg, rgba(240, 253, 250, 0.98), rgba(204, 251, 241, 0.9));
+  border-color: rgba(13, 148, 136, 0.18);
 }
 
 .plan-icon.pro {
+  color: #1d5f8f;
+  background: linear-gradient(180deg, rgba(245, 249, 255, 0.98), rgba(222, 235, 255, 0.92));
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.plan-icon.trial {
   color: #1d5f8f;
   background: linear-gradient(180deg, rgba(245, 249, 255, 0.98), rgba(222, 235, 255, 0.92));
   border-color: rgba(59, 130, 246, 0.2);
@@ -342,9 +346,19 @@ async function handleClear(): Promise<void> {
   color: #245ea8;
 }
 
+.summary-plan.plan-trial .plan-kicker,
+.summary-plan.plan-trial .plan-title {
+  color: #245ea8;
+}
+
 .summary-plan.plan-ultimate .plan-kicker,
 .summary-plan.plan-ultimate .plan-title {
   color: #8b5a00;
+}
+
+.summary-plan.plan-insider .plan-kicker,
+.summary-plan.plan-insider .plan-title {
+  color: #0f766e;
 }
 
 .summary-side {
@@ -379,10 +393,22 @@ async function handleClear(): Promise<void> {
   color: #245ea8;
 }
 
+.summary-status.plan-trial {
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.18);
+  color: #245ea8;
+}
+
 .summary-status.plan-ultimate {
   background: rgba(202, 138, 4, 0.1);
   border-color: rgba(202, 138, 4, 0.22);
   color: #8b5a00;
+}
+
+.summary-status.plan-insider {
+  background: rgba(13, 148, 136, 0.08);
+  border-color: rgba(13, 148, 136, 0.18);
+  color: #0f766e;
 }
 
 .status-dot {
@@ -400,8 +426,16 @@ async function handleClear(): Promise<void> {
   background: #3b82f6;
 }
 
+.summary-status.plan-trial .status-dot {
+  background: #3b82f6;
+}
+
 .summary-status.plan-ultimate .status-dot {
   background: #ca8a04;
+}
+
+.summary-status.plan-insider .status-dot {
+  background: #14b8a6;
 }
 
 [data-theme='dark'] .status-dot {
@@ -492,6 +526,26 @@ async function handleClear(): Promise<void> {
   border-color: color-mix(in srgb, var(--accent) 30%, var(--panel-border));
 }
 
+.metric-card.plan-free:hover {
+  border-color: rgba(107, 114, 128, 0.24);
+}
+
+.metric-card.plan-pro:hover {
+  border-color: rgba(37, 99, 235, 0.24);
+}
+
+.metric-card.plan-trial:hover {
+  border-color: rgba(37, 99, 235, 0.24);
+}
+
+.metric-card.plan-ultimate:hover {
+  border-color: rgba(202, 138, 4, 0.26);
+}
+
+.metric-card.plan-insider:hover {
+  border-color: rgba(13, 148, 136, 0.24);
+}
+
 .metric-header {
   display: flex;
   align-items: center;
@@ -515,6 +569,31 @@ async function handleClear(): Promise<void> {
 .metric-icon.device {
   background: rgba(59, 130, 246, 0.1);
   color: #3b82f6;
+}
+
+.metric-icon.plan-free {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.metric-icon.plan-pro {
+  background: rgba(37, 99, 235, 0.1);
+  color: #245ea8;
+}
+
+.metric-icon.plan-trial {
+  background: rgba(37, 99, 235, 0.1);
+  color: #245ea8;
+}
+
+.metric-icon.plan-ultimate {
+  background: rgba(202, 138, 4, 0.12);
+  color: #8b5a00;
+}
+
+.metric-icon.plan-insider {
+  background: rgba(13, 148, 136, 0.12);
+  color: #0f766e;
 }
 
 .metric-label {
@@ -556,6 +635,31 @@ async function handleClear(): Promise<void> {
   height: 100%;
   background: linear-gradient(90deg, #3b82f6, #60a5fa);
   border-radius: 999px;
+}
+
+.device-progress.plan-free .device-progress-bar,
+.device-progress-bar.plan-free {
+  background: linear-gradient(90deg, #9ca3af, #6b7280);
+}
+
+.device-progress.plan-pro .device-progress-bar,
+.device-progress-bar.plan-pro {
+  background: linear-gradient(90deg, #60a5fa, #2563eb);
+}
+
+.device-progress.plan-trial .device-progress-bar,
+.device-progress-bar.plan-trial {
+  background: linear-gradient(90deg, #60a5fa, #2563eb);
+}
+
+.device-progress.plan-ultimate .device-progress-bar,
+.device-progress-bar.plan-ultimate {
+  background: linear-gradient(90deg, #f3c969, #ca8a04);
+}
+
+.device-progress.plan-insider .device-progress-bar,
+.device-progress-bar.plan-insider {
+  background: linear-gradient(90deg, #5eead4, #0d9488);
 }
 
 /* Devices Section */
