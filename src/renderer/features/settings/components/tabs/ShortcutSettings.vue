@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="shortcut-settings">
     <h3 class="panel-title">{{ t('shortcuts.title') }}</h3>
 
@@ -37,7 +37,7 @@
       <div class="dialog" @click.stop>
         <div class="dialog-header">
           <h3>{{ t('shortcuts.addShortcut') }}</h3>
-          <button class="close-button" @click="closeAddDialog">×</button>
+          <button class="close-button dialog-close-button" @click="closeAddDialog">×</button>
         </div>
         <div class="dialog-body">
           <div class="shortcut-form-group">
@@ -279,12 +279,12 @@ async function handleReset() {
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: var(--dialog-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: var(--dialog-overlay-backdrop-filter);
 }
 
 .dialog {
@@ -311,21 +311,14 @@ async function handleReset() {
 }
 
 .close-button {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  font-size: 24px;
   color: #9ca3af;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: all 0.15s ease;
+  font-size: 0;
 }
 
-.close-button:hover {
-  background-color: #f3f4f6;
-  color: #111827;
+.close-button::before {
+  content: "×";
+  font-size: 22px;
+  line-height: 1;
 }
 
 .dialog-body {
@@ -386,3 +379,4 @@ async function handleReset() {
 }
 
 </style>
+

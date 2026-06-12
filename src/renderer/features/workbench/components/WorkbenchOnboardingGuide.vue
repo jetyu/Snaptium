@@ -3,8 +3,8 @@
     <div ref="overlayRef" class="workbench-onboarding" role="dialog" aria-modal="true"
       aria-labelledby="workbench-onboarding-title" tabindex="0" @keydown.esc="emit('dismiss')">
       <section class="workbench-onboarding__dialog" @click.stop>
-        <button type="button" class="workbench-onboarding__close" :aria-label="t('common.close')"
-          @click="emit('dismiss')">
+        <button type="button" class="workbench-onboarding__close dialog-close-button" :aria-label="t('common.close')"
+            @click="emit('dismiss')">
           <IconX :size="16" />
         </button>
 
@@ -365,24 +365,6 @@ onMounted(async () => {
   top: 12px;
   right: 12px;
   z-index: 2;
-  width: 30px;
-  height: 30px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: 1px solid var(--panel-border, #dbe3ef);
-  border-radius: 8px;
-  background: var(--panel, #ffffff);
-  color: var(--text-muted, #64748b);
-  cursor: pointer;
-  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
-}
-
-.workbench-onboarding__close:hover {
-  border-color: var(--panel-border, #dbe3ef);
-  background: var(--panel-hover, #f5f7fa);
-  color: var(--text, #111827);
 }
 
 .workbench-onboarding__rail {
@@ -810,10 +792,6 @@ onMounted(async () => {
 :global([data-theme='dark']) .workbench-onboarding__finish-card,
 :global([data-theme='dark']) .workbench-onboarding__secondary-action,
 :global([data-theme='dark']) .workbench-onboarding__nav-button,
-:global([data-theme='dark']) .workbench-onboarding__close {
-  background: rgba(255, 255, 255, 0.04);
-}
-
 :global([data-theme='dark']) .workbench-onboarding__choice-card.is-selected {
   background: color-mix(in srgb, var(--accent) 13%, transparent);
 }

@@ -41,5 +41,6 @@ export function useWorkspace() {
     toggleNodeStar: store.toggleNodeStar,
     forceFlushAutoSave: store.forceFlushAutoSave,
     openHistoryDialog: store.openHistoryDialog,
+    openNotePropertiesDialog: store.openNotePropertiesDialog,
   };
 }
