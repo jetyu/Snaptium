@@ -1099,7 +1099,7 @@ watch(
   --workbench-recommendation-card-height: var(--workbench-feed-card-height);
   --workbench-panel-header-padding: 16px 20px 10px;
   --workbench-panel-body-padding: 0 20px 16px;
-  --workbench-feed-row-min-height: 60px;
+  --workbench-feed-row-min-height: 52px;
   --workbench-overview-card-padding: 7px 12px;
   --workbench-side-card-padding: 18px 20px;
   --workbench-growth-chart-height: 110px;
@@ -1600,7 +1600,7 @@ watch(
   display: flex;
   align-items: center;
   gap: 11px;
-  padding: 10px 6px;
+  padding: 7px 6px;
   border: 0;
   border-bottom: 1px solid var(--workbench-border);
   border-radius: 0;
@@ -1640,7 +1640,7 @@ watch(
   min-width: 0;
   display: grid;
   flex: 1;
-  gap: 5px;
+  gap: 3px;
 }
 
 .feed-row__title {
@@ -2318,6 +2318,7 @@ watch(
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 3.6;
+  vector-effect: non-scaling-stroke;
   filter: drop-shadow(0 8px 14px rgba(61, 124, 255, 0.24));
 }
 
