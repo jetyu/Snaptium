@@ -7,9 +7,8 @@ on:
   pull_request:
     branches:
       - develop
-      - insider
+      - preview
       - main
-  workflow_dispatch:
 
 permissions:
   contents: write
@@ -44,27 +43,27 @@ jobs:
           case "$BASE_BRANCH" in
             develop)
               if [[ "$HEAD_BRANCH" == feature/* ]]; then
-                echo "Allowed: feature/* -> develop"
+                echo "Allowed: $HEAD_BRANCH -> develop"
               else
                 echo "::error::Invalid merge direction. Only feature/* branches can be merged into develop."
                 exit 1
               fi
               ;;
 
-            insider)
+            preview)
               if [[ "$HEAD_BRANCH" == "develop" ]]; then
-                echo "Allowed: develop -> insider"
+                echo "Allowed: develop -> preview"
               else
-                echo "::error::Invalid merge direction. Only develop can be merged into insider."
+                echo "::error::Invalid merge direction. Only develop can be merged into preview."
                 exit 1
               fi
               ;;
 
             main)
-              if [[ "$HEAD_BRANCH" == "insider" ]]; then
-                echo "Allowed: insider -> main"
+              if [[ "$HEAD_BRANCH" == "preview" ]]; then
+                echo "Allowed: preview -> main"
               else
-                echo "::error::Invalid merge direction. Only insider can be merged into main."
+                echo "::error::Invalid merge direction. Only preview can be merged into main."
                 exit 1
               fi
               ;;
@@ -121,7 +120,7 @@ jobs:
           echo "$BRANCHES"
 
           IS_MAIN=false
-          IS_INSIDER=false
+          IS_PREVIEW=false
           IS_DEVELOP=false
           IS_FEATURE=false
 
@@ -129,8 +128,8 @@ jobs:
             IS_MAIN=true
           fi
 
-          if echo "$BRANCHES" | grep -qE "origin/insider$"; then
-            IS_INSIDER=true
+          if echo "$BRANCHES" | grep -qE "origin/preview$"; then
+            IS_PREVIEW=true
           fi
 
           if echo "$BRANCHES" | grep -qE "origin/develop$"; then
@@ -142,7 +141,7 @@ jobs:
           fi
 
           echo "IS_MAIN=$IS_MAIN"
-          echo "IS_INSIDER=$IS_INSIDER"
+          echo "IS_PREVIEW=$IS_PREVIEW"
           echo "IS_DEVELOP=$IS_DEVELOP"
           echo "IS_FEATURE=$IS_FEATURE"
 
@@ -155,8 +154,8 @@ jobs:
             echo "r2_channel=latest" >> "$GITHUB_OUTPUT"
             echo "release_name=Snaptium $TAG" >> "$GITHUB_OUTPUT"
 
-          elif [[ "$IS_INSIDER" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]; then
-            echo "Beta Release detected from insider"
+          elif [[ "$IS_PREVIEW" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]; then
+            echo "Beta Release detected from preview"
 
             echo "is_dev=true" >> "$GITHUB_OUTPUT"
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
@@ -175,10 +174,10 @@ jobs:
 
           else
             echo "::error::Tag $TAG does not match the release policy."
-            echo "::error::Use vX.Y.Z on main for Stable releases."
-            echo "::error::Use vX.Y.Z-beta.N on insider for Beta releases."
             echo "::error::Use vX.Y.Z-alpha.N on develop for Alpha releases."
-            echo "::error::feature/* branches are not allowed to publish releases."
+            echo "::error::Use vX.Y.Z-beta.N on preview for Beta releases."
+            echo "::error::Use vX.Y.Z on main for Stable releases."
+            echo "::error::feature/* branches are not allowed to publish releases directly."
             exit 1
           fi
 
