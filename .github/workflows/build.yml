@@ -152,8 +152,20 @@ jobs:
         run: npm ci --prefer-offline --no-audit --no-fund
 
       - name: Set Version
+        shell: bash
+        env:
+          TARGET_VERSION: ${{ needs.prepare.outputs.version }}
         run: |
-          npm version ${{ needs.prepare.outputs.version }} --no-git-tag-version
+          set -euo pipefail
+
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          if [ "$CURRENT_VERSION" = "$TARGET_VERSION" ]; then
+            echo "package.json version already set to $TARGET_VERSION; skipping npm version."
+            exit 0
+          fi
+
+          npm version "$TARGET_VERSION" --no-git-tag-version
 
       - name: Set Release Channel Publish URL
         shell: bash
