@@ -19,6 +19,7 @@ interface UseWorkspaceContextMenuOptions {
   createNoteFromTemplate: (templateId: NoteTemplateId) => Promise<void>;
   moveNode: (payload: { nodeId: string; parentId: string | null; index: number }) => Promise<void>;
   showNoteInFolder: (id: string) => Promise<void>;
+  openProperties: (id: string) => void;
   deleteNote: (id: string) => Promise<unknown>;
   deleteNotebook: (id: string) => Promise<unknown>;
   getNoteMoveTargets: (note: Note) => WorkspaceMoveTarget[];
@@ -124,6 +125,10 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
         }
         break;
       case WORKSPACE_CONSTANTS.ACTIONS.PROPERTIES:
+        if (context.note) {
+          options.openProperties(context.note.id);
+        }
+        break;
       case WORKSPACE_CONSTANTS.ACTIONS.SHOW_IN_FOLDER:
         if (context.note) {
           await options.showNoteInFolder(context.note.id);

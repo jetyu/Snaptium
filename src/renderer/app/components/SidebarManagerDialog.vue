@@ -9,7 +9,7 @@
               <h2>{{ t('label.sidebarConfig') }}</h2>
               <p class="sidebar-manager-dialog__intro">{{ t('appShell.sidebarManager.intro') }}</p>
             </div>
-            <button type="button" class="sidebar-manager-dialog__close" :aria-label="t('common.close')"
+            <button type="button" class="sidebar-manager-dialog__close dialog-close-button" :aria-label="t('common.close')"
               @click="closeSidebarManager">
               <IconX :size="18" />
             </button>
@@ -208,7 +208,8 @@ watch(isSidebarManagerOpen, async (open) => {
   position: fixed;
   inset: 0;
   z-index: 1100;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--dialog-overlay-bg);
+  backdrop-filter: var(--dialog-overlay-backdrop-filter);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,17 +257,7 @@ watch(isSidebarManagerOpen, async (open) => {
 }
 
 .sidebar-manager-dialog__close {
-  border: none;
-  background: transparent;
   color: var(--text-muted);
-  cursor: pointer;
-  padding: 6px;
-  border-radius: 10px;
-}
-
-.sidebar-manager-dialog__close:hover {
-  color: var(--text);
-  background: var(--panel-hover);
 }
 
 .sidebar-manager-dialog__body {

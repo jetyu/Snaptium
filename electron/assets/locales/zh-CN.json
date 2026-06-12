@@ -1,4 +1,4 @@
-{
+﻿{
   "about.author": "作者: ",
   "about.chromium": "Chromium",
   "about.copyrights": "版权所有 © 2026 Snaptium Team. 保留所有权利",
@@ -365,7 +365,7 @@
   "license.activation.description": "享受更高效的智能写作体验。",
   "license.activation.failed": "激活失败，请检查网络连接。",
   "license.activation.featuresTitle": "可解锁的高级功能：",
-"license.activation.inputLabel": "授权码",
+  "license.activation.inputLabel": "授权码",
   "license.activation.placeholder": "SNPX-XXXX-XXXX-XXXX-XXXX",
   "license.activation.purchase": "获取授权",
   "license.activation.purchaseHint": "还没有授权？前往官网购买。",
@@ -1006,5 +1006,19 @@
   "workspace.iconPicker.reset": "重置颜色",
   "workspace.iconPicker.tabColor": "颜色",
   "workspace.iconPicker.title": "笔记本图标颜色",
-  "workspace.nodesList.emptyState": "创建笔记或者笔记本"
+  "workspace.nodesList.emptyState": "创建笔记或者笔记本",
+  "noteProperties.characterCount": "字符数",
+  "noteProperties.contentId": "内容 ID",
+  "noteProperties.contentSize": "内容大小",
+  "noteProperties.contentStats": "内容统计",
+  "noteProperties.copyInfo": "复制信息",
+  "noteProperties.createdAt": "创建时间",
+  "noteProperties.lineCount": "行数",
+  "noteProperties.noteId": "笔记 ID",
+  "noteProperties.technicalInfo": "技术信息",
+  "noteProperties.timeInfo": "时间信息",
+  "noteProperties.unavailable": "不可用",
+  "noteProperties.updatedAt": "最近修改",
+  "noteProperties.wordCount": "字数",
+  "noteProperties.workspace": "工作区"
 }
