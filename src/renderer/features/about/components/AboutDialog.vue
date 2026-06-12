@@ -4,7 +4,7 @@
       <div v-if="isOpen" class="about-overlay" @keydown.esc="closeAbout" tabindex="0" ref="overlayRef">
         <div class="about-modal" @click.stop>
           <div class="about-close-btn-wrapper">
-            <button @click="closeAbout" class="about-close-btn" :aria-label="t('close')">
+            <button @click="closeAbout" class="about-close-btn dialog-close-button" :aria-label="t('close')">
               <IconX :size="16" />
             </button>
           </div>
@@ -98,7 +98,8 @@ onUnmounted(() => {
   position: fixed;
   inset: 0;
   z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: var(--dialog-overlay-bg);
+  backdrop-filter: var(--dialog-overlay-backdrop-filter);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -123,27 +124,13 @@ onUnmounted(() => {
 }
 
 .about-close-btn {
-  background: transparent;
-  border: none;
-  border-radius: 4px;
-  padding: 4px;
   color: var(--text-secondary, #4b5563);
-  cursor: pointer;
-  transition: background-color 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .icon-wrapper {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-}
-
-.about-close-btn:hover {
-  background-color: var(--bg-hover, #f3f4f6);
-  color: #111827;
 }
 
 .about-content {

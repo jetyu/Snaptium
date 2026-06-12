@@ -4,6 +4,7 @@
   <AboutDialog />
   <TrashDialog />
   <HistoryDialog />
+  <NotePropertiesDialog />
   <AccessControlOverlay />
   <LicenseDialog />
 </template>
@@ -23,7 +24,7 @@ import { useShortcutsStore } from '@renderer/features/shortcuts';
 import { useCommandRegistration } from '@renderer/features/shortcuts/composables/useCommandRegistration';
 import { useRAGInitialization } from '@renderer/features/rag';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
-import { HistoryDialog } from '@renderer/features/workspace';
+import { HistoryDialog, NotePropertiesDialog } from '@renderer/features/workspace';
 import { useSyncLifecycle } from '@renderer/features/sync';
 import { AccessControlOverlay } from '@renderer/features/security';
 import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';

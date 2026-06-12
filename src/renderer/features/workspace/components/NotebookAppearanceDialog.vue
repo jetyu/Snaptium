@@ -15,8 +15,8 @@
                 <p>{{ notebookName }}</p>
               </div>
             </div>
-            <button class="appearance-dialog__close" :title="$t('common.close')" @click="closeDialog">
-              &times;
+            <button class="appearance-dialog__close dialog-close-button" :title="$t('common.close')" @click="closeDialog">
+              <IconX :size="18" />
             </button>
           </header>
 
@@ -56,6 +56,7 @@
 </template>
 
 <script setup lang="ts">
+import { IconX } from '@tabler/icons-vue';
 import {
   NOTEBOOK_ICON_COLORS,
   NOTEBOOK_ICON_COLOR_VALUES,
@@ -108,7 +109,8 @@ function resetToDefault() {
 .appearance-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.42);
+  background: var(--dialog-overlay-bg);
+  backdrop-filter: var(--dialog-overlay-backdrop-filter);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -159,20 +161,7 @@ function resetToDefault() {
 }
 
 .appearance-dialog__close {
-  border: none;
-  background: transparent;
   color: var(--text-muted);
-  cursor: pointer;
-  font-size: 20px;
-  line-height: 1;
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-}
-
-.appearance-dialog__close:hover {
-  color: var(--text);
-  background: var(--panel-hover);
 }
 
 .appearance-dialog__panel {
