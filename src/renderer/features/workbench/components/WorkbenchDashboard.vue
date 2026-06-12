@@ -1591,6 +1591,7 @@ watch(
 
 .feed-list {
   display: grid;
+  align-content: start;
   padding: var(--workbench-panel-body-padding);
 }
 
