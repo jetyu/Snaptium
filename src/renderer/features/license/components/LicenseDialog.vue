@@ -10,7 +10,7 @@
       >
         <div class="license-modal" @click.stop>
           <div class="license-modal-header">
-            <button type="button" class="license-close-btn" :aria-label="t('button.close')" @click="closeLicenseDialog">
+            <button type="button" class="license-close-btn dialog-close-button" :aria-label="t('button.close')" @click="closeLicenseDialog">
               <IconX :size="18" />
             </button>
           </div>
@@ -117,31 +117,6 @@ watch(
   justify-content: flex-end;
   padding: 14px 14px 0 14px;
   z-index: 15;
-}
-
-.license-close-btn {
-  width: 32px;
-  height: 32px;
-  border: 1px solid var(--panel-border);
-  border-radius: 10px;
-  background: var(--panel);
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 0;
-  cursor: pointer;
-  color: var(--text-muted);
-  transition: 
-    border-color 0.15s ease, 
-    background-color 0.15s ease, 
-    color 0.15s ease;
-}
-
-.license-close-btn:hover {
-  border-color: var(--accent);
-  background: var(--panel-hover);
-  color: var(--accent);
 }
 
 .license-close-btn :deep(svg) {

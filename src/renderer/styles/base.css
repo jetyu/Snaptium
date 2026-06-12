@@ -183,3 +183,32 @@ button.icon-text svg,
 .icon-action-button svg {
   display: block;
 }
+
+.dialog-close-button {
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel);
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  cursor: pointer;
+  color: var(--text-muted);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.dialog-close-button:hover {
+  border-color: var(--accent);
+  background: var(--panel-hover);
+  color: var(--accent);
+}
+
+.dialog-close-button svg {
+  display: block;
+}

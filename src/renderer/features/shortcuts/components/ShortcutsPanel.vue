@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="shortcuts-panel">
     <div class="panel-header">
       <h2>{{ t('shortcuts.title') }}</h2>
@@ -16,7 +16,7 @@
       <div class="dialog" @click.stop>
         <div class="dialog-header">
           <h3>{{ t('shortcuts.addShortcut') }}</h3>
-          <button class="close-button" @click="closeAddDialog">
+          <button class="close-button dialog-close-button" @click="closeAddDialog">
             ×
           </button>
         </div>
@@ -193,24 +193,14 @@ async function handleReset() {
 }
 
 .close-button {
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: none;
-  background: transparent;
-  font-size: 24px;
   color: var(--text-muted);
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 6px;
+  font-size: 0;
 }
 
-.close-button:hover {
-  background: var(--panel-hover);
-  color: var(--text);
+.close-button::before {
+  content: "×";
+  font-size: 22px;
+  line-height: 1;
 }
 
 .dialog-body {
@@ -270,3 +260,4 @@ async function handleReset() {
 }
 
 </style>
+

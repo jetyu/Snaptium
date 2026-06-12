@@ -14,7 +14,7 @@
                 <IconEraser :size="16" />
                 <span>{{ $t('trash.empty') }}</span>
               </button>
-              <button @click="closeTrash" class="btn-close">
+              <button @click="closeTrash" class="btn-close dialog-close-button">
                 <IconX :size="18" />
               </button>
             </div>
@@ -209,17 +209,6 @@ watch(isOpen, async (newVal) => {
 }
 
 .btn-close {
-  background: transparent;
-  border: none;
-  color: var(--text-muted, #6b7280);
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  display: flex;
-}
-
-.btn-close:hover {
-  background: var(--panel-hover, #f3f4f6);
   color: var(--text, #111827);
 }
 

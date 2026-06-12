@@ -15,7 +15,7 @@
               <p class="note-properties-kicker">{{ $t('contextMenu.properties') }}</p>
               <h2 :title="note.title">{{ note.title || $t('common.untitledNote') }}</h2>
             </div>
-            <button class="note-properties-close" type="button" :aria-label="$t('button.close')" @click="closeDialog">
+            <button class="note-properties-close dialog-close-button" type="button" :aria-label="$t('button.close')" @click="closeDialog">
               <IconX :size="18" />
             </button>
           </div>
@@ -86,9 +86,6 @@
               <IconCheck v-if="isCopied" :size="15" />
               <IconCopy v-else :size="15" />
               <span>{{ isCopied ? $t('preview.codeCopied') : $t('noteProperties.copyInfo') }}</span>
-            </button>
-            <button class="footer-button footer-button--primary" type="button" @click="closeDialog">
-              {{ $t('button.close') }}
             </button>
           </div>
         </div>
@@ -282,21 +279,6 @@ watch(note, (nextNote) => {
 
 .note-properties-close {
   flex: 0 0 auto;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  border: none;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text-muted, #6b7280);
-  cursor: pointer;
-}
-
-.note-properties-close:hover {
-  background: var(--panel-hover, #f3f4f6);
-  color: var(--text, #111827);
 }
 
 .note-properties-body {
@@ -388,16 +370,6 @@ watch(note, (nextNote) => {
   border-color: color-mix(in srgb, #10b981 40%, var(--panel-border));
   background: color-mix(in srgb, #10b981 10%, var(--panel));
   color: #047857;
-}
-
-.footer-button--primary {
-  background: var(--accent, #3b82f6);
-  border-color: var(--accent, #3b82f6);
-  color: #ffffff;
-}
-
-.footer-button--primary:hover {
-  filter: brightness(0.95);
 }
 
 .fade-enter-active,
