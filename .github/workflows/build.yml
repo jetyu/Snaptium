@@ -4,10 +4,16 @@ on:
   push:
     tags:
       - 'v*.*'
+  pull_request:
+    branches:
+      - develop
+      - insider
+      - main
   workflow_dispatch:
 
 permissions:
   contents: write
+  pull-requests: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -18,8 +24,60 @@ env:
   R2_ENDPOINT: https://c682d0f655a59157a9b01ed8a07ef379.r2.cloudflarestorage.com
 
 jobs:
+  branch-policy:
+    name: Branch Policy
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate merge direction
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          BASE_BRANCH="${{ github.base_ref }}"
+          HEAD_BRANCH="${{ github.head_ref }}"
+
+          echo "PR source branch: $HEAD_BRANCH"
+          echo "PR target branch: $BASE_BRANCH"
+
+          case "$BASE_BRANCH" in
+            develop)
+              if [[ "$HEAD_BRANCH" == feature/* ]]; then
+                echo "Allowed: feature/* -> develop"
+              else
+                echo "::error::Invalid merge direction. Only feature/* branches can be merged into develop."
+                exit 1
+              fi
+              ;;
+
+            insider)
+              if [[ "$HEAD_BRANCH" == "develop" ]]; then
+                echo "Allowed: develop -> insider"
+              else
+                echo "::error::Invalid merge direction. Only develop can be merged into insider."
+                exit 1
+              fi
+              ;;
+
+            main)
+              if [[ "$HEAD_BRANCH" == "insider" ]]; then
+                echo "Allowed: insider -> main"
+              else
+                echo "::error::Invalid merge direction. Only insider can be merged into main."
+                exit 1
+              fi
+              ;;
+
+            *)
+              echo "::error::Unsupported target branch: $BASE_BRANCH"
+              exit 1
+              ;;
+          esac
+
   prepare:
     name: Release Preparation
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.versioning.outputs.version }}
@@ -29,6 +87,7 @@ jobs:
       prerelease: ${{ steps.versioning.outputs.prerelease }}
       make_latest: ${{ steps.versioning.outputs.make_latest }}
       r2_channel: ${{ steps.versioning.outputs.r2_channel }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
@@ -37,9 +96,12 @@ jobs:
 
       - name: Compute Release Info
         id: versioning
+        shell: bash
         run: |
+          set -euo pipefail
+
           if [[ "${{ github.ref }}" != refs/tags/v* ]]; then
-            echo "::error::Release must be triggered by tag."
+            echo "::error::Release must be triggered by a version tag."
             exit 1
           fi
 
@@ -49,18 +111,26 @@ jobs:
           echo "Tag: $TAG"
           echo "Version: $VERSION"
 
+          git fetch --prune origin '+refs/heads/*:refs/remotes/origin/*'
+
           TAG_COMMIT=$(git rev-list -n 1 "$TAG")
           BRANCHES=$(git branch -r --contains "$TAG_COMMIT")
 
+          echo "Tag commit: $TAG_COMMIT"
           echo "Branches containing this commit:"
           echo "$BRANCHES"
 
           IS_MAIN=false
+          IS_INSIDER=false
           IS_DEVELOP=false
           IS_FEATURE=false
 
           if echo "$BRANCHES" | grep -qE "origin/main$"; then
             IS_MAIN=true
+          fi
+
+          if echo "$BRANCHES" | grep -qE "origin/insider$"; then
+            IS_INSIDER=true
           fi
 
           if echo "$BRANCHES" | grep -qE "origin/develop$"; then
@@ -71,32 +141,49 @@ jobs:
             IS_FEATURE=true
           fi
 
+          echo "IS_MAIN=$IS_MAIN"
+          echo "IS_INSIDER=$IS_INSIDER"
+          echo "IS_DEVELOP=$IS_DEVELOP"
+          echo "IS_FEATURE=$IS_FEATURE"
+
           if [[ "$IS_MAIN" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "Stable Release (main)"
-            echo "is_dev=false" >> $GITHUB_OUTPUT
-            echo "prerelease=false" >> $GITHUB_OUTPUT
-            echo "make_latest=true" >> $GITHUB_OUTPUT
-            echo "r2_channel=latest" >> $GITHUB_OUTPUT
-          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]; then
-            echo "Beta Release (develop)"
-            echo "is_dev=true" >> $GITHUB_OUTPUT
-            echo "prerelease=true" >> $GITHUB_OUTPUT
-            echo "make_latest=false" >> $GITHUB_OUTPUT
-            echo "r2_channel=beta" >> $GITHUB_OUTPUT
-          elif [[ "$IS_FEATURE" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
-            echo "Alpha Release (feature)"
-            echo "is_dev=true" >> $GITHUB_OUTPUT
-            echo "prerelease=true" >> $GITHUB_OUTPUT
-            echo "make_latest=false" >> $GITHUB_OUTPUT
-            echo "r2_channel=alpha" >> $GITHUB_OUTPUT
+            echo "Stable Release detected from main"
+
+            echo "is_dev=false" >> "$GITHUB_OUTPUT"
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+            echo "make_latest=true" >> "$GITHUB_OUTPUT"
+            echo "r2_channel=latest" >> "$GITHUB_OUTPUT"
+            echo "release_name=Snaptium $TAG" >> "$GITHUB_OUTPUT"
+
+          elif [[ "$IS_INSIDER" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]]; then
+            echo "Beta Release detected from insider"
+
+            echo "is_dev=true" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "make_latest=false" >> "$GITHUB_OUTPUT"
+            echo "r2_channel=beta" >> "$GITHUB_OUTPUT"
+            echo "release_name=Snaptium $VERSION Beta" >> "$GITHUB_OUTPUT"
+
+          elif [[ "$IS_DEVELOP" == true && "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+-alpha\.[0-9]+$ ]]; then
+            echo "Alpha Release detected from develop"
+
+            echo "is_dev=true" >> "$GITHUB_OUTPUT"
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+            echo "make_latest=false" >> "$GITHUB_OUTPUT"
+            echo "r2_channel=alpha" >> "$GITHUB_OUTPUT"
+            echo "release_name=Snaptium $VERSION Alpha" >> "$GITHUB_OUTPUT"
+
           else
-            echo "::error::Tag $TAG does not match branch release policy. Use vX.Y.Z on main, vX.Y.Z-beta.N on develop, or vX.Y.Z-alpha.N on feature/* branches."
+            echo "::error::Tag $TAG does not match the release policy."
+            echo "::error::Use vX.Y.Z on main for Stable releases."
+            echo "::error::Use vX.Y.Z-beta.N on insider for Beta releases."
+            echo "::error::Use vX.Y.Z-alpha.N on develop for Alpha releases."
+            echo "::error::feature/* branches are not allowed to publish releases."
             exit 1
           fi
 
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
-          echo "tag=$TAG" >> $GITHUB_OUTPUT
-          echo "release_name=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Upload Release Notes Template File
         uses: actions/upload-artifact@v5
@@ -106,6 +193,7 @@ jobs:
 
   build:
     name: Build on ${{ matrix.os }}
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: prepare
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90
@@ -184,7 +272,7 @@ jobs:
 
           fs.writeFileSync(packageJsonPath, `${JSON.stringify(packageJson, null, 2)}\n`)
 
-          console.log(`electron-builder publish provider: generic`)
+          console.log('electron-builder publish provider: generic')
           console.log(`electron-builder publish url: https://update.snaptium.com/download/${channel}`)
           NODE
 
@@ -208,6 +296,7 @@ jobs:
 
   release:
     name: Publishing Release
+    if: startsWith(github.ref, 'refs/tags/v')
     needs: [prepare, build]
     runs-on: ubuntu-latest
 
@@ -271,7 +360,10 @@ jobs:
           const platforms = Object.fromEntries(
             Object.entries(manifestChecks).map(([platform, manifest]) => {
               const manifestPath = path.join(releaseDir, manifest)
-              const ok = fs.existsSync(manifestPath) && fs.statSync(manifestPath).isFile() && fs.statSync(manifestPath).size > 0
+              const ok =
+                fs.existsSync(manifestPath) &&
+                fs.statSync(manifestPath).isFile() &&
+                fs.statSync(manifestPath).size > 0
 
               return [
                 platform,
@@ -286,6 +378,7 @@ jobs:
           const health = {
             ok: Object.values(platforms).every((platform) => platform.ok),
             version,
+            channel,
             platforms,
             generated_at: new Date().toISOString()
           }
