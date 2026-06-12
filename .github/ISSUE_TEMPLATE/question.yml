@@ -1,0 +1,74 @@
+name: Product Support
+description: Ask a usage question or request clarification / 使用咨询或功能疑问
+labels: ["Question"]
+assignees:
+  - jetyu
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Usage Question / 使用问题 
+
+        This template is for **usage questions** only. Please describe your question clearly and provide sufficient context. 
+        If the software crashes, behaves incorrectly, please use the [Bug Report](https://github.com/jetyu/NoteWizard/issues/new?template=bug.yml) template.  
+              
+        本模板仅用于 **使用咨询** , 请清晰描述你的问题，并尽可能提供相关背景信息。 
+        如果软件出现崩溃、功能异常，请使用 [Bug Report](https://github.com/jetyu/NoteWizard/issues/new?template=bug.yml) 模板。 
+        
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System / 操作系统
+      description: Select the operating system you are using. Required | 当前使用的操作系统（必填）
+      options:
+        - Windows 11
+        - Windows 10
+        - macOS (Intel)
+        - macOS (Apple Silicon)
+        - Linux
+    validations:
+      required: true
+
+  - type: input
+    id: os_version
+    attributes:
+      label: Operating System Version / 操作系统版本
+      description: The version of OS you are using. Required | 当前使用的操作系统版本（必填）
+      placeholder: e.g. Windows 11 23H2, macOS 13.6, Ubuntu 20.04 LTS, CentOS 9 and etc.
+    validations:
+      required: true
+
+  - type: input
+    id: notewizard_version
+    attributes:
+      label: NoteWizard Version / NoteWizard版本
+      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
+      placeholder: e.g. 1.0.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question / 你的问题
+      description: Describe your question in detail. Required | 请详细描述你的问题（必填）
+      placeholder: |
+        e.g.
+        1. Open NoteWizard
+        2. Insert a line of text
+        3. Observe the cursor position
+
+        例：
+        1. 打开 NoteWizard
+        2. 插入一行文本
+        3. 观察光标位置
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context / 补充信息
+      description: Provide logs, screenshots, or configuration if relevant. Optional | 如有相关日志、截图或配置，请提供（可选）

@@ -1,0 +1,85 @@
+export const WORKSPACE_CONSTANTS = {
+  NODE_TYPE_FILE: 'file',
+  NODE_TYPE_FOLDER: 'folder',
+
+  SAVE_STATUS: {
+    IDLE: 'idle',
+    SAVING: 'saving',
+    SAVED: 'saved',
+    ERROR: 'error',
+  },
+
+  AUTO_SAVE: {
+    DEBOUNCE_DELAY: 600,
+    STATUS_HIDE_DELAY: 3000,
+  },
+  
+  TIME_FORMAT: {
+    JUST_NOW_THRESHOLD: 5,
+    SECONDS_THRESHOLD: 60,
+    MINUTES_THRESHOLD: 3600,
+  },
+
+  ERROR_MESSAGES: {
+    SAVE_FAILED: 'Failed to save',
+    UNKNOWN_ERROR: 'Unknown error',
+  },
+
+  MENU: {
+    NEW_NOTE: 'contextMenu.newNote',
+    NEW_FROM_TEMPLATE: 'contextMenu.newFromTemplate',
+    NEW_NOTEBOOK: 'contextMenu.newNotebook',
+    RENAME: 'contextMenu.rename',
+    DELETE: 'contextMenu.delete',
+    LOCK: 'contextMenu.lock',
+    UNLOCK: 'contextMenu.unlock',
+    MOVE_TO: 'contextMenu.moveTo',
+    MOVE_TO_ROOT: 'contextMenu.moveToRoot',
+    MOVE_TO_NOTEBOOK: 'contextMenu.moveToNotebook',
+    SHOW_IN_FOLDER: 'contextMenu.showInFolder',
+    PROPERTIES: 'contextMenu.properties',
+    HISTORY: 'contextMenu.history',
+    STAR: 'contextMenu.star',
+    UNSTAR: 'contextMenu.unstar',
+    NOTEBOOK_ICON_COLOR: 'contextMenu.notebookIconColor',
+    NOTEBOOK_ICON_COLOR_DEFAULT: 'contextMenu.notebookIconColorDefault',
+    NOTEBOOK_ICON_COLOR_SLATE: 'contextMenu.notebookIconColorSlate',
+    NOTEBOOK_ICON_COLOR_BLUE: 'contextMenu.notebookIconColorBlue',
+    NOTEBOOK_ICON_COLOR_CYAN: 'contextMenu.notebookIconColorCyan',
+    NOTEBOOK_ICON_COLOR_GREEN: 'contextMenu.notebookIconColorGreen',
+    NOTEBOOK_ICON_COLOR_AMBER: 'contextMenu.notebookIconColorAmber',
+    NOTEBOOK_ICON_COLOR_ROSE: 'contextMenu.notebookIconColorRose',
+    NOTEBOOK_ICON_COLOR_INDIGO: 'contextMenu.notebookIconColorIndigo',
+    NOTEBOOK_ICON_COLOR_TEAL: 'contextMenu.notebookIconColorTeal',
+    NOTEBOOK_ICON_COLOR_LIME: 'contextMenu.notebookIconColorLime',
+    NOTEBOOK_ICON_COLOR_RED: 'contextMenu.notebookIconColorRed',
+    NOTEBOOK_ICON_COLOR_WHITE: 'contextMenu.notebookIconColorWhite',
+    NOTEBOOK_ICON_APPEARANCE: 'contextMenu.notebookIconAppearance',
+  },
+  ACTIONS: {
+    CREATE_NOTE: 'create-note',
+    CREATE_NOTE_FROM_TEMPLATE_PREFIX: 'create-note-from-template',
+    CREATE_NOTEBOOK: 'create-notebook',
+    RENAME: 'rename',
+    DELETE: 'delete',
+    DELETE_SELECTION: 'delete-selection',
+    TOGGLE_LOCK: 'toggle-lock',
+    MOVE_TO_PREFIX: 'move-to',
+    SHOW_IN_FOLDER: 'show-in-folder',
+    PROPERTIES: 'properties',
+    HISTORY: 'history',
+    TOGGLE_STAR: 'toggle-star',
+    SET_NOTEBOOK_ICON_COLOR_PREFIX: 'set-notebook-icon-color',
+    OPEN_NOTEBOOK_ICON_APPEARANCE: 'open-notebook-icon-appearance',
+    NOOP: 'noop',
+  },
+  MENU_ITEM_TYPE: {
+    NORMAL: 'normal',
+    SEPARATOR: 'separator',
+    SUBMENU: 'submenu',
+    CHECKBOX: 'checkbox',
+    RADIO: 'radio',
+  },
+} as const;
+
+export type SaveStatus = typeof WORKSPACE_CONSTANTS.SAVE_STATUS[keyof typeof WORKSPACE_CONSTANTS.SAVE_STATUS];

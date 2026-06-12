@@ -1,0 +1,76 @@
+name: Feature Enhancement
+description: Suggest an Improvement or addition to an existing feature / 已有的功能进行改进或完善
+labels: ["Enhancement"]
+assignees:
+  - jetyu
+  
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Feature Enhancement / 功能改进 
+
+        This template is for suggesting **improvements to existing features** only. 
+        If you are requesting a new feature, please use the [Feature Request](https://github.com/jetyu/NoteWizard/issues/new?template=feature.yml) template. 
+        
+        此模板仅用于提出对 **现有功能的改进建议** 。
+        如果是全新的功能需求，请使用 [Feature Request](https://github.com/jetyu/NoteWizard/issues/new?template=feature.yml) 模板。
+
+  - type: dropdown
+    id: os
+    attributes:
+     label: Operating System / 操作系统
+     description: Select the operating system you are using. Required | 当前使用的操作系统（必填）
+     options:
+       - Windows 11
+       - Windows 10
+       - macOS (Intel)
+       - macOS (Apple Silicon)
+       - Linux
+    validations:
+     required: true
+
+  - type: input
+    id: os_version
+    attributes:
+      label: Operating System Version / 操作系统版本
+      description: The version of OS you are using. Required | 当前使用的操作系统版本（必填）
+      placeholder: e.g. Windows 11 23H2, macOS 13.6, Ubuntu 20.04 LTS, CentOS 9 and etc.
+    validations:
+      required: true
+
+  - type: input
+    id: notewizard_version
+    attributes:
+      label: NoteWizard Version / NoteWizard版本
+      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
+      placeholder: e.g. 1.0.1
+    validations:
+      required: true
+
+  - type: textarea
+    id: current_behavior
+    attributes:
+      label: Current Behavior / 当前结果
+      description: How does the feature work now? Require | 当前功能是如何工作的？（必填）
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or Insufficient / 问题或不足
+      description: What is inconvenient or insufficient? Require | 有哪些不便或不足之处？（必填）
+    validations:
+      required: true
+
+  - type: textarea
+    id: enhancement
+    attributes:
+      label: Enhancement Case / 改进方案
+      description: How should it be improved? Require | 如何改进？（必填）
+      placeholder: |
+           e.g. Describe expected behavio of the feature in detail.
+           例：请详细描述该功能的期望行为。
+    validations:
+      required: true

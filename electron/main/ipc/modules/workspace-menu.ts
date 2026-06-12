@@ -1,0 +1,116 @@
+import { Menu, ipcMain, nativeImage, type BrowserWindow, type MenuItemConstructorOptions } from 'electron';
+import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
+import { loggerService } from '../../services/logger.service.js';
+
+const logger = loggerService.createLogger('Electron:Workspace Menu IPC');
+
+type MenuAction = string | null;
+type MenuItemType = 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
+
+interface WorkspaceContextMenuItemPayload {
+  action?: string | null;
+  labelKey?: string;
+  label?: string;
+  type?: MenuItemType;
+  enabled?: boolean;
+  checked?: boolean;
+  iconDataUrl?: string;
+  submenu?: WorkspaceContextMenuItemPayload[];
+}
+
+interface WorkspaceContextMenuPayload {
+  labels?: Record<string, string>;
+  items?: WorkspaceContextMenuItemPayload[];
+}
+
+function resolveLabel(item: WorkspaceContextMenuItemPayload, labels: Record<string, string>): string {
+  if (item.labelKey && labels[item.labelKey]) {
+    return labels[item.labelKey];
+  }
+
+  if (typeof item.label === 'string' && item.label.trim().length > 0) {
+    return item.label;
+  }
+
+  if (typeof item.action === 'string' && item.action.trim().length > 0) {
+    return item.action;
+  }
+
+  return '';
+}
+
+function buildMenuItems(
+  items: WorkspaceContextMenuItemPayload[],
+  labels: Record<string, string>,
+  resolve: (action: MenuAction) => void,
+): MenuItemConstructorOptions[] {
+  return items.map((item) => {
+    if (item.type === 'separator') {
+      return { type: 'separator' };
+    }
+
+    if (item.type === 'submenu') {
+      const submenuItems = Array.isArray(item.submenu) ? item.submenu : [];
+      return {
+        id: typeof item.action === 'string' ? item.action : undefined,
+        label: resolveLabel(item, labels),
+        enabled: item.enabled !== false && submenuItems.length > 0,
+        submenu: buildMenuItems(submenuItems, labels, resolve),
+      } as MenuItemConstructorOptions;
+    }
+
+    const action = typeof item.action === 'string' && item.action.trim().length > 0
+      ? item.action
+      : null;
+
+    const icon = typeof item.iconDataUrl === 'string' && item.iconDataUrl.startsWith('data:')
+      ? nativeImage.createFromDataURL(item.iconDataUrl)
+      : undefined;
+
+    return {
+      id: action ?? undefined,
+      label: resolveLabel(item, labels),
+      type: item.type ?? 'normal',
+      checked: item.checked === true,
+      icon,
+      enabled: item.enabled !== false && action !== null,
+      click: action ? () => resolve(action) : undefined,
+    };
+  });
+}
+
+function buildTemplate(
+  payload: WorkspaceContextMenuPayload = {},
+  resolve: (action: MenuAction) => void,
+): MenuItemConstructorOptions[] {
+  const labels = payload.labels ?? {};
+  const items = payload.items ?? [];
+  return buildMenuItems(items, labels, resolve);
+}
+
+export function registerWorkspaceMenuIpcHandlers(mainWindow: BrowserWindow): void {
+  ipcMain.removeHandler(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU);
+
+  ipcMain.handle(IPC_CHANNELS.WORKSPACE_SHOW_CONTEXT_MENU, async (_event, payload: unknown) => {
+    logger.debug('Showing context menu for workspace');
+    const normalizedPayload = (typeof payload === 'object' && payload !== null
+      ? payload
+      : {}) as WorkspaceContextMenuPayload;
+
+    return new Promise<MenuAction>((resolve) => {
+      let settled = false;
+      const finalize = (action: MenuAction = null): void => {
+        if (!settled) {
+          settled = true;
+          resolve(action);
+        }
+      };
+
+      const menu = Menu.buildFromTemplate(buildTemplate(normalizedPayload, finalize));
+      menu.popup({
+        window: mainWindow,
+        callback: () => finalize(null),
+      });
+    });
+  });
+}
