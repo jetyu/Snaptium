@@ -175,6 +175,7 @@ const {
   updateNotebookIconColor,
   toggleNodeStar,
   openHistoryDialog,
+  openNotePropertiesDialog,
 } = useWorkspace();
 
 const { t } = useI18n();
@@ -1102,6 +1103,7 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     createNoteFromTemplate,
     moveNode,
     showNoteInFolder,
+    openProperties: openNotePropertiesDialog,
     deleteNote,
     deleteNotebook,
     getNoteMoveTargets,

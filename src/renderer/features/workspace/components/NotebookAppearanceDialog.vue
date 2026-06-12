@@ -108,7 +108,8 @@ function resetToDefault() {
 .appearance-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.42);
+  background: var(--dialog-overlay-bg);
+  backdrop-filter: var(--dialog-overlay-backdrop-filter);
   display: flex;
   align-items: center;
   justify-content: center;

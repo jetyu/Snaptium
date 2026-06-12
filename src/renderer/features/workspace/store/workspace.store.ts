@@ -65,6 +65,8 @@ export const useWorkspaceStore = defineStore('workspace', {
       isHistoryDialogOpen: false,
       historyVersions: [] as HistoryVersion[],
       historyLoading: false,
+      isNotePropertiesDialogOpen: false,
+      notePropertiesTargetId: null as string | null,
     };
   },
 
@@ -108,6 +110,11 @@ export const useWorkspaceStore = defineStore('workspace', {
 
       return [...tagMap.values()].sort((left, right) => left.name.localeCompare(right.name));
     },
+
+    notePropertiesTarget: (state): Note | null => {
+      if (!state.notePropertiesTargetId) return null;
+      return state.notes.find((note) => note.id === state.notePropertiesTargetId) ?? null;
+    },
   },
 
   actions: {
@@ -143,6 +150,10 @@ export const useWorkspaceStore = defineStore('workspace', {
           this.activeNoteId = notes[0]?.id ?? null;
         } else if (!this.activeNoteId) {
           this.activeNoteId = notes[0]?.id ?? null;
+        }
+
+        if (this.notePropertiesTargetId && !notes.find((note) => note.id === this.notePropertiesTargetId)) {
+          this.closeNotePropertiesDialog();
         }
 
         this.activeNotebookId = null;
@@ -438,6 +449,9 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (this.activeNoteId === id) {
         this.activeNoteId = this.notes[0]?.id ?? null;
       }
+      if (this.notePropertiesTargetId === id) {
+        this.closeNotePropertiesDialog();
+      }
       logger.info(`Deleted note: ${id}`);
     },
 
@@ -479,6 +493,9 @@ export const useWorkspaceStore = defineStore('workspace', {
       if (idsToRemove.has(this.activeNotebookId ?? '')) {
         this.activeNotebookId = null;
       }
+      if (idsToRemove.has(this.notePropertiesTargetId ?? '')) {
+        this.closeNotePropertiesDialog();
+      }
 
       logger.info(`Deleted notebook and descendants: ${id} (Total items removed: ${idsToRemove.size})`);
       window.dispatchEvent(new CustomEvent('vfs-changed'));
@@ -514,6 +531,9 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
       if (idsToRemove.has(this.activeNotebookId ?? '')) {
         this.activeNotebookId = null;
+      }
+      if (idsToRemove.has(this.notePropertiesTargetId ?? '')) {
+        this.closeNotePropertiesDialog();
       }
 
       logger.info(`Deleted selected nodes and descendants: ${nodeIds.length} root candidate(s), ${idsToRemove.size} total item(s) removed.`);
@@ -582,6 +602,23 @@ export const useWorkspaceStore = defineStore('workspace', {
     closeHistoryDialog() {
       this.isHistoryDialogOpen = false;
       this.historyVersions = [];
+    },
+
+    openNotePropertiesDialog(noteId: string) {
+      const note = this.notes.find((candidate) => candidate.id === noteId);
+      if (!note) {
+        logger.warn(`Cannot open note properties, note not found: ${noteId}`);
+        return;
+      }
+
+      this.activeNoteId = noteId;
+      this.notePropertiesTargetId = noteId;
+      this.isNotePropertiesDialogOpen = true;
+    },
+
+    closeNotePropertiesDialog() {
+      this.isNotePropertiesDialogOpen = false;
+      this.notePropertiesTargetId = null;
     },
 
     async fetchHistory(contentId: string) {

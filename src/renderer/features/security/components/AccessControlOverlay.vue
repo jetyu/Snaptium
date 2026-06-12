@@ -150,8 +150,8 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(3, 7, 18, 0.56);
-  backdrop-filter: blur(4px);
+  background: var(--dialog-overlay-bg);
+  backdrop-filter: var(--dialog-overlay-backdrop-filter);
   outline: none;
 }
 

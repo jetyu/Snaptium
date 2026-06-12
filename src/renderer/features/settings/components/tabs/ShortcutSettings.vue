@@ -279,12 +279,12 @@ async function handleReset() {
 .dialog-overlay {
   position: fixed;
   inset: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: var(--dialog-overlay-bg);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
+  backdrop-filter: var(--dialog-overlay-backdrop-filter);
 }
 
 .dialog {

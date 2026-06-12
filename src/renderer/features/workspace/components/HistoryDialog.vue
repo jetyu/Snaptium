@@ -145,8 +145,8 @@ watch(() => workspaceStore.isHistoryDialogOpen, async (newVal) => {
   position: fixed;
   inset: 0;
   z-index: 1200;
-  background-color: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(4px);
+  background: var(--dialog-overlay-bg);
+  backdrop-filter: var(--dialog-overlay-backdrop-filter);
   display: flex;
   align-items: center;
   justify-content: center;

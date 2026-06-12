@@ -91,7 +91,8 @@ watch(
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--dialog-overlay-bg);
+  backdrop-filter: var(--dialog-overlay-backdrop-filter);
   outline: none;
 }
 
