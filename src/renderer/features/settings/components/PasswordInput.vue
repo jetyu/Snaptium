@@ -5,8 +5,8 @@
       @change="handleChange" @keyup.enter="handleEnter" />
     <button type="button" class="password-toggle-btn" :aria-label="toggleAriaLabel" :title="toggleAriaLabel"
       :disabled="disabled" @click="toggleVisibility">
-      <PreviewOpen v-if="isVisible" theme="outline" size="14" />
-      <PreviewClose v-else theme="outline" size="14" />
+      <IconEye v-if="isVisible" :size="14" />
+      <IconEyeOff v-else :size="14" />
     </button>
   </div>
 </template>
@@ -14,7 +14,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { PreviewClose, PreviewOpen } from '@icon-park/vue-next';
+import { IconEye, IconEyeOff } from '@tabler/icons-vue';
 
 const props = withDefaults(defineProps<{
   modelValue?: string;

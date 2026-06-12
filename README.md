@@ -10,6 +10,8 @@
   <img src="electron/assets/logo/app-logo-128.png" alt="Snaptium Logo" width="88">
 
 # Snaptium
+**Tips:NoteWizard has been fully upgraded to Snaptium. If you need to use the previous NoteWizard version, please download it from [here](https://github.com/jetyu/Snaptium/releases/tag/v1.2.1).**
+
 [Official Website](https://snaptium.com) [Official Docs](https://snaptium.com/docs) [Download](https://snaptium.com/#download)
 ### Local-first Markdown Intelligent Writing & Knowledge Management Workspace
 
@@ -23,16 +25,15 @@ Focused on deep writing, knowledge management, and a local-first experience, sup
 ![GitHub forks](https://img.shields.io/github/forks/jetyu/Snaptium?style=flat)
 
 ![Platform](https://img.shields.io/badge/Platform-Windows%20|%20macOS%20|%20Linux-blue?style=flat)
-![Electron](https://img.shields.io/badge/Electron-41+-47848F?style=flat&logo=electron&logoColor=white)
-![Vue](https://img.shields.io/badge/Vue-3.x-42b883?style=flat&logo=vue.js&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat&logo=typescript&logoColor=white)
+![Electron](https://img.shields.io/badge/Electron-41.2.1-47848F?style=flat&logo=electron&logoColor=white)
+![Vue](https://img.shields.io/badge/Vue-3.5.32-42b883?style=flat&logo=vuedotjs&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6.0.3-3178C6?style=flat&logo=typescript&logoColor=white)
 
 [![Open Issues](https://img.shields.io/github/issues/jetyu/Snaptium?style=flat&color=orange)]()
 [![Closed Issues](https://img.shields.io/github/issues-closed/jetyu/Snaptium?style=flat&color=brightgreen)]()
 [![License](https://img.shields.io/github/license/jetyu/Snaptium?style=flat)]()
 
 </div>
-
 ---
 
 # ✨ Project Positioning

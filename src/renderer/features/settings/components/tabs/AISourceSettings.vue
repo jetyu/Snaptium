@@ -20,10 +20,10 @@
               <h4 class="source-title">{{ source.name }}</h4>
               <div class="settings-card-actions">
                 <button class="action-btn" :disabled="isLicenseLocked" @click="handleEditSource(source)" :title="t('common.editor')">
-                  <Edit theme="outline" size="14" />
+                  <IconPencil :size="14" />
                 </button>
                 <button class="action-btn delete" :disabled="isLicenseLocked" @click="removeSource(source)" :title="t('trash.delete')">
-                  <Delete theme="outline" size="14" />
+                  <IconTrash :size="14" />
                 </button>
               </div>
             </div>
@@ -97,7 +97,7 @@
       <!-- Add Source Card (Placeholder) -->
       <div v-else-if="settingsStore.config.aiSources.length > 0" class="add-source-card" @click="handleAddSourceTrigger">
         <div class="add-icon">
-          <Plus theme="outline" :size="24" />
+          <IconPlus :size="24" />
         </div>
         <span>{{ t('button.addAISource') }}</span>
       </div>
@@ -105,7 +105,7 @@
       <div v-if="settingsStore.config.aiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card"
         @click="handleAddSourceTrigger">
         <div class="empty-icon">
-          <Light theme="outline" :size="48" />
+          <IconBulb :size="48" />
         </div>
         <p class="empty-text">{{ t('text.noAISourcesFound') }}</p>
         <span class="empty-action-text">{{ t('button.addAISource') }}</span>
@@ -124,7 +124,7 @@ import { settingsService } from '../../services/settings.service';
 import { systemDialog } from '../../services/system-dialog.service';
 import { createLogger } from '../../../logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
-import { Plus, Light, Delete, Edit } from '@icon-park/vue-next';
+import { IconPlus, IconBulb, IconTrash, IconPencil } from '@tabler/icons-vue';
 import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 import PasswordInput from '../PasswordInput.vue';
 

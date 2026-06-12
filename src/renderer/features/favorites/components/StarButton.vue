@@ -5,12 +5,12 @@
     :title="modelValue ? $t('contextMenu.unstar') : $t('contextMenu.star')"
     @click.stop="$emit('update:modelValue', !modelValue)"
   >
-    <Star :theme="modelValue ? 'filled' : 'outline'" :size="14" />
+    <IconStar :fill="modelValue ? 'currentColor' : 'none'" :size="14" />
   </button>
 </template>
 
 <script setup lang="ts">
-import { Star } from '@icon-park/vue-next';
+import { IconStar } from '@tabler/icons-vue';
 
 defineProps<{
   modelValue?: boolean;

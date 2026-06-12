@@ -691,6 +691,8 @@ export class LicenseService {
       return serverCode.trim();
     }
 
+    if ((status === 400 || status === 422) && route === '/license/activate') return LICENSE_ERROR_CODES.LICENSE_INVALID;
+    if ((status === 400 || status === 422) && route === '/license/validate') return LICENSE_ERROR_CODES.LICENSE_INVALID;
     if (status === 401) return LICENSE_ERROR_CODES.LICENSE_INVALID;
     if (status === 403) return LICENSE_ERROR_CODES.LICENSE_INVALID;
     if (status === 404 && route === '/license/deactivate-device') return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;

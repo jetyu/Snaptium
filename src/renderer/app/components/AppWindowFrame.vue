@@ -19,17 +19,17 @@
     <div class="app-window-frame__controls no-drag">
       <button type="button" class="app-window-frame__control-btn" :title="t('menu.window.minimize')"
         :aria-label="t('menu.window.minimize')" @click.stop="handleMinimize">
-        <Minus theme="outline" :size="14" />
+        <IconMinus :size="14" />
       </button>
       <button type="button" class="app-window-frame__control-btn"
         :title="isMaximized ? t('menu.window') : t('menu.window')"
         :aria-label="isMaximized ? t('menu.window') : t('menu.window')" @click.stop="handleToggleMaximize">
-        <Square v-if="!isMaximized" theme="outline" :size="13" />
-        <Copy v-else theme="outline" :size="13" />
+        <IconSquare v-if="!isMaximized" :size="13" />
+        <IconCopy v-else :size="13" />
       </button>
       <button type="button" class="app-window-frame__control-btn is-close" :title="t('menu.window.close')"
         :aria-label="t('menu.window.close')" @click.stop="handleClose">
-        <Close theme="outline" :size="14" />
+        <IconX :size="14" />
       </button>
     </div>
   </header>
@@ -38,7 +38,7 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Close, Minus, Square, Copy } from '@icon-park/vue-next';
+import { IconX, IconMinus, IconSquare, IconCopy } from '@tabler/icons-vue';
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import AppMenuBar from './AppMenuBar.vue';
 import AppTitleBarSearch from './AppTitleBarSearch.vue';

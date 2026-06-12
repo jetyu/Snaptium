@@ -69,10 +69,6 @@ function getRendererVendorChunkName(id: string): string | null {
     return 'vendor-emoji';
   }
 
-  if (id.includes('@icon-park')) {
-    return 'vendor-icons';
-  }
-
   if (id.includes('vue') || id.includes('pinia')) {
     return 'vendor-vue';
   }

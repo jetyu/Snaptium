@@ -1,14 +1,15 @@
 <template>
   <button type="button" class="license-badge" :class="[store.plan, toneClass]" @click="openLicenseDialog">
+    <component :is="planIcon" v-if="planIcon" :size="12" class="badge-icon" />
     <span class="label">{{ t(`license.badge.${store.plan}`) }}</span>
-    <span v-if="store.status === 'offline_grace'" class="hint">{{ t('license.badge.offline') }}</span>
-    <span v-else-if="store.status === 'session_grace'" class="hint">{{ t('license.badge.grace') }}</span>
   </button>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { IconBuilding, IconCrown, IconSparkle2, IconSparkles2, IconTimeDuration0 } from '@tabler/icons-vue';
+import { LICENSE_PLANS, type LicensePlan } from '@shared/license.constants';
 import { useLicenseStore } from '../store/license.store';
 import { useLicenseDialog } from '../composables/useLicenseDialog';
 
@@ -16,13 +17,19 @@ const { t } = useI18n();
 const store = useLicenseStore();
 const { openLicenseDialog } = useLicenseDialog();
 
-const toneClass = computed(() => {
-  if (store.status === 'expired' || store.status === 'invalid') {
-    return 'is-expired';
-  }
+const PLAN_ICONS: Partial<Record<LicensePlan, Component>> = {
+  [LICENSE_PLANS.TRIAL]: IconTimeDuration0,
+  [LICENSE_PLANS.INSIDER]: IconSparkle2,
+  [LICENSE_PLANS.PRO]: IconSparkles2,
+  [LICENSE_PLANS.ULTIMATE]: IconCrown,
+  [LICENSE_PLANS.ENTERPRISE]: IconBuilding,
+};
 
-  if (store.status === 'offline_grace' || store.status === 'session_grace') {
-    return 'is-grace';
+const planIcon = computed(() => PLAN_ICONS[store.plan] ?? null);
+
+const toneClass = computed(() => {
+  if (store.displayStatus === 'expired' || store.displayStatus === 'invalid') {
+    return 'is-expired';
   }
 
   return 'is-normal';
@@ -34,63 +41,142 @@ const toneClass = computed(() => {
   -webkit-app-region: no-drag;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid transparent;
+  gap: 5px;
+  border: 1px solid var(--panel-border);
   border-radius: 999px;
   padding: 4px 10px;
-  font-size: 0.74rem;
+  font-size: 0.72rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: rgba(100, 116, 139, 0.08);
-  color: #334155;
+  background: var(--panel-hover);
+  color: var(--text-muted);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
 }
 
 .license-badge:hover {
-  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
+
+
+.badge-icon {
+  flex-shrink: 0;
+  display: block;
+}
+
+/* Free Plan */
 .license-badge.free {
-  border-color: #cbd5e1;
+  border-color: var(--panel-border);
+  background: var(--panel-hover);
+  color: #6b7280;
 }
 
+.license-badge.free:hover {
+  border-color: rgba(107, 114, 128, 0.28);
+  background: rgba(107, 114, 128, 0.08);
+  color: #4b5563;
+}
+
+/* Insider Plan */
 .license-badge.insider {
-  background: #e5f2ff;
-  border-color: #b8dcff;
-  color: #0f4b8a;
+  background: rgba(13, 148, 136, 0.08);
+  border-color: rgba(13, 148, 136, 0.25);
+  color: #0f766e;
 }
 
+[data-theme='dark'] .license-badge.insider {
+  background: rgba(13, 148, 136, 0.16);
+  border-color: rgba(45, 212, 191, 0.35);
+  color: #5eead4;
+}
+
+.license-badge.insider:hover {
+  border-color: rgba(13, 148, 136, 0.35);
+  background: rgba(13, 148, 136, 0.12);
+  color: #0f766e;
+}
+
+/* Pro Plan */
 .license-badge.pro {
-  background: #f2ffe9;
-  border-color: #c9e9b2;
-  color: #2f6b0f;
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #245ea8;
 }
 
+[data-theme='dark'] .license-badge.pro {
+  background: rgba(37, 99, 235, 0.16);
+  border-color: rgba(96, 165, 250, 0.35);
+  color: #7db5ff;
+}
+
+.license-badge.pro:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4f91;
+}
+
+/* Trial Plan */
 .license-badge.trial {
-  background: #fff7e8;
-  border-color: #fed7aa;
-  color: #9a3412;
+  background: rgba(37, 99, 235, 0.08);
+  border-color: rgba(37, 99, 235, 0.25);
+  color: #245ea8;
 }
 
+[data-theme='dark'] .license-badge.trial {
+  background: rgba(37, 99, 235, 0.16);
+  border-color: rgba(96, 165, 250, 0.35);
+  color: #7db5ff;
+}
+
+.license-badge.trial:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4f91;
+}
+
+/* Ultimate Plan */
 .license-badge.ultimate {
-  background: #fff1f8;
-  border-color: #f9a8d4;
-  color: #9d174d;
+  background: rgba(202, 138, 4, 0.1);
+  border-color: rgba(202, 138, 4, 0.25);
+  color: #8b5a00;
 }
 
+[data-theme='dark'] .license-badge.ultimate {
+  background: rgba(202, 138, 4, 0.16);
+  border-color: rgba(245, 158, 11, 0.35);
+  color: #f5c96b;
+}
+
+.license-badge.ultimate:hover {
+  border-color: rgba(202, 138, 4, 0.36);
+  background: rgba(202, 138, 4, 0.14);
+  color: #7a5200;
+}
+
+/* Enterprise Plan */
 .license-badge.enterprise {
-  background: #ecfeff;
-  border-color: #a5f3fc;
-  color: #155e75;
+  background: rgba(6, 182, 212, 0.08);
+  border-color: rgba(6, 182, 212, 0.25);
+  color: #06b6d4;
 }
 
+[data-theme='dark'] .license-badge.enterprise {
+  background: rgba(6, 182, 212, 0.15);
+  border-color: rgba(6, 182, 212, 0.35);
+  color: #22d3ee;
+}
+
+/* Expired States */
 .license-badge.is-expired {
-  background: #fff1f2;
-  border-color: #fecdd3;
-  color: #be123c;
+  background: rgba(239, 68, 68, 0.08);
+  border-color: rgba(239, 68, 68, 0.25);
+  color: #ef4849;
 }
 
-.hint {
-  opacity: 0.76;
-  font-size: 0.7rem;
+[data-theme='dark'] .license-badge.is-expired {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f87171;
 }
 </style>

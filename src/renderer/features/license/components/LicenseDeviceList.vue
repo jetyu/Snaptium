@@ -4,47 +4,56 @@
       {{ t('license.devices.empty') }}
     </div>
 
-    <div v-else class="device-table">
-      <div class="device-header">
-        <span>{{ t('license.devices.name') }}</span>
-        <span>{{ t('license.devices.platform') }}</span>
-        <span>{{ t('license.devices.status') }}</span>
-        <span>{{ t('license.devices.lastSeen') }}</span>
-        <span>{{ t('license.devices.action') }}</span>
-      </div>
+    <div v-else class="device-cards">
+      <article v-for="device in devices" :key="device.id" class="device-card" :class="{ 'is-current': device.current }">
+        <div class="device-main">
+          <div class="device-hardware-icon" :class="{ 'is-current-icon': device.current }">
+            <component :is="getDeviceIcon(device.platform)" size="20" />
+          </div>
 
-      <article v-for="device in devices" :key="device.id" class="device-row">
-        <div class="name">
-          <span class="device-name">{{ device.name }}</span>
-          <span v-if="device.current" class="current-badge">{{ t('license.devices.current') }}</span>
+          <div class="device-details">
+            <div class="device-title-row">
+              <span class="device-name" :title="device.name">{{ device.name }}</span>
+              <span v-if="device.current" class="current-badge">
+                {{ t('license.devices.current') }}
+              </span>
+            </div>
+
+            <div class="device-sub-row">
+              <span class="device-platform">{{ device.platform || t('common.unknown') }}</span>
+              <span class="device-dot-separator">•</span>
+              <span class="device-last-seen" :title="formatDate(device.lastSeenAt)">
+                {{ t('license.devices.lastSeen') }}: {{ formatRelativeTime(device.lastSeenAt) }}
+              </span>
+            </div>
+          </div>
         </div>
-        <span class="platform-text">{{ device.platform || '-' }}</span>
-        <span>
+
+        <div class="device-actions">
           <span class="status-pill" :class="getStatusToneClass(device.status)">
-            {{ device.status }}
+            <span class="status-indicator-dot"></span>
+            {{ getStatusLabel(device.status) }}
           </span>
-        </span>
-        <span class="timestamp">{{ formatDate(device.lastSeenAt) }}</span>
-        <span class="action-cell">
-          <button
-            type="button"
-            class="action-button secondary deactivate-btn"
-            :disabled="processingDeviceId === device.id"
-            @click="handleDeactivate(device.id, device.current)"
-          >
-            {{ t('license.devices.deactivate') }}
+
+          <button type="button" class="deactivate-btn" :disabled="processingDeviceId === device.id"
+            @click="handleDeactivate(device.id, device.current)">
+            <span v-if="processingDeviceId === device.id" class="spinner small"></span>
+            <span v-else>{{ t('license.devices.deactivate') }}</span>
           </button>
-        </span>
+        </div>
       </article>
     </div>
 
-    <p v-if="errorMessage" class="device-error">{{ errorMessage }}</p>
+    <Transition name="fade-slide">
+      <p v-if="errorMessage" class="device-error-banner">{{ errorMessage }}</p>
+    </Transition>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { IconDeviceDesktop, IconBrandWindows, IconBrandApple, IconDeviceMobile } from '@tabler/icons-vue';
 import type { LicenseDevice } from '@shared/license.constants';
 import { licenseService, normalizeLicenseErrorMessage } from '../services/license.service';
 
@@ -54,35 +63,67 @@ interface Props {
 
 defineProps<Props>();
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const processingDeviceId = ref<string | null>(null);
 const errorMessage = ref('');
 
+function getDeviceIcon(platform: string | null) {
+  if (!platform) {
+    return IconDeviceDesktop;
+  }
+  const p = platform.toLowerCase();
+  if (p.includes('win') || p.includes('windows')) {
+    return IconBrandWindows;
+  }
+  if (p.includes('mac') || p.includes('os x') || p.includes('darwin')) {
+    return IconBrandApple;
+  }
+  if (p.includes('phone') || p.includes('android') || p.includes('ios') || p.includes('iphone')) {
+    return IconDeviceMobile;
+  }
+  return IconDeviceDesktop;
+}
+
 function formatDate(value: string | null): string {
-  if (!value) {
-    return '-';
-  }
-
+  if (!value) return '-';
   const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) {
-    return value;
-  }
-
+  if (!Number.isFinite(timestamp)) return value;
   return new Date(timestamp).toLocaleString();
+}
+
+function formatRelativeTime(value: string | null): string {
+  if (!value) return '-';
+  const timestamp = Date.parse(value);
+  if (!Number.isFinite(timestamp)) return value;
+
+  const now = Date.now();
+  const diffMs = now - timestamp;
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return t('saveStatus.justNow');
+  if (diffMin < 60) return t('saveStatus.minutesAgo', { minutes: diffMin });
+  if (diffHour < 24) return t('statusBar.savedHoursAgo', `${diffHour}小时前`); // Fallback formatting
+  if (diffDay === 1) return '昨天';
+  if (diffDay < 30) return `${diffDay}天前`;
+
+  return new Date(timestamp).toLocaleDateString();
 }
 
 function getStatusToneClass(value: string): string {
   const status = value.trim().toLowerCase();
-  if (status === 'active') {
-    return 'is-active';
-  }
-  if (status === 'inactive') {
-    return 'is-inactive';
-  }
-  if (status === 'revoked') {
-    return 'is-revoked';
-  }
+  if (status === 'active') return 'is-active';
+  if (status === 'inactive') return 'is-inactive';
+  if (status === 'revoked') return 'is-revoked';
   return 'is-default';
+}
+
+function getStatusLabel(value: string): string {
+  const status = value.trim().toLowerCase();
+  const key = `license.deviceStatus.${status}`;
+  return te(key) ? t(key) : value;
 }
 
 async function handleDeactivate(deviceId: string, current: boolean): Promise<void> {
@@ -107,45 +148,78 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
 .license-device-list {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.device-cards {
+  display: flex;
+  flex-direction: column;
   gap: 10px;
 }
 
-.device-table {
+.device-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  border: 1px solid var(--panel-border);
+  background: var(--panel);
+  border-radius: 12px;
+  padding: 12px 16px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.device-card:hover {
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--panel-border));
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.device-card.is-current {
+  border-color: color-mix(in srgb, var(--accent) 50%, var(--panel-border));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 4%, var(--panel)), var(--panel));
+}
+
+.device-main {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+  flex: 1;
+}
+
+.device-hardware-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel-hover);
+  color: var(--text-muted);
+  border: 1px solid var(--panel-border);
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.device-card:hover .device-hardware-icon {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.device-hardware-icon.is-current-icon {
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--panel-border));
+}
+
+.device-details {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
+  min-width: 0;
 }
 
-.device-header,
-.device-row {
-  display: grid;
-  grid-template-columns: minmax(180px, 1.4fr) minmax(120px, 0.95fr) minmax(100px, 0.75fr) minmax(130px, 1fr) minmax(120px, 0.8fr);
-  gap: 8px;
-  align-items: center;
-}
-
-.device-header {
-  padding: 6px 8px;
-  font-size: 0.78rem;
-  color: #5f6b7a;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.device-row {
-  border: 1px solid #e7eaf0;
-  border-radius: 8px;
-  padding: 8px;
-  font-size: 0.82rem;
-  background: #ffffff;
-  transition: border-color 0.15s ease;
-}
-
-.device-row:hover {
-  border-color: #d4dbe6;
-}
-
-.name {
+.device-title-row {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -153,8 +227,9 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
 }
 
 .device-name {
-  font-weight: 600;
-  color: #0f172a;
+  font-weight: 650;
+  color: var(--text);
+  font-size: 0.88rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -164,29 +239,59 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 3px 9px;
+  padding: 2px 8px;
   font-size: 0.72rem;
-  color: #0f4b8a;
-  background: #eff6ff;
-  border: 1px solid #bfd3ff;
+  font-weight: 600;
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--panel-border));
 }
 
-.platform-text {
-  color: #334155;
+.device-sub-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
 }
 
-.timestamp {
-  color: #475569;
+.device-platform {
+  font-weight: 500;
+}
+
+.device-dot-separator {
+  opacity: 0.5;
+}
+
+.device-last-seen {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.device-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
 }
 
 .status-pill {
   display: inline-flex;
   align-items: center;
+  gap: 6px;
   padding: 3px 10px;
   border-radius: 999px;
-  font-size: 0.74rem;
+  font-size: 0.76rem;
   border: 1px solid transparent;
   font-weight: 600;
+  text-transform: capitalize;
+}
+
+.status-indicator-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
 }
 
 .status-pill.is-active {
@@ -195,10 +300,28 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
   border-color: #bbf7d0;
 }
 
+[data-theme='dark'] .status-pill.is-active {
+  color: #4ade80;
+  background: rgba(22, 101, 52, 0.2);
+  border-color: rgba(74, 222, 128, 0.3);
+}
+
+.status-pill.is-active .status-indicator-dot {
+  background: #166534;
+}
+
+[data-theme='dark'] .status-pill.is-active .status-indicator-dot {
+  background: #4ade80;
+}
+
 .status-pill.is-inactive {
-  color: #334155;
-  background: #f8fafc;
-  border-color: #d2dae7;
+  color: var(--text-muted);
+  background: var(--panel-hover);
+  border-color: var(--panel-border);
+}
+
+.status-pill.is-inactive .status-indicator-dot {
+  background: var(--text-muted);
 }
 
 .status-pill.is-revoked {
@@ -207,80 +330,100 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
   border-color: #fecdd3;
 }
 
-.status-pill.is-default {
-  color: #475569;
-  background: #f8fafc;
-  border-color: #e2e8f0;
+[data-theme='dark'] .status-pill.is-revoked {
+  color: #fb7185;
+  background: rgba(159, 18, 57, 0.2);
+  border-color: rgba(251, 113, 133, 0.3);
 }
 
-.action-cell {
-  display: flex;
-  justify-content: flex-start;
+.status-pill.is-revoked .status-indicator-dot {
+  background: #9f1239;
+}
+
+[data-theme='dark'] .status-pill.is-revoked .status-indicator-dot {
+  background: #fb7185;
+}
+
+.status-pill.is-default {
+  color: var(--text-muted);
+  background: var(--panel-hover);
+  border-color: var(--panel-border);
+}
+
+.status-pill.is-default .status-indicator-dot {
+  background: var(--text-muted);
 }
 
 .deactivate-btn {
-  border: 1px solid #fecaca;
-  background: #fff6f6;
-  color: #be123c;
-  min-width: 76px;
-  min-height: 28px;
+  border: 1px solid color-mix(in srgb, var(--danger) 25%, var(--panel-border));
+  background: color-mix(in srgb, var(--danger) 6%, var(--panel));
+  color: var(--danger);
+  min-width: 60px;
   height: 28px;
   border-radius: 6px;
-  padding: 0 8px;
-  font-size: 0.76rem;
-  font-weight: 500;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .deactivate-btn:hover:not(:disabled) {
-  border-color: #fca5a5;
-  background: #ffe4e6;
-  color: #9f1239;
+  border-color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 12%, var(--panel));
+  color: var(--danger);
 }
 
 .deactivate-btn:disabled {
-  opacity: 0.6;
+  opacity: 0.5;
   cursor: not-allowed;
 }
 
 .device-empty {
-  font-size: 0.85rem;
-  color: #5f6b7a;
-  border: 1px dashed #d3dae5;
-  border-radius: 8px;
-  padding: 14px 12px;
-  background: #ffffff;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+  border: 1px dashed var(--panel-border);
+  border-radius: 10px;
+  padding: 18px;
+  text-align: center;
+  background: var(--panel);
 }
 
-.device-error {
-  margin: 0;
-  border: 1px solid #fecaca;
+.device-error-banner {
+  margin: 10px 0 0 0;
+  border: 1px solid color-mix(in srgb, var(--danger) 20%, transparent);
   border-radius: 8px;
-  background: #fff1f2;
-  color: #be123c;
+  background: color-mix(in srgb, var(--danger) 6%, var(--panel));
+  color: var(--danger);
   font-size: 0.82rem;
-  padding: 8px 10px;
+  padding: 8px 12px;
+  font-weight: 500;
 }
 
-@media (max-width: 840px) {
-  .device-header {
-    display: none;
+@media (max-width: 640px) {
+  .device-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
   }
 
-  .device-row {
-    grid-template-columns: 1fr;
-    gap: 8px;
-  }
-
-  .name {
-    justify-content: space-between;
-  }
-
-  .action-cell {
-    justify-content: flex-start;
-  }
-
-  .deactivate-btn {
+  .device-actions {
     width: 100%;
+    justify-content: space-between;
+    border-top: 1px solid var(--panel-border);
+    padding-top: 8px;
   }
+}
+
+/* Transitions */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.25s ease;
+}
+
+.fade-slide-enter-from,
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-6px);
 }
 </style>

@@ -1,16 +1,10 @@
 <template>
   <div class="note-template-picker" :class="`note-template-picker--${variant}`">
-    <button
-      v-for="template in templateCards"
-      :key="template.id"
-      type="button"
-      class="note-template-picker__card"
+    <button v-for="template in templateCards" :key="template.id" type="button" class="note-template-picker__card"
       :class="{ [template.toneClass]: true, 'is-selected': modelValue === template.id }"
-      :aria-pressed="modelValue === template.id"
-      @click="selectTemplate(template.id)"
-    >
+      :aria-pressed="modelValue === template.id" @click="selectTemplate(template.id)">
       <span class="note-template-picker__icon">
-        <component :is="template.icon" theme="outline" :size="18" />
+        <component :is="template.icon" :size="18" />
       </span>
       <span class="note-template-picker__copy">
         <strong>{{ template.title }}</strong>
@@ -23,7 +17,7 @@
 <script setup lang="ts">
 import { computed, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { BookOpen, DocAdd, Edit, Notes } from '@icon-park/vue-next';
+import { IconBook, IconFilePlus, IconPencil, IconFileText } from '@tabler/icons-vue';
 import {
   NOTE_TEMPLATE_DEFINITIONS,
   type NoteTemplateIconName,
@@ -53,10 +47,10 @@ const emit = defineEmits<{
 const { t } = useI18n();
 
 const templateIconComponents = {
-  docAdd: DocAdd,
-  edit: Edit,
-  notes: Notes,
-  bookOpen: BookOpen,
+  docAdd: IconFilePlus,
+  edit: IconPencil,
+  notes: IconFileText,
+  bookOpen: IconBook,
 } as const satisfies Record<NoteTemplateIconName, Component>;
 
 const templateCards = computed<NoteTemplateCard[]>(() =>

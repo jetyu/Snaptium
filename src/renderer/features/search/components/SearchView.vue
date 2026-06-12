@@ -3,7 +3,7 @@
     <header class="search-view__header">
       <div class="search-view__title-wrap">
         <span class="search-view__title-icon">
-          <DatabaseSearch theme="outline" :size="18" />
+          <IconDatabaseSearch :size="18" />
         </span>
         <h1 class="search-view__title">{{ $t('search.knowledgeSearch') }}</h1>
       </div>
@@ -15,22 +15,21 @@
           <h2>{{ $t('search.knowledgeHistory') }}</h2>
           <button type="button" class="search-view__new-thread icon-action-button" :disabled="isBusy"
             :title="$t('search.newKnowledgeChat')" @click="startNewThread">
-            <Plus theme="outline" :size="14" />
+            <IconPlus :size="14" />
             <span>{{ $t('search.newKnowledgeChat') }}</span>
           </button>
         </header>
         <div v-if="questionThreads.length > 0" class="search-view__history-list">
           <div v-for="thread in questionThreads" :key="thread.id" class="search-view__history-item"
             :class="{ 'is-active': activeThreadId === thread.id, 'is-draft': thread.isDraft }">
-            <button type="button" class="search-view__history-open" :title="thread.title"
-              @click="selectThread(thread)">
+            <button type="button" class="search-view__history-open" :title="thread.title" @click="selectThread(thread)">
               <span class="search-view__history-query">{{ thread.title }}</span>
               <span class="search-view__history-answer">{{ thread.preview }}</span>
               <span class="search-view__history-meta">{{ formatAskedAt(thread.askedAt) }}</span>
             </button>
             <button v-if="!isGeneratingThread(thread)" type="button" class="search-view__history-delete"
               :title="$t('common.delete')" @click.stop.prevent="deleteQuestionThread(thread)">
-              <Delete theme="outline" :size="14" />
+              <IconTrash :size="14" />
             </button>
           </div>
         </div>
@@ -64,14 +63,15 @@
               </div>
               <div class="search-view__message search-view__message--assistant">
                 <span class="search-view__assistant-avatar">
-                  <DatabaseSearch theme="outline" :size="15" />
+                  <IconDatabaseSearch :size="15" />
                 </span>
                 <div class="search-view__assistant-card">
                   <div v-if="isGeneratingQuestion(question)" class="search-view__thinking">
                     <div class="search-view__spinner"></div>
                     <span>{{ $t('label.aiRAGThinking') }}</span>
                   </div>
-                  <p v-else-if="getQuestionError(question)" class="search-view__status-text search-view__status-text--error">
+                  <p v-else-if="getQuestionError(question)"
+                    class="search-view__status-text search-view__status-text--error">
                     {{ getQuestionError(question) }}
                   </p>
                   <template v-else>
@@ -86,7 +86,7 @@
                       <button v-for="source in getQuestionSources(question)" :key="source.noteId" type="button"
                         class="search-view__source-card" :title="source.noteTitle" @click="openSourceNote(source)">
                         <span class="search-view__source-card-head">
-                          <FileText theme="outline" :size="15" />
+                          <IconFileText :size="15" />
                           <span>{{ source.noteTitle }}</span>
                         </span>
                       </button>
@@ -101,14 +101,15 @@
         <section class="search-view__query">
           <div class="search-view__input-shell" :class="{ 'is-disabled': !canUseKnowledgeSearch }">
             <textarea ref="searchInput" v-model="searchQuery" class="search-view__input" rows="1"
-              :disabled="!canUseKnowledgeSearch" :placeholder="$t('search.semanticPlaceholder')"
-              @input="resizeComposer" @keydown="handleComposerKeydown" />
+              :disabled="!canUseKnowledgeSearch" :placeholder="$t('search.semanticPlaceholder')" @input="resizeComposer"
+              @keydown="handleComposerKeydown" />
             <button v-if="searchQuery" type="button" class="search-view__icon-button" :title="$t('button.clear')"
               @click="clearQuery">
-              <Close theme="outline" :size="14" />
+              <IconX :size="14" />
             </button>
             <button type="button" class="search-view__ask-button icon-action-button" :disabled="!canAsk"
-              :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason" @click="handleAsk">
+              :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason"
+              @click="handleAsk">
               <span>{{ $t('search.knowledgeAskShortcut') }}</span>
             </button>
           </div>
@@ -122,7 +123,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { Close, DatabaseSearch, Delete, FileText, Plus } from '@icon-park/vue-next';
+import { IconX, IconDatabaseSearch, IconTrash, IconFileText, IconPlus } from '@tabler/icons-vue';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { useRAGConfig, useRAGSearch, useRAGChat } from '@renderer/features/rag';
 import { useLicenseGate } from '@renderer/features/license';
@@ -946,11 +947,11 @@ onBeforeUnmount(() => {
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
-.search-view__history-item + .search-view__history-item {
+.search-view__history-item+.search-view__history-item {
   margin-top: 8px;
 }
 
-.search-view__history-item + .search-view__history-item::before {
+.search-view__history-item+.search-view__history-item::before {
   content: '';
   position: absolute;
   top: -5px;
@@ -1069,7 +1070,7 @@ onBeforeUnmount(() => {
   text-align: center;
 }
 
-.search-view__chat-scroll > .search-view__status {
+.search-view__chat-scroll>.search-view__status {
   min-height: 100%;
 }
 

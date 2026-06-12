@@ -88,7 +88,7 @@
 
           <button class="settings-nav-btn" :disabled="settingsStore.config.previewAppearance.remoteImageMode !== 'trusted'"
             @click="emit('edit-trusted-hosts')" :title="t('label.previewTrustedSources')">
-            <edit theme="outline" size="16" />
+            <IconPencil :size="16" />
           </button>
         </div>
       </section>
@@ -100,7 +100,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Edit } from '@icon-park/vue-next';
+import { IconPencil } from '@tabler/icons-vue';
 import { useSettingsStore, type PreviewAppearanceSettings } from '../../../store/settings.store';
 import fontProvider from '@renderer/config/font-provider.json';
 

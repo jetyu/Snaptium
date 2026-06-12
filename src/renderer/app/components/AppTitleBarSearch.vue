@@ -1,12 +1,13 @@
 <template>
   <div class="app-search" :class="{ 'is-active': isFocused || searchQuery }" @click.stop @dblclick.stop>
     <div class="app-search__input-wrapper">
-      <Search class="app-search__icon" theme="outline" :size="14" />
-      <input ref="inputRef" v-model="searchQuery" type="text" class="app-search__input" :placeholder="t('search.quickPlaceholder')"
-        @focus="handleFocus" @blur="handleBlur" @input="handleInput" @keydown.down.prevent="moveHighlight(1)"
-        @keydown.up.prevent="moveHighlight(-1)" @keydown.enter="selectHighlighted" @keydown.esc="handleEsc" />
+      <IconSearch class="app-search__icon" :size="14" />
+      <input ref="inputRef" v-model="searchQuery" type="text" class="app-search__input"
+        :placeholder="t('search.quickPlaceholder')" @focus="handleFocus" @blur="handleBlur" @input="handleInput"
+        @keydown.down.prevent="moveHighlight(1)" @keydown.up.prevent="moveHighlight(-1)"
+        @keydown.enter="selectHighlighted" @keydown.esc="handleEsc" />
       <button v-if="searchQuery" class="app-search__clear" @click="clearSearch">
-        <Close theme="outline" :size="12" />
+        <IconX :size="12" />
       </button>
     </div>
 
@@ -18,7 +19,7 @@
             :class="{ 'is-highlighted': highlightedIndex === index }" @click="selectResult(result)"
             @mouseenter="highlightedIndex = index">
             <div class="app-search__result-info">
-              <FileText theme="outline" :size="14" class="app-search__result-icon" />
+              <IconFileText :size="14" class="app-search__result-icon" />
               <span class="app-search__result-title">{{ result.title }}</span>
             </div>
             <div v-if="result.matches.length > 0" class="app-search__result-match">
@@ -37,7 +38,7 @@
 <script setup lang="ts">
 import { ref, onBeforeUnmount } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Search, Close, FileText } from '@icon-park/vue-next';
+import { IconSearch, IconX, IconFileText } from '@tabler/icons-vue';
 import { searchService, type SearchResult, type SearchMatch } from '@renderer/features/search/services/search.service';
 import { useWorkspace } from '@renderer/features/workspace';
 import { useAppShellStore } from '../store/appShell.store';
@@ -128,7 +129,7 @@ function selectHighlighted() {
 async function selectResult(result: SearchResult) {
   await appShellStore.setActiveMainView('workspace');
   selectNote(result.id);
-  
+
   // Dispatch jump event for highlighting if match exists
   if (result.matches.length > 0) {
     setTimeout(() => {
@@ -136,7 +137,7 @@ async function selectResult(result: SearchResult) {
       window.dispatchEvent(new CustomEvent('workspace-search-jump', { detail }));
     }, 100);
   }
-  
+
   showDropdown.value = false;
   searchQuery.value = '';
 }

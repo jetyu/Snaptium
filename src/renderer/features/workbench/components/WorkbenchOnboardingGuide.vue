@@ -1,22 +1,11 @@
 <template>
   <Teleport to="body">
-    <div
-      ref="overlayRef"
-      class="workbench-onboarding"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="workbench-onboarding-title"
-      tabindex="0"
-      @keydown.esc="emit('dismiss')"
-    >
+    <div ref="overlayRef" class="workbench-onboarding" role="dialog" aria-modal="true"
+      aria-labelledby="workbench-onboarding-title" tabindex="0" @keydown.esc="emit('dismiss')">
       <section class="workbench-onboarding__dialog" @click.stop>
-        <button
-          type="button"
-          class="workbench-onboarding__close"
-          :aria-label="t('common.close')"
-          @click="emit('dismiss')"
-        >
-          <Close theme="outline" :size="16" />
+        <button type="button" class="workbench-onboarding__close" :aria-label="t('common.close')"
+          @click="emit('dismiss')">
+          <IconX :size="16" />
         </button>
 
         <aside class="workbench-onboarding__rail">
@@ -25,17 +14,12 @@
           <p>{{ t('workbench.onboarding.description') }}</p>
 
           <ol class="workbench-onboarding__steps">
-            <li
-              v-for="(step, index) in stepDefinitions"
-              :key="step.id"
-              class="workbench-onboarding__step"
-              :class="{
-                'is-active': index === currentStep,
-                'is-complete': index < currentStep,
-              }"
-            >
+            <li v-for="(step, index) in stepDefinitions" :key="step.id" class="workbench-onboarding__step" :class="{
+              'is-active': index === currentStep,
+              'is-complete': index < currentStep,
+            }">
               <span class="workbench-onboarding__step-index">
-                <CheckSmall v-if="index < currentStep" theme="outline" :size="14" />
+                <IconCheck v-if="index < currentStep" :size="14" />
                 <span v-else>{{ index + 1 }}</span>
               </span>
               <span class="workbench-onboarding__step-copy">
@@ -48,24 +32,19 @@
 
         <main class="workbench-onboarding__main">
           <header class="workbench-onboarding__main-header">
-            <span>{{ t('workbench.onboarding.stepCount', { current: currentStep + 1, total: stepDefinitions.length }) }}</span>
+            <span>{{ t('workbench.onboarding.stepCount', { current: currentStep + 1, total: stepDefinitions.length })
+            }}</span>
             <h3>{{ activeStep.title }}</h3>
             <p>{{ activeStep.description }}</p>
           </header>
 
           <div v-if="currentStep === 0" class="workbench-onboarding__intent-grid">
-            <button
-              v-for="intent in intentCards"
-              :key="intent.id"
-              type="button"
-              class="workbench-onboarding__choice-card"
-              :class="{ 'is-selected': selectedIntent === intent.id }"
-              :aria-pressed="selectedIntent === intent.id"
-              @click="selectIntent(intent.id)"
-            >
+            <button v-for="intent in intentCards" :key="intent.id" type="button"
+              class="workbench-onboarding__choice-card" :class="{ 'is-selected': selectedIntent === intent.id }"
+              :aria-pressed="selectedIntent === intent.id" @click="selectIntent(intent.id)">
               <span class="workbench-onboarding__choice-head">
                 <span class="workbench-onboarding__choice-icon" :class="intent.toneClass">
-                  <component :is="intent.icon" theme="outline" :size="18" />
+                  <component :is="intent.icon" :size="18" />
                 </span>
                 <span v-if="intent.recommended" class="workbench-onboarding__badge">
                   {{ t('workbench.onboarding.recommended') }}
@@ -85,12 +64,13 @@
                 <span>{{ t('workbench.onboarding.startPanel.description') }}</span>
               </div>
               <div class="workbench-onboarding__start-actions">
-                <button type="button" class="workbench-onboarding__primary-action" @click="emit('create-template', selectedTemplate)">
-                  <DocAdd theme="outline" :size="16" />
+                <button type="button" class="workbench-onboarding__primary-action"
+                  @click="emit('create-template', selectedTemplate)">
+                  <IconFilePlus :size="16" />
                   <span>{{ t('workbench.onboarding.createSelected') }}</span>
                 </button>
                 <button type="button" class="workbench-onboarding__secondary-action" @click="emit('import-markdown')">
-                  <ImportAndExport theme="outline" :size="16" />
+                  <IconFileImport :size="16" />
                   <span>{{ t('workbench.onboarding.importCta') }}</span>
                 </button>
               </div>
@@ -100,7 +80,7 @@
           <div v-else-if="currentStep === 2" class="workbench-onboarding__map-grid">
             <article v-for="item in workspaceMapItems" :key="item.id" class="workbench-onboarding__map-card">
               <span class="workbench-onboarding__map-icon" :class="item.toneClass">
-                <component :is="item.icon" theme="outline" :size="18" />
+                <component :is="item.icon" :size="18" />
               </span>
               <strong>{{ item.title }}</strong>
               <span>{{ item.description }}</span>
@@ -110,7 +90,7 @@
           <div v-else class="workbench-onboarding__finish-grid">
             <article v-for="item in finishItems" :key="item.id" class="workbench-onboarding__finish-card">
               <span class="workbench-onboarding__finish-icon" :class="item.toneClass">
-                <component :is="item.icon" theme="outline" :size="18" />
+                <component :is="item.icon" :size="18" />
               </span>
               <strong>{{ item.title }}</strong>
               <span>{{ item.description }}</span>
@@ -122,7 +102,7 @@
                 <span>{{ t('workbench.onboarding.syncPanel.description') }}</span>
               </div>
               <button type="button" class="workbench-onboarding__secondary-action" @click="emit('open-sync')">
-                <DatabaseSync theme="outline" :size="16" />
+                <IconDatabase :size="16" />
                 <span>{{ t('workbench.onboarding.syncPanel.action') }}</span>
               </button>
             </section>
@@ -133,31 +113,20 @@
               {{ t('workbench.onboarding.dismiss') }}
             </button>
             <div class="workbench-onboarding__nav">
-              <button
-                type="button"
-                class="workbench-onboarding__nav-button"
-                :disabled="currentStep === 0"
-                @click="goPrevious"
-              >
-                <ArrowLeft theme="outline" :size="15" />
+              <button type="button" class="workbench-onboarding__nav-button" :disabled="currentStep === 0"
+                @click="goPrevious">
+                <IconArrowLeft :size="15" />
                 <span>{{ t('workbench.onboarding.back') }}</span>
               </button>
-              <button
-                v-if="currentStep < lastStepIndex"
-                type="button"
-                class="workbench-onboarding__nav-button workbench-onboarding__nav-button--primary"
-                @click="goNext"
-              >
+              <button v-if="currentStep < lastStepIndex" type="button"
+                class="workbench-onboarding__nav-button workbench-onboarding__nav-button--primary" @click="goNext">
                 <span>{{ t('workbench.onboarding.next') }}</span>
-                <ArrowRight theme="outline" :size="15" />
+                <IconArrowRight :size="15" />
               </button>
-              <button
-                v-else
-                type="button"
+              <button v-else type="button"
                 class="workbench-onboarding__nav-button workbench-onboarding__nav-button--primary"
-                @click="emit('dismiss')"
-              >
-                <CheckSmall theme="outline" :size="15" />
+                @click="emit('dismiss')">
+                <IconCheck :size="15" />
                 <span>{{ t('workbench.onboarding.finish') }}</span>
               </button>
             </div>
@@ -172,22 +141,22 @@
 import { computed, nextTick, onMounted, ref, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  CheckSmall,
-  Close,
-  ConnectionPoint,
-  DatabaseSync,
-  DocAdd,
-  Edit,
-  FolderFocus,
-  ImportAndExport,
-  Notes,
-  Search,
-  Shield,
-  TagOne,
-} from '@icon-park/vue-next';
+  IconArrowLeft,
+  IconArrowRight,
+  IconBook,
+  IconCheck,
+  IconX,
+  IconHierarchy,
+  IconDatabase,
+  IconFilePlus,
+  IconPencil,
+  IconFolderOpen,
+  IconFileImport,
+  IconFileText,
+  IconDatabaseSearch,
+  IconShield,
+  IconTag,
+} from '@tabler/icons-vue';
 import { type NoteTemplateId } from '@renderer/features/workspace';
 import NoteTemplatePicker from './NoteTemplatePicker.vue';
 
@@ -270,7 +239,7 @@ const intentCards = computed<Array<OnboardingCard<OnboardingIntentId>>>(() => [
     id: 'write',
     title: t('workbench.onboarding.intent.write.title'),
     description: t('workbench.onboarding.intent.write.description'),
-    icon: Edit,
+    icon: IconPencil,
     toneClass: 'tone-primary',
     recommended: true,
   },
@@ -278,21 +247,21 @@ const intentCards = computed<Array<OnboardingCard<OnboardingIntentId>>>(() => [
     id: 'knowledge',
     title: t('workbench.onboarding.intent.knowledge.title'),
     description: t('workbench.onboarding.intent.knowledge.description'),
-    icon: BookOpen,
+    icon: IconBook,
     toneClass: 'tone-sky',
   },
   {
     id: 'meeting',
     title: t('workbench.onboarding.intent.meeting.title'),
     description: t('workbench.onboarding.intent.meeting.description'),
-    icon: Notes,
+    icon: IconFileText,
     toneClass: 'tone-soft',
   },
   {
     id: 'research',
     title: t('workbench.onboarding.intent.research.title'),
     description: t('workbench.onboarding.intent.research.description'),
-    icon: ConnectionPoint,
+    icon: IconHierarchy,
     toneClass: 'tone-deep',
   },
 ]);
@@ -302,28 +271,28 @@ const workspaceMapItems = computed<Array<OnboardingCard<string>>>(() => [
     id: 'workspace',
     title: t('workbench.onboarding.map.workspace.title'),
     description: t('workbench.onboarding.map.workspace.description'),
-    icon: Notes,
+    icon: IconFileText,
     toneClass: 'tone-primary',
   },
   {
     id: 'notebooks',
     title: t('workbench.onboarding.map.notebooks.title'),
     description: t('workbench.onboarding.map.notebooks.description'),
-    icon: FolderFocus,
+    icon: IconFolderOpen,
     toneClass: 'tone-sky',
   },
   {
     id: 'tags',
     title: t('workbench.onboarding.map.tags.title'),
     description: t('workbench.onboarding.map.tags.description'),
-    icon: TagOne,
+    icon: IconTag,
     toneClass: 'tone-soft',
   },
   {
     id: 'search',
     title: t('workbench.onboarding.map.search.title'),
     description: t('workbench.onboarding.map.search.description'),
-    icon: Search,
+    icon: IconDatabaseSearch,
     toneClass: 'tone-deep',
   },
 ]);
@@ -333,14 +302,14 @@ const finishItems = computed<Array<OnboardingCard<string>>>(() => [
     id: 'local',
     title: t('workbench.onboarding.finish.local.title'),
     description: t('workbench.onboarding.finish.local.description'),
-    icon: Shield,
+    icon: IconShield,
     toneClass: 'tone-sky',
   },
   {
     id: 'review',
     title: t('workbench.onboarding.finish.review.title'),
     description: t('workbench.onboarding.finish.review.description'),
-    icon: Search,
+    icon: IconDatabaseSearch,
     toneClass: 'tone-primary',
   },
 ]);
@@ -545,7 +514,7 @@ onMounted(async () => {
   padding-right: 28px;
 }
 
-.workbench-onboarding__main-header > span {
+.workbench-onboarding__main-header>span {
   color: color-mix(in srgb, var(--accent) 74%, var(--text, #111827));
   font-size: 0.74rem;
   font-weight: 760;
@@ -660,9 +629,9 @@ onMounted(async () => {
   line-height: 1.26;
 }
 
-.workbench-onboarding__choice-card > span:last-child,
-.workbench-onboarding__map-card > span:last-child,
-.workbench-onboarding__finish-card > span:last-child {
+.workbench-onboarding__choice-card>span:last-child,
+.workbench-onboarding__map-card>span:last-child,
+.workbench-onboarding__finish-card>span:last-child {
   color: var(--text-secondary, #64748b);
   font-size: 0.8rem;
   line-height: 1.45;
@@ -680,8 +649,8 @@ onMounted(async () => {
   background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 
-.workbench-onboarding__start-panel > div:first-child,
-.workbench-onboarding__sync-panel > div:first-child {
+.workbench-onboarding__start-panel>div:first-child,
+.workbench-onboarding__sync-panel>div:first-child {
   min-width: 0;
   display: grid;
   gap: 4px;

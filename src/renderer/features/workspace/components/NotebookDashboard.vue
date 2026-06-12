@@ -3,16 +3,12 @@
     <div class="dashboard-content">
       <header class="dashboard-header">
         <div class="title-section icon-text">
-          <NotebookVisualIcon
-            :icon-color="currentNotebook?.iconColor"
-            :icon-size="22"
-            :box-size="30"
-          />
+          <NotebookVisualIcon :icon-color="currentNotebook?.iconColor" :icon-size="22" :box-size="30" />
           <h1>{{ notebookName }}</h1>
         </div>
         <div class="actions">
           <button class="action-button icon-text" @click="createNote(activeNotebookId)">
-            <Plus theme="outline" :size="15" />
+            <IconPlus :size="15" />
             {{ $t("workspace.dashboard.newNoteInThisNotebook") }}
           </button>
         </div>
@@ -50,7 +46,7 @@
         <h2>{{ $t("workspace.dashboard.notesList") }}</h2>
         <div v-if="notebookNotes.length > 0" class="notes-list">
           <div v-for="note in notebookNotes" :key="note.id" class="note-card icon-text" @click="selectNote(note.id)">
-            <Notes theme="outline" :size="16" />
+            <IconFileText :size="16" />
             <div class="note-info">
               <span class="note-title" :title="note.title">{{ note.title }}</span>
               <span class="note-date">{{ formatDate(note.updatedAt, locale) }}</span>
@@ -70,7 +66,7 @@ import { computed } from "vue";
 import { useWorkspace } from "@renderer/features/workspace";
 import { useI18n } from "vue-i18n";
 import { formatDate } from "@renderer/core/utils/date.utils";
-import { Plus, Notes } from '@icon-park/vue-next';
+import { IconPlus, IconFileText } from '@tabler/icons-vue';
 import NotebookVisualIcon from './NotebookVisualIcon.vue';
 
 function compareNodeOrder(left: { order: number; createdAt: number; id: string }, right: { order: number; createdAt: number; id: string }) {

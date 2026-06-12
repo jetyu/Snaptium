@@ -5,7 +5,7 @@
         <section class="hero-card">
           <div class="hero-copy">
             <em class="hero-quote">
-              <BookmarkOne theme="outline" :size="12" />
+              <IconBookmark :size="12" />
               <strong>{{ t('workbench.hero.dailyQuote') }}</strong>
               <span>{{ dailyQuoteText }}</span>
             </em>
@@ -16,13 +16,8 @@
             </div>
             <div class="hero-actions">
               <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
-                <Edit v-if="hasNotes" theme="outline" :size="14" />
-                <Plus v-else theme="outline" :size="14" />
-                <span>{{ hasNotes ? t('workbench.action.continueWriting') : t('workbench.action.newDocument') }}</span>
-              </button>
-              <button v-if="hasNotes" type="button" class="hero-action" @click="createFirstNote">
-                <Plus theme="outline" :size="14" />
-                <span>{{ t('workbench.action.newDocument') }}</span>
+                <IconPencil :size="14" />
+                <span>{{ t('workbench.action.continueWriting') }}</span>
               </button>
             </div>
           </div>
@@ -31,7 +26,7 @@
             <img class="hero-art__image" :src="wallpaperSrc" :alt="wallpaperAlt" @error="handleWallpaperImageError" />
             <button type="button" class="hero-art__source-button" :disabled="wallpaperLoading"
               :aria-label="t('workbench.action.nextWallpaper')" @click="loadNextWallpaper">
-              <Picture theme="outline" :size="15" />
+              <IconPhoto :size="15" />
             </button>
             <div v-if="wallpaperTitleText || wallpaperMetaText || wallpaperSourceUrl" class="hero-art__info">
               <div v-if="wallpaperTitleText" class="hero-art__info-title">{{ wallpaperTitleText }}</div>
@@ -50,7 +45,7 @@
           <div class="overview-grid">
             <article v-for="metric in overviewMetrics" :key="metric.id" class="overview-card">
               <div class="overview-card__head">
-                <component :is="metric.icon" theme="outline" :size="15" />
+                <component :is="metric.icon" :size="15" />
                 <span>{{ metric.label }}</span>
               </div>
               <p class="overview-card__content">{{ metric.value }}</p>
@@ -68,8 +63,8 @@
               <button v-for="entry in recentActivityPreview" :key="entry.id" type="button" class="feed-row"
                 :title="getActivityTooltip(entry)" @click="handleActivityClick(entry)">
                 <span class="feed-row__icon">
-                  <Edit v-if="entry.kind === 'saved'" theme="outline" :size="14" />
-                  <Brain v-else theme="outline" :size="14" />
+                  <IconPencil v-if="entry.kind === 'saved'" :size="14" />
+                  <IconBrain v-else :size="14" />
                 </span>
                 <span class="feed-row__main">
                   <span class="feed-row__title">{{ getActivityTitle(entry) }}</span>
@@ -90,7 +85,7 @@
               <button v-for="question in recentQuestionEntriesPreview" :key="question.id" type="button" class="feed-row"
                 :title="question.query" @click="openSearchView({ query: question.query, mode: 'semantic', run: true })">
                 <span class="feed-row__icon">
-                  <SearchIcon theme="outline" :size="14" />
+                  <IconDatabaseSearch :size="14" />
                 </span>
                 <span class="feed-row__main">
                   <span class="feed-row__title">{{ question.query }}</span>
@@ -103,7 +98,7 @@
               <button v-for="entry in todoFallbackEntries" :key="entry.id" type="button" class="feed-row"
                 :title="entry.snippet" @click="openNoteInWorkspace(entry.noteId)">
                 <span class="feed-row__icon">
-                  <Notes theme="outline" :size="14" />
+                  <IconFileText :size="14" />
                 </span>
                 <span class="feed-row__main">
                   <span class="feed-row__title">{{ entry.snippet }}</span>
@@ -128,8 +123,7 @@
                 <button type="button" class="smart-focus__open"
                   @click="openSmartRecommendation(primarySmartRecommendation)">
                   <span class="smart-focus__icon">
-                    <component :is="getSmartReasonIcon(primarySmartRecommendation.reasonType)" theme="outline"
-                      :size="18" />
+                    <component :is="getSmartReasonIcon(primarySmartRecommendation.reasonType)" :size="18" />
                   </span>
                   <span class="smart-focus__reason">{{ t(primarySmartRecommendation.reasonKey) }}</span>
                   <span class="smart-focus__score">{{ formatSmartScore(primarySmartRecommendation.score) }}</span>
@@ -165,7 +159,7 @@
                 :title="item.note.title">
                 <button type="button" class="smart-lane__open" @click="openSmartRecommendation(item)">
                   <span class="smart-lane__icon">
-                    <component :is="getSmartReasonIcon(item.reasonType)" theme="outline" :size="14" />
+                    <component :is="getSmartReasonIcon(item.reasonType)" :size="14" />
                   </span>
                   <span class="smart-lane__main">
                     <span class="smart-lane__reason">{{ t(item.reasonKey) }}</span>
@@ -207,7 +201,7 @@
           <header class="side-card__header side-card__header--compact side-card__header--insights">
             <h3>
               <span class="side-card__title-icon side-card__title-icon--growth">
-                <RadarChart theme="outline" :size="14" />
+                <IconChartRadar :size="14" />
               </span>
               {{ t('workbench.sidebar.growth') }}
             </h3>
@@ -216,7 +210,7 @@
           <div class="insights-block insights-block--stats">
             <div class="stats-list stats-list--compact">
               <div v-for="item in todayStatItems" :key="item.label" class="stats-row">
-                <Dot theme="outline" :size="12" class="stats-row__icon" />
+                <IconPoint :size="12" class="stats-row__icon" />
                 <span>{{ item.label }}</span>
                 <strong>{{ item.value }}</strong>
               </div>
@@ -237,7 +231,7 @@
           <header class="side-card__header">
             <h3>
               <span class="side-card__title-icon side-card__title-icon--tags">
-                <TagOne theme="outline" :size="14" />
+                <IconTag :size="14" />
               </span>
               {{ t('workbench.sidebar.activeTags') }}
             </h3>
@@ -264,7 +258,7 @@
           <header class="side-card__header">
             <h3>
               <span class="side-card__title-icon side-card__title-icon--topic">
-                <ConnectionPoint theme="outline" :size="14" />
+                <IconHierarchy :size="14" />
               </span>
               {{ t('workbench.sidebar.knowledgeTopics') }}
             </h3>
@@ -289,13 +283,9 @@
       </aside>
     </div>
   </div>
-  <WorkbenchOnboardingGuide
-    v-if="shouldShowOnboardingGuide"
-    @create-template="handleOnboardingCreateTemplate"
-    @dismiss="dismissOnboardingGuide"
-    @import-markdown="handleOnboardingImportMarkdown"
-    @open-sync="handleOnboardingOpenSync"
-  />
+  <WorkbenchOnboardingGuide v-if="shouldShowOnboardingGuide" @create-template="handleOnboardingCreateTemplate"
+    @dismiss="dismissOnboardingGuide" @import-markdown="handleOnboardingImportMarkdown"
+    @open-sync="handleOnboardingOpenSync" />
 </template>
 
 <script setup lang="ts">
@@ -304,26 +294,24 @@ import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import defaultHeroUrl from '@assets/images/default-hero.png';
 import {
-  Search as SearchIcon,
-  Edit,
-  Plus,
-  Picture,
-  Brain,
-  LinkOne,
-  Notes,
-  Dot,
-  RadarChart,
-  ConnectionPoint,
-  Star,
-  ApplicationTwo,
-  DatabaseSearch,
-  ChartHistogram,
-  Time,
-  Fire,
-  FolderFocus,
-  BookmarkOne,
-  TagOne,
-} from '@icon-park/vue-next';
+  IconPencil,
+  IconPhoto,
+  IconBrain,
+  IconLink,
+  IconFileText,
+  IconPoint,
+  IconChartRadar,
+  IconHierarchy,
+  IconStar,
+  IconAlignBoxBottomCenter,
+  IconDatabaseSearch,
+  IconChartHistogram,
+  IconClock,
+  IconFlame,
+  IconFolderOpen,
+  IconBookmark,
+  IconTag,
+} from '@tabler/icons-vue';
 import { useSearch } from '@renderer/features/search';
 import {
   buildNoteTemplate,
@@ -593,31 +581,31 @@ const overviewMetrics = computed<OverviewMetric[]>(() => {
       id: 'total-writing',
       label: t('workbench.behavior.totalCharacters'),
       value: formatNumber(behaviorFeedback.value.totalCharacters),
-      icon: ApplicationTwo,
+      icon: IconAlignBoxBottomCenter,
     },
     {
       id: 'streak',
       label: t('workbench.behavior.streakDays'),
       value: formatNumber(behaviorFeedback.value.streakDays),
-      icon: ChartHistogram,
+      icon: IconChartHistogram,
     },
     {
       id: 'documents',
       label: t('workbench.stats.noteCount'),
       value: formatNumber(notes.value.length),
-      icon: Notes,
+      icon: IconFileText,
     },
     {
       id: 'favorites',
       label: t('workbench.module.favorites'),
       value: formatNumber(starredCount.value),
-      icon: Star,
+      icon: IconStar,
     },
     {
       id: 'knowledge',
       label: t('search.semanticSearch'),
       value: formatNumber(knowledgePointCount.value),
-      icon: DatabaseSearch,
+      icon: IconDatabaseSearch,
     },
   ];
 });
@@ -796,21 +784,21 @@ function getWallpaperSourceLabel(source: WallpaperResult['source']): string {
 
 function getSmartReasonIcon(reasonType: LocalRecommendationReasonType): Component {
   if (reasonType === 'draft_signal') {
-    return Edit;
+    return IconPencil;
   }
   if (reasonType === 'semantic_related') {
-    return LinkOne;
+    return IconLink;
   }
   if (reasonType === 'long_gap') {
-    return Time;
+    return IconClock;
   }
   if (reasonType === 'recent_focus') {
-    return Fire;
+    return IconFlame;
   }
   if (reasonType === 'same_notebook') {
-    return FolderFocus;
+    return IconFolderOpen;
   }
-  return BookmarkOne;
+  return IconBookmark;
 }
 
 function formatSmartScore(score: number): string {
@@ -1153,11 +1141,7 @@ watch(
     "recent tags"
     "smart topic";
   grid-template-rows:
-    minmax(112px, auto)
-    minmax(96px, auto)
-    auto
-    var(--workbench-feed-card-height)
-    var(--workbench-recommendation-card-height);
+    minmax(112px, auto) minmax(96px, auto) auto var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
   gap: var(--workbench-gap);
   align-items: stretch;
   min-height: 0;
@@ -1302,35 +1286,69 @@ watch(
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
   padding-top: 0;
 }
 
 .hero-action {
-  min-width: 112px;
-  min-height: 36px;
+  min-width: 88px;
+  min-height: 34px;
+  padding: 0.42rem 1rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  padding: 0 14px;
-  border: 1px solid var(--workbench-border-strong);
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.82);
-  color: var(--workbench-ink);
-  box-shadow: 0 6px 16px rgba(43, 52, 82, 0.07), inset 0 1px 0 rgba(255, 255, 255, 0.82);
+  gap: 0.48rem;
+  border: 1px solid color-mix(in srgb, var(--workbench-border-strong) 82%, #c9d1dc);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  color: color-mix(in srgb, var(--workbench-ink) 92%, #111827);
   cursor: pointer;
   font: inherit;
-  font-size: 0.8rem;
-  font-weight: 700;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  font-size: 0.86rem;
+  font-weight: 500;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.18s ease,
+    color 0.15s ease,
+    box-shadow 0.18s ease;
+}
+
+.hero-action:hover,
+.hero-action:focus-visible {
+  background: rgba(243, 244, 246, 0.96);
+  border-color: rgba(122, 167, 255, 0.72);
+  color: var(--workbench-ink);
+}
+
+.hero-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(122, 167, 255, 0.16);
+}
+
+.hero-action:active {
+  background: rgba(229, 231, 235, 0.96);
 }
 
 .hero-action--primary {
-  border-color: rgba(61, 124, 255, 0.26);
-  background: linear-gradient(150deg, #56a2ff 0%, #3d7cff 54%, #2f68e6 100%);
-  color: #ffffff;
-  box-shadow: 0 12px 24px rgba(61, 124, 255, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.24);
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.06);
+}
+
+:global([data-theme='dark']) .hero-action {
+  background: rgba(37, 45, 58, 0.92);
+  border-color: rgba(108, 125, 156, 0.34);
+  color: rgba(238, 242, 249, 0.94);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+:global([data-theme='dark']) .hero-action:hover,
+:global([data-theme='dark']) .hero-action:focus-visible {
+  background: rgba(44, 54, 69, 0.96);
+  border-color: rgba(122, 167, 255, 0.56);
+  color: rgba(245, 247, 252, 0.98);
+}
+
+:global([data-theme='dark']) .hero-action:active {
+  background: rgba(31, 39, 52, 0.96);
 }
 
 .hero-art {
@@ -1487,7 +1505,7 @@ watch(
   cursor: default;
 }
 
-.overview-card + .overview-card {
+.overview-card+.overview-card {
   border-left: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
 }
 
@@ -2481,6 +2499,7 @@ watch(
 }
 
 @media (min-width: 1121px) {
+
   .panel-row--recent .panel--half,
   .side-card--tags {
     height: 100%;
@@ -2673,7 +2692,7 @@ watch(
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .overview-card + .overview-card {
+  .overview-card+.overview-card {
     border-left: 0;
   }
 
@@ -2721,5 +2740,4 @@ watch(
     padding: 16px;
   }
 }
-
 </style>

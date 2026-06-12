@@ -37,11 +37,9 @@
           <p class="setting-description">{{ t('text.startupDefaultView') }}</p>
         </div>
         <label class="select-shell">
-          <select class="settings-select" :value="settingsStore.config.appShell.activeMainView"
-            @change="handleStartupViewChange">
+          <select class="settings-select" :value="startupViewValue" @change="handleStartupViewChange">
             <option value="workbench">{{ t('option.startup.workbench') }}</option>
             <option value="workspace">{{ t('option.startup.workspace') }}</option>
-            <option value="settings">{{ t('pref.pane.title') }}</option>
           </select>
         </label>
       </section>
@@ -82,6 +80,7 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { languageOptions } from '@renderer/features/i18n';
 import { type AppShellMainViewId } from '@renderer/app/constants/appShell.constants';
@@ -89,6 +88,10 @@ import { useSettingsStore } from '../../store/settings.store';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
+
+const startupViewValue = computed<AppShellMainViewId>(() => {
+  return settingsStore.config.appShell.activeMainView === 'workspace' ? 'workspace' : 'workbench';
+});
 
 const handleLanguageChange = async (event: Event) => {
   const target = event.target as HTMLSelectElement;

@@ -3,7 +3,7 @@
     <header class="dashboard-header">
       <div class="dashboard-title-wrap">
         <span class="dashboard-title-icon">
-          <Star theme="outline" :size="16" />
+          <IconStar :size="16" />
         </span>
         <h1 class="dashboard-title">{{ $t('favorites.listTitle') }}</h1>
       </div>
@@ -17,23 +17,33 @@
               <th class="col-icon"></th>
               <th class="col-name sortable" @click="toggleSort('name')">
                 {{ $t('favorites.name') }}
-                <span class="sort-icon" v-if="sortField === 'name'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                <span class="sort-icon" v-if="sortField === 'name'">
+                  <component :is="sortOrder === 'asc' ? IconChevronUp : IconChevronDown" :size="12" />
+                </span>
               </th>
               <th class="col-type sortable" @click="toggleSort('type')">
                 {{ $t('favorites.type') }}
-                <span class="sort-icon" v-if="sortField === 'type'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                <span class="sort-icon" v-if="sortField === 'type'">
+                  <component :is="sortOrder === 'asc' ? IconChevronUp : IconChevronDown" :size="12" />
+                </span>
               </th>
               <th class="col-location sortable" @click="toggleSort('location')">
                 {{ $t('favorites.location') }}
-                <span class="sort-icon" v-if="sortField === 'location'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                <span class="sort-icon" v-if="sortField === 'location'">
+                  <component :is="sortOrder === 'asc' ? IconChevronUp : IconChevronDown" :size="12" />
+                </span>
               </th>
               <th class="col-modified sortable" @click="toggleSort('updatedAt')">
                 {{ $t('favorites.lastModified') }}
-                <span class="sort-icon" v-if="sortField === 'updatedAt'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                <span class="sort-icon" v-if="sortField === 'updatedAt'">
+                  <component :is="sortOrder === 'asc' ? IconChevronUp : IconChevronDown" :size="12" />
+                </span>
               </th>
               <th class="col-time sortable" @click="toggleSort('starredAt')">
                 {{ $t('favorites.starredAt') }}
-                <span class="sort-icon" v-if="sortField === 'starredAt'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
+                <span class="sort-icon" v-if="sortField === 'starredAt'">
+                  <component :is="sortOrder === 'asc' ? IconChevronUp : IconChevronDown" :size="12" />
+                </span>
               </th>
               <th class="col-actions">{{ $t('favorites.operation') }}</th>
             </tr>
@@ -42,14 +52,9 @@
             <tr v-for="item in allFavorites" :key="`${item.kind}-${item.id}`" class="favorite-row"
               @click="jumpToWorkspace(item.id, item.kind)">
               <td class="col-icon">
-                <FileLockOne v-if="item.kind === 'note' && item.locked" theme="outline" :size="16" />
-                <Notes v-else-if="item.kind === 'note'" theme="outline" :size="16" />
-                <NotebookVisualIcon
-                  v-else
-                  :icon-color="item.iconColor"
-                  :icon-size="13"
-                  :box-size="18"
-                />
+                <IconFileCheck v-if="item.kind === 'note' && item.locked" :size="16" />
+                <IconFileText v-else-if="item.kind === 'note'" :size="16" />
+                <NotebookVisualIcon v-else :icon-color="item.iconColor" :icon-size="13" :box-size="18" />
               </td>
               <td class="col-name">{{ item.nameOrTitle }}</td>
               <td class="col-type">
@@ -65,7 +70,7 @@
               <td class="col-actions">
                 <button class="action-btn is-active" :title="t('contextMenu.unstar')"
                   @click.stop="favoritesStore.toggleStar(item.id, item.kind, false)">
-                  <Star theme="filled" :size="16" />
+                  <IconStar fill="currentColor" :size="16" />
                 </button>
               </td>
             </tr>
@@ -84,7 +89,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useFavoritesStore } from '@renderer/features/favorites/store/favorites.store';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
-import { Notes, FileLockOne, Star } from '@icon-park/vue-next';
+import { IconChevronDown, IconChevronUp, IconFileCheck, IconFileText, IconStar } from '@tabler/icons-vue';
 import { useI18n } from 'vue-i18n';
 import { formatDate as formatTime } from '@renderer/core/utils/date.utils';
 import NotebookVisualIcon from '@renderer/features/workspace/components/NotebookVisualIcon.vue';
@@ -275,10 +280,11 @@ async function jumpToWorkspace(id: string, type: 'note' | 'notebook') {
 }
 
 .sort-icon {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   margin-left: 4px;
-  font-size: 0.7rem;
   color: var(--accent);
+  vertical-align: middle;
 }
 
 .favorites-table tbody tr:last-child td {

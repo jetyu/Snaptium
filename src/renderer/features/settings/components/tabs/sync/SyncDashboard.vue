@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="settings-grid">
     <section class="setting-card">
       <div class="setting-copy">
@@ -73,7 +73,7 @@
         >
           <span v-if="settingsStore.config.sync.provider === 'webdav'" class="active-tag">{{ t('checkbox.status.enabled') }}</span>
           <div class="provider-icon webdav">
-            <DataServer theme="outline" size="24" />
+            <IconServer :size="24" />
           </div>
           <div class="provider-info">
             <div class="provider-header">
@@ -88,7 +88,7 @@
               :title="t('common.edit')"
               :disabled="isSyncDisabled"
             >
-              <Edit theme="outline" size="16" />
+              <IconPencil :size="16" />
             </button>
             <button
               class="action-icon-btn clear"
@@ -96,7 +96,7 @@
               :title="t('common.reset')"
               :disabled="isSyncDisabled"
             >
-              <Delete theme="outline" size="16" />
+              <IconTrash :size="16" />
             </button>
           </div>
         </div>
@@ -108,7 +108,7 @@
         >
           <span v-if="settingsStore.config.sync.provider === 'oss-s3'" class="active-tag">{{ t('checkbox.status.enabled') }}</span>
           <div class="provider-icon oss">
-            <DatabaseSync theme="outline" size="24" />
+            <IconDatabase :size="24" />
           </div>
           <div class="provider-info">
             <div class="provider-header">
@@ -123,7 +123,7 @@
               :title="t('common.edit')"
               :disabled="isSyncDisabled"
             >
-              <Edit theme="outline" size="16" />
+              <IconPencil :size="16" />
             </button>
             <button
               class="action-icon-btn clear"
@@ -131,7 +131,7 @@
               :title="t('common.reset')"
               :disabled="isSyncDisabled"
             >
-              <Delete theme="outline" size="16" />
+              <IconTrash :size="16" />
             </button>
           </div>
         </div>
@@ -151,7 +151,7 @@
           <button
             type="button"
             class="action-button primary"
-            :disabled="syncStore.isSyncing || !settingsStore.config.sync.enabled || !isConfigReady"
+            :disabled="isLicenseLocked || syncStore.isSyncing || !settingsStore.config.sync.enabled || !isConfigReady"
             @click="handleSyncNow"
           >
             <span v-if="syncStore.isSyncing" class="spinner small"></span>
@@ -175,7 +175,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { DataServer, Edit, Delete, DatabaseSync } from '@icon-park/vue-next';
+import { IconServer, IconPencil, IconTrash, IconDatabase } from '@tabler/icons-vue';
 import { useSettingsStore } from '../../../store/settings.store';
 import { SYNC_INTERVAL_OPTIONS, SYNC_TRIGGERS, syncService, useSyncPresentation, useSyncStore } from '@renderer/features/sync';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
@@ -513,14 +513,14 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 
 .active-tag {
   position: absolute;
-  top: 0;
-  right: 0;
+  top: -1px;
+  right: -1px;
   font-size: 0.65rem;
   font-weight: 700;
   background: #4a90e2;
   color: #ffffff;
   padding: 3px 10px 4px;
-  border-radius: 0 11px 0 10px;
+  border-radius: 0 10px 0 10px;
   line-height: 1;
   z-index: 10;
   box-shadow: -1px 1px 4px rgba(0, 0, 0, 0.05);

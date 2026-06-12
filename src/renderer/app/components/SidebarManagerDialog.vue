@@ -11,7 +11,7 @@
             </div>
             <button type="button" class="sidebar-manager-dialog__close" :aria-label="t('common.close')"
               @click="closeSidebarManager">
-              <Close theme="outline" :size="18" />
+              <IconX :size="18" />
             </button>
           </header>
 
@@ -31,7 +31,7 @@
                       <div class="sidebar-manager-dialog__preview-group">
                         <button v-for="view in mainViews" :key="view.id" type="button"
                           class="sidebar-manager-dialog__preview-button sidebar-manager-dialog__preview-button--view is-active">
-                          <component :is="getMainViewIcon(view.id)" theme="outline" :size="18" />
+                          <component :is="getMainViewIcon(view.id)" :size="18" />
                         </button>
                       </div>
 
@@ -45,10 +45,10 @@
                           <button type="button" class="sidebar-manager-dialog__preview-remove"
                             :aria-label="t('appShell.sidebarManager.removeModule', { module: t(module.labelKey) })"
                             @click="removeFromPreview(module.id)">
-                            <Minus theme="outline" :size="14" />
+                            <IconMinus :size="16" stroke="3" />
                           </button>
                           <button type="button" class="sidebar-manager-dialog__preview-button is-module">
-                            <component :is="getModuleIcon(module.id)" theme="outline" :size="18" />
+                            <component :is="getModuleIcon(module.id)" :size="18" />
                           </button>
                         </div>
                         <div v-for="slot in previewPlaceholderCount" :key="`placeholder-${slot}`"
@@ -62,7 +62,7 @@
                       <!-- 底部管理按钮 -->
                       <button type="button"
                         class="sidebar-manager-dialog__preview-button sidebar-manager-dialog__preview-button--manage">
-                        <SettingConfig theme="outline" :size="18" />
+                        <IconAdjustmentsHorizontal :size="18" />
                       </button>
                     </div>
                   </div>
@@ -83,7 +83,7 @@
                     <article v-for="module in customModules" :key="module.id"
                       class="sidebar-manager-dialog__module-card" :class="{ 'is-active': isModuleEnabled(module.id) }">
                       <div class="sidebar-manager-dialog__module-icon">
-                        <component :is="getModuleIcon(module.id)" theme="outline" :size="18" />
+                        <component :is="getModuleIcon(module.id)" :size="18" />
                       </div>
                       <div class="sidebar-manager-dialog__module-copy">
                         <strong>{{ t(module.labelKey) }}</strong>
@@ -92,12 +92,12 @@
                         class="sidebar-manager-dialog__module-action" :disabled="hasReachedCustomModuleLimit"
                         :aria-label="t('appShell.sidebarManager.addModule', { module: t(module.labelKey) })"
                         @click="addToPreview(module.id)">
-                        <Plus theme="outline" :size="16" />
+                        <IconPlus :size="16" />
                       </button>
                       <button v-else type="button" class="sidebar-manager-dialog__module-action is-remove"
                         :aria-label="t('appShell.sidebarManager.removeModule', { module: t(module.labelKey) })"
                         @click="removeFromPreview(module.id)">
-                        <Minus theme="outline" :size="16" />
+                        <IconMinus :size="16" />
                       </button>
                     </article>
                   </div>
@@ -114,7 +114,20 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue';
 import { storeToRefs } from 'pinia';
-import { Close, ApplicationOne, Plus, Minus, Search, SettingTwo, Delete, Info, NotebookOne, SettingConfig, Star, TagOne } from '@icon-park/vue-next';
+import {
+  IconX,
+  IconDashboard,
+  IconPlus,
+  IconMinus,
+  IconDatabaseSearch,
+  IconSettings,
+  IconAdjustmentsHorizontal,
+  IconTrash,
+  IconInfoCircle,
+  IconNotebook,
+  IconStar,
+  IconTag,
+} from '@tabler/icons-vue';
 import { useI18n } from 'vue-i18n';
 import type { AppShellMainViewId, AppShellModuleId } from '../constants/appShell.constants';
 import { useSidebarManager } from '../composables/useSidebarManager';
@@ -138,30 +151,30 @@ const previewPlaceholderCount = computed(() => {
   return Math.max(0, maxCustomModules.value - enabledCustomModules.value.length);
 });
 
-const mainViewIconMap: Record<AppShellMainViewId, typeof NotebookOne> = {
-  workbench: ApplicationOne,
-  workspace: NotebookOne,
-  tags: TagOne,
-  favorites: Star,
-  search: Search,
-  settings: SettingTwo,
+const mainViewIconMap: Record<AppShellMainViewId, typeof IconNotebook> = {
+  workbench: IconDashboard,
+  workspace: IconNotebook,
+  tags: IconTag,
+  favorites: IconStar,
+  search: IconDatabaseSearch,
+  settings: IconSettings,
 };
 
-const moduleIconMap: Record<AppShellModuleId, typeof Search> = {
-  favorites: Star,
-  tags: TagOne,
-  search: Search,
-  settings: SettingTwo,
-  trash: Delete,
-  about: Info,
+const moduleIconMap: Record<AppShellModuleId, typeof IconDatabaseSearch> = {
+  favorites: IconStar,
+  tags: IconTag,
+  search: IconDatabaseSearch,
+  settings: IconSettings,
+  trash: IconTrash,
+  about: IconInfoCircle,
 };
 
 function getMainViewIcon(viewId: AppShellMainViewId) {
-  return mainViewIconMap[viewId] ?? NotebookOne;
+  return mainViewIconMap[viewId] ?? IconNotebook;
 }
 
 function getModuleIcon(moduleId: AppShellModuleId) {
-  return moduleIconMap[moduleId] ?? Search;
+  return moduleIconMap[moduleId] ?? IconDatabaseSearch;
 }
 
 function isModuleEnabled(moduleId: AppShellModuleId) {
@@ -321,7 +334,7 @@ watch(isSidebarManagerOpen, async (open) => {
 
 .sidebar-manager-dialog__preview-rail {
   width: 68px;
-  height: 360px;
+  height: 376px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -350,7 +363,7 @@ watch(isSidebarManagerOpen, async (open) => {
 }
 
 .sidebar-manager-dialog__preview-group--grow {
-  flex: 1;
+  flex: 0 0 auto;
   justify-content: flex-start;
 }
 
@@ -419,18 +432,22 @@ watch(isSidebarManagerOpen, async (open) => {
 .sidebar-manager-dialog__preview-remove {
   position: absolute;
   top: -6px;
-  right: 4px;
-  width: 16px;
-  height: 16px;
+  right: 3px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 999px;
-  background: #fff1f2;
-  color: #be123c;
+  border-radius: 6px;
+  background: rgba(244, 63, 94, 0.08);
+  color: #e11d48;
   cursor: pointer;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
+  transition: background-color 0.18s ease, color 0.18s ease;
+}
+
+.sidebar-manager-dialog__preview-remove:hover {
+  background: rgba(244, 63, 94, 0.14);
 }
 
 .sidebar-manager-dialog__preview-label {
@@ -462,11 +479,10 @@ watch(isSidebarManagerOpen, async (open) => {
   border: 1px solid var(--panel-border);
   border-radius: 12px;
   background: color-mix(in srgb, var(--panel) 92%, white);
-  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease;
+  transition: border-color 0.18s ease, background-color 0.18s ease;
 }
 
 .sidebar-manager-dialog__module-card:hover {
-  transform: translateY(-1px);
   border-color: color-mix(in srgb, var(--accent) 18%, var(--panel-border));
 }
 
@@ -516,13 +532,12 @@ watch(isSidebarManagerOpen, async (open) => {
   background: color-mix(in srgb, var(--accent) 14%, var(--panel));
   color: var(--accent-hover);
   cursor: pointer;
-  transition: opacity 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
-  align-self: flex-end;
+  transition: opacity 0.18s ease, background-color 0.18s ease;
+  align-self: center;
   flex-shrink: 0;
 }
 
 .sidebar-manager-dialog__module-action:hover:not(:disabled) {
-  transform: translateY(-1px);
   background: color-mix(in srgb, var(--accent) 20%, var(--panel));
 }
 

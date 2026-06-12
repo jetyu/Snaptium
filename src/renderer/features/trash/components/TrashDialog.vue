@@ -5,17 +5,17 @@
         <div class="trash-dialog" @click.stop>
           <div class="trash-header">
             <div class="header-left">
-              <Delete theme="outline" :size="20" class="trash-icon" />
+              <IconTrash :size="20" class="trash-icon" />
               <h2>{{ $t('label.trash') }}</h2>
             </div>
             <div class="header-right">
               <button v-if="trashedNodes.length > 0" class="btn-empty" @click="onEmptyTrash" :title="$t('trash.empty')"
                 :disabled="isEmptying || Boolean(activeNodeId)">
-                <Clear theme="outline" :size="16" />
+                <IconEraser :size="16" />
                 <span>{{ $t('trash.empty') }}</span>
               </button>
               <button @click="closeTrash" class="btn-close">
-                <Close theme="outline" :size="18" />
+                <IconX :size="18" />
               </button>
             </div>
           </div>
@@ -24,14 +24,14 @@
             <div v-if="error" class="error-banner" role="alert">
               <span class="error-text">{{ error }}</span>
               <button class="error-dismiss" aria-label="Dismiss error" @click="clearError">
-                <Close theme="outline" :size="14" />
+                <IconX :size="14" />
               </button>
             </div>
             <div v-if="isLoading" class="loading-state">
               <div class="spinner"></div>
             </div>
             <div v-else-if="trashedNodes.length === 0" class="empty-state">
-              <Delete theme="outline" :size="48" class="empty-icon" />
+              <IconTrash :size="48" class="empty-icon" />
               <p>{{ $t('trash.emptyState') }}</p>
             </div>
             <div v-else class="trash-list-wrapper">
@@ -47,13 +47,8 @@
                   <tr v-for="node in trashedNodes" :key="node.id">
                     <td>
                       <div class="node-name">
-                        <Notes v-if="node.type === 'file'" theme="outline" :size="14" />
-                        <NotebookVisualIcon
-                          v-else
-                          :icon-color="node.iconColor"
-                          :icon-size="12"
-                          :box-size="16"
-                        />
+                        <IconFileText v-if="node.type === 'file'" :size="14" />
+                        <NotebookVisualIcon v-else :icon-color="node.iconColor" :icon-size="12" :box-size="16" />
                         <span class="name-text">{{ node.name }}</span>
                         <span v-if="node.childCount > 0" class="child-count">
                           ({{ $t('trash.containsItems', { count: node.childCount }) }})
@@ -65,12 +60,12 @@
                       <div class="action-buttons">
                         <button class="btn-inline-action restore" @click="onRestoreNode(node.id)"
                           :title="$t('trash.restore') || 'Restore'" :disabled="Boolean(activeNodeId) || isEmptying">
-                          <Refresh theme="outline" :size="14" />
+                          <IconRefresh :size="14" />
                         </button>
                         <button class="btn-inline-action delete" @click="onDeleteNode(node.id)"
                           :title="$t('trash.deletePermanently') || 'Delete Permanently'"
                           :disabled="Boolean(activeNodeId) || isEmptying">
-                          <Delete theme="outline" :size="14" />
+                          <IconTrash :size="14" />
                         </button>
                       </div>
                     </td>
@@ -88,7 +83,7 @@
 <script setup lang="ts">
 import { nextTick, ref, watch } from 'vue';
 import { useTrash } from '../composables/useTrash';
-import { Delete, Close, Clear, Refresh, Notes } from '@icon-park/vue-next';
+import { IconTrash, IconX, IconEraser, IconRefresh, IconFileText } from '@tabler/icons-vue';
 import NotebookVisualIcon from '@renderer/features/workspace/components/NotebookVisualIcon.vue';
 
 const { isOpen, trashedNodes, isLoading, error, clearError, closeTrash, restoreNode, permanentlyDeleteNode, emptyTrash } = useTrash();
