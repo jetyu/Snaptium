@@ -78,8 +78,8 @@
                     <div v-if="shouldDisplayFallbackNotice(question)" class="search-view__fallback-notice">
                       {{ $t('message.rag.noChatModel') }}
                     </div>
-                    <div v-if="getQuestionAnswer(question)" class="search-view__answer-content"
-                      v-html="renderQuestionAnswer(question)"></div>
+                     <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
+                       v-html="renderQuestionAnswer(question)"></div>
                     <p v-else class="search-view__status-text">{{ $t('search.noResultsSemantic') }}</p>
                     <div v-if="getQuestionSources(question).length > 0" class="search-view__sources">
                       <h3>{{ $t('search.knowledgeSources') }}</h3>
@@ -125,6 +125,7 @@ import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { IconX, IconDatabaseSearch, IconTrash, IconFileText, IconPlus } from '@tabler/icons-vue';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
+import { renderMarkdownEnhancements } from '@renderer/core/markdown/markdownEnhancements';
 import { useRAGConfig, useRAGSearch, useRAGChat } from '@renderer/features/rag';
 import { useLicenseGate } from '@renderer/features/license';
 import { createLogger } from '@renderer/features/logger';
@@ -173,6 +174,7 @@ const activeFallbackQuestionId = ref('');
 const activeErrorQuestionId = ref('');
 const activeErrorMessage = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+let markdownEnhancementRunId = 0;
 
 const canUseKnowledgeSearch = computed(() => ragLicenseGate.allowed.value && ragEnabled.value && ragConfigured.value);
 const isBusy = computed(() => isSearching.value || isAIGenerating.value);
@@ -293,6 +295,16 @@ function scrollChatToBottom(): void {
 
     messageList.scrollTop = messageList.scrollHeight;
   });
+}
+
+async function syncMarkdownEnhancements(): Promise<void> {
+  const runId = ++markdownEnhancementRunId;
+  await nextTick();
+  if (runId !== markdownEnhancementRunId) {
+    return;
+  }
+
+  await renderMarkdownEnhancements(messageListRef.value);
 }
 
 function scrollQuestionIntoView(questionId: string): void {
@@ -624,14 +636,24 @@ watch(questionThreads, (threads) => {
   }
 });
 
+watch(
+  chatQuestions,
+  () => {
+    void syncMarkdownEnhancements();
+  },
+  { deep: true, flush: 'post' },
+);
+
 onMounted(() => {
   applySearchRequest();
   focusSearchInput();
   scrollChatToBottom();
+  void syncMarkdownEnhancements();
 });
 
 onBeforeUnmount(() => {
   clearPendingSearch();
+  markdownEnhancementRunId += 1;
 });
 </script>
 
@@ -1115,42 +1137,7 @@ onBeforeUnmount(() => {
 .search-view__answer-content {
   color: var(--text);
   font-size: 0.92rem;
-  line-height: 1.76;
-}
-
-.search-view__answer-content :deep(h1),
-.search-view__answer-content :deep(h2),
-.search-view__answer-content :deep(h3) {
-  margin: 1em 0 0.45em;
-  color: var(--text);
-  line-height: 1.35;
-}
-
-.search-view__answer-content :deep(h1:first-child),
-.search-view__answer-content :deep(h2:first-child),
-.search-view__answer-content :deep(h3:first-child) {
-  margin-top: 0;
-}
-
-.search-view__answer-content :deep(p) {
-  margin: 0.55em 0;
-}
-
-.search-view__answer-content :deep(ul),
-.search-view__answer-content :deep(ol) {
-  margin: 0.55em 0;
-  padding-left: 1.4em;
-}
-
-.search-view__answer-content :deep(li + li) {
-  margin-top: 0.32em;
-}
-
-.search-view__answer-content :deep(code) {
-  padding: 1px 4px;
-  border-radius: 4px;
-  background: var(--panel-hover);
-  color: var(--text);
+  line-height: 1.5;
 }
 
 .search-view__sources {

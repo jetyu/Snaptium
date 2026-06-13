@@ -1,11 +1,6 @@
 import DOMPurify from 'dompurify';
 import MarkdownIt from 'markdown-it';
-import markdownItDeflist from 'markdown-it-deflist';
-import markdownItFootnote from 'markdown-it-footnote';
 import markdownItKatex from 'markdown-it-katex';
-import markdownItMark from 'markdown-it-mark';
-import markdownItSub from 'markdown-it-sub';
-import markdownItSup from 'markdown-it-sup';
 import markdownItTaskLists from 'markdown-it-task-lists';
 import {
   DEFAULT_TRUSTED_REMOTE_IMAGE_HOSTS,
@@ -209,7 +204,6 @@ function getHtmlWhitelistOptions(allowInlineSvg: boolean) {
     'table', 'thead', 'tbody', 'tr', 'th', 'td',
     'button', 'input', 'label',
     'img', 'picture', 'source',
-    // MathML tags for KaTeX support
     'math', 'semantics', 'annotation', 'mtext', 'mspace', 'ms', 'mn', 'mi', 'mo', 'mfrac', 'msup', 'msub', 'msubsup',
     'mmultiscripts', 'munder', 'mover', 'munderover', 'mtable', 'mtr', 'mtd', 'maction', 'menclose', 'merror',
     'mfenced', 'mphantom', 'mroot', 'msqrt', 'mstyle',
@@ -220,8 +214,8 @@ function getHtmlWhitelistOptions(allowInlineSvg: boolean) {
     'alt', 'title', 'width', 'height', 'class', 'id', 'role', 'focusable', 'aria-hidden', 'aria-label',
     'checked', 'disabled', 'for',
     'data-source-start', 'data-source-end', 'data-heading-id',
-    'style', // Required for KaTeX positioning
-    'encoding', 'display', // MathML attributes
+    'style',
+    'encoding', 'display',
   ];
 
   if (allowInlineSvg) {
@@ -246,6 +240,15 @@ function getHtmlWhitelistOptions(allowInlineSvg: boolean) {
 
 function escapeAttributeValue(markdownIt: MarkdownIt, value: string) {
   return markdownIt.utils.escapeHtml(value);
+}
+
+function renderMermaidBlock(markdownIt: MarkdownIt, token: MarkdownCodeBlockToken) {
+  let wrapperAttrHtml = '';
+  if (token.map && token.map.length >= 2) {
+    wrapperAttrHtml = ` data-source-start="${token.map[0] + 1}" data-source-end="${token.map[1] + 1}"`;
+  }
+
+  return `<div class="preview-mermaid-block"${wrapperAttrHtml}><pre class="mermaid">${markdownIt.utils.escapeHtml(token.content)}</pre></div>\n`;
 }
 
 function renderCodeBlock(
@@ -284,20 +287,15 @@ function createMarkdownIt(allowHtml: boolean, renderOptions: MarkdownRenderOptio
   const markdownIt = new MarkdownIt({
     html: allowHtml,
     linkify: true,
-    typographer: true,
-    breaks: true,
+    typographer: false,
+    breaks: false,
   });
 
-  markdownIt.use(markdownItFootnote);
   markdownIt.use(markdownItTaskLists, {
     enabled: false,
     label: true,
     labelAfter: true,
   });
-  markdownIt.use(markdownItMark);
-  markdownIt.use(markdownItSub);
-  markdownIt.use(markdownItSup);
-  markdownIt.use(markdownItDeflist);
   markdownIt.use(markdownItKatex);
 
   const defaultValidateLink = markdownIt.validateLink.bind(markdownIt);
@@ -316,7 +314,7 @@ function createMarkdownIt(allowHtml: boolean, renderOptions: MarkdownRenderOptio
   markdownIt.renderer.rules.link_open = (tokens, idx, options, env, self) => {
     const token = tokens[idx];
     token.attrSet('target', '_blank');
-    token.attrSet('rel', 'noopener noreferrer nofollow');
+    token.attrSet('rel', 'noopener noreferrer');
     return defaultLinkRenderer(tokens, idx, options, env, self);
   };
 
@@ -387,6 +385,10 @@ function createMarkdownIt(allowHtml: boolean, renderOptions: MarkdownRenderOptio
     const token = tokens[idx];
     const info = token.info ? markdownIt.utils.unescapeAll(token.info).trim() : '';
     const languageName = info ? info.split(/\s+/, 1)[0] : '';
+    if (languageName.toLowerCase() === 'mermaid') {
+      return renderMermaidBlock(markdownIt, token);
+    }
+
     return renderCodeBlock(markdownIt, token, languageName, renderOptions.copyCodeButtonLabel);
   };
 
