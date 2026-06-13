@@ -77,29 +77,16 @@
 
       <section
         class="setting-card update-state-card"
-        :class="{ 'vertical-layout': isDownloadingState, 'is-downloading': isDownloadingState }"
+        :class="{ 'is-downloading': isDownloadingState }"
       >
         <div class="setting-copy update-state-copy">
-          <p class="setting-label">{{ updateStateTitle }}</p>
-          <span class="update-state-message" :class="updateStateToneClass">
-            {{ updateStateMessage }}
-          </span>
-
-          <div v-if="isDownloadingState" class="update-progress">
-            <div class="update-progress-summary">
-              <span class="update-progress-percent">{{ progressPercent }}%</span>
-            </div>
-            <div
-              class="update-progress-track"
-              role="progressbar"
-              :aria-valuemin="0"
-              :aria-valuemax="100"
-              :aria-valuenow="progressPercent"
-              :aria-valuetext="downloadProgressSummary"
-            >
-              <div class="update-progress-fill" :style="{ width: `${progressPercent}%` }" />
-            </div>
+          <div class="update-state-header">
+            <p class="setting-label">{{ updateStateTitle }}</p>
+            <span v-if="isDownloadingState" class="update-download-percent">{{ progressPercent }}%</span>
           </div>
+          <p class="update-state-message" :class="updateStateToneClass">
+            {{ updateStateMessage }}
+          </p>
         </div>
         <div v-if="showAvailableUpdateActions || showInstallActions || showRetryAction" class="update-actions">
           <button v-if="showAvailableUpdateActions" type="button" class="action-button" @click="handleDownloadUpdate">
@@ -163,32 +150,6 @@ const progressPercent = computed(() => Math.min(100, Math.max(0, Math.round(down
 const isDownloadingState = computed(() => updatePanelState.value === 'downloading');
 const showRetryAction = computed(() => Boolean(error.value) && !isChecking.value && !isDownloading.value);
 
-function formatBytes(bytes: number): string {
-  if (!Number.isFinite(bytes) || bytes <= 0) {
-    return '0 B';
-  }
-
-  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const unitIndex = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1);
-  const value = bytes / 1024 ** unitIndex;
-  const digits = unitIndex === 0 || value >= 10 ? 0 : 1;
-
-  return `${value.toFixed(digits)} ${units[unitIndex]}`;
-}
-
-const downloadProgressSummary = computed(() => {
-  const transferred = formatBytes(downloadProgress.value.transferred);
-  const total = downloadProgress.value.total > 0 ? formatBytes(downloadProgress.value.total) : '';
-  const sizeText = total ? `${transferred} / ${total}` : transferred;
-  const speed = downloadProgress.value.bytesPerSecond > 0 ? formatBytes(downloadProgress.value.bytesPerSecond) : '';
-
-  if (speed) {
-    return `${t('updater.downloaded')} ${sizeText} · ${t('updater.downloadSpeed')} ${speed}/s`;
-  }
-
-  return `${t('updater.downloaded')} ${sizeText}`;
-});
-
 const updateStateTitle = computed(() => {
   switch (updatePanelState.value) {
     case 'checking':
@@ -217,7 +178,7 @@ const updateStateMessage = computed(() => {
         ? t('updater.newVersionMessage', { version: updateInfo.value.version })
         : t('updater.newVersionAvailable');
     case 'downloading':
-      return downloadProgressSummary.value;
+      return t('updater.downloadingUpdate');
     case 'ready-to-install':
       return updateInfo.value
         ? t('updater.installMessage', { version: updateInfo.value.version })
@@ -318,8 +279,7 @@ const handleChannelChange = async (event: Event) => {
 }
 
 .update-state-card {
-  align-items: stretch;
-  min-height: 92px;
+  gap: 0.75rem;
 }
 
 .update-state-card.is-downloading {
@@ -327,20 +287,24 @@ const handleChannelChange = async (event: Event) => {
   background: linear-gradient(180deg, color-mix(in srgb, #0f6cbd 5%, #fbfbfc), #fbfbfc);
 }
 
-.update-state-card.vertical-layout {
-  align-items: stretch;
-  gap: 0.85rem;
-}
-
 .update-state-copy {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  gap: 0.15rem;
+  gap: 0.2rem;
   width: 100%;
+  min-width: 0;
+}
+
+.update-state-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 .update-state-message {
+  margin: 0;
   color: #5f6b7a;
   font-size: 0.82rem;
   line-height: 1.45;
@@ -367,21 +331,7 @@ const handleChannelChange = async (event: Event) => {
   flex-wrap: wrap;
 }
 
-.update-progress {
-  width: 100%;
-  margin-top: 0.55rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-}
-
-.update-progress-summary {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-}
-
-.update-progress-percent {
+.update-download-percent {
   display: inline-flex;
   align-items: center;
   padding: 0.16rem 0.55rem;
@@ -393,28 +343,15 @@ const handleChannelChange = async (event: Event) => {
   line-height: 1.35;
 }
 
-.update-progress-track {
-  height: 8px;
-  margin: 0;
-  overflow: hidden;
-  border-radius: 999px;
-  background: color-mix(in srgb, #0f6cbd 12%, #e5e7eb);
-}
-
-.update-progress-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: #0f6cbd;
-  transition: width 0.2s ease;
-}
-
 @media (max-width: 720px) {
   .update-actions {
     justify-content: flex-start;
   }
 
-  .update-progress-summary {
+  .update-state-header {
     justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
 </style>
