@@ -547,15 +547,14 @@ onMounted(async () => {
 .workbench-onboarding__choice-card {
   cursor: pointer;
   text-align: left;
-  transition: transform 0.16s ease, background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
-}
+  transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
+  }
 
-.workbench-onboarding__choice-card:hover {
-  transform: translateY(-1px);
+  .workbench-onboarding__choice-card:hover {
   border-color: var(--panel-border, #dbe3ef);
   background: var(--panel-hover, #f5f7fa);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.09);
-}
+  }
 
 .workbench-onboarding__choice-card.is-selected {
   border-color: color-mix(in srgb, var(--accent) 58%, var(--panel-border, #dbe3ef));

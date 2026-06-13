@@ -15,8 +15,3 @@ _No changelog available for this release_
 <!-- COMPARE_LINK_START -->
 <!-- Optional: GitHub compare link -->
 <!-- COMPARE_LINK_END -->
-
-<!-- FULL_CHANGELOG_START -->
-#### Full Changelog
-- [Changelog](https://snaptium.com/changelog)
-<!-- FULL_CHANGELOG_END -->
