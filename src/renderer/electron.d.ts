@@ -202,6 +202,7 @@ interface UpdaterUpdateInfoPayload {
   releaseDate?: string;
   releaseNotes?: string;
   files?: Array<Record<string, JsonValue>>;
+  silent?: boolean;
 }
 
 interface UpdaterProgressPayload {
@@ -211,9 +212,14 @@ interface UpdaterProgressPayload {
   total: number;
 }
 
+interface UpdaterCheckPayload {
+  silent: boolean;
+}
+
 interface UpdaterErrorPayload {
   message: string;
   code: string;
+  silent?: boolean;
 }
 
 interface UpdaterConfigPayload {
@@ -545,7 +551,7 @@ declare global {
         install: () => Promise<{ success: boolean }>;
         getVersion: () => Promise<string>;
         updateConfig: (config: UpdaterConfigPayload) => Promise<{ success: boolean }>;
-        onChecking: (callback: () => void) => () => void;
+        onChecking: (callback: (data: UpdaterCheckPayload) => void) => () => void;
         onAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onNotAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onDownloadProgress: (callback: (data: UpdaterProgressPayload) => void) => () => void;

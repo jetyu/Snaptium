@@ -5,6 +5,7 @@ import {
   updaterService,
   type ErrorInfo,
   type ProgressInfo,
+  type UpdateEventContext,
   type UpdateInfo,
   type UpdaterConfig,
 } from '../services/updater.service';
@@ -55,7 +56,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   const availableActionsDismissed = ref(false);
   const installActionsDismissed = ref(false);
   const showNoUpdateResult = ref(false);
-  const isSilentCheck = ref(true);
+  const isSilentChecking = ref(false);
 
   let cleanupListeners: (() => void) | null = null;
   let initialized = false;
@@ -64,6 +65,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     updateAvailable.value &&
     Boolean(updateInfo.value) &&
     !isChecking.value &&
+    !isSilentChecking.value &&
     !isDownloading.value &&
     !isUpdateDownloaded.value &&
     !availableActionsDismissed.value &&
@@ -74,6 +76,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     isUpdateDownloaded.value &&
     Boolean(updateInfo.value) &&
     !isChecking.value &&
+    !isSilentChecking.value &&
     !installActionsDismissed.value &&
     !error.value
   );
@@ -87,7 +90,7 @@ export const useUpdaterStore = defineStore('updater', () => {
       return 'downloading';
     }
 
-    if (isChecking.value) {
+    if (isChecking.value && !isSilentChecking.value) {
       return 'checking';
     }
 
@@ -122,32 +125,57 @@ export const useUpdaterStore = defineStore('updater', () => {
     availableActionsDismissed.value = false;
     installActionsDismissed.value = false;
     showNoUpdateResult.value = false;
+    isSilentChecking.value = false;
   }
 
-  function handleUpdateChecking(): void {
+  function handleUpdateChecking(context: UpdateEventContext): void {
     isChecking.value = true;
+    isSilentChecking.value = context.silent;
+
+    if (context.silent) {
+      return;
+    }
+
     error.value = null;
     showNoUpdateResult.value = false;
   }
 
-  function handleUpdateAvailable(info: UpdateInfo): void {
+  function handleUpdateAvailable(info: UpdateInfo, context: UpdateEventContext): void {
+    const previousVersion = updateInfo.value?.version;
+    const isSameVersion = previousVersion === info.version;
+
     isChecking.value = false;
     updateAvailable.value = true;
-    isUpdateDownloaded.value = false;
+
+    if (!isSameVersion) {
+      isUpdateDownloaded.value = false;
+    }
+
     updateInfo.value = info;
-    availableActionsDismissed.value = false;
-    installActionsDismissed.value = false;
+    isSilentChecking.value = false;
+    if (!context.silent || !isSameVersion) {
+      availableActionsDismissed.value = false;
+      installActionsDismissed.value = false;
+    }
     showNoUpdateResult.value = false;
+    error.value = null;
   }
 
-  function handleUpdateNotAvailable(): void {
+  function handleUpdateNotAvailable(_info: UpdateInfo, context: UpdateEventContext): void {
     isChecking.value = false;
+    isSilentChecking.value = false;
+
+    if (context.silent) {
+      return;
+    }
+
     updateAvailable.value = false;
     isUpdateDownloaded.value = false;
     updateInfo.value = null;
     availableActionsDismissed.value = false;
     installActionsDismissed.value = false;
-    showNoUpdateResult.value = !isSilentCheck.value;
+    showNoUpdateResult.value = true;
+    error.value = null;
   }
 
   function handleDownloadProgress(progress: ProgressInfo): void {
@@ -163,9 +191,13 @@ export const useUpdaterStore = defineStore('updater', () => {
     installActionsDismissed.value = false;
   }
 
-  function handleUpdateError(errorInfo: ErrorInfo): void {
+  function handleUpdateError(errorInfo: ErrorInfo, context: UpdateEventContext): void {
     isChecking.value = false;
     isDownloading.value = false;
+    isSilentChecking.value = false;
+    if (context.silent) {
+      return;
+    }
     error.value = errorInfo;
     showNoUpdateResult.value = false;
   }
@@ -173,10 +205,8 @@ export const useUpdaterStore = defineStore('updater', () => {
   async function checkForUpdates(silent = false): Promise<void> {
     if (isChecking.value) return;
 
-    isSilentCheck.value = silent;
     isChecking.value = true;
     error.value = null;
-    availableActionsDismissed.value = false;
     showNoUpdateResult.value = false;
 
     try {

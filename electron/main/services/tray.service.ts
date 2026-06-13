@@ -10,10 +10,12 @@ const logger = loggerService.createLogger('Electron:Tray Service');
 class TrayService {
   private tray: Tray | null;
   private mainWindow: BrowserWindow | null;
+  private lastUpdateNotificationVersion: string | null;
 
   constructor() {
     this.tray = null;
     this.mainWindow = null;
+    this.lastUpdateNotificationVersion = null;
   }
 
   init(mainWindow: BrowserWindow): void {
@@ -101,9 +103,16 @@ class TrayService {
 
   showUpdateNotification(version: string): void {
     if (!this.tray) return;
+
+    const normalizedVersion = version.trim();
+    if (!normalizedVersion || normalizedVersion === this.lastUpdateNotificationVersion) {
+      return;
+    }
+
+    this.lastUpdateNotificationVersion = normalizedVersion;
     this.tray.displayBalloon({
       title: $t('updater.newVersionAvailable'),
-      content: $t('updater.newVersionMessage').replace('{version}', version),
+      content: $t('updater.newVersionMessage').replace('{version}', normalizedVersion),
       icon: nativeImage.createFromPath(this.getTrayIconPath())
     });
 
@@ -115,6 +124,7 @@ class TrayService {
       this.tray.destroy();
       this.tray = null;
     }
+    this.lastUpdateNotificationVersion = null;
     logger.debug('Tray destroyed');
   }
 }
