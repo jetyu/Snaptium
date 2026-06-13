@@ -287,6 +287,16 @@ const handleChannelChange = async (event: Event) => {
   background: linear-gradient(180deg, color-mix(in srgb, #0f6cbd 5%, #fbfbfc), #fbfbfc);
 }
 
+.update-state-card.is-downloading {
+  border-color: color-mix(in srgb, #0f6cbd 18%, #e7eaf0);
+  background: linear-gradient(180deg, color-mix(in srgb, #0f6cbd 5%, #fbfbfc), #fbfbfc);
+}
+
+.update-state-card.vertical-layout {
+  align-items: stretch;
+  gap: 0.85rem;
+}
+
 .update-state-copy {
   display: flex;
   flex-direction: column;
