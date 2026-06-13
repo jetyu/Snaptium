@@ -68,7 +68,7 @@
         <button
           type="button"
           class="action-button"
-          :disabled="isChecking || isDownloading"
+          :disabled="isChecking || isDownloading || isDownloadRequestPending"
           @click="handleCheckForUpdates"
         >
           {{ isChecking ? t('button.checkingForUpdates') : t('menu.help.update') }}
@@ -77,16 +77,22 @@
 
       <section
         class="setting-card update-state-card"
-        :class="{ 'is-downloading': isDownloadingState }"
       >
-        <div class="setting-copy update-state-copy">
-          <div class="update-state-header">
+        <div class="update-state-header">
+          <div class="setting-copy update-state-copy">
             <p class="setting-label">{{ updateStateTitle }}</p>
-            <span v-if="isDownloadingState" class="update-download-percent">{{ progressPercent }}%</span>
+            <p class="update-state-message" :class="updateStateToneClass">
+              {{ updateStateMessage }}
+            </p>
           </div>
-          <p class="update-state-message" :class="updateStateToneClass">
-            {{ updateStateMessage }}
-          </p>
+          <button
+            v-if="isDownloadingState"
+            type="button"
+            class="action-button secondary update-cancel-button"
+            @click="handleCancelDownload"
+          >
+            {{ t('updater.cancel') }}
+          </button>
         </div>
         <div v-if="showAvailableUpdateActions || showInstallActions || showRetryAction" class="update-actions">
           <button v-if="showAvailableUpdateActions" type="button" class="action-button" @click="handleDownloadUpdate">
@@ -130,6 +136,7 @@ const {
   currentVersion,
   isChecking,
   isDownloading,
+  isDownloadRequestPending,
   updateAvailable,
   updateInfo,
   downloadProgress,
@@ -148,7 +155,33 @@ const channelOptions = computed(() => [
 const updateIntervalHours = computed(() => Math.round(settingsStore.config.updateCheckInterval / (60 * 60 * 1000)));
 const progressPercent = computed(() => Math.min(100, Math.max(0, Math.round(downloadProgress.value.percent || 0))));
 const isDownloadingState = computed(() => updatePanelState.value === 'downloading');
-const showRetryAction = computed(() => Boolean(error.value) && !isChecking.value && !isDownloading.value);
+const showRetryAction = computed(() =>
+  Boolean(error.value) && !isChecking.value && !isDownloading.value && !isDownloadRequestPending.value
+);
+
+function formatFileSize(sizeInBytes: number): string {
+  const safeSize = Number.isFinite(sizeInBytes) && sizeInBytes > 0 ? sizeInBytes : 0;
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+  if (safeSize === 0) {
+    return `0 ${units[0]}`;
+  }
+
+  let value = safeSize;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  const digits = unitIndex === 0 ? 0 : 1;
+  return `${value.toFixed(digits)} ${units[unitIndex]}`;
+}
+
+const downloadProgressSummary = computed(() =>
+  `${formatFileSize(downloadProgress.value.transferred)} / ${formatFileSize(downloadProgress.value.total)} ${progressPercent.value}%`
+);
 
 const updateStateTitle = computed(() => {
   switch (updatePanelState.value) {
@@ -178,7 +211,7 @@ const updateStateMessage = computed(() => {
         ? t('updater.newVersionMessage', { version: updateInfo.value.version })
         : t('updater.newVersionAvailable');
     case 'downloading':
-      return t('updater.downloadingUpdate');
+      return downloadProgressSummary.value;
     case 'ready-to-install':
       return updateInfo.value
         ? t('updater.installMessage', { version: updateInfo.value.version })
@@ -195,7 +228,7 @@ const updateStateMessage = computed(() => {
 const updateStateToneClass = computed(() => ({
   'is-success': updatePanelState.value === 'up-to-date',
   'is-error': updatePanelState.value === 'error',
-  'is-info': updatePanelState.value === 'available' || updatePanelState.value === 'ready-to-install' || updatePanelState.value === 'downloading',
+  'is-info': updatePanelState.value === 'available' || updatePanelState.value === 'ready-to-install',
 }));
 
 async function syncUpdaterConfig(): Promise<void> {
@@ -212,6 +245,10 @@ const handleCheckForUpdates = async () => {
 
 const handleDownloadUpdate = async () => {
   await updaterStore.downloadUpdate();
+};
+
+const handleCancelDownload = async () => {
+  await updaterStore.cancelDownload();
 };
 
 const handleDismissAvailableUpdate = () => {
@@ -282,21 +319,6 @@ const handleChannelChange = async (event: Event) => {
   gap: 0.75rem;
 }
 
-.update-state-card.is-downloading {
-  border-color: color-mix(in srgb, #0f6cbd 18%, #e7eaf0);
-  background: linear-gradient(180deg, color-mix(in srgb, #0f6cbd 5%, #fbfbfc), #fbfbfc);
-}
-
-.update-state-card.is-downloading {
-  border-color: color-mix(in srgb, #0f6cbd 18%, #e7eaf0);
-  background: linear-gradient(180deg, color-mix(in srgb, #0f6cbd 5%, #fbfbfc), #fbfbfc);
-}
-
-.update-state-card.vertical-layout {
-  align-items: stretch;
-  gap: 0.85rem;
-}
-
 .update-state-copy {
   display: flex;
   flex-direction: column;
@@ -318,6 +340,7 @@ const handleChannelChange = async (event: Event) => {
   color: #5f6b7a;
   font-size: 0.82rem;
   line-height: 1.45;
+  font-variant-numeric: tabular-nums;
   word-break: break-word;
 }
 
@@ -341,16 +364,9 @@ const handleChannelChange = async (event: Event) => {
   flex-wrap: wrap;
 }
 
-.update-download-percent {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.16rem 0.55rem;
-  border-radius: 999px;
-  background: color-mix(in srgb, #0f6cbd 12%, #ffffff);
-  color: #0f6cbd;
-  font-size: 0.78rem;
-  font-weight: 700;
-  line-height: 1.35;
+.update-cancel-button {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 @media (max-width: 720px) {
@@ -359,9 +375,12 @@ const handleChannelChange = async (event: Event) => {
   }
 
   .update-state-header {
-    justify-content: flex-start;
-    align-items: flex-start;
     flex-direction: column;
+    align-items: stretch;
+  }
+
+  .update-cancel-button {
+    align-self: flex-end;
   }
 }
 </style>

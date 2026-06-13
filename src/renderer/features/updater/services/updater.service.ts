@@ -35,6 +35,7 @@ export interface UpdaterConfig {
 export interface UpdateEventHandlers {
   onChecking?: (context: UpdateEventContext) => void;
   onAvailable?: (info: UpdateInfo, context: UpdateEventContext) => void;
+  onCancelled?: (info: UpdateInfo) => void;
   onNotAvailable?: (info: UpdateInfo, context: UpdateEventContext) => void;
   onDownloadProgress?: (progress: ProgressInfo) => void;
   onDownloaded?: (info: UpdateInfo) => void;
@@ -106,6 +107,10 @@ export const updaterService = {
     return await electronApi.updater.download();
   },
 
+  async cancelDownload(): Promise<{ success: boolean }> {
+    return await electronApi.updater.cancelDownload();
+  },
+
   async install(): Promise<{ success: boolean }> {
     return await electronApi.updater.install();
   },
@@ -126,6 +131,9 @@ export const updaterService = {
       electronApi.updater.onAvailable((payload: unknown) => {
         const context = normalizeUpdateContext(payload);
         handlers.onAvailable?.(normalizeUpdateInfo(payload), context);
+      }),
+      electronApi.updater.onCancelled((payload: unknown) => {
+        handlers.onCancelled?.(normalizeUpdateInfo(payload));
       }),
       electronApi.updater.onNotAvailable((payload: unknown) => {
         const context = normalizeUpdateContext(payload);

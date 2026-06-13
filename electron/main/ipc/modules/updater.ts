@@ -24,6 +24,12 @@ export function registerUpdaterHandlers() {
     return { success: true };
   });
 
+  ipcMain.handle(IPC_CHANNELS.UPDATER_USER_CANCEL_DOWNLOAD, async () => {
+    logger.debug('Cancelling update download...');
+    updaterService.cancelDownload();
+    return { success: true };
+  });
+
   ipcMain.handle(IPC_CHANNELS.UPDATER_INSTALL, () => {
     logger.debug('Installing update...');
     updaterService.quitAndInstall();

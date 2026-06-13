@@ -1,5 +1,6 @@
 import updaterPkg from 'electron-updater';
 const { autoUpdater } = updaterPkg;
+import { CancellationToken } from 'builder-util-runtime';
 import { app, BrowserWindow } from 'electron';
 import {
   buildUpdateFeedUrl,
@@ -18,6 +19,7 @@ class UpdaterService {
   private mainWindow: BrowserWindow | null;
   private updateCheckInterval: ReturnType<typeof setInterval> | null;
   private initialCheckTimeout: ReturnType<typeof setTimeout> | null;
+  private downloadCancellationToken: CancellationToken | null;
   private isChecking: boolean;
   private currentCheckSilent: boolean;
 
@@ -25,6 +27,7 @@ class UpdaterService {
     this.mainWindow = null;
     this.updateCheckInterval = null;
     this.initialCheckTimeout = null;
+    this.downloadCancellationToken = null;
     this.isChecking = false;
     this.currentCheckSilent = false;
 
@@ -119,6 +122,16 @@ class UpdaterService {
       });
     });
 
+    autoUpdater.on('update-cancelled', (info) => {
+      logger.debug('Update download cancelled', { version: info.version });
+      this.sendToRenderer('updater:download-cancelled', {
+        version: info.version,
+        releaseDate: info.releaseDate,
+        releaseNotes: info.releaseNotes,
+        files: info.files,
+      });
+    });
+
     autoUpdater.on('error', (error: unknown) => {
       logger.error('Update error', { error: getErrorMessage(error) });
       const silent = this.currentCheckSilent;
@@ -176,17 +189,41 @@ class UpdaterService {
   }
 
   async downloadUpdate(): Promise<void> {
+    if (this.downloadCancellationToken) {
+      logger.warn('Update download already in progress');
+      return;
+    }
+
+    this.downloadCancellationToken = new CancellationToken();
+
     try {
       logger.debug('Starting update download');
       this.sendToRenderer('updater:download-start');
-      await autoUpdater.downloadUpdate();
+      await autoUpdater.downloadUpdate(this.downloadCancellationToken);
     } catch (error: unknown) {
+      if (this.isDownloadCancelled(error)) {
+        logger.info('Update download cancelled');
+        return;
+      }
+
       logger.error('Failed to download update', { error: getErrorMessage(error) });
       this.sendToRenderer('updater:error', {
         message: getErrorMessage(error),
         code: 'DOWNLOAD_FAILED',
       });
+    } finally {
+      this.clearDownloadCancellationToken();
     }
+  }
+
+  cancelDownload(): void {
+    if (!this.downloadCancellationToken) {
+      logger.debug('No update download to cancel');
+      return;
+    }
+
+    logger.debug('Cancelling update download');
+    this.downloadCancellationToken.cancel();
   }
 
   quitAndInstall(): void {
@@ -243,8 +280,18 @@ class UpdaterService {
 
   destroy(): void {
     this.stopAutoCheck();
+    this.clearDownloadCancellationToken();
     this.mainWindow = null;
     this.currentCheckSilent = false;
+  }
+
+  private clearDownloadCancellationToken(): void {
+    this.downloadCancellationToken?.dispose();
+    this.downloadCancellationToken = null;
+  }
+
+  private isDownloadCancelled(error: unknown): boolean {
+    return getErrorMessage(error, '') === 'cancelled';
   }
 }
 

@@ -548,11 +548,13 @@ declare global {
       updater?: {
         check: (silent?: boolean) => Promise<{ success: boolean }>;
         download: () => Promise<{ success: boolean }>;
+        cancelDownload: () => Promise<{ success: boolean }>;
         install: () => Promise<{ success: boolean }>;
         getVersion: () => Promise<string>;
         updateConfig: (config: UpdaterConfigPayload) => Promise<{ success: boolean }>;
         onChecking: (callback: (data: UpdaterCheckPayload) => void) => () => void;
         onAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
+        onCancelled: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onNotAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onDownloadProgress: (callback: (data: UpdaterProgressPayload) => void) => () => void;
         onDownloaded: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
