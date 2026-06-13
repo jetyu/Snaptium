@@ -9,6 +9,7 @@ export function useUpdater() {
     ...state,
     checkForUpdates: updaterStore.checkForUpdates,
     downloadUpdate: updaterStore.downloadUpdate,
+    cancelDownload: updaterStore.cancelDownload,
     installUpdate: updaterStore.installUpdate,
     getCurrentVersion: updaterStore.getCurrentVersion,
     updateConfig: updaterStore.updateConfig,

@@ -39,19 +39,28 @@ function getErrorMessage(err: Error | { message?: string } | string | null | und
   return fallback;
 }
 
-export const useUpdaterStore = defineStore('updater', () => {
-  const currentVersion = ref('0.0.0');
-  const isChecking = ref(false);
-  const isDownloading = ref(false);
-  const updateAvailable = ref(false);
-  const isUpdateDownloaded = ref(false);
-  const updateInfo = ref<UpdateInfo | null>(null);
-  const downloadProgress = ref<ProgressInfo>({
+function createEmptyDownloadProgress(): ProgressInfo {
+  return {
     percent: 0,
     bytesPerSecond: 0,
     transferred: 0,
     total: 0,
-  });
+  };
+}
+
+function isCancelledUpdateError(errorInfo: ErrorInfo): boolean {
+  return errorInfo.code === 'CANCELLED' || errorInfo.message.trim().toLowerCase() === 'cancelled';
+}
+
+export const useUpdaterStore = defineStore('updater', () => {
+  const currentVersion = ref('0.0.0');
+  const isChecking = ref(false);
+  const isDownloading = ref(false);
+  const isDownloadRequestPending = ref(false);
+  const updateAvailable = ref(false);
+  const isUpdateDownloaded = ref(false);
+  const updateInfo = ref<UpdateInfo | null>(null);
+  const downloadProgress = ref<ProgressInfo>(createEmptyDownloadProgress());
   const error = ref<ErrorInfo | null>(null);
   const availableActionsDismissed = ref(false);
   const installActionsDismissed = ref(false);
@@ -67,6 +76,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     !isChecking.value &&
     !isSilentChecking.value &&
     !isDownloading.value &&
+    !isDownloadRequestPending.value &&
     !isUpdateDownloaded.value &&
     !availableActionsDismissed.value &&
     !error.value
@@ -77,6 +87,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     Boolean(updateInfo.value) &&
     !isChecking.value &&
     !isSilentChecking.value &&
+    !isDownloadRequestPending.value &&
     !installActionsDismissed.value &&
     !error.value
   );
@@ -108,6 +119,13 @@ export const useUpdaterStore = defineStore('updater', () => {
 
     return 'idle';
   });
+
+  function resetDownloadState(): void {
+    isChecking.value = false;
+    isDownloading.value = false;
+    isUpdateDownloaded.value = false;
+    downloadProgress.value = createEmptyDownloadProgress();
+  }
 
   async function getCurrentVersion(): Promise<void> {
     try {
@@ -161,6 +179,17 @@ export const useUpdaterStore = defineStore('updater', () => {
     error.value = null;
   }
 
+  function handleUpdateCancelled(info: UpdateInfo): void {
+    resetDownloadState();
+    updateAvailable.value = true;
+    updateInfo.value = info;
+    error.value = null;
+    availableActionsDismissed.value = false;
+    installActionsDismissed.value = false;
+    showNoUpdateResult.value = false;
+    isSilentChecking.value = false;
+  }
+
   function handleUpdateNotAvailable(_info: UpdateInfo, context: UpdateEventContext): void {
     isChecking.value = false;
     isSilentChecking.value = false;
@@ -195,6 +224,16 @@ export const useUpdaterStore = defineStore('updater', () => {
     isChecking.value = false;
     isDownloading.value = false;
     isSilentChecking.value = false;
+    if (isCancelledUpdateError(errorInfo)) {
+      resetDownloadState();
+      updateAvailable.value = true;
+      error.value = null;
+      availableActionsDismissed.value = false;
+      installActionsDismissed.value = false;
+      showNoUpdateResult.value = false;
+      return;
+    }
+
     if (context.silent) {
       return;
     }
@@ -222,19 +261,15 @@ export const useUpdaterStore = defineStore('updater', () => {
   }
 
   async function downloadUpdate(): Promise<void> {
-    if (isDownloading.value) return;
+    if (isDownloading.value || isDownloadRequestPending.value) return;
 
+    isDownloadRequestPending.value = true;
     isDownloading.value = true;
     isUpdateDownloaded.value = false;
     availableActionsDismissed.value = true;
     installActionsDismissed.value = false;
     error.value = null;
-    downloadProgress.value = {
-      percent: 0,
-      bytesPerSecond: 0,
-      transferred: 0,
-      total: 0,
-    };
+    downloadProgress.value = createEmptyDownloadProgress();
 
     try {
       await updaterService.download();
@@ -243,8 +278,18 @@ export const useUpdaterStore = defineStore('updater', () => {
         message: getErrorMessage(err as Error | { message?: string }, translate('updater.downloadFailed')),
         code: 'DOWNLOAD_FAILED',
       };
+    } finally {
       isDownloading.value = false;
+      isDownloadRequestPending.value = false;
     }
+  }
+
+  async function cancelDownload(): Promise<void> {
+    if (!isDownloading.value) {
+      return;
+    }
+
+    await updaterService.cancelDownload();
   }
 
   async function installUpdate(): Promise<void> {
@@ -281,6 +326,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     cleanupListeners = updaterService.subscribe({
       onChecking: handleUpdateChecking,
       onAvailable: handleUpdateAvailable,
+      onCancelled: handleUpdateCancelled,
       onNotAvailable: handleUpdateNotAvailable,
       onDownloadProgress: handleDownloadProgress,
       onDownloaded: handleUpdateDownloaded,
@@ -305,10 +351,12 @@ export const useUpdaterStore = defineStore('updater', () => {
     error,
     showNoUpdateResult,
     updatePanelState,
+    isDownloadRequestPending,
     showAvailableUpdateActions,
     showInstallActions,
     checkForUpdates,
     downloadUpdate,
+    cancelDownload,
     installUpdate,
     dismissAvailableUpdateActions,
     dismissInstallActions,

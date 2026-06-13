@@ -239,6 +239,7 @@ const electronAPI = Object.freeze({
   updater: Object.freeze({
     check: (silent: boolean) => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_CHECK, silent),
     download: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_DOWNLOAD),
+    cancelDownload: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_USER_CANCEL_DOWNLOAD),
     install: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_INSTALL),
     getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_GET_VERSION),
     updateConfig: (config: { autoCheckUpdates: boolean; updateCheckInterval: number; updateChannel: 'stable' | 'beta' | 'dev' }) =>
@@ -252,6 +253,11 @@ const electronAPI = Object.freeze({
       const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
       ipcRenderer.on(IPC_CHANNELS.UPDATER_AVAILABLE, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_AVAILABLE, subscription);
+    },
+    onCancelled: (callback: DataCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_DOWNLOAD_CANCELLED, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_DOWNLOAD_CANCELLED, subscription);
     },
     onNotAvailable: (callback: DataCallback) => {
       const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
