@@ -1,0 +1,4 @@
+root = true
+
+[*.json]
+charset = utf-8
