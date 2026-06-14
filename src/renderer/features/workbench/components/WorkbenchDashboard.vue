@@ -389,7 +389,7 @@ const TODO_TASK_REGEX = /^[-*+]\s+\[\s\]\s+(.+)$/;
 const TODO_MARKER_REGEX = /(?:^|\s)(?:TODO|TBD|FIXME)\b:?\s*(.+)?$/i;
 const CODE_FENCE_REGEX = /^\s*(?:```|~~~)/;
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const { openSearchView } = useSearch();
 const { notes, notebooks, allTags, createNote, selectNote } = useWorkspace();
 const { openSettings } = useSettings();
