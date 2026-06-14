@@ -8,13 +8,8 @@
           <p class="setting-label">{{ t('label.softwareAutoUpdate') }}</p>
           <p class="setting-description">{{ t('text.softwareAutoUpdate') }}</p>
         </div>
-        <button
-          type="button"
-          class="startup-switch"
-          :class="{ enabled: settingsStore.config.autoCheckUpdates }"
-          :aria-pressed="settingsStore.config.autoCheckUpdates"
-          @click="handleAutoUpdateToggle"
-        >
+        <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.autoCheckUpdates }"
+          :aria-pressed="settingsStore.config.autoCheckUpdates" @click="handleAutoUpdateToggle">
           <span class="startup-switch-track">
             <span class="startup-switch-thumb" />
           </span>
@@ -31,15 +26,8 @@
             <p class="setting-description">{{ t('text.updateCheckInterval') }}</p>
           </div>
           <div class="number-input-container">
-            <input
-              type="number"
-              class="settings-input number-input"
-              :value="updateIntervalHours"
-              min="1"
-              max="168"
-              :disabled="!settingsStore.config.autoCheckUpdates"
-              @change="handleIntervalChange"
-            />
+            <input type="number" class="settings-input number-input" :value="updateIntervalHours" min="1" max="168"
+              :disabled="!settingsStore.config.autoCheckUpdates" @change="handleIntervalChange" />
           </div>
         </section>
 
@@ -65,19 +53,13 @@
             <span class="update-version-value">v{{ currentVersion }}</span>
           </div>
         </div>
-        <button
-          type="button"
-          class="action-button"
-          :disabled="isChecking || isDownloading || isDownloadRequestPending"
-          @click="handleCheckForUpdates"
-        >
+        <button type="button" class="action-button" :disabled="isChecking || isDownloading || isDownloadRequestPending"
+          @click="handleCheckForUpdates">
           {{ isChecking ? t('button.checkingForUpdates') : t('menu.help.update') }}
         </button>
       </section>
 
-      <section
-        class="setting-card update-state-card"
-      >
+      <section class="setting-card update-state-card">
         <div class="update-state-header">
           <div class="setting-copy update-state-copy">
             <p class="setting-label">{{ updateStateTitle }}</p>
@@ -85,12 +67,8 @@
               {{ updateStateMessage }}
             </p>
           </div>
-          <button
-            v-if="isDownloadingState"
-            type="button"
-            class="action-button secondary update-cancel-button"
-            @click="handleCancelDownload"
-          >
+          <button v-if="isDownloadingState" type="button" class="action-button secondary update-cancel-button"
+            @click="handleCancelDownload">
             {{ t('updater.cancel') }}
           </button>
         </div>
@@ -98,12 +76,8 @@
           <button v-if="showAvailableUpdateActions" type="button" class="action-button" @click="handleDownloadUpdate">
             {{ t('updater.download') }}
           </button>
-          <button
-            v-if="showAvailableUpdateActions"
-            type="button"
-            class="action-button secondary"
-            @click="handleDismissAvailableUpdate"
-          >
+          <button v-if="showAvailableUpdateActions" type="button" class="action-button secondary"
+            @click="handleDismissAvailableUpdate">
             {{ t('updater.later') }}
           </button>
           <button v-if="showInstallActions" type="button" class="action-button" @click="handleInstallUpdate">
@@ -323,7 +297,7 @@ const handleChannelChange = async (event: Event) => {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  width: 100%;
+  flex: 1;
   min-width: 0;
 }
 
@@ -384,4 +358,3 @@ const handleChannelChange = async (event: Event) => {
   }
 }
 </style>
-
