@@ -1224,7 +1224,7 @@ watch(
   flex-wrap: wrap;
   gap: 10px;
   padding-top: 0;
-  margin-top: 0;
+  margin-top: 20px;
 }
 
 .hero-action {
