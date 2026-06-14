@@ -215,7 +215,7 @@
             <article v-if="primaryInsightSummaryItem" class="insight-achievement-hero">
               <span class="insight-achievement-hero__main">
                 <span class="insight-achievement-hero__label">{{ primaryInsightSummaryItem.label }}</span>
-                <strong>{{ primaryInsightSummaryItem.value }}</strong>
+                <strong class="insight-achievement-hero__value">{{ primaryInsightSummaryItem.value }}</strong>
               </span>
               <span class="insight-achievement-hero__icon">
                 <component :is="primaryInsightSummaryItem.icon" :size="20" />
@@ -308,7 +308,6 @@ import {
   IconFileText,
   IconChartRadar,
   IconHierarchy,
-  IconStar,
   IconAlignBoxBottomCenter,
   IconDatabaseSearch,
   IconChartHistogram,
@@ -475,7 +474,6 @@ const smartRecommendationLaneItems = computed<LocalSmartRecommendationItem[]>(()
 const behaviorFeedback = computed(() => {
   const now = Date.now();
   const todayStart = getDayStartTimestamp(now);
-  const sevenDayThreshold = todayStart - (6 * DAY_MS);
   const activeDays = new Set(notes.value.map((note) => getLocalDateKey(note.updatedAt)));
 
   let streakDays = 0;
@@ -487,8 +485,6 @@ const behaviorFeedback = computed(() => {
 
   return {
     totalCharacters: notes.value.reduce((total, note) => total + getCharacterCount(note.content), 0),
-    totalNotes: notes.value.length,
-    activeLast7Days: notes.value.filter((note) => note.updatedAt >= sevenDayThreshold).length,
     streakDays,
   };
 });
@@ -517,12 +513,6 @@ const recentActivity = computed<ActivityEntry[]>(() => {
 });
 
 const recentActivityPreview = computed<ActivityEntry[]>(() => recentActivity.value);
-
-const starredCount = computed<number>(() => {
-  const sNotes = notes.value.filter((note) => note.starred).length;
-  const sNotebooks = notebooks.value.filter((nb) => nb.starred).length;
-  return sNotes + sNotebooks;
-});
 
 const topTopicLabels = computed<string[]>(() => {
   const clusterLabels = knowledgeTopicEntries.value.slice(0, 4).map((topic) => topic.label);
@@ -596,12 +586,6 @@ const insightSummaryItems = computed<InsightSummaryItem[]>(() => {
       label: t('workbench.stats.todayQuestions'),
       value: formatNumber(todayQuestionCount.value),
       icon: IconDatabaseSearch,
-    },
-    {
-      id: 'favorites',
-      label: t('workbench.stats.favoriteCount'),
-      value: formatNumber(starredCount.value),
-      icon: IconStar,
     },
     {
       id: 'streak',
@@ -2049,7 +2033,7 @@ watch(
 .insights-block {
   min-width: 0;
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .insights-block--stats {
@@ -2083,15 +2067,14 @@ watch(
   white-space: nowrap;
 }
 
-.insight-achievement-hero strong {
+.insight-achievement-hero__value {
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
   color: var(--workbench-ink);
-  font-size: 1.32rem;
+  font-size: 1.4rem;
   font-weight: 820;
   letter-spacing: 0;
-  line-height: 1;
-  text-overflow: ellipsis;
+  line-height: 1.05;
   white-space: nowrap;
 }
 
@@ -2106,14 +2089,14 @@ watch(
 
 .insight-summary-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 6px 10px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
   background: transparent;
 }
 
 .insight-summary-item {
   min-width: 0;
-  min-height: 16px;
+  min-height: 18px;
   display: grid;
   grid-template-columns: 16px minmax(0, 1fr) auto;
   align-items: center;
