@@ -1034,7 +1034,7 @@ watch(
   --workbench-recommendation-card-height: var(--workbench-feed-card-height);
   --workbench-panel-header-padding: 14px 18px 8px;
   --workbench-panel-body-padding: 0 18px 14px;
-  --workbench-feed-row-min-height: 50px;
+  --workbench-feed-row-min-height: 38px;
   --workbench-side-card-padding: 16px 18px;
   --workbench-hero-copy-offset: 6px;
   flex: 1;
@@ -1444,12 +1444,19 @@ watch(
   align-items: stretch;
 }
 
+.panel-row--recent .panel__header {
+  padding: 16px 18px 12px;
+}
+
 .panel-row--recent .feed-list {
-  grid-auto-rows: var(--workbench-feed-row-min-height);
+  gap: 7px;
 }
 
 .panel-row--recent .feed-row {
-  height: var(--workbench-feed-row-min-height);
+  gap: 9px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 12px;
 }
 
 .panel-row--recent .module-empty {
@@ -1493,24 +1500,24 @@ watch(
 }
 
 .feed-row:last-child {
-  border-bottom: 0;
+  border-color: transparent;
 }
 
 .feed-list--interactive .feed-row:hover {
-  border-bottom-color: transparent;
+  border-color: var(--workbench-border);
   border-radius: 12px;
   background: var(--workbench-soft);
-  box-shadow: inset 0 0 0 1px var(--workbench-border);
+  box-shadow: none;
 }
 
 .feed-row__icon {
-  width: 27px;
-  height: 27px;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: 8px;
   background: var(--workbench-soft);
   color: var(--workbench-blue);
 }
@@ -1519,15 +1526,15 @@ watch(
   min-width: 0;
   display: grid;
   flex: 1;
-  gap: 3px;
+  gap: 4px;
 }
 
 .feed-row__title {
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-ink);
-  font-size: 0.86rem;
-  font-weight: 730;
+  font-size: 0.82rem;
+  font-weight: 780;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1536,8 +1543,8 @@ watch(
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-muted);
-  font-size: 0.76rem;
-  font-weight: 540;
+  font-size: 0.68rem;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1545,8 +1552,8 @@ watch(
 .feed-row__time {
   flex-shrink: 0;
   color: var(--workbench-muted);
-  font-size: 0.76rem;
-  font-weight: 620;
+  font-size: 0.68rem;
+  font-weight: 650;
   white-space: nowrap;
 }
 
