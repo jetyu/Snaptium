@@ -170,7 +170,7 @@ jobs:
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
             echo "make_latest=false" >> "$GITHUB_OUTPUT"
             echo "r2_channel=alpha" >> "$GITHUB_OUTPUT"
-            echo "release_name=Snaptium $VERSION Alpha" >> "$GITHUB_OUTPUT"
+            echo "release_name=Snaptium $VERSION" >> "$GITHUB_OUTPUT"
 
           else
             echo "::error::Tag $TAG does not match the release policy."
