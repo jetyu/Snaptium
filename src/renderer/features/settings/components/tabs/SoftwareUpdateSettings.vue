@@ -67,18 +67,19 @@
               {{ updateStateMessage }}
             </p>
           </div>
-          <button v-if="isDownloadingState" type="button" class="action-button secondary update-cancel-button"
-            @click="handleCancelDownload">
-            {{ t('updater.cancel') }}
-          </button>
         </div>
-        <div v-if="showAvailableUpdateActions || showInstallActions || showRetryAction" class="update-actions">
+        <div v-if="showAvailableUpdateActions || isDownloadingState || showInstallActions || showRetryAction"
+          class="update-actions" :class="{ 'is-downloading': isDownloadingState }">
           <button v-if="showAvailableUpdateActions" type="button" class="action-button" @click="handleDownloadUpdate">
             {{ t('updater.download') }}
           </button>
           <button v-if="showAvailableUpdateActions" type="button" class="action-button secondary"
             @click="handleDismissAvailableUpdate">
             {{ t('updater.later') }}
+          </button>
+          <button v-if="isDownloadingState" type="button" class="action-button secondary update-cancel-button"
+            @click="handleCancelDownload">
+            {{ t('updater.cancel') }}
           </button>
           <button v-if="showInstallActions" type="button" class="action-button" @click="handleInstallUpdate">
             {{ t('updater.installNow') }}
@@ -297,7 +298,6 @@ const handleChannelChange = async (event: Event) => {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
-  flex: 1;
   min-width: 0;
 }
 
@@ -338,6 +338,10 @@ const handleChannelChange = async (event: Event) => {
   flex-wrap: wrap;
 }
 
+.update-actions.is-downloading {
+  justify-content: flex-end;
+}
+
 .update-cancel-button {
   flex-shrink: 0;
   white-space: nowrap;
@@ -346,6 +350,10 @@ const handleChannelChange = async (event: Event) => {
 @media (max-width: 720px) {
   .update-actions {
     justify-content: flex-start;
+  }
+
+  .update-actions.is-downloading {
+    justify-content: flex-end;
   }
 
   .update-state-header {
