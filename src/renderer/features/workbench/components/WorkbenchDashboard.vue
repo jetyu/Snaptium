@@ -1029,7 +1029,8 @@ watch(
   --workbench-gap: 14px;
   --workbench-card-radius: 16px;
   --workbench-sidebar-min: 300px;
-  --workbench-hero-min-height: 164px;
+  --workbench-overview-card-height: 220px;
+  --workbench-overview-row-height: 103px;
   --workbench-feed-card-height: clamp(344px, 19vw, 420px);
   --workbench-recommendation-card-height: var(--workbench-feed-card-height);
   --workbench-panel-header-padding: 14px 18px 8px;
@@ -1061,6 +1062,8 @@ watch(
 }
 
 :global(.main-shell.main-shell--maximized) .workbench-dashboard {
+  --workbench-overview-card-height: 220px;
+  --workbench-overview-row-height: 103px;
   --workbench-hero-copy-offset: 6px;
 }
 
@@ -1075,7 +1078,7 @@ watch(
     "recent tags"
     "smart topic";
   grid-template-rows:
-    minmax(76px, auto) minmax(64px, auto) var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
+    var(--workbench-overview-row-height) var(--workbench-overview-row-height) var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
   gap: var(--workbench-gap);
   align-items: stretch;
   min-height: 0;
@@ -1089,7 +1092,8 @@ watch(
 
 .hero-card {
   grid-area: hero;
-  min-height: var(--workbench-hero-min-height);
+  height: var(--workbench-overview-card-height);
+  min-height: var(--workbench-overview-card-height);
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   gap: var(--workbench-gap);
@@ -1287,6 +1291,7 @@ watch(
 .hero-art {
   position: relative;
   align-self: stretch;
+  height: var(--workbench-overview-card-height);
   min-height: 0;
   margin: -14px 0 -10px;
   overflow: hidden;
@@ -2053,7 +2058,7 @@ watch(
 
 .insight-achievement-hero {
   min-width: 0;
-  min-height: 48px;
+  min-height: 36px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 26px;
   align-items: center;
@@ -2108,7 +2113,7 @@ watch(
 
 .insight-summary-item {
   min-width: 0;
-  min-height: 22px;
+  min-height: 16px;
   display: grid;
   grid-template-columns: 16px minmax(0, 1fr) auto;
   align-items: center;
@@ -2309,6 +2314,7 @@ watch(
 .side-card--insights {
   grid-area: insights;
   align-self: stretch;
+  height: var(--workbench-overview-card-height);
   grid-template-rows: auto auto;
   gap: 10px;
   padding: 12px 14px;
