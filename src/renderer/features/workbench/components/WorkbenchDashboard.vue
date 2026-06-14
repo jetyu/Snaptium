@@ -2042,10 +2042,10 @@ watch(
 
 .insight-achievement-hero {
   min-width: 0;
-  min-height: 36px;
+  min-height: 60px;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 26px;
-  align-items: center;
+  align-items: start;
   gap: 8px;
   overflow: hidden;
   padding: 0;
@@ -2054,7 +2054,7 @@ watch(
 .insight-achievement-hero__main {
   min-width: 0;
   display: grid;
-  gap: 3px;
+  gap: 2px;
 }
 
 .insight-achievement-hero__label {
@@ -2084,6 +2084,7 @@ watch(
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: start;
   color: color-mix(in srgb, var(--workbench-blue) 82%, var(--workbench-ink));
 }
 
@@ -2300,7 +2301,7 @@ watch(
   height: var(--workbench-overview-card-height);
   grid-template-rows: auto auto;
   gap: 10px;
-  padding: 12px 14px;
+  padding: 8px 14px 12px;
 }
 
 .side-card--tags {
