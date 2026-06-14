@@ -978,6 +978,7 @@
   "workbench.sidebar.activeTags": "活跃标签",
   "workbench.sidebar.aiModel": "配置 AI 模型",
   "workbench.sidebar.growth": "成长趋势",
+  "workbench.sidebar.overview": "关键概览",
   "workbench.sidebar.knowledgeHeat": "知识热力图",
   "workbench.sidebar.knowledgeTopics": "主题热度榜",
   "workbench.sidebar.syncConfig": "配置同步",
