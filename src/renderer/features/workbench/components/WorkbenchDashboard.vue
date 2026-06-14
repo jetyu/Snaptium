@@ -197,8 +197,18 @@
           </header>
 
           <div class="insights-block insights-block--stats">
+            <article v-if="primaryInsightSummaryItem" class="insight-achievement-hero">
+              <span class="insight-achievement-hero__main">
+                <span class="insight-achievement-hero__label">{{ primaryInsightSummaryItem.label }}</span>
+                <strong>{{ primaryInsightSummaryItem.value }}</strong>
+              </span>
+              <span class="insight-achievement-hero__icon">
+                <component :is="primaryInsightSummaryItem.icon" :size="20" />
+              </span>
+            </article>
+
             <div class="insight-summary-grid">
-              <article v-for="item in insightSummaryItems" :key="item.id" class="insight-summary-item">
+              <article v-for="item in secondaryInsightSummaryItems" :key="item.id" class="insight-summary-item">
                 <span class="insight-summary-item__icon">
                   <component :is="item.icon" :size="13" />
                 </span>
@@ -586,6 +596,8 @@ const insightSummaryItems = computed<InsightSummaryItem[]>(() => {
     },
   ];
 });
+const primaryInsightSummaryItem = computed<InsightSummaryItem | null>(() => insightSummaryItems.value[0] ?? null);
+const secondaryInsightSummaryItems = computed<InsightSummaryItem[]>(() => insightSummaryItems.value.slice(1));
 
 const recentEditedTime = computed<string>(() => {
   const targetNote = sortedNotesByUpdated.value[0];
@@ -2022,12 +2034,62 @@ watch(
   gap: 10px;
 }
 
+.insights-block--stats {
+  align-content: start;
+}
+
+.insight-achievement-hero {
+  min-width: 0;
+  min-height: 64px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 30px;
+  align-items: center;
+  gap: 10px;
+  overflow: hidden;
+  padding: 0;
+}
+
+.insight-achievement-hero__main {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.insight-achievement-hero__label {
+  min-width: 0;
+  overflow: hidden;
+  color: color-mix(in srgb, var(--workbench-blue) 70%, var(--workbench-ink));
+  font-size: 0.72rem;
+  font-weight: 760;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insight-achievement-hero strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--workbench-ink);
+  font-size: 1.6rem;
+  font-weight: 820;
+  letter-spacing: 0;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insight-achievement-hero__icon {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--workbench-blue) 82%, var(--workbench-ink));
+}
+
 .insight-summary-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 18px;
-  row-gap: 8px;
-  padding: 4px 0 2px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
   background: transparent;
 }
 
@@ -2035,14 +2097,16 @@ watch(
   min-width: 0;
   min-height: 24px;
   display: grid;
-  grid-template-columns: 16px minmax(0, 1fr) auto;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
   align-items: center;
   gap: 8px;
-  padding: 3px 0;
+  padding: 0;
 }
 
 .insight-summary-item__icon {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
   color: color-mix(in srgb, var(--workbench-blue) 78%, var(--workbench-muted));
 }
 
@@ -2050,7 +2114,7 @@ watch(
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-muted);
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 660;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2058,11 +2122,13 @@ watch(
 
 .insight-summary-item strong {
   min-width: 0;
+  overflow: hidden;
   color: var(--workbench-ink);
-  font-size: 0.86rem;
+  font-size: 0.98rem;
   font-weight: 780;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
   text-align: right;
+  text-overflow: ellipsis;
   white-space: nowrap;
 }
 
@@ -2231,7 +2297,7 @@ watch(
   grid-area: insights;
   align-self: stretch;
   grid-template-rows: auto auto;
-  gap: 14px;
+  gap: 16px;
   padding: 14px 16px;
 }
 
