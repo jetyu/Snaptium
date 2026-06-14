@@ -9,16 +9,18 @@
               <strong>{{ t('workbench.hero.dailyQuote') }}</strong>
               <span>{{ dailyQuoteText }}</span>
             </em>
-            <p class="hero-greeting">{{ greetingText }}</p>
-            <h1>{{ heroLeadText }}</h1>
-            <div class="hero-meta">
-              <span v-if="hasNotes">{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
-            </div>
-            <div class="hero-actions">
-              <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
-                <IconPencil :size="14" />
-                <span>{{ t('workbench.action.continueWriting') }}</span>
-              </button>
+            <div class="hero-copy-body">
+              <p class="hero-greeting">{{ greetingText }}</p>
+              <h1>{{ heroLeadText }}</h1>
+              <div class="hero-meta">
+                <span v-if="hasNotes">{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
+              </div>
+              <div class="hero-actions">
+                <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
+                  <IconPencil :size="14" />
+                  <span>{{ t('workbench.action.continueWriting') }}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -41,22 +43,15 @@
           </div>
         </section>
 
-        <section class="overview-section">
-          <div class="overview-grid">
-            <article v-for="metric in overviewMetrics" :key="metric.id" class="overview-card">
-              <div class="overview-card__head">
-                <component :is="metric.icon" :size="15" />
-                <span>{{ metric.label }}</span>
-              </div>
-              <p class="overview-card__content">{{ metric.value }}</p>
-            </article>
-          </div>
-        </section>
-
         <div class="panel-row panel-row--recent">
           <section class="panel panel--half">
             <header class="panel__header">
-              <h2>{{ t('workbench.module.recentActivity') }}</h2>
+              <h2 class="module-title">
+                <span class="module-title__icon">
+                  <IconClock :size="14" />
+                </span>
+                {{ t('workbench.module.recentActivity') }}
+              </h2>
             </header>
 
             <div v-if="recentActivityPreview.length > 0" class="feed-list feed-list--interactive">
@@ -78,7 +73,12 @@
 
           <section class="panel panel--half">
             <header class="panel__header">
-              <h2>{{ t('workbench.module.recentQuestions') }}</h2>
+              <h2 class="module-title">
+                <span class="module-title__icon">
+                  <IconDatabaseSearch :size="14" />
+                </span>
+                {{ t('workbench.module.recentQuestions') }}
+              </h2>
             </header>
 
             <div v-if="recentQuestionEntriesPreview.length > 0" class="feed-list feed-list--interactive">
@@ -113,8 +113,12 @@
 
         <section class="panel panel--smart">
           <header class="panel__header">
-            <h2>{{ t('workbench.module.smartRecommendation') }}</h2>
-            <span class="panel-badge">{{ t('workbench.tag.aiEnhanced') }}</span>
+            <h2 class="module-title">
+              <span class="module-title__icon">
+                <IconBrain :size="14" />
+              </span>
+              {{ t('workbench.module.smartRecommendation') }}
+            </h2>
           </header>
 
           <div v-if="primarySmartRecommendation" class="smart-grid">
@@ -198,44 +202,42 @@
 
       <aside class="workbench-side">
         <section class="side-card side-card--insights">
-          <header class="side-card__header side-card__header--compact side-card__header--insights">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--growth">
+          <header class="side-card__header side-card__header--insights">
+            <h3 class="module-title">
+              <span class="module-title__icon">
                 <IconChartRadar :size="14" />
               </span>
-              {{ t('workbench.sidebar.growth') }}
+              {{ t('workbench.sidebar.overview') }}
             </h3>
           </header>
 
           <div class="insights-block insights-block--stats">
-            <div class="stats-list stats-list--compact">
-              <div v-for="item in todayStatItems" :key="item.label" class="stats-row">
-                <IconPoint :size="12" class="stats-row__icon" />
-                <span>{{ item.label }}</span>
-                <strong>{{ item.value }}</strong>
-              </div>
-            </div>
-          </div>
+            <article v-if="primaryInsightSummaryItem" class="insight-achievement-hero">
+              <span class="insight-achievement-hero__main">
+                <span class="insight-achievement-hero__label">{{ primaryInsightSummaryItem.label }}</span>
+                <strong class="insight-achievement-hero__value">{{ primaryInsightSummaryItem.value }}</strong>
+              </span>
+              <span class="insight-achievement-hero__icon">
+                <component :is="primaryInsightSummaryItem.icon" :size="20" />
+              </span>
+            </article>
 
-          <div class="insights-block insights-block--growth">
-            <div class="growth-chart growth-chart--compact">
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-                <polyline :points="growthPolyline" />
-              </svg>
-              <div class="growth-chart__axis" aria-hidden="true">
-                <span v-for="label in growthAxisLabels" :key="label.key" :title="label.title">
-                  {{ label.label }}
+            <div class="insight-summary-grid">
+              <article v-for="item in secondaryInsightSummaryItems" :key="item.id" class="insight-summary-item">
+                <span class="insight-summary-item__icon">
+                  <component :is="item.icon" :size="13" />
                 </span>
-              </div>
+                <span class="insight-summary-item__label">{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </article>
             </div>
-            <p class="side-card__muted side-card__muted--compact">{{ growthLabel }}</p>
           </div>
         </section>
 
         <section class="side-card side-card--tags">
           <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--tags">
+            <h3 class="module-title">
+              <span class="module-title__icon">
                 <IconTag :size="14" />
               </span>
               {{ t('workbench.sidebar.activeTags') }}
@@ -261,8 +263,8 @@
 
         <section class="side-card side-card--topic">
           <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--topic">
+            <h3 class="module-title">
+              <span class="module-title__icon">
                 <IconHierarchy :size="14" />
               </span>
               {{ t('workbench.sidebar.knowledgeTopics') }}
@@ -304,10 +306,8 @@ import {
   IconBrain,
   IconLink,
   IconFileText,
-  IconPoint,
   IconChartRadar,
   IconHierarchy,
-  IconStar,
   IconAlignBoxBottomCenter,
   IconDatabaseSearch,
   IconChartHistogram,
@@ -359,22 +359,11 @@ interface TodoFallbackEntry {
   updatedAt: number;
 }
 
-interface OverviewMetric {
+interface InsightSummaryItem {
   id: string;
   label: string;
   value: string;
   icon: Component;
-}
-
-interface TodayStatItem {
-  label: string;
-  value: string;
-}
-
-interface GrowthAxisLabel {
-  key: string;
-  label: string;
-  title: string;
 }
 
 interface ActiveTagEntry {
@@ -399,8 +388,6 @@ const SMART_RECOMMENDATION_LANE_LIMIT = Math.max(
 const TODO_TASK_REGEX = /^[-*+]\s+\[\s\]\s+(.+)$/;
 const TODO_MARKER_REGEX = /(?:^|\s)(?:TODO|TBD|FIXME)\b:?\s*(.+)?$/i;
 const CODE_FENCE_REGEX = /^\s*(?:```|~~~)/;
-const LINK_REGEX = /\[\[[^[\]]+\]\]|\[[^\]]+\]\([^)]+\)/g;
-const HEADING_REGEX = /^#{1,6}\s+/gm;
 
 const { t, locale } = useI18n();
 const { openSearchView } = useSearch();
@@ -487,7 +474,6 @@ const smartRecommendationLaneItems = computed<LocalSmartRecommendationItem[]>(()
 const behaviorFeedback = computed(() => {
   const now = Date.now();
   const todayStart = getDayStartTimestamp(now);
-  const sevenDayThreshold = todayStart - (6 * DAY_MS);
   const activeDays = new Set(notes.value.map((note) => getLocalDateKey(note.updatedAt)));
 
   let streakDays = 0;
@@ -499,8 +485,6 @@ const behaviorFeedback = computed(() => {
 
   return {
     totalCharacters: notes.value.reduce((total, note) => total + getCharacterCount(note.content), 0),
-    totalNotes: notes.value.length,
-    activeLast7Days: notes.value.filter((note) => note.updatedAt >= sevenDayThreshold).length,
     streakDays,
   };
 });
@@ -529,20 +513,6 @@ const recentActivity = computed<ActivityEntry[]>(() => {
 });
 
 const recentActivityPreview = computed<ActivityEntry[]>(() => recentActivity.value);
-
-const starredCount = computed<number>(() => {
-  const sNotes = notes.value.filter((note) => note.starred).length;
-  const sNotebooks = notebooks.value.filter((nb) => nb.starred).length;
-  return sNotes + sNotebooks;
-});
-
-const knowledgePointCount = computed<number>(() => {
-  return notes.value.reduce((total, note) => {
-    const linkCount = note.content.match(LINK_REGEX)?.length ?? 0;
-    const headingCount = note.content.match(HEADING_REGEX)?.length ?? 0;
-    return total + linkCount + headingCount;
-  }, 0);
-});
 
 const topTopicLabels = computed<string[]>(() => {
   const clusterLabels = knowledgeTopicEntries.value.slice(0, 4).map((topic) => topic.label);
@@ -586,7 +556,12 @@ const activeTagEntries = computed<ActiveTagEntry[]>(() => {
     }));
 });
 
-const overviewMetrics = computed<OverviewMetric[]>(() => {
+const todayQuestionCount = computed<number>(() => {
+  const todayStart = getDayStartTimestamp(Date.now());
+  return recentQuestionEntries.value.filter((entry) => entry.askedAt >= todayStart).length;
+});
+
+const insightSummaryItems = computed<InsightSummaryItem[]>(() => {
   return [
     {
       id: 'total-writing',
@@ -595,109 +570,33 @@ const overviewMetrics = computed<OverviewMetric[]>(() => {
       icon: IconAlignBoxBottomCenter,
     },
     {
-      id: 'streak',
-      label: t('workbench.behavior.streakDays'),
-      value: formatNumber(behaviorFeedback.value.streakDays),
-      icon: IconChartHistogram,
-    },
-    {
       id: 'documents',
       label: t('workbench.stats.noteCount'),
       value: formatNumber(notes.value.length),
       icon: IconFileText,
     },
     {
-      id: 'favorites',
-      label: t('workbench.module.favorites'),
-      value: formatNumber(starredCount.value),
-      icon: IconStar,
+      id: 'today-updated',
+      label: t('workbench.stats.todayUpdatedNotes'),
+      value: formatNumber(todayUpdatedNoteCount.value),
+      icon: IconPencil,
     },
     {
-      id: 'knowledge',
-      label: t('search.semanticSearch'),
-      value: formatNumber(knowledgePointCount.value),
+      id: 'today-questions',
+      label: t('workbench.stats.todayQuestions'),
+      value: formatNumber(todayQuestionCount.value),
       icon: IconDatabaseSearch,
+    },
+    {
+      id: 'streak',
+      label: t('workbench.behavior.streakDays'),
+      value: formatNumber(behaviorFeedback.value.streakDays),
+      icon: IconChartHistogram,
     },
   ];
 });
-
-const dailyUpdatedNoteSeries = computed<number[]>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const buckets = new Array<number>(7).fill(0);
-
-  notes.value.forEach((note) => {
-    const diffDays = Math.floor((todayStart - getDayStartTimestamp(note.updatedAt)) / DAY_MS);
-    if (diffDays < 0 || diffDays > 6) {
-      return;
-    }
-    const bucketIndex = 6 - diffDays;
-    buckets[bucketIndex] += 1;
-  });
-
-  return buckets;
-});
-
-const growthAxisLabels = computed<GrowthAxisLabel[]>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const labelFormatter = new Intl.DateTimeFormat(locale.value || undefined, {
-    month: 'numeric',
-    day: 'numeric',
-  });
-  const titleFormatter = new Intl.DateTimeFormat(locale.value || undefined, {
-    weekday: 'short',
-    month: 'numeric',
-    day: 'numeric',
-  });
-
-  return Array.from({ length: 7 }, (_, index) => {
-    const timestamp = todayStart - ((6 - index) * DAY_MS);
-    const date = new Date(timestamp);
-    return {
-      key: getLocalDateKey(timestamp),
-      label: labelFormatter.format(date),
-      title: titleFormatter.format(date),
-    };
-  });
-});
-
-const growthPolyline = computed<string>(() => {
-  const points = dailyUpdatedNoteSeries.value;
-  if (points.length === 0) {
-    return '0,100 100,100';
-  }
-  const max = Math.max(1, ...points);
-  return points
-    .map((value, index) => {
-      const x = points.length === 1 ? 0 : (index / (points.length - 1)) * 100;
-      const y = 100 - ((value / max) * 92 + 4);
-      return `${x},${Math.max(2, Math.min(98, y))}`;
-    })
-    .join(' ');
-});
-
-const thisWeekUpdatedNoteCount = computed<number>(() => dailyUpdatedNoteSeries.value.reduce((total, value) => total + value, 0));
-const previousWeekUpdatedNoteCount = computed<number>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const prevWeekStart = todayStart - (13 * DAY_MS);
-  const prevWeekEnd = todayStart - (6 * DAY_MS);
-
-  return notes.value.filter((note) => note.updatedAt >= prevWeekStart && note.updatedAt < prevWeekEnd).length;
-});
-
-const weeklyGrowthPercentText = computed<string>(() => {
-  const prev = previousWeekUpdatedNoteCount.value;
-  const current = thisWeekUpdatedNoteCount.value;
-  if (prev <= 0) {
-    return current > 0 ? '+100%' : '0%';
-  }
-  const delta = Math.round(((current - prev) / prev) * 100);
-  const sign = delta >= 0 ? '+' : '';
-  return `${sign}${delta}%`;
-});
-
-const growthLabel = computed<string>(() => {
-  return `${t('workbench.stats.weeklyGrowth')} ${weeklyGrowthPercentText.value}`;
-});
+const primaryInsightSummaryItem = computed<InsightSummaryItem | null>(() => insightSummaryItems.value[0] ?? null);
+const secondaryInsightSummaryItems = computed<InsightSummaryItem[]>(() => insightSummaryItems.value.slice(1));
 
 const recentEditedTime = computed<string>(() => {
   const targetNote = sortedNotesByUpdated.value[0];
@@ -705,19 +604,6 @@ const recentEditedTime = computed<string>(() => {
     return t('workbench.empty.noData');
   }
   return formatRelativeTime(targetNote.updatedAt);
-});
-
-const todayStatItems = computed<TodayStatItem[]>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const todayQuestionCount = recentQuestionEntries.value.filter((entry) => entry.askedAt >= todayStart).length;
-  const todayStarredCount = notes.value.filter((note) => note.starred && (note.starredAt ?? 0) >= todayStart).length
-    + notebooks.value.filter((notebook) => notebook.starred && (notebook.starredAt ?? 0) >= todayStart).length;
-
-  return [
-    { label: t('workbench.stats.todayUpdatedNotes'), value: formatNumber(todayUpdatedNoteCount.value) },
-    { label: t('workbench.stats.todayQuestions'), value: formatNumber(todayQuestionCount) },
-    { label: t('workbench.stats.todayFavorites'), value: formatNumber(todayStarredCount) },
-  ];
 });
 
 const greetingText = computed<string>(() => {
@@ -1124,19 +1010,18 @@ watch(
   --workbench-shadow-soft: 0 6px 16px rgba(43, 52, 82, 0.06);
   --workbench-layout-max-width: 1920px;
   --workbench-page-padding: 16px 20px 24px;
-  --workbench-gap: 16px;
+  --workbench-gap: 14px;
   --workbench-card-radius: 16px;
   --workbench-sidebar-min: 300px;
-  --workbench-hero-min-height: clamp(188px, 13vw, 248px);
-  --workbench-overview-card-min-height: 52px;
+  --workbench-overview-card-height: 220px;
+  --workbench-overview-row-height: 103px;
   --workbench-feed-card-height: clamp(344px, 19vw, 420px);
   --workbench-recommendation-card-height: var(--workbench-feed-card-height);
-  --workbench-panel-header-padding: 16px 20px 10px;
-  --workbench-panel-body-padding: 0 20px 16px;
-  --workbench-feed-row-min-height: 52px;
-  --workbench-overview-card-padding: 7px 12px;
-  --workbench-side-card-padding: 18px 20px;
-  --workbench-growth-chart-height: 132px;
+  --workbench-panel-header-padding: 14px 18px 8px;
+  --workbench-panel-body-padding: 0 18px 14px;
+  --workbench-feed-row-min-height: 38px;
+  --workbench-side-card-padding: 16px 18px;
+  --workbench-hero-copy-offset: 6px;
   flex: 1;
   min-height: 0;
   padding: var(--workbench-page-padding);
@@ -1161,7 +1046,9 @@ watch(
 }
 
 :global(.main-shell.main-shell--maximized) .workbench-dashboard {
-  --workbench-growth-chart-height: clamp(160px, 15vh, 196px);
+  --workbench-overview-card-height: 220px;
+  --workbench-overview-row-height: 103px;
+  --workbench-hero-copy-offset: 6px;
 }
 
 .workbench-layout {
@@ -1172,11 +1059,10 @@ watch(
   grid-template-areas:
     "hero insights"
     "hero insights"
-    "overview insights"
     "recent tags"
     "smart topic";
   grid-template-rows:
-    minmax(112px, auto) minmax(96px, auto) auto var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
+    var(--workbench-overview-row-height) var(--workbench-overview-row-height) var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
   gap: var(--workbench-gap);
   align-items: stretch;
   min-height: 0;
@@ -1190,11 +1076,12 @@ watch(
 
 .hero-card {
   grid-area: hero;
-  min-height: var(--workbench-hero-min-height);
+  height: var(--workbench-overview-card-height);
+  min-height: var(--workbench-overview-card-height);
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   gap: var(--workbench-gap);
-  padding: 18px 0 16px 24px;
+  padding: 14px 0 10px 20px;
   overflow: hidden;
   border: 1px solid var(--workbench-border);
   border-radius: var(--workbench-card-radius);
@@ -1210,10 +1097,16 @@ watch(
   min-width: 0;
   display: grid;
   align-content: start;
-  gap: 11px;
-  padding-top: clamp(4px, 0.7vw, 12px);
+  gap: 6px;
+  padding-top: 0;
   position: relative;
   z-index: 2;
+}
+
+.hero-copy-body {
+  display: grid;
+  gap: 7px;
+  padding-top: var(--workbench-hero-copy-offset);
 }
 
 .hero-copy h1 {
@@ -1222,9 +1115,9 @@ watch(
   color: var(--workbench-ink);
   display: -webkit-box;
   overflow: hidden;
-  font-size: clamp(1.34rem, 1.18vw, 1.6rem);
+  font-size: 1.42rem;
   font-weight: 740;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   line-height: 1.08;
   line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1315,6 +1208,7 @@ watch(
   flex-wrap: wrap;
   gap: 10px;
   padding-top: 0;
+  margin-top: 20px;
 }
 
 .hero-action {
@@ -1381,8 +1275,9 @@ watch(
 .hero-art {
   position: relative;
   align-self: stretch;
+  height: var(--workbench-overview-card-height);
   min-height: 0;
-  margin: -18px 0 -16px;
+  margin: -14px 0 -10px;
   overflow: hidden;
   border-radius: 0 var(--workbench-card-radius) var(--workbench-card-radius) 0;
   opacity: 0.94;
@@ -1492,82 +1387,29 @@ watch(
   transform: translateY(0);
 }
 
-.overview-section {
-  grid-area: overview;
-  display: grid;
-  gap: 12px;
-  align-self: start;
-}
-
-.panel__header h2 {
-  margin: 0;
-  color: var(--workbench-ink);
-  font-size: 1.08rem;
-  font-weight: 760;
-  letter-spacing: -0.035em;
-}
-
-.overview-grid {
-  display: grid;
-  width: 100%;
-  overflow: hidden;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: stretch;
-  border: 1px solid var(--workbench-border);
-  border-radius: 12px;
-  background: var(--workbench-card);
-  box-shadow: var(--workbench-shadow-soft);
-  backdrop-filter: none;
-}
-
-.overview-card {
+.module-title {
   min-width: 0;
-  min-height: var(--workbench-overview-card-min-height);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  padding: var(--workbench-overview-card-padding);
-  background: transparent;
-  cursor: default;
-}
-
-.overview-card+.overview-card {
-  border-left: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
-}
-
-.overview-card__head {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  min-width: 0;
-  color: var(--workbench-blue);
-  font-size: 0.68rem;
-  font-weight: 720;
-  line-height: 1.1;
-  white-space: nowrap;
-}
-
-.overview-card__head span {
-  min-width: 0;
-  overflow: hidden;
-  color: color-mix(in srgb, var(--workbench-ink) 62%, var(--workbench-muted));
-  text-overflow: ellipsis;
-}
-
-.overview-card__content {
+  gap: 9px;
   margin: 0;
   color: var(--workbench-ink);
-  font-size: 0.82rem;
-  font-weight: 680;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
-  min-width: 0;
-  justify-self: end;
-  overflow: hidden;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.98rem;
+  font-weight: 760;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.module-title__icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--workbench-soft);
+  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
 }
 
 .panel {
@@ -1591,6 +1433,25 @@ watch(
   align-items: stretch;
 }
 
+.panel-row--recent .panel__header {
+  padding: 16px 18px 12px;
+}
+
+.panel-row--recent .feed-list {
+  gap: 7px;
+}
+
+.panel-row--recent .feed-row {
+  gap: 9px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.panel-row--recent .module-empty {
+  margin: 0 18px 14px;
+}
+
 .panel--half {
   min-height: 0;
 }
@@ -1601,19 +1462,6 @@ watch(
   justify-content: space-between;
   gap: 12px;
   padding: var(--workbench-panel-header-padding);
-}
-
-.panel-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 23px;
-  padding: 0 9px;
-  border: 1px solid var(--workbench-border);
-  border-radius: 999px;
-  background: var(--workbench-soft);
-  color: var(--workbench-muted);
-  font-size: 0.74rem;
-  font-weight: 760;
 }
 
 .feed-list {
@@ -1641,24 +1489,24 @@ watch(
 }
 
 .feed-row:last-child {
-  border-bottom: 0;
+  border-color: transparent;
 }
 
 .feed-list--interactive .feed-row:hover {
-  border-bottom-color: transparent;
+  border-color: var(--workbench-border);
   border-radius: 12px;
   background: var(--workbench-soft);
-  box-shadow: inset 0 0 0 1px var(--workbench-border);
+  box-shadow: none;
 }
 
 .feed-row__icon {
-  width: 27px;
-  height: 27px;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
+  border-radius: 8px;
   background: var(--workbench-soft);
   color: var(--workbench-blue);
 }
@@ -1667,15 +1515,15 @@ watch(
   min-width: 0;
   display: grid;
   flex: 1;
-  gap: 3px;
+  gap: 4px;
 }
 
 .feed-row__title {
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-ink);
-  font-size: 0.86rem;
-  font-weight: 730;
+  font-size: 0.82rem;
+  font-weight: 780;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1684,8 +1532,8 @@ watch(
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-muted);
-  font-size: 0.76rem;
-  font-weight: 540;
+  font-size: 0.68rem;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1693,8 +1541,8 @@ watch(
 .feed-row__time {
   flex-shrink: 0;
   color: var(--workbench-muted);
-  font-size: 0.76rem;
-  font-weight: 620;
+  font-size: 0.68rem;
+  font-weight: 650;
   white-space: nowrap;
 }
 
@@ -2084,46 +1932,8 @@ watch(
   gap: 9px;
 }
 
-.side-card__header--compact h3 {
-  font-size: 0.88rem;
-}
-
 .side-card__header--insights {
   align-items: flex-start;
-}
-
-.side-card__header h3 {
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  margin: 0;
-  color: var(--workbench-ink);
-  font-size: 0.98rem;
-  font-weight: 760;
-  letter-spacing: -0.03em;
-}
-
-.side-card__title-icon {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-}
-
-.side-card__title-icon--ai {
-  background: var(--workbench-soft);
-  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
-}
-
-.side-card__title-icon--growth,
-.side-card__title-icon--tags,
-.side-card__title-icon--topic {
-  background: var(--workbench-soft);
-  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
 }
 
 .state-pill {
@@ -2157,25 +1967,6 @@ watch(
   border-color: rgba(240, 80, 139, 0.2);
   background: rgba(240, 80, 139, 0.1);
   color: #c93068;
-}
-
-.side-card__muted {
-  margin: 0;
-  color: color-mix(in srgb, var(--workbench-ink) 58%, var(--workbench-muted));
-  font-size: 0.84rem;
-  font-weight: 560;
-  line-height: 1.58;
-}
-
-.side-card__muted--compact {
-  align-self: end;
-  display: -webkit-box;
-  overflow: hidden;
-  font-size: 0.76rem;
-  line-height: 1.42;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
 }
 
 .side-card__action {
@@ -2239,126 +2030,108 @@ watch(
   flex-shrink: 0;
 }
 
-.stats-list {
-  display: grid;
-  gap: 10px;
-}
-
-.stats-list--compact {
-  gap: 7px;
-}
-
-.stats-row {
-  display: grid;
-  grid-template-columns: 15px minmax(0, 1fr) auto;
-  gap: 8px;
-  align-items: center;
-  color: var(--workbench-muted);
-  font-size: 0.82rem;
-  font-weight: 630;
-}
-
-.stats-list--compact .stats-row {
-  grid-template-columns: 13px minmax(0, 1fr) auto;
-  gap: 7px;
-  font-size: 0.76rem;
-}
-
-.stats-row__icon {
-  color: color-mix(in srgb, var(--workbench-blue) 84%, white);
-  flex-shrink: 0;
-}
-
-.stats-row span {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.stats-row strong {
-  color: var(--workbench-ink);
-  font-size: 0.9rem;
-  font-weight: 780;
-  letter-spacing: -0.02em;
-}
-
-.stats-list--compact .stats-row strong {
-  font-size: 0.82rem;
-}
-
 .insights-block {
   min-width: 0;
   display: grid;
+  gap: 6px;
+}
+
+.insights-block--stats {
+  align-content: start;
+}
+
+.insight-achievement-hero {
+  min-width: 0;
+  min-height: 60px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 26px;
+  align-items: start;
   gap: 8px;
-}
-
-.insights-block--growth {
-  height: 100%;
-  min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr);
-}
-
-.growth-chart {
-  height: var(--workbench-growth-chart-height);
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
   overflow: hidden;
-  border: 1px solid var(--workbench-border);
-  border-radius: 14px;
-  background: var(--workbench-soft);
+  padding: 0;
 }
 
-:global([data-theme='dark']) .growth-chart {
-  background: var(--workbench-soft);
-}
-
-.growth-chart svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  padding: 12px 14px 8px;
-}
-
-.growth-chart--compact {
-  border-radius: 12px;
-}
-
-.growth-chart--compact svg {
-  padding: 10px 12px 6px;
-}
-
-.growth-chart__axis {
+.insight-achievement-hero__main {
+  min-width: 0;
   display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  align-items: center;
-  gap: 0;
-  padding: 6px 12px 7px;
-  border-top: 1px solid color-mix(in srgb, var(--workbench-border) 82%, transparent);
-  color: var(--workbench-muted);
-  font-size: 0.63rem;
-  font-weight: 630;
-  letter-spacing: -0.01em;
-  line-height: 1;
+  gap: 2px;
 }
 
-.growth-chart__axis span {
+.insight-achievement-hero__label {
   min-width: 0;
   overflow: hidden;
-  text-align: center;
+  color: color-mix(in srgb, var(--workbench-blue) 70%, var(--workbench-ink));
+  font-size: 0.68rem;
+  font-weight: 760;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.growth-chart polyline {
-  fill: none;
-  stroke: var(--workbench-blue);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3.6;
-  vector-effect: non-scaling-stroke;
-  filter: none;
+.insight-achievement-hero__value {
+  min-width: 0;
+  overflow: visible;
+  color: var(--workbench-ink);
+  font-size: 1.4rem;
+  font-weight: 820;
+  letter-spacing: 0;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.insight-achievement-hero__icon {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: start;
+  color: color-mix(in srgb, var(--workbench-blue) 82%, var(--workbench-ink));
+}
+
+.insight-summary-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  background: transparent;
+}
+
+.insight-summary-item {
+  min-width: 0;
+  min-height: 18px;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
+}
+
+.insight-summary-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--workbench-blue) 78%, var(--workbench-muted));
+}
+
+.insight-summary-item__label {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--workbench-muted);
+  font-size: 0.66rem;
+  font-weight: 660;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.insight-summary-item strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--workbench-ink);
+  font-size: 0.86rem;
+  font-weight: 780;
+  letter-spacing: 0;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .active-tag-list {
@@ -2525,9 +2298,10 @@ watch(
 .side-card--insights {
   grid-area: insights;
   align-self: stretch;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 11px;
-  padding: 14px 16px;
+  height: var(--workbench-overview-card-height);
+  grid-template-rows: auto auto;
+  gap: 10px;
+  padding: 8px 14px 12px;
 }
 
 .side-card--tags {
@@ -2586,12 +2360,6 @@ watch(
   .workbench-dashboard {
     --workbench-page-padding: 14px 18px 22px;
     --workbench-sidebar-min: 276px;
-    --workbench-overview-card-min-height: 50px;
-    --workbench-overview-card-padding: 6px 10px;
-  }
-
-  .overview-card__content {
-    font-size: 0.8rem;
   }
 }
 
@@ -2621,7 +2389,6 @@ watch(
   }
 
   .hero-card,
-  .overview-section,
   .panel-row--recent,
   .panel--smart,
   .side-card--insights,
@@ -2674,10 +2441,6 @@ watch(
     border-radius: 16px;
   }
 
-  .overview-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
   .smart-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -2728,26 +2491,6 @@ watch(
     width: 100%;
   }
 
-  .overview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .overview-card+.overview-card {
-    border-left: 0;
-  }
-
-  .overview-card {
-    border-top: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
-  }
-
-  .overview-card:nth-child(-n + 2) {
-    border-top: 0;
-  }
-
-  .overview-card:nth-child(even) {
-    border-left: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
-  }
-
   .panel__header,
   .feed-list,
   .smart-grid {
@@ -2768,8 +2511,13 @@ watch(
   .feed-row {
     align-items: flex-start;
     min-height: 62px;
+    height: auto;
     padding-top: 12px;
     padding-bottom: 12px;
+  }
+
+  .panel-row--recent .feed-list {
+    grid-auto-rows: auto;
   }
 
   .feed-row__time {
