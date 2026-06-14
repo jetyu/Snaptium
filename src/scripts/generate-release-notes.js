@@ -31,7 +31,7 @@ function getTag() {
 
 function extractSection(history, version) {
   const headingRegex = new RegExp(
-    `^### \\[${escapeRegExp(version)}\\](?: - .+)?\\s*$`,
+    `^###\\s*\\[?\\s*v?${escapeRegExp(version)}\\s*\\]?(?:\\s*[-—].+)?\\s*$`,
     'm'
   );
 
@@ -44,7 +44,7 @@ function extractSection(history, version) {
   const start = match.index + match[0].length;
   const rest = history.slice(start);
 
-  const nextHeading = rest.match(/^\s*### \[/m);
+  const nextHeading = rest.match(/^\s*###\s/m);
   const end = nextHeading
     ? start + nextHeading.index
     : history.length;
