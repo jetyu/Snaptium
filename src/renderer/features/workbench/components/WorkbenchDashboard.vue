@@ -9,16 +9,18 @@
               <strong>{{ t('workbench.hero.dailyQuote') }}</strong>
               <span>{{ dailyQuoteText }}</span>
             </em>
-            <p class="hero-greeting">{{ greetingText }}</p>
-            <h1>{{ heroLeadText }}</h1>
-            <div class="hero-meta">
-              <span v-if="hasNotes">{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
-            </div>
-            <div class="hero-actions">
-              <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
-                <IconPencil :size="14" />
-                <span>{{ t('workbench.action.continueWriting') }}</span>
-              </button>
+            <div class="hero-copy-body">
+              <p class="hero-greeting">{{ greetingText }}</p>
+              <h1>{{ heroLeadText }}</h1>
+              <div class="hero-meta">
+                <span v-if="hasNotes">{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
+              </div>
+              <div class="hero-actions">
+                <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
+                  <IconPencil :size="14" />
+                  <span>{{ t('workbench.action.continueWriting') }}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -102,7 +104,6 @@
         <section class="panel panel--smart">
           <header class="panel__header">
             <h2>{{ t('workbench.module.smartRecommendation') }}</h2>
-            <span class="panel-badge">{{ t('workbench.tag.aiEnhanced') }}</span>
           </header>
 
           <div v-if="primarySmartRecommendation" class="smart-grid">
@@ -188,7 +189,7 @@
         <section class="side-card side-card--insights">
           <header class="side-card__header side-card__header--compact side-card__header--insights">
             <h3>
-              <span class="side-card__title-icon side-card__title-icon--growth">
+              <span class="side-card__title-icon side-card__title-icon--overview">
                 <IconChartRadar :size="14" />
               </span>
               {{ t('workbench.sidebar.overview') }}
@@ -204,20 +205,6 @@
                 <span class="insight-summary-item__label">{{ item.label }}</span>
                 <strong>{{ item.value }}</strong>
               </article>
-            </div>
-          </div>
-
-          <div class="insights-block insights-block--growth">
-            <div class="growth-chart growth-chart--compact">
-              <div class="growth-chart__label">{{ growthLabel }}</div>
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-                <polyline :points="growthPolyline" />
-              </svg>
-              <div class="growth-chart__axis" aria-hidden="true">
-                <span v-for="label in growthAxisLabels" :key="label.key" :title="label.title">
-                  {{ label.label }}
-                </span>
-              </div>
             </div>
           </div>
         </section>
@@ -355,12 +342,6 @@ interface InsightSummaryItem {
   icon: Component;
 }
 
-interface GrowthAxisLabel {
-  key: string;
-  label: string;
-  title: string;
-}
-
 interface ActiveTagEntry {
   name: string;
   count: number;
@@ -384,7 +365,7 @@ const TODO_TASK_REGEX = /^[-*+]\s+\[\s\]\s+(.+)$/;
 const TODO_MARKER_REGEX = /(?:^|\s)(?:TODO|TBD|FIXME)\b:?\s*(.+)?$/i;
 const CODE_FENCE_REGEX = /^\s*(?:```|~~~)/;
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const { openSearchView } = useSearch();
 const { notes, notebooks, allTags, createNote, selectNote } = useWorkspace();
 const { openSettings } = useSettings();
@@ -604,84 +585,6 @@ const insightSummaryItems = computed<InsightSummaryItem[]>(() => {
       icon: IconChartHistogram,
     },
   ];
-});
-
-const dailyUpdatedNoteSeries = computed<number[]>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const buckets = new Array<number>(7).fill(0);
-
-  notes.value.forEach((note) => {
-    const diffDays = Math.floor((todayStart - getDayStartTimestamp(note.updatedAt)) / DAY_MS);
-    if (diffDays < 0 || diffDays > 6) {
-      return;
-    }
-    const bucketIndex = 6 - diffDays;
-    buckets[bucketIndex] += 1;
-  });
-
-  return buckets;
-});
-
-const growthAxisLabels = computed<GrowthAxisLabel[]>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const labelFormatter = new Intl.DateTimeFormat(locale.value || undefined, {
-    month: 'numeric',
-    day: 'numeric',
-  });
-  const titleFormatter = new Intl.DateTimeFormat(locale.value || undefined, {
-    weekday: 'short',
-    month: 'numeric',
-    day: 'numeric',
-  });
-
-  return Array.from({ length: 7 }, (_, index) => {
-    const timestamp = todayStart - ((6 - index) * DAY_MS);
-    const date = new Date(timestamp);
-    return {
-      key: getLocalDateKey(timestamp),
-      label: labelFormatter.format(date),
-      title: titleFormatter.format(date),
-    };
-  });
-});
-
-const growthPolyline = computed<string>(() => {
-  const points = dailyUpdatedNoteSeries.value;
-  if (points.length === 0) {
-    return '0,100 100,100';
-  }
-  const max = Math.max(1, ...points);
-  return points
-    .map((value, index) => {
-      const x = points.length === 1 ? 0 : (index / (points.length - 1)) * 100;
-      const y = 100 - ((value / max) * 92 + 4);
-      return `${x},${Math.max(2, Math.min(98, y))}`;
-    })
-    .join(' ');
-});
-
-const thisWeekUpdatedNoteCount = computed<number>(() => dailyUpdatedNoteSeries.value.reduce((total, value) => total + value, 0));
-const previousWeekUpdatedNoteCount = computed<number>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const prevWeekStart = todayStart - (13 * DAY_MS);
-  const prevWeekEnd = todayStart - (6 * DAY_MS);
-
-  return notes.value.filter((note) => note.updatedAt >= prevWeekStart && note.updatedAt < prevWeekEnd).length;
-});
-
-const weeklyGrowthPercentText = computed<string>(() => {
-  const prev = previousWeekUpdatedNoteCount.value;
-  const current = thisWeekUpdatedNoteCount.value;
-  if (prev <= 0) {
-    return current > 0 ? '+100%' : '0%';
-  }
-  const delta = Math.round(((current - prev) / prev) * 100);
-  const sign = delta >= 0 ? '+' : '';
-  return `${sign}${delta}%`;
-});
-
-const growthLabel = computed<string>(() => {
-  return `${t('workbench.stats.weeklyGrowth')} ${weeklyGrowthPercentText.value}`;
 });
 
 const recentEditedTime = computed<string>(() => {
@@ -1099,14 +1002,14 @@ watch(
   --workbench-gap: 16px;
   --workbench-card-radius: 16px;
   --workbench-sidebar-min: 300px;
-  --workbench-hero-min-height: clamp(188px, 13vw, 248px);
+  --workbench-hero-min-height: clamp(176px, 11vw, 228px);
   --workbench-feed-card-height: clamp(344px, 19vw, 420px);
   --workbench-recommendation-card-height: var(--workbench-feed-card-height);
   --workbench-panel-header-padding: 16px 20px 10px;
   --workbench-panel-body-padding: 0 20px 16px;
   --workbench-feed-row-min-height: 52px;
   --workbench-side-card-padding: 18px 20px;
-  --workbench-growth-chart-height: 112px;
+  --workbench-hero-copy-offset: clamp(8px, 0.8vw, 16px);
   flex: 1;
   min-height: 0;
   padding: var(--workbench-page-padding);
@@ -1131,7 +1034,7 @@ watch(
 }
 
 :global(.main-shell.main-shell--maximized) .workbench-dashboard {
-  --workbench-growth-chart-height: clamp(136px, 12vh, 168px);
+  --workbench-hero-copy-offset: clamp(12px, 1.05vw, 22px);
 }
 
 .workbench-layout {
@@ -1145,7 +1048,7 @@ watch(
     "recent tags"
     "smart topic";
   grid-template-rows:
-    minmax(112px, auto) minmax(96px, auto) var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
+    minmax(104px, auto) minmax(88px, auto) var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
   gap: var(--workbench-gap);
   align-items: stretch;
   min-height: 0;
@@ -1163,7 +1066,7 @@ watch(
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   gap: var(--workbench-gap);
-  padding: 18px 0 16px 24px;
+  padding: 16px 0 12px 24px;
   overflow: hidden;
   border: 1px solid var(--workbench-border);
   border-radius: var(--workbench-card-radius);
@@ -1179,10 +1082,16 @@ watch(
   min-width: 0;
   display: grid;
   align-content: start;
-  gap: 11px;
-  padding-top: clamp(4px, 0.7vw, 12px);
+  gap: 8px;
+  padding-top: clamp(2px, 0.5vw, 8px);
   position: relative;
   z-index: 2;
+}
+
+.hero-copy-body {
+  display: grid;
+  gap: 9px;
+  padding-top: var(--workbench-hero-copy-offset);
 }
 
 .hero-copy h1 {
@@ -1284,6 +1193,7 @@ watch(
   flex-wrap: wrap;
   gap: 10px;
   padding-top: 0;
+  margin-top: 0;
 }
 
 .hero-action {
@@ -1351,7 +1261,7 @@ watch(
   position: relative;
   align-self: stretch;
   min-height: 0;
-  margin: -18px 0 -16px;
+  margin: -16px 0 -12px;
   overflow: hidden;
   border-radius: 0 var(--workbench-card-radius) var(--workbench-card-radius) 0;
   opacity: 0.94;
@@ -1500,19 +1410,6 @@ watch(
   justify-content: space-between;
   gap: 12px;
   padding: var(--workbench-panel-header-padding);
-}
-
-.panel-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 23px;
-  padding: 0 9px;
-  border: 1px solid var(--workbench-border);
-  border-radius: 999px;
-  background: var(--workbench-soft);
-  color: var(--workbench-muted);
-  font-size: 0.74rem;
-  font-weight: 760;
 }
 
 .feed-list {
@@ -2018,7 +1915,7 @@ watch(
   color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
 }
 
-.side-card__title-icon--growth,
+.side-card__title-icon--overview,
 .side-card__title-icon--tags,
 .side-card__title-icon--topic {
   background: var(--workbench-soft);
@@ -2122,26 +2019,26 @@ watch(
 .insights-block {
   min-width: 0;
   display: grid;
-  gap: 6px;
+  gap: 10px;
 }
 
 .insight-summary-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  column-gap: 14px;
-  row-gap: 4px;
-  padding: 2px 0 0;
+  column-gap: 18px;
+  row-gap: 8px;
+  padding: 4px 0 2px;
   background: transparent;
 }
 
 .insight-summary-item {
   min-width: 0;
-  min-height: 0;
+  min-height: 24px;
   display: grid;
-  grid-template-columns: 15px minmax(0, 1fr) auto;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 7px;
-  padding: 1px 0;
+  gap: 8px;
+  padding: 3px 0;
 }
 
 .insight-summary-item__icon {
@@ -2153,8 +2050,8 @@ watch(
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-muted);
-  font-size: 0.72rem;
-  font-weight: 650;
+  font-size: 0.75rem;
+  font-weight: 660;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2162,100 +2059,11 @@ watch(
 .insight-summary-item strong {
   min-width: 0;
   color: var(--workbench-ink);
-  font-size: 0.8rem;
-  font-weight: 760;
+  font-size: 0.86rem;
+  font-weight: 780;
   letter-spacing: -0.02em;
   text-align: right;
   white-space: nowrap;
-}
-
-.insights-block--growth {
-  height: 100%;
-  min-height: 0;
-  grid-template-rows: auto;
-  align-content: start;
-}
-
-.growth-chart {
-  position: relative;
-  height: var(--workbench-growth-chart-height);
-  display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
-  overflow: hidden;
-  border: 1px solid var(--workbench-border);
-  border-radius: 14px;
-  background: var(--workbench-soft);
-}
-
-:global([data-theme='dark']) .growth-chart {
-  background: var(--workbench-soft);
-}
-
-.growth-chart__label {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  max-width: calc(100% - 16px);
-  padding: 2px 6px;
-  border: 1px solid color-mix(in srgb, var(--workbench-border) 76%, transparent);
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--workbench-card-solid) 88%, transparent);
-  color: color-mix(in srgb, var(--workbench-ink) 60%, var(--workbench-muted));
-  font-size: 0.66rem;
-  font-weight: 660;
-  line-height: 1;
-  pointer-events: none;
-}
-
-.growth-chart svg {
-  display: block;
-  width: 100%;
-  height: 100%;
-  box-sizing: border-box;
-  padding: 8px 12px 4px;
-}
-
-.growth-chart--compact {
-  border-radius: 12px;
-}
-
-.growth-chart--compact svg {
-  padding: 6px 12px 3px;
-}
-
-.growth-chart__axis {
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  align-items: center;
-  gap: 0;
-  padding: 4px 12px 5px;
-  border-top: 1px solid color-mix(in srgb, var(--workbench-border) 82%, transparent);
-  color: var(--workbench-muted);
-  font-size: 0.63rem;
-  font-weight: 630;
-  letter-spacing: -0.01em;
-  line-height: 1;
-}
-
-.growth-chart__axis span {
-  min-width: 0;
-  overflow: hidden;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.growth-chart polyline {
-  fill: none;
-  stroke: var(--workbench-blue);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3.6;
-  vector-effect: non-scaling-stroke;
-  filter: none;
 }
 
 .active-tag-list {
@@ -2422,9 +2230,9 @@ watch(
 .side-card--insights {
   grid-area: insights;
   align-self: stretch;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 8px;
-  padding: 12px 16px;
+  grid-template-rows: auto auto;
+  gap: 14px;
+  padding: 14px 16px;
 }
 
 .side-card--tags {
