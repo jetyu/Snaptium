@@ -984,7 +984,7 @@
   "workbench.stats.favoriteCount": "收藏数",
   "workbench.stats.noteCount": "笔记数",
   "workbench.stats.todayFavorites": "今日收藏",
-  "workbench.stats.todayQuestions": "今日问答",
+  "workbench.stats.todayQuestions": "今日知识库问答",
   "workbench.stats.todayUpdatedNotes": "今日更新笔记",
   "workbench.tags.noteCount": "{count} 篇笔记",
   "workbench.time.daysAgo": "{count} 天前",
