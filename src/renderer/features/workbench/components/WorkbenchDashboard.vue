@@ -46,7 +46,12 @@
         <div class="panel-row panel-row--recent">
           <section class="panel panel--half">
             <header class="panel__header">
-              <h2>{{ t('workbench.module.recentActivity') }}</h2>
+              <h2 class="module-title">
+                <span class="module-title__icon">
+                  <IconClock :size="14" />
+                </span>
+                {{ t('workbench.module.recentActivity') }}
+              </h2>
             </header>
 
             <div v-if="recentActivityPreview.length > 0" class="feed-list feed-list--interactive">
@@ -68,7 +73,12 @@
 
           <section class="panel panel--half">
             <header class="panel__header">
-              <h2>{{ t('workbench.module.recentQuestions') }}</h2>
+              <h2 class="module-title">
+                <span class="module-title__icon">
+                  <IconDatabaseSearch :size="14" />
+                </span>
+                {{ t('workbench.module.recentQuestions') }}
+              </h2>
             </header>
 
             <div v-if="recentQuestionEntriesPreview.length > 0" class="feed-list feed-list--interactive">
@@ -103,7 +113,12 @@
 
         <section class="panel panel--smart">
           <header class="panel__header">
-            <h2>{{ t('workbench.module.smartRecommendation') }}</h2>
+            <h2 class="module-title">
+              <span class="module-title__icon">
+                <IconBrain :size="14" />
+              </span>
+              {{ t('workbench.module.smartRecommendation') }}
+            </h2>
           </header>
 
           <div v-if="primarySmartRecommendation" class="smart-grid">
@@ -187,9 +202,9 @@
 
       <aside class="workbench-side">
         <section class="side-card side-card--insights">
-          <header class="side-card__header side-card__header--compact side-card__header--insights">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--overview">
+          <header class="side-card__header side-card__header--insights">
+            <h3 class="module-title">
+              <span class="module-title__icon">
                 <IconChartRadar :size="14" />
               </span>
               {{ t('workbench.sidebar.overview') }}
@@ -221,8 +236,8 @@
 
         <section class="side-card side-card--tags">
           <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--tags">
+            <h3 class="module-title">
+              <span class="module-title__icon">
                 <IconTag :size="14" />
               </span>
               {{ t('workbench.sidebar.activeTags') }}
@@ -248,8 +263,8 @@
 
         <section class="side-card side-card--topic">
           <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--topic">
+            <h3 class="module-title">
+              <span class="module-title__icon">
                 <IconHierarchy :size="14" />
               </span>
               {{ t('workbench.sidebar.knowledgeTopics') }}
@@ -1011,17 +1026,17 @@ watch(
   --workbench-shadow-soft: 0 6px 16px rgba(43, 52, 82, 0.06);
   --workbench-layout-max-width: 1920px;
   --workbench-page-padding: 16px 20px 24px;
-  --workbench-gap: 16px;
+  --workbench-gap: 14px;
   --workbench-card-radius: 16px;
   --workbench-sidebar-min: 300px;
-  --workbench-hero-min-height: clamp(176px, 11vw, 228px);
+  --workbench-hero-min-height: 164px;
   --workbench-feed-card-height: clamp(344px, 19vw, 420px);
   --workbench-recommendation-card-height: var(--workbench-feed-card-height);
-  --workbench-panel-header-padding: 16px 20px 10px;
-  --workbench-panel-body-padding: 0 20px 16px;
-  --workbench-feed-row-min-height: 52px;
-  --workbench-side-card-padding: 18px 20px;
-  --workbench-hero-copy-offset: clamp(8px, 0.8vw, 16px);
+  --workbench-panel-header-padding: 14px 18px 8px;
+  --workbench-panel-body-padding: 0 18px 14px;
+  --workbench-feed-row-min-height: 50px;
+  --workbench-side-card-padding: 16px 18px;
+  --workbench-hero-copy-offset: 6px;
   flex: 1;
   min-height: 0;
   padding: var(--workbench-page-padding);
@@ -1046,7 +1061,7 @@ watch(
 }
 
 :global(.main-shell.main-shell--maximized) .workbench-dashboard {
-  --workbench-hero-copy-offset: clamp(12px, 1.05vw, 22px);
+  --workbench-hero-copy-offset: 6px;
 }
 
 .workbench-layout {
@@ -1060,7 +1075,7 @@ watch(
     "recent tags"
     "smart topic";
   grid-template-rows:
-    minmax(104px, auto) minmax(88px, auto) var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
+    minmax(76px, auto) minmax(64px, auto) var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
   gap: var(--workbench-gap);
   align-items: stretch;
   min-height: 0;
@@ -1078,7 +1093,7 @@ watch(
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   gap: var(--workbench-gap);
-  padding: 16px 0 12px 24px;
+  padding: 14px 0 10px 20px;
   overflow: hidden;
   border: 1px solid var(--workbench-border);
   border-radius: var(--workbench-card-radius);
@@ -1094,15 +1109,15 @@ watch(
   min-width: 0;
   display: grid;
   align-content: start;
-  gap: 8px;
-  padding-top: clamp(2px, 0.5vw, 8px);
+  gap: 6px;
+  padding-top: 0;
   position: relative;
   z-index: 2;
 }
 
 .hero-copy-body {
   display: grid;
-  gap: 9px;
+  gap: 7px;
   padding-top: var(--workbench-hero-copy-offset);
 }
 
@@ -1112,9 +1127,9 @@ watch(
   color: var(--workbench-ink);
   display: -webkit-box;
   overflow: hidden;
-  font-size: clamp(1.34rem, 1.18vw, 1.6rem);
+  font-size: 1.42rem;
   font-weight: 740;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   line-height: 1.08;
   line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1273,7 +1288,7 @@ watch(
   position: relative;
   align-self: stretch;
   min-height: 0;
-  margin: -16px 0 -12px;
+  margin: -14px 0 -10px;
   overflow: hidden;
   border-radius: 0 var(--workbench-card-radius) var(--workbench-card-radius) 0;
   opacity: 0.94;
@@ -1383,12 +1398,29 @@ watch(
   transform: translateY(0);
 }
 
-.panel__header h2 {
+.module-title {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   margin: 0;
   color: var(--workbench-ink);
-  font-size: 1.08rem;
+  font-size: 0.98rem;
   font-weight: 760;
-  letter-spacing: -0.035em;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.module-title__icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--workbench-soft);
+  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
 }
 
 .panel {
@@ -1410,6 +1442,18 @@ watch(
   grid-area: recent;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
+}
+
+.panel-row--recent .feed-list {
+  grid-auto-rows: var(--workbench-feed-row-min-height);
+}
+
+.panel-row--recent .feed-row {
+  height: var(--workbench-feed-row-min-height);
+}
+
+.panel-row--recent .module-empty {
+  margin: 0 18px 14px;
 }
 
 .panel--half {
@@ -1892,46 +1936,8 @@ watch(
   gap: 9px;
 }
 
-.side-card__header--compact h3 {
-  font-size: 0.88rem;
-}
-
 .side-card__header--insights {
   align-items: flex-start;
-}
-
-.side-card__header h3 {
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  margin: 0;
-  color: var(--workbench-ink);
-  font-size: 0.98rem;
-  font-weight: 760;
-  letter-spacing: -0.03em;
-}
-
-.side-card__title-icon {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-}
-
-.side-card__title-icon--ai {
-  background: var(--workbench-soft);
-  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
-}
-
-.side-card__title-icon--overview,
-.side-card__title-icon--tags,
-.side-card__title-icon--topic {
-  background: var(--workbench-soft);
-  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
 }
 
 .state-pill {
@@ -2031,7 +2037,7 @@ watch(
 .insights-block {
   min-width: 0;
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .insights-block--stats {
@@ -2040,11 +2046,11 @@ watch(
 
 .insight-achievement-hero {
   min-width: 0;
-  min-height: 64px;
+  min-height: 48px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 30px;
+  grid-template-columns: minmax(0, 1fr) 26px;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   overflow: hidden;
   padding: 0;
 }
@@ -2052,14 +2058,14 @@ watch(
 .insight-achievement-hero__main {
   min-width: 0;
   display: grid;
-  gap: 4px;
+  gap: 3px;
 }
 
 .insight-achievement-hero__label {
   min-width: 0;
   overflow: hidden;
   color: color-mix(in srgb, var(--workbench-blue) 70%, var(--workbench-ink));
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 760;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2069,7 +2075,7 @@ watch(
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-ink);
-  font-size: 1.6rem;
+  font-size: 1.32rem;
   font-weight: 820;
   letter-spacing: 0;
   line-height: 1;
@@ -2078,8 +2084,8 @@ watch(
 }
 
 .insight-achievement-hero__icon {
-  width: 30px;
-  height: 30px;
+  width: 26px;
+  height: 26px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2088,18 +2094,18 @@ watch(
 
 .insight-summary-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 10px;
   background: transparent;
 }
 
 .insight-summary-item {
   min-width: 0;
-  min-height: 24px;
+  min-height: 22px;
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) auto;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   padding: 0;
 }
 
@@ -2114,7 +2120,7 @@ watch(
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-muted);
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   font-weight: 660;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -2124,7 +2130,7 @@ watch(
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-ink);
-  font-size: 0.98rem;
+  font-size: 0.86rem;
   font-weight: 780;
   letter-spacing: 0;
   text-align: right;
@@ -2297,8 +2303,8 @@ watch(
   grid-area: insights;
   align-self: stretch;
   grid-template-rows: auto auto;
-  gap: 16px;
-  padding: 14px 16px;
+  gap: 10px;
+  padding: 12px 14px;
 }
 
 .side-card--tags {
@@ -2508,8 +2514,13 @@ watch(
   .feed-row {
     align-items: flex-start;
     min-height: 62px;
+    height: auto;
     padding-top: 12px;
     padding-bottom: 12px;
+  }
+
+  .panel-row--recent .feed-list {
+    grid-auto-rows: auto;
   }
 
   .feed-row__time {
