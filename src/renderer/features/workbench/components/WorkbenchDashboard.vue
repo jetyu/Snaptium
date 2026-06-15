@@ -147,15 +147,18 @@
                   </button>
                 </span>
               </span>
-              <button type="button" class="smart-focus__body"
-                @click="openSmartRecommendation(primarySmartRecommendation)">
+              <div class="smart-focus__body" role="button" tabindex="0"
+                @click="openSmartRecommendation(primarySmartRecommendation)"
+                @keydown.enter.prevent="openSmartRecommendation(primarySmartRecommendation)"
+                @keydown.space.prevent="openSmartRecommendation(primarySmartRecommendation)">
                 <span class="smart-focus__title">{{ primarySmartRecommendation.note.title }}</span>
                 <span class="smart-focus__meta">
                   <span>{{ formatRelativeTime(primarySmartRecommendation.note.updatedAt) }}</span>
                   <span v-for="topic in topTopicLabels.slice(0, 3)" :key="topic">{{ topic }}</span>
                 </span>
-                <span class="smart-focus__preview">{{ getSmartNotePreview(primarySmartRecommendation.note) }}</span>
-              </button>
+                <div class="smart-focus__preview smart-focus__preview--markdown markdown-body"
+                  v-html="getSmartNotePreviewHtml(primarySmartRecommendation.note)" />
+              </div>
             </article>
 
             <div class="smart-lanes">
@@ -300,6 +303,7 @@ import { computed, onMounted, ref, watch, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import defaultHeroUrl from '@assets/images/default-hero.png';
+import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import {
   IconPencil,
   IconPhoto,
@@ -322,6 +326,7 @@ import {
   buildNoteTemplate,
   useWorkspace,
   useWorkspaceStore,
+  workspaceService,
   type Note,
   type NoteTemplate,
   type NoteTemplateId,
@@ -736,6 +741,43 @@ function getSmartNotePreview(note: Note): string {
     .trim();
 
   return text || t('workbench.empty.noContent');
+}
+
+function getSmartNotePreviewHtml(note: Note): string {
+  const previewMarkdown = note.content
+    .replace(/```[\s\S]*?```/g, '\n')
+    .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')
+    .replace(/^\s*[-*+]\s+\[[ xX]\]\s+/gm, '- ')
+    .split('\n')
+    .map((line) => line.trimEnd())
+    .filter((line, index, lines) => {
+      if (line.trim()) {
+        return true;
+      }
+      const previousLine = lines[index - 1];
+        return Boolean(previousLine?.trim());
+    })
+    .slice(0, 15)
+    .join('\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+    .slice(0, 1440);
+
+  if (!previewMarkdown) {
+    return t('workbench.empty.noContent');
+  }
+
+  const renderedHtml = renderMarkdown(previewMarkdown, {
+    allowHtml: false,
+    allowInlineSvg: false,
+    remoteImageMode: 'blocked',
+    blockedImageLabel: t('preview.remoteImageBlocked'),
+    copyCodeButtonLabel: t('preview.copyCode'),
+    contentId: note.contentId,
+    workspaceRoot: workspaceService.getCurrentWorkspaceRoot(),
+  });
+
+  return renderedHtml.trim();
 }
 
 function normalizeTodoSnippet(value: string): string {
@@ -1636,7 +1678,7 @@ watch(
   align-content: start;
   grid-template-rows: auto auto minmax(0, 1fr);
   gap: 4px;
-  margin-top: 0;
+  margin-top: 8px;
   padding: 0;
   border: 0;
   background: transparent;
@@ -1644,6 +1686,12 @@ watch(
   text-align: left;
   cursor: pointer;
   font: inherit;
+}
+
+.smart-focus__body:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--workbench-blue) 42%, transparent);
+  outline-offset: 4px;
+  border-radius: 10px;
 }
 
 .smart-focus__head,
@@ -1710,16 +1758,104 @@ watch(
 }
 
 .smart-focus__preview {
-  min-height: 34px;
+  min-height: calc(1.28em * 12);
+  max-height: calc(1.28em * 12);
   overflow: hidden;
+  margin-top: 12px;
   color: color-mix(in srgb, var(--workbench-ink) 60%, var(--workbench-muted));
-  display: -webkit-box;
-  font-size: 0.72rem;
-  font-weight: 560;
-  line-height: 1.4;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 540;
+  line-height: 1.28;
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+.smart-focus__preview--markdown {
+  padding-right: 2px;
+}
+
+.smart-focus__preview--markdown :deep(> :first-child) {
+  margin-top: 0;
+}
+
+.smart-focus__preview--markdown :deep(p) {
+  margin: 0 0 0.32rem;
+}
+
+.smart-focus__preview--markdown :deep(h1),
+.smart-focus__preview--markdown :deep(h2),
+.smart-focus__preview--markdown :deep(h3),
+.smart-focus__preview--markdown :deep(h4),
+.smart-focus__preview--markdown :deep(h5),
+.smart-focus__preview--markdown :deep(h6) {
+  margin: 0 0 0.32rem;
+  border: 0;
+  padding: 0;
+  color: color-mix(in srgb, var(--workbench-ink) 84%, var(--workbench-muted));
+  font-weight: 760;
+  line-height: 1.32;
+}
+
+.smart-focus__preview--markdown :deep(h1) {
+  font-size: 1.28em;
+}
+
+.smart-focus__preview--markdown :deep(h2) {
+  font-size: 1.18em;
+}
+
+.smart-focus__preview--markdown :deep(h3) {
+  font-size: 1.1em;
+}
+
+.smart-focus__preview--markdown :deep(h4) {
+  font-size: 1.02em;
+}
+
+.smart-focus__preview--markdown :deep(h5) {
+  font-size: 0.96em;
+}
+
+.smart-focus__preview--markdown :deep(h6) {
+  font-size: 0.92em;
+  color: color-mix(in srgb, var(--workbench-ink) 72%, var(--workbench-muted));
+}
+
+.smart-focus__preview--markdown :deep(ul),
+.smart-focus__preview--markdown :deep(ol) {
+  margin: 0 0 0.36rem;
+  padding-left: 1rem;
+}
+
+.smart-focus__preview--markdown :deep(li) {
+  margin: 0;
+}
+
+.smart-focus__preview--markdown :deep(blockquote) {
+  margin: 0 0 0.36rem;
+  padding-left: 0.56rem;
+}
+
+.smart-focus__preview--markdown :deep(pre) {
+  margin: 0 0 0.36rem;
+}
+
+.smart-focus__preview--markdown :deep(pre code) {
+  white-space: pre-wrap;
+}
+
+.smart-focus__preview--markdown :deep(code) {
+  padding: 0 0.18rem;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--workbench-soft) 88%, white);
+  color: color-mix(in srgb, var(--workbench-ink) 82%, var(--workbench-muted));
+  font-size: 0.92em;
+}
+
+.smart-focus__preview--markdown :deep(a) {
+  color: inherit;
+  text-decoration: none;
 }
 
 .smart-focus__meta {
