@@ -34,8 +34,6 @@ Focused on deep writing, knowledge management, and a local-first experience, sup
 [![License](https://img.shields.io/github/license/jetyu/Snaptium?style=flat)](https://github.com/jetyu/Snaptium/blob/main/LICENSE)
 
 </div>
----
-
 # ✨ Project Positioning
 
 Snaptium is not just another Markdown note-taking tool.  

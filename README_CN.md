@@ -36,8 +36,6 @@
 
 </div>
 
----
-
 # ✨ 项目定位
 
 Snaptium 并不仅仅是一款 Markdown 笔记工具。  
