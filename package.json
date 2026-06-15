@@ -24,13 +24,22 @@
     "test:e2e": "playwright test",
     "test": "npm run test:unit",
     "dist": "npm run build && electron-builder",
-    "dist:win": "npm run build && electron-builder --win",
+    "dist:win": "npm run build && node src/scripts/build-win.js",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:linux": "npm run build && electron-builder --linux"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1032.0",
     "@aws-sdk/lib-storage": "^3.1032.0",
+    "@lancedb/lancedb": "^0.27.2",
+    "apache-arrow": "^18.1.0",
+    "argon2": "^0.44.0",
+    "electron-updater": "^6.8.3",
+    "webdav": "^5.9.0",
+    "yarle-evernote-to-md": "^6.17.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
     "@codemirror/autocomplete": "^6.20.1",
     "@codemirror/commands": "^6.8.1",
     "@codemirror/lang-markdown": "^6.3.4",
@@ -38,12 +47,24 @@
     "@codemirror/search": "^6.6.0",
     "@codemirror/state": "^6.5.2",
     "@codemirror/view": "^6.38.6",
-    "@lancedb/lancedb": "^0.27.2",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.54.2",
     "@tabler/icons-vue": "^3.44.0",
-    "apache-arrow": "^18.1.0",
-    "argon2": "^0.44.0",
+    "@types/katex": "^0.16.8",
+    "@types/markdown-it": "^14.1.2",
+    "@types/node": "^22.13.0",
+    "@typescript-eslint/eslint-plugin": "^8.16.0",
+    "@typescript-eslint/parser": "^8.16.0",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitest/coverage-v8": "^4.1.0",
+    "@vue/eslint-config-typescript": "^14.2.0",
+    "concurrently": "^10.0.3",
     "dompurify": "^3.3.3",
-    "electron-updater": "^6.8.3",
+    "electron": "^41.2.1",
+    "electron-builder": "^26.8.1",
+    "eslint": "^10.2.1",
+    "eslint-plugin-vue": "^10.8.0",
+    "globals": "^17.5.0",
     "highlight.js": "^11.11.1",
     "katex": "^0.16.45",
     "markdown-it": "^14.1.0",
@@ -54,35 +75,15 @@
     "markdown-it-sub": "^2.0.0",
     "markdown-it-sup": "^2.0.0",
     "markdown-it-task-lists": "^2.1.1",
-    "pinia": "^3.0.4",
-    "vue": "^3.5.32",
-    "vue-i18n": "^11.3.2",
-    "webdav": "^5.9.0",
-    "yarle-evernote-to-md": "^6.17.0",
-    "zod": "^4.3.6"
-  },
-  "devDependencies": {
-    "@eslint/js": "^10.0.1",
-    "@playwright/test": "^1.54.2",
-    "@types/katex": "^0.16.8",
-    "@types/markdown-it": "^14.1.2",
-    "@types/node": "^22.13.0",
-    "@typescript-eslint/eslint-plugin": "^8.16.0",
-    "@typescript-eslint/parser": "^8.16.0",
-    "@vitejs/plugin-vue": "^6.0.1",
-    "@vitest/coverage-v8": "^4.1.0",
-    "@vue/eslint-config-typescript": "^14.2.0",
-    "concurrently": "^10.0.3",
-    "electron": "^41.2.1",
-    "electron-builder": "^26.8.1",
-    "eslint": "^10.2.1",
-    "eslint-plugin-vue": "^10.8.0",
-    "globals": "^17.5.0",
+    "mermaid": "^11.15.0",
     "nodemon": "^3.1.14",
+    "pinia": "^3.0.4",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.8",
     "vitest": "^4.1.0",
+    "vue": "^3.5.32",
+    "vue-i18n": "^11.3.2",
     "vue-tsc": "^2.1.10",
     "wait-on": "^8.0.1"
   },
@@ -95,6 +96,10 @@
       "buildResources": "assets"
     },
     "compression": "maximum",
+    "electronLanguages": [
+      "en-US",
+      "zh-CN"
+    ],
     "publish": [
       {
         "provider": "generic",
@@ -199,15 +204,13 @@
     "files": [
       "dist/renderer/**/*",
       ".electron-build/**/*",
-      "electron/assets/**/*",
+      "electron/assets/logo/**/*",
       "package.json"
     ],
     "asar": true,
     "asarUnpack": [
-      "**/node_modules/codemirror/**",
-      "**/node_modules/lancedb/**",
-      "**/node_modules/apache-arrow/**",
-      "**/node_modules/markdown-it/**"
+      "**/node_modules/@lancedb/**/*.node",
+      "**/node_modules/argon2/**/*.node"
     ],
     "extraResources": [
       {

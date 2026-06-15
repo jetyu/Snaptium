@@ -1,7 +1,7 @@
 <template>
   <section
     ref="previewRoot"
-    class="panel preview preview-panel"
+    class="panel preview preview-panel markdown-body"
     tabindex="0"
     v-html="html"
     :style="previewStyle"
@@ -10,8 +10,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { renderMarkdownEnhancements } from '@renderer/core/markdown/markdownEnhancements';
 import { useSettingsStore } from '../../settings/store/settings.store';
 
 type PreviewScrollBehavior = 'auto' | 'smooth' | 'instant';
@@ -28,6 +29,7 @@ const settingsStore = useSettingsStore();
 const previewRoot = ref<HTMLElement | null>(null);
 const { t } = useI18n();
 const copyResetTimers = new Map<HTMLButtonElement, ReturnType<typeof setTimeout>>();
+let enhancementRunId = 0;
 
 const previewStyle = computed(() => {
   const { fontSize, fontFamily } = settingsStore.config.previewAppearance;
@@ -39,6 +41,16 @@ const previewStyle = computed(() => {
 
 function getScrollContainer() {
   return previewRoot.value;
+}
+
+async function syncMarkdownEnhancements() {
+  const runId = ++enhancementRunId;
+  await nextTick();
+  if (runId !== enhancementRunId) {
+    return;
+  }
+
+  await renderMarkdownEnhancements(previewRoot.value);
 }
 
 interface SourceMapEntry {
@@ -254,10 +266,16 @@ watch(
       }
     }
     copyResetTimers.clear();
+    void syncMarkdownEnhancements();
   },
 );
 
+onMounted(() => {
+  void syncMarkdownEnhancements();
+});
+
 onBeforeUnmount(() => {
+  enhancementRunId += 1;
   for (const timeout of copyResetTimers.values()) {
     clearTimeout(timeout);
   }

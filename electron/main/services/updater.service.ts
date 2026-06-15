@@ -1,5 +1,6 @@
 import updaterPkg from 'electron-updater';
 const { autoUpdater } = updaterPkg;
+import { CancellationToken } from 'builder-util-runtime';
 import { app, BrowserWindow } from 'electron';
 import {
   buildUpdateFeedUrl,
@@ -18,13 +19,17 @@ class UpdaterService {
   private mainWindow: BrowserWindow | null;
   private updateCheckInterval: ReturnType<typeof setInterval> | null;
   private initialCheckTimeout: ReturnType<typeof setTimeout> | null;
+  private downloadCancellationToken: CancellationToken | null;
   private isChecking: boolean;
+  private currentCheckSilent: boolean;
 
   constructor() {
     this.mainWindow = null;
     this.updateCheckInterval = null;
     this.initialCheckTimeout = null;
+    this.downloadCancellationToken = null;
     this.isChecking = false;
+    this.currentCheckSilent = false;
 
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = true;
@@ -70,13 +75,15 @@ class UpdaterService {
     autoUpdater.on('checking-for-update', () => {
       logger.debug('Checking for updates...');
       this.isChecking = true;
-      this.sendToRenderer('updater:checking');
+      this.sendToRenderer('updater:checking', { silent: this.currentCheckSilent });
     });
 
     autoUpdater.on('update-available', (info) => {
       logger.debug('Update available', { version: info.version });
+      const silent = this.currentCheckSilent;
       this.isChecking = false;
       this.sendToRenderer('updater:available', {
+        silent,
         version: info.version,
         releaseDate: info.releaseDate,
         releaseNotes: info.releaseNotes,
@@ -84,14 +91,18 @@ class UpdaterService {
       });
 
       trayService.showUpdateNotification(info.version);
+      this.currentCheckSilent = false;
     });
 
     autoUpdater.on('update-not-available', (info) => {
       logger.debug('Update not available', { version: info.version });
+      const silent = this.currentCheckSilent;
       this.isChecking = false;
       this.sendToRenderer('updater:not-available', {
+        silent,
         version: info.version,
       });
+      this.currentCheckSilent = false;
     });
 
     autoUpdater.on('download-progress', (progressObj) => {
@@ -111,20 +122,34 @@ class UpdaterService {
       });
     });
 
+    autoUpdater.on('update-cancelled', (info) => {
+      logger.debug('Update download cancelled', { version: info.version });
+      this.sendToRenderer('updater:download-cancelled', {
+        version: info.version,
+        releaseDate: info.releaseDate,
+        releaseNotes: info.releaseNotes,
+        files: info.files,
+      });
+    });
+
     autoUpdater.on('error', (error: unknown) => {
       logger.error('Update error', { error: getErrorMessage(error) });
+      const silent = this.currentCheckSilent;
       this.isChecking = false;
 
       if (this.latestVersionNotFound(error)) {
         logger.debug('No releases found on GitHub');
-        this.sendToRenderer('updater:not-available', { version: app.getVersion() });
+        this.sendToRenderer('updater:not-available', { silent, version: app.getVersion() });
+        this.currentCheckSilent = false;
         return;
       }
 
       this.sendToRenderer('updater:error', {
+        silent,
         message: getErrorMessage(error),
         code: getErrorCode(error) ?? 'UNKNOWN_ERROR',
       });
+      this.currentCheckSilent = false;
     });
   }
 
@@ -140,7 +165,8 @@ class UpdaterService {
     }
 
     try {
-      logger.debug('Manual update check triggered', { silent });
+      logger.debug('Update check triggered', { silent });
+      this.currentCheckSilent = silent;
       this.sendToRenderer('updater:check-start', { silent });
       await autoUpdater.checkForUpdates();
     } catch (error: unknown) {
@@ -148,29 +174,56 @@ class UpdaterService {
 
       if (this.latestVersionNotFound(error)) {
         logger.debug('No releases version found on GitHub');
-        this.sendToRenderer('updater:not-available', { version: app.getVersion() });
+        this.sendToRenderer('updater:not-available', { silent: this.currentCheckSilent, version: app.getVersion() });
+        this.currentCheckSilent = false;
         return;
       }
 
       this.sendToRenderer('updater:error', {
+        silent: this.currentCheckSilent,
         message: getErrorMessage(error),
         code: 'CHECK_FAILED',
       });
+      this.currentCheckSilent = false;
     }
   }
 
   async downloadUpdate(): Promise<void> {
+    if (this.downloadCancellationToken) {
+      logger.warn('Update download already in progress');
+      return;
+    }
+
+    this.downloadCancellationToken = new CancellationToken();
+
     try {
       logger.debug('Starting update download');
       this.sendToRenderer('updater:download-start');
-      await autoUpdater.downloadUpdate();
+      await autoUpdater.downloadUpdate(this.downloadCancellationToken);
     } catch (error: unknown) {
+      if (this.isDownloadCancelled(error)) {
+        logger.info('Update download cancelled');
+        return;
+      }
+
       logger.error('Failed to download update', { error: getErrorMessage(error) });
       this.sendToRenderer('updater:error', {
         message: getErrorMessage(error),
         code: 'DOWNLOAD_FAILED',
       });
+    } finally {
+      this.clearDownloadCancellationToken();
     }
+  }
+
+  cancelDownload(): void {
+    if (!this.downloadCancellationToken) {
+      logger.debug('No update download to cancel');
+      return;
+    }
+
+    logger.debug('Cancelling update download');
+    this.downloadCancellationToken.cancel();
   }
 
   quitAndInstall(): void {
@@ -227,7 +280,18 @@ class UpdaterService {
 
   destroy(): void {
     this.stopAutoCheck();
+    this.clearDownloadCancellationToken();
     this.mainWindow = null;
+    this.currentCheckSilent = false;
+  }
+
+  private clearDownloadCancellationToken(): void {
+    this.downloadCancellationToken?.dispose();
+    this.downloadCancellationToken = null;
+  }
+
+  private isDownloadCancelled(error: unknown): boolean {
+    return getErrorMessage(error, '') === 'cancelled';
   }
 }
 

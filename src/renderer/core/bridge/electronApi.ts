@@ -204,6 +204,7 @@ export interface UpdaterUpdateInfoPayload {
   releaseDate?: string;
   releaseNotes?: string;
   files?: JsonObject[];
+  silent?: boolean;
 }
 
 export interface UpdaterProgressPayload {
@@ -213,9 +214,14 @@ export interface UpdaterProgressPayload {
   total: number;
 }
 
+export interface UpdaterCheckPayload {
+  silent: boolean;
+}
+
 export interface UpdaterErrorPayload {
   message: string;
   code: string;
+  silent?: boolean;
 }
 
 export interface UpdaterConfigPayload {
@@ -926,11 +932,13 @@ export const electronApi = {
     },
     check: (silent = false) => electronApi.updater.getApi().check(silent),
     download: () => electronApi.updater.getApi().download(),
+    cancelDownload: () => electronApi.updater.getApi().cancelDownload(),
     install: () => electronApi.updater.getApi().install(),
     getVersion: () => electronApi.updater.getApi().getVersion(),
     updateConfig: (config: UpdaterConfigPayload) => electronApi.updater.getApi().updateConfig(config),
-    onChecking: (callback: () => void) => electronApi.updater.getApi().onChecking(callback),
+    onChecking: (callback: (data: UpdaterCheckPayload) => void) => electronApi.updater.getApi().onChecking(callback),
     onAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => electronApi.updater.getApi().onAvailable(callback),
+    onCancelled: (callback: (data: UpdaterUpdateInfoPayload) => void) => electronApi.updater.getApi().onCancelled(callback),
     onNotAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => electronApi.updater.getApi().onNotAvailable(callback),
     onDownloadProgress: (callback: (data: UpdaterProgressPayload) => void) => electronApi.updater.getApi().onDownloadProgress(callback),
     onDownloaded: (callback: (data: UpdaterUpdateInfoPayload) => void) => electronApi.updater.getApi().onDownloaded(callback),

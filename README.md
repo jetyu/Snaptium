@@ -31,7 +31,7 @@ Focused on deep writing, knowledge management, and a local-first experience, sup
 
 [![Open Issues](https://img.shields.io/github/issues/jetyu/Snaptium?style=flat&color=orange)]()
 [![Closed Issues](https://img.shields.io/github/issues-closed/jetyu/Snaptium?style=flat&color=brightgreen)]()
-[![License](https://img.shields.io/github/license/jetyu/Snaptium?style=flat)]()
+[![License](https://img.shields.io/github/license/jetyu/Snaptium?style=flat)](https://github.com/jetyu/Snaptium/blob/main/LICENSE)
 
 </div>
 ---

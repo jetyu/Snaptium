@@ -17,6 +17,10 @@ export interface ProgressInfo {
   total: number;
 }
 
+export interface UpdateEventContext {
+  silent: boolean;
+}
+
 export interface ErrorInfo {
   message: string;
   code: string;
@@ -29,12 +33,13 @@ export interface UpdaterConfig {
 }
 
 export interface UpdateEventHandlers {
-  onChecking?: () => void;
-  onAvailable?: (info: UpdateInfo) => void;
-  onNotAvailable?: (info: UpdateInfo) => void;
+  onChecking?: (context: UpdateEventContext) => void;
+  onAvailable?: (info: UpdateInfo, context: UpdateEventContext) => void;
+  onCancelled?: (info: UpdateInfo) => void;
+  onNotAvailable?: (info: UpdateInfo, context: UpdateEventContext) => void;
   onDownloadProgress?: (progress: ProgressInfo) => void;
   onDownloaded?: (info: UpdateInfo) => void;
-  onError?: (error: ErrorInfo) => void;
+  onError?: (error: ErrorInfo, context: UpdateEventContext) => void;
 }
 
 function normalizeUpdateInfo(payload: unknown): UpdateInfo {
@@ -54,6 +59,13 @@ function normalizeProgressInfo(payload: unknown): ProgressInfo {
     bytesPerSecond: Number(progress.bytesPerSecond ?? 0),
     transferred: Number(progress.transferred ?? 0),
     total: Number(progress.total ?? 0),
+  };
+}
+
+function normalizeUpdateContext(payload: unknown): UpdateEventContext {
+  const context = (typeof payload === 'object' && payload !== null ? payload : {}) as { silent?: unknown };
+  return {
+    silent: Boolean(context.silent),
   };
 }
 
@@ -95,6 +107,10 @@ export const updaterService = {
     return await electronApi.updater.download();
   },
 
+  async cancelDownload(): Promise<{ success: boolean }> {
+    return await electronApi.updater.cancelDownload();
+  },
+
   async install(): Promise<{ success: boolean }> {
     return await electronApi.updater.install();
   },
@@ -111,12 +127,24 @@ export const updaterService = {
 
   subscribe(handlers: UpdateEventHandlers): () => void {
     const cleanups = [
-      electronApi.updater.onChecking(() => handlers.onChecking?.()),
-      electronApi.updater.onAvailable((payload: unknown) => handlers.onAvailable?.(normalizeUpdateInfo(payload))),
-      electronApi.updater.onNotAvailable((payload: unknown) => handlers.onNotAvailable?.(normalizeUpdateInfo(payload))),
+      electronApi.updater.onChecking((payload: unknown) => handlers.onChecking?.(normalizeUpdateContext(payload))),
+      electronApi.updater.onAvailable((payload: unknown) => {
+        const context = normalizeUpdateContext(payload);
+        handlers.onAvailable?.(normalizeUpdateInfo(payload), context);
+      }),
+      electronApi.updater.onCancelled((payload: unknown) => {
+        handlers.onCancelled?.(normalizeUpdateInfo(payload));
+      }),
+      electronApi.updater.onNotAvailable((payload: unknown) => {
+        const context = normalizeUpdateContext(payload);
+        handlers.onNotAvailable?.(normalizeUpdateInfo(payload), context);
+      }),
       electronApi.updater.onDownloadProgress((payload: unknown) => handlers.onDownloadProgress?.(normalizeProgressInfo(payload))),
       electronApi.updater.onDownloaded((payload: unknown) => handlers.onDownloaded?.(normalizeUpdateInfo(payload))),
-      electronApi.updater.onError((payload: unknown) => handlers.onError?.(normalizeErrorInfo(payload))),
+      electronApi.updater.onError((payload: unknown) => {
+        const context = normalizeUpdateContext(payload);
+        handlers.onError?.(normalizeErrorInfo(payload), context);
+      }),
     ];
 
     return () => {

@@ -9,16 +9,18 @@
               <strong>{{ t('workbench.hero.dailyQuote') }}</strong>
               <span>{{ dailyQuoteText }}</span>
             </em>
-            <p class="hero-greeting">{{ greetingText }}</p>
-            <h1>{{ heroLeadText }}</h1>
-            <div class="hero-meta">
-              <span v-if="hasNotes">{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
-            </div>
-            <div class="hero-actions">
-              <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
-                <IconPencil :size="14" />
-                <span>{{ t('workbench.action.continueWriting') }}</span>
-              </button>
+            <div class="hero-copy-body">
+              <p class="hero-greeting">{{ greetingText }}</p>
+              <h1>{{ heroLeadText }}</h1>
+              <div class="hero-meta">
+                <span v-if="hasNotes">{{ t('workbench.label.recentEdited') }} {{ recentEditedTime }}</span>
+              </div>
+              <div class="hero-actions">
+                <button type="button" class="hero-action hero-action--primary" @click="handlePrimaryAction">
+                  <IconPencil :size="14" />
+                  <span>{{ t('workbench.action.continueWriting') }}</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -41,22 +43,15 @@
           </div>
         </section>
 
-        <section class="overview-section">
-          <div class="overview-grid">
-            <article v-for="metric in overviewMetrics" :key="metric.id" class="overview-card">
-              <div class="overview-card__head">
-                <component :is="metric.icon" :size="15" />
-                <span>{{ metric.label }}</span>
-              </div>
-              <p class="overview-card__content">{{ metric.value }}</p>
-            </article>
-          </div>
-        </section>
-
         <div class="panel-row panel-row--recent">
           <section class="panel panel--half">
             <header class="panel__header">
-              <h2>{{ t('workbench.module.recentActivity') }}</h2>
+              <h2 class="module-title">
+                <span class="module-title__icon">
+                  <IconClock :size="14" />
+                </span>
+                {{ t('workbench.module.recentActivity') }}
+              </h2>
             </header>
 
             <div v-if="recentActivityPreview.length > 0" class="feed-list feed-list--interactive">
@@ -78,7 +73,12 @@
 
           <section class="panel panel--half">
             <header class="panel__header">
-              <h2>{{ t('workbench.module.recentQuestions') }}</h2>
+              <h2 class="module-title">
+                <span class="module-title__icon">
+                  <IconDatabaseSearch :size="14" />
+                </span>
+                {{ t('workbench.module.recentQuestions') }}
+              </h2>
             </header>
 
             <div v-if="recentQuestionEntriesPreview.length > 0" class="feed-list feed-list--interactive">
@@ -113,8 +113,12 @@
 
         <section class="panel panel--smart">
           <header class="panel__header">
-            <h2>{{ t('workbench.module.smartRecommendation') }}</h2>
-            <span class="panel-badge">{{ t('workbench.tag.aiEnhanced') }}</span>
+            <h2 class="module-title">
+              <span class="module-title__icon">
+                <IconBrain :size="14" />
+              </span>
+              {{ t('workbench.module.smartRecommendation') }}
+            </h2>
           </header>
 
           <div v-if="primarySmartRecommendation" class="smart-grid">
@@ -198,39 +202,42 @@
 
       <aside class="workbench-side">
         <section class="side-card side-card--insights">
-          <header class="side-card__header side-card__header--compact side-card__header--insights">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--growth">
+          <header class="side-card__header side-card__header--insights">
+            <h3 class="module-title">
+              <span class="module-title__icon">
                 <IconChartRadar :size="14" />
               </span>
-              {{ t('workbench.sidebar.growth') }}
+              {{ t('workbench.sidebar.overview') }}
             </h3>
           </header>
 
           <div class="insights-block insights-block--stats">
-            <div class="stats-list stats-list--compact">
-              <div v-for="item in todayStatItems" :key="item.label" class="stats-row">
-                <IconPoint :size="12" class="stats-row__icon" />
-                <span>{{ item.label }}</span>
-                <strong>{{ item.value }}</strong>
-              </div>
-            </div>
-          </div>
+            <article v-if="primaryInsightSummaryItem" class="insight-achievement-hero">
+              <span class="insight-achievement-hero__main">
+                <span class="insight-achievement-hero__label">{{ primaryInsightSummaryItem.label }}</span>
+                <strong class="insight-achievement-hero__value">{{ primaryInsightSummaryItem.value }}</strong>
+              </span>
+              <span class="insight-achievement-hero__icon">
+                <component :is="primaryInsightSummaryItem.icon" :size="20" />
+              </span>
+            </article>
 
-          <div class="insights-block insights-block--growth">
-            <div class="growth-chart growth-chart--compact">
-              <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-                <polyline :points="growthPolyline" />
-              </svg>
+            <div class="insight-summary-grid">
+              <article v-for="item in secondaryInsightSummaryItems" :key="item.id" class="insight-summary-item">
+                <span class="insight-summary-item__icon">
+                  <component :is="item.icon" :size="13" />
+                </span>
+                <span class="insight-summary-item__label">{{ item.label }}</span>
+                <strong>{{ item.value }}</strong>
+              </article>
             </div>
-            <p class="side-card__muted side-card__muted--compact">{{ growthLabel }}</p>
           </div>
         </section>
 
         <section class="side-card side-card--tags">
           <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--tags">
+            <h3 class="module-title">
+              <span class="module-title__icon">
                 <IconTag :size="14" />
               </span>
               {{ t('workbench.sidebar.activeTags') }}
@@ -256,8 +263,8 @@
 
         <section class="side-card side-card--topic">
           <header class="side-card__header">
-            <h3>
-              <span class="side-card__title-icon side-card__title-icon--topic">
+            <h3 class="module-title">
+              <span class="module-title__icon">
                 <IconHierarchy :size="14" />
               </span>
               {{ t('workbench.sidebar.knowledgeTopics') }}
@@ -299,10 +306,8 @@ import {
   IconBrain,
   IconLink,
   IconFileText,
-  IconPoint,
   IconChartRadar,
   IconHierarchy,
-  IconStar,
   IconAlignBoxBottomCenter,
   IconDatabaseSearch,
   IconChartHistogram,
@@ -354,16 +359,11 @@ interface TodoFallbackEntry {
   updatedAt: number;
 }
 
-interface OverviewMetric {
+interface InsightSummaryItem {
   id: string;
   label: string;
   value: string;
   icon: Component;
-}
-
-interface TodayStatItem {
-  label: string;
-  value: string;
 }
 
 interface ActiveTagEntry {
@@ -388,8 +388,6 @@ const SMART_RECOMMENDATION_LANE_LIMIT = Math.max(
 const TODO_TASK_REGEX = /^[-*+]\s+\[\s\]\s+(.+)$/;
 const TODO_MARKER_REGEX = /(?:^|\s)(?:TODO|TBD|FIXME)\b:?\s*(.+)?$/i;
 const CODE_FENCE_REGEX = /^\s*(?:```|~~~)/;
-const LINK_REGEX = /\[\[[^[\]]+\]\]|\[[^\]]+\]\([^)]+\)/g;
-const HEADING_REGEX = /^#{1,6}\s+/gm;
 
 const { t } = useI18n();
 const { openSearchView } = useSearch();
@@ -476,7 +474,6 @@ const smartRecommendationLaneItems = computed<LocalSmartRecommendationItem[]>(()
 const behaviorFeedback = computed(() => {
   const now = Date.now();
   const todayStart = getDayStartTimestamp(now);
-  const sevenDayThreshold = todayStart - (6 * DAY_MS);
   const activeDays = new Set(notes.value.map((note) => getLocalDateKey(note.updatedAt)));
 
   let streakDays = 0;
@@ -488,8 +485,6 @@ const behaviorFeedback = computed(() => {
 
   return {
     totalCharacters: notes.value.reduce((total, note) => total + getCharacterCount(note.content), 0),
-    totalNotes: notes.value.length,
-    activeLast7Days: notes.value.filter((note) => note.updatedAt >= sevenDayThreshold).length,
     streakDays,
   };
 });
@@ -518,20 +513,6 @@ const recentActivity = computed<ActivityEntry[]>(() => {
 });
 
 const recentActivityPreview = computed<ActivityEntry[]>(() => recentActivity.value);
-
-const starredCount = computed<number>(() => {
-  const sNotes = notes.value.filter((note) => note.starred).length;
-  const sNotebooks = notebooks.value.filter((nb) => nb.starred).length;
-  return sNotes + sNotebooks;
-});
-
-const knowledgePointCount = computed<number>(() => {
-  return notes.value.reduce((total, note) => {
-    const linkCount = note.content.match(LINK_REGEX)?.length ?? 0;
-    const headingCount = note.content.match(HEADING_REGEX)?.length ?? 0;
-    return total + linkCount + headingCount;
-  }, 0);
-});
 
 const topTopicLabels = computed<string[]>(() => {
   const clusterLabels = knowledgeTopicEntries.value.slice(0, 4).map((topic) => topic.label);
@@ -575,7 +556,12 @@ const activeTagEntries = computed<ActiveTagEntry[]>(() => {
     }));
 });
 
-const overviewMetrics = computed<OverviewMetric[]>(() => {
+const todayQuestionCount = computed<number>(() => {
+  const todayStart = getDayStartTimestamp(Date.now());
+  return recentQuestionEntries.value.filter((entry) => entry.askedAt >= todayStart).length;
+});
+
+const insightSummaryItems = computed<InsightSummaryItem[]>(() => {
   return [
     {
       id: 'total-writing',
@@ -584,86 +570,33 @@ const overviewMetrics = computed<OverviewMetric[]>(() => {
       icon: IconAlignBoxBottomCenter,
     },
     {
-      id: 'streak',
-      label: t('workbench.behavior.streakDays'),
-      value: formatNumber(behaviorFeedback.value.streakDays),
-      icon: IconChartHistogram,
-    },
-    {
       id: 'documents',
       label: t('workbench.stats.noteCount'),
       value: formatNumber(notes.value.length),
       icon: IconFileText,
     },
     {
-      id: 'favorites',
-      label: t('workbench.module.favorites'),
-      value: formatNumber(starredCount.value),
-      icon: IconStar,
+      id: 'today-updated',
+      label: t('workbench.stats.todayUpdatedNotes'),
+      value: formatNumber(todayUpdatedNoteCount.value),
+      icon: IconPencil,
     },
     {
-      id: 'knowledge',
-      label: t('search.semanticSearch'),
-      value: formatNumber(knowledgePointCount.value),
+      id: 'today-questions',
+      label: t('workbench.stats.todayQuestions'),
+      value: formatNumber(todayQuestionCount.value),
       icon: IconDatabaseSearch,
+    },
+    {
+      id: 'streak',
+      label: t('workbench.behavior.streakDays'),
+      value: formatNumber(behaviorFeedback.value.streakDays),
+      icon: IconChartHistogram,
     },
   ];
 });
-
-const dailyUpdatedNoteSeries = computed<number[]>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const buckets = new Array<number>(7).fill(0);
-
-  notes.value.forEach((note) => {
-    const diffDays = Math.floor((todayStart - getDayStartTimestamp(note.updatedAt)) / DAY_MS);
-    if (diffDays < 0 || diffDays > 6) {
-      return;
-    }
-    const bucketIndex = 6 - diffDays;
-    buckets[bucketIndex] += 1;
-  });
-
-  return buckets;
-});
-
-const growthPolyline = computed<string>(() => {
-  const points = dailyUpdatedNoteSeries.value;
-  if (points.length === 0) {
-    return '0,100 100,100';
-  }
-  const max = Math.max(1, ...points);
-  return points
-    .map((value, index) => {
-      const x = points.length === 1 ? 0 : (index / (points.length - 1)) * 100;
-      const y = 100 - ((value / max) * 92 + 4);
-      return `${x},${Math.max(2, Math.min(98, y))}`;
-    })
-    .join(' ');
-});
-
-const thisWeekUpdatedNoteCount = computed<number>(() => dailyUpdatedNoteSeries.value.reduce((total, value) => total + value, 0));
-const previousWeekUpdatedNoteCount = computed<number>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const prevWeekStart = todayStart - (13 * DAY_MS);
-  const prevWeekEnd = todayStart - (6 * DAY_MS);
-
-  return notes.value.filter((note) => note.updatedAt >= prevWeekStart && note.updatedAt < prevWeekEnd).length;
-});
-
-const weeklyGrowthPercentText = computed<string>(() => {
-  const prev = previousWeekUpdatedNoteCount.value;
-  const current = thisWeekUpdatedNoteCount.value;
-  if (prev <= 0) {
-    return current > 0 ? '+100%' : '0%';
-  }
-  const delta = Math.round(((current - prev) / prev) * 100);
-  const sign = delta >= 0 ? '+' : '';
-  return `${sign}${delta}%`;
-});
-
-const growthLabel = computed<string>(() => {
-  return `${t('workbench.stats.weeklyGrowth')} ${weeklyGrowthPercentText.value}`;
-});
+const primaryInsightSummaryItem = computed<InsightSummaryItem | null>(() => insightSummaryItems.value[0] ?? null);
+const secondaryInsightSummaryItems = computed<InsightSummaryItem[]>(() => insightSummaryItems.value.slice(1));
 
 const recentEditedTime = computed<string>(() => {
   const targetNote = sortedNotesByUpdated.value[0];
@@ -671,19 +604,6 @@ const recentEditedTime = computed<string>(() => {
     return t('workbench.empty.noData');
   }
   return formatRelativeTime(targetNote.updatedAt);
-});
-
-const todayStatItems = computed<TodayStatItem[]>(() => {
-  const todayStart = getDayStartTimestamp(Date.now());
-  const todayQuestionCount = recentQuestionEntries.value.filter((entry) => entry.askedAt >= todayStart).length;
-  const todayStarredCount = notes.value.filter((note) => note.starred && (note.starredAt ?? 0) >= todayStart).length
-    + notebooks.value.filter((notebook) => notebook.starred && (notebook.starredAt ?? 0) >= todayStart).length;
-
-  return [
-    { label: t('workbench.stats.todayUpdatedNotes'), value: formatNumber(todayUpdatedNoteCount.value) },
-    { label: t('workbench.stats.todayQuestions'), value: formatNumber(todayQuestionCount) },
-    { label: t('workbench.stats.todayFavorites'), value: formatNumber(todayStarredCount) },
-  ];
 });
 
 const greetingText = computed<string>(() => {
@@ -1073,43 +993,39 @@ watch(
 .workbench-dashboard {
   --workbench-page: #fbfbff;
   --workbench-page-end: #f6f8fe;
-  --workbench-card: rgba(255, 255, 255, 0.84);
+  --workbench-card: var(--workbench-card-solid);
   --workbench-card-solid: #ffffff;
-  --workbench-panel: rgba(255, 255, 255, 0.9);
+  --workbench-panel: var(--workbench-card-solid);
   --workbench-border: rgba(126, 136, 166, 0.16);
   --workbench-border-strong: rgba(126, 136, 166, 0.22);
   --workbench-ink: #121625;
   --workbench-muted: #727b91;
-  --workbench-soft: rgba(245, 247, 253, 0.84);
+  --workbench-soft: #f3f6fb;
   --workbench-blue: #3d7cff;
   --workbench-blue-soft: #73a7ff;
   --workbench-teal: #2eb889;
   --workbench-amber: #ef8a25;
   --workbench-rose: #f0508b;
-  --workbench-shadow: 0 16px 38px rgba(43, 52, 82, 0.085), inset 0 1px 0 rgba(255, 255, 255, 0.88);
-  --workbench-shadow-soft: 0 10px 26px rgba(43, 52, 82, 0.065), inset 0 1px 0 rgba(255, 255, 255, 0.84);
+  --workbench-shadow: 0 10px 24px rgba(43, 52, 82, 0.08);
+  --workbench-shadow-soft: 0 6px 16px rgba(43, 52, 82, 0.06);
   --workbench-layout-max-width: 1920px;
   --workbench-page-padding: 16px 20px 24px;
-  --workbench-gap: 16px;
+  --workbench-gap: 14px;
   --workbench-card-radius: 16px;
   --workbench-sidebar-min: 300px;
-  --workbench-hero-min-height: clamp(188px, 13vw, 248px);
-  --workbench-overview-card-min-height: 52px;
+  --workbench-overview-card-height: 220px;
+  --workbench-overview-row-height: 103px;
   --workbench-feed-card-height: clamp(344px, 19vw, 420px);
   --workbench-recommendation-card-height: var(--workbench-feed-card-height);
-  --workbench-panel-header-padding: 16px 20px 10px;
-  --workbench-panel-body-padding: 0 20px 16px;
-  --workbench-feed-row-min-height: 52px;
-  --workbench-overview-card-padding: 7px 12px;
-  --workbench-side-card-padding: 18px 20px;
-  --workbench-growth-chart-height: 110px;
+  --workbench-panel-header-padding: 14px 18px 8px;
+  --workbench-panel-body-padding: 0 18px 14px;
+  --workbench-feed-row-min-height: 38px;
+  --workbench-side-card-padding: 16px 18px;
+  --workbench-hero-copy-offset: 6px;
   flex: 1;
   min-height: 0;
   padding: var(--workbench-page-padding);
-  background:
-    radial-gradient(1050px 460px at 30% -12%, rgba(61, 124, 255, 0.14), transparent 62%),
-    radial-gradient(850px 420px at 96% 6%, rgba(83, 164, 255, 0.1), transparent 58%),
-    linear-gradient(180deg, var(--workbench-page) 0%, var(--workbench-page-end) 100%);
+  background: linear-gradient(180deg, var(--workbench-page) 0%, var(--workbench-page-end) 100%);
   color: var(--workbench-ink);
   overflow-y: auto;
 }
@@ -1117,16 +1033,22 @@ watch(
 :global([data-theme='dark']) .workbench-dashboard {
   --workbench-page: #11141c;
   --workbench-page-end: #161a25;
-  --workbench-card: rgba(28, 32, 44, 0.82);
+  --workbench-card: var(--workbench-card-solid);
   --workbench-card-solid: #1c202c;
-  --workbench-panel: rgba(27, 31, 43, 0.9);
+  --workbench-panel: var(--workbench-card-solid);
   --workbench-border: rgba(151, 162, 194, 0.16);
   --workbench-border-strong: rgba(151, 162, 194, 0.24);
   --workbench-ink: var(--text);
   --workbench-muted: var(--text-muted);
-  --workbench-soft: rgba(34, 39, 54, 0.82);
-  --workbench-shadow: 0 16px 40px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  --workbench-shadow-soft: 0 10px 28px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --workbench-soft: #232836;
+  --workbench-shadow: 0 14px 32px rgba(0, 0, 0, 0.24);
+  --workbench-shadow-soft: 0 8px 20px rgba(0, 0, 0, 0.18);
+}
+
+:global(.main-shell.main-shell--maximized) .workbench-dashboard {
+  --workbench-overview-card-height: 220px;
+  --workbench-overview-row-height: 103px;
+  --workbench-hero-copy-offset: 6px;
 }
 
 .workbench-layout {
@@ -1137,11 +1059,10 @@ watch(
   grid-template-areas:
     "hero insights"
     "hero insights"
-    "overview insights"
     "recent tags"
     "smart topic";
   grid-template-rows:
-    minmax(112px, auto) minmax(96px, auto) auto var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
+    var(--workbench-overview-row-height) var(--workbench-overview-row-height) var(--workbench-feed-card-height) var(--workbench-recommendation-card-height);
   gap: var(--workbench-gap);
   align-items: stretch;
   min-height: 0;
@@ -1155,34 +1076,37 @@ watch(
 
 .hero-card {
   grid-area: hero;
-  min-height: var(--workbench-hero-min-height);
+  height: var(--workbench-overview-card-height);
+  min-height: var(--workbench-overview-card-height);
   display: grid;
   grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.08fr);
   gap: var(--workbench-gap);
-  padding: 18px 0 16px 24px;
+  padding: 14px 0 10px 20px;
   overflow: hidden;
-  border: 1px solid rgba(95, 151, 232, 0.18);
+  border: 1px solid var(--workbench-border);
   border-radius: var(--workbench-card-radius);
-  background:
-    radial-gradient(circle at 9% 13%, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.54) 38%, transparent 64%),
-    linear-gradient(126deg, rgba(255, 255, 255, 0.94) 0%, rgba(251, 250, 255, 0.9) 44%, rgba(238, 234, 255, 0.7) 100%);
+  background: var(--workbench-card-solid);
   box-shadow: var(--workbench-shadow-soft);
 }
 
 :global([data-theme='dark']) .hero-card {
-  background:
-    radial-gradient(circle at 9% 13%, rgba(52, 56, 76, 0.72), rgba(36, 40, 56, 0.52) 38%, transparent 64%),
-    linear-gradient(126deg, rgba(31, 35, 49, 0.96) 0%, rgba(29, 32, 46, 0.92) 44%, rgba(44, 39, 72, 0.68) 100%);
+  background: var(--workbench-card-solid);
 }
 
 .hero-copy {
   min-width: 0;
   display: grid;
   align-content: start;
-  gap: 11px;
-  padding-top: clamp(4px, 0.7vw, 12px);
+  gap: 6px;
+  padding-top: 0;
   position: relative;
   z-index: 2;
+}
+
+.hero-copy-body {
+  display: grid;
+  gap: 7px;
+  padding-top: var(--workbench-hero-copy-offset);
 }
 
 .hero-copy h1 {
@@ -1191,9 +1115,9 @@ watch(
   color: var(--workbench-ink);
   display: -webkit-box;
   overflow: hidden;
-  font-size: clamp(1.34rem, 1.18vw, 1.6rem);
+  font-size: 1.42rem;
   font-weight: 740;
-  letter-spacing: -0.03em;
+  letter-spacing: 0;
   line-height: 1.08;
   line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -1232,17 +1156,15 @@ watch(
   align-items: center;
   gap: 6px;
   padding: 4px 9px 4px 8px;
-  border: 1px solid color-mix(in srgb, var(--workbench-blue) 24%, var(--workbench-border));
+  border: 1px solid var(--workbench-border);
   border-radius: 999px;
-  background:
-    linear-gradient(135deg, rgba(61, 124, 255, 0.14), rgba(115, 167, 255, 0.08)),
-    rgba(255, 255, 255, 0.54);
-  color: color-mix(in srgb, var(--workbench-blue) 76%, var(--workbench-ink));
+  background: var(--workbench-soft);
+  color: color-mix(in srgb, var(--workbench-blue) 72%, var(--workbench-ink));
   font-size: 0.76rem;
   font-style: normal;
   font-weight: 700;
   line-height: 1.32;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.68), 0 5px 14px rgba(61, 124, 255, 0.08);
+  box-shadow: none;
   min-width: 0;
 }
 
@@ -1277,10 +1199,8 @@ watch(
 }
 
 :global([data-theme='dark']) .hero-quote {
-  background:
-    linear-gradient(135deg, rgba(61, 124, 255, 0.18), rgba(115, 167, 255, 0.1)),
-    rgba(255, 255, 255, 0.05);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: var(--workbench-soft);
+  box-shadow: none;
 }
 
 .hero-actions {
@@ -1288,6 +1208,7 @@ watch(
   flex-wrap: wrap;
   gap: 10px;
   padding-top: 0;
+  margin-top: 20px;
 }
 
 .hero-action {
@@ -1354,8 +1275,9 @@ watch(
 .hero-art {
   position: relative;
   align-self: stretch;
+  height: var(--workbench-overview-card-height);
   min-height: 0;
-  margin: -18px 0 -16px;
+  margin: -14px 0 -10px;
   overflow: hidden;
   border-radius: 0 var(--workbench-card-radius) var(--workbench-card-radius) 0;
   opacity: 0.94;
@@ -1377,14 +1299,14 @@ watch(
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(255, 255, 255, 0.54);
+  border: 1px solid rgba(255, 255, 255, 0.18);
   border-radius: 9px;
-  background: rgba(14, 18, 29, 0.48);
+  background: rgba(17, 23, 38, 0.9);
   color: #ffffff;
   opacity: 0;
   transform: translateY(-4px);
   cursor: pointer;
-  backdrop-filter: blur(12px);
+  backdrop-filter: none;
   transition: opacity 0.18s ease, transform 0.18s ease, background-color 0.18s ease;
 }
 
@@ -1416,7 +1338,7 @@ watch(
   font-size: 0.72rem;
   font-weight: 650;
   opacity: 0;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.32);
+  text-shadow: none;
   transform: translateY(4px);
   transition: opacity 0.18s ease, transform 0.18s ease;
 }
@@ -1465,82 +1387,29 @@ watch(
   transform: translateY(0);
 }
 
-.overview-section {
-  grid-area: overview;
-  display: grid;
-  gap: 12px;
-  align-self: start;
-}
-
-.panel__header h2 {
-  margin: 0;
-  color: var(--workbench-ink);
-  font-size: 1.08rem;
-  font-weight: 760;
-  letter-spacing: -0.035em;
-}
-
-.overview-grid {
-  display: grid;
-  width: 100%;
-  overflow: hidden;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  align-items: stretch;
-  border: 1px solid var(--workbench-border);
-  border-radius: 12px;
-  background: var(--workbench-card);
-  box-shadow: var(--workbench-shadow-soft);
-  backdrop-filter: blur(16px);
-}
-
-.overview-card {
+.module-title {
   min-width: 0;
-  min-height: var(--workbench-overview-card-min-height);
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  padding: var(--workbench-overview-card-padding);
-  background: transparent;
-  cursor: default;
-}
-
-.overview-card+.overview-card {
-  border-left: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
-}
-
-.overview-card__head {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  min-width: 0;
-  color: var(--workbench-blue);
-  font-size: 0.68rem;
-  font-weight: 720;
-  line-height: 1.1;
-  white-space: nowrap;
-}
-
-.overview-card__head span {
-  min-width: 0;
-  overflow: hidden;
-  color: color-mix(in srgb, var(--workbench-ink) 62%, var(--workbench-muted));
-  text-overflow: ellipsis;
-}
-
-.overview-card__content {
+  gap: 9px;
   margin: 0;
   color: var(--workbench-ink);
-  font-size: 0.82rem;
-  font-weight: 680;
-  letter-spacing: -0.02em;
-  line-height: 1.08;
-  min-width: 0;
-  justify-self: end;
-  overflow: hidden;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.98rem;
+  font-weight: 760;
+  letter-spacing: 0;
+  line-height: 1.2;
+}
+
+.module-title__icon {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: var(--workbench-soft);
+  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
 }
 
 .panel {
@@ -1550,7 +1419,7 @@ watch(
   border-radius: var(--workbench-card-radius);
   background: var(--workbench-panel);
   box-shadow: var(--workbench-shadow-soft);
-  backdrop-filter: blur(18px);
+  backdrop-filter: none;
 }
 
 .panel-row {
@@ -1564,6 +1433,25 @@ watch(
   align-items: stretch;
 }
 
+.panel-row--recent .panel__header {
+  padding: 16px 18px 12px;
+}
+
+.panel-row--recent .feed-list {
+  gap: 7px;
+}
+
+.panel-row--recent .feed-row {
+  gap: 9px;
+  padding: 5px 9px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+}
+
+.panel-row--recent .module-empty {
+  margin: 0 18px 14px;
+}
+
 .panel--half {
   min-height: 0;
 }
@@ -1574,19 +1462,6 @@ watch(
   justify-content: space-between;
   gap: 12px;
   padding: var(--workbench-panel-header-padding);
-}
-
-.panel-badge {
-  display: inline-flex;
-  align-items: center;
-  min-height: 23px;
-  padding: 0 9px;
-  border: 1px solid rgba(61, 124, 255, 0.18);
-  border-radius: 999px;
-  background: rgba(61, 124, 255, 0.1);
-  color: var(--workbench-blue);
-  font-size: 0.74rem;
-  font-weight: 760;
 }
 
 .feed-list {
@@ -1614,25 +1489,25 @@ watch(
 }
 
 .feed-row:last-child {
-  border-bottom: 0;
+  border-color: transparent;
 }
 
 .feed-list--interactive .feed-row:hover {
-  border-bottom-color: transparent;
+  border-color: var(--workbench-border);
   border-radius: 12px;
-  background: rgba(61, 124, 255, 0.05);
-  box-shadow: inset 0 0 0 1px rgba(61, 124, 255, 0.1);
+  background: var(--workbench-soft);
+  box-shadow: none;
 }
 
 .feed-row__icon {
-  width: 27px;
-  height: 27px;
+  width: 22px;
+  height: 22px;
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  border-radius: 9px;
-  background: rgba(61, 124, 255, 0.09);
+  border-radius: 8px;
+  background: var(--workbench-soft);
   color: var(--workbench-blue);
 }
 
@@ -1640,15 +1515,15 @@ watch(
   min-width: 0;
   display: grid;
   flex: 1;
-  gap: 3px;
+  gap: 4px;
 }
 
 .feed-row__title {
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-ink);
-  font-size: 0.86rem;
-  font-weight: 730;
+  font-size: 0.82rem;
+  font-weight: 780;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1657,8 +1532,8 @@ watch(
   min-width: 0;
   overflow: hidden;
   color: var(--workbench-muted);
-  font-size: 0.76rem;
-  font-weight: 540;
+  font-size: 0.68rem;
+  font-weight: 650;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1666,8 +1541,8 @@ watch(
 .feed-row__time {
   flex-shrink: 0;
   color: var(--workbench-muted);
-  font-size: 0.76rem;
-  font-weight: 620;
+  font-size: 0.68rem;
+  font-weight: 650;
   white-space: nowrap;
 }
 
@@ -1682,10 +1557,10 @@ watch(
   align-items: center;
   min-height: 23px;
   padding: 0 9px;
-  border: 1px solid rgba(61, 124, 255, 0.14);
+  border: 1px solid var(--workbench-border);
   border-radius: 999px;
-  background: rgba(61, 124, 255, 0.1);
-  color: #2f68e6;
+  background: var(--workbench-soft);
+  color: color-mix(in srgb, var(--workbench-blue) 78%, var(--workbench-ink));
   font-size: 0.74rem;
   font-weight: 760;
 }
@@ -1719,28 +1594,24 @@ watch(
   display: grid;
   gap: 4px;
   padding: 12px 14px;
-  border: 1px solid color-mix(in srgb, var(--workbench-blue) 18%, var(--workbench-border));
+  border: 1px solid var(--workbench-border);
   border-radius: 12px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(244, 248, 255, 0.7)),
-    color-mix(in srgb, var(--workbench-blue) 6%, var(--workbench-card));
+  background: var(--workbench-card-solid);
   color: var(--workbench-ink);
   text-align: left;
   font: inherit;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  box-shadow: var(--workbench-shadow-soft);
   transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 
 :global([data-theme='dark']) .smart-focus {
-  background:
-    linear-gradient(135deg, rgba(36, 42, 58, 0.86), rgba(30, 35, 49, 0.72)),
-    color-mix(in srgb, var(--workbench-blue) 9%, var(--workbench-card));
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  background: var(--workbench-card-solid);
+  box-shadow: var(--workbench-shadow-soft);
 }
 
 .smart-focus:hover {
-  border-color: color-mix(in srgb, var(--workbench-blue) 32%, var(--workbench-border));
-  box-shadow: 0 12px 28px rgba(61, 124, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  border-color: var(--workbench-border-strong);
+  box-shadow: var(--workbench-shadow-soft);
 }
 
 .smart-focus__open {
@@ -1802,14 +1673,14 @@ watch(
   align-items: center;
   justify-content: center;
   border-radius: 8px;
-  background: color-mix(in srgb, var(--workbench-blue) 12%, transparent);
-  color: var(--workbench-blue);
+  background: var(--workbench-soft);
+  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
 }
 
 .smart-focus__reason {
   min-width: 0;
   overflow: hidden;
-  color: var(--workbench-blue);
+  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
   font-size: 0.69rem;
   font-weight: 780;
   text-overflow: ellipsis;
@@ -1864,7 +1735,7 @@ watch(
 }
 
 .smart-focus__meta span {
-  background: rgba(61, 124, 255, 0.08);
+  background: var(--workbench-soft);
   color: color-mix(in srgb, var(--workbench-ink) 64%, var(--workbench-muted));
 }
 
@@ -1899,10 +1770,10 @@ watch(
 .smart-feedback__button {
   min-height: 22px;
   padding: 0 7px;
-  border: 1px solid color-mix(in srgb, var(--workbench-blue) 18%, var(--workbench-border));
+  border: 1px solid var(--workbench-border);
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.5);
-  color: color-mix(in srgb, var(--workbench-blue) 78%, var(--workbench-ink));
+  background: var(--workbench-soft);
+  color: color-mix(in srgb, var(--workbench-blue) 72%, var(--workbench-ink));
   cursor: pointer;
   font: inherit;
   font-size: 0.66rem;
@@ -1911,12 +1782,12 @@ watch(
 }
 
 .smart-feedback__button:hover {
-  border-color: color-mix(in srgb, var(--workbench-blue) 32%, var(--workbench-border));
-  background: rgba(61, 124, 255, 0.09);
+  border-color: var(--workbench-border-strong);
+  background: color-mix(in srgb, var(--workbench-soft) 88%, white);
 }
 
 .smart-feedback__button--muted {
-  border-color: color-mix(in srgb, var(--workbench-muted) 24%, var(--workbench-border));
+  border-color: var(--workbench-border);
   color: color-mix(in srgb, var(--workbench-ink) 58%, var(--workbench-muted));
 }
 
@@ -1944,7 +1815,7 @@ watch(
   padding: 5px 10px;
   border: 1px solid var(--workbench-border);
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.46);
+  background: var(--workbench-card-solid);
   color: var(--workbench-ink);
   text-align: left;
   font: inherit;
@@ -1952,12 +1823,12 @@ watch(
 }
 
 :global([data-theme='dark']) .smart-lane {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--workbench-card-solid);
 }
 
 .smart-lane:hover {
-  border-color: color-mix(in srgb, var(--workbench-blue) 24%, var(--workbench-border));
-  background: rgba(61, 124, 255, 0.06);
+  border-color: var(--workbench-border-strong);
+  background: var(--workbench-soft);
 }
 
 .smart-lane__open {
@@ -1982,8 +1853,8 @@ watch(
   align-items: center;
   justify-content: center;
   border-radius: 7px;
-  background: color-mix(in srgb, var(--workbench-blue) 10%, transparent);
-  color: var(--workbench-blue);
+  background: var(--workbench-soft);
+  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
 }
 
 .smart-lane__main {
@@ -1993,7 +1864,7 @@ watch(
 }
 
 .smart-lane__reason {
-  color: var(--workbench-blue);
+  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
   font-size: 0.65rem;
   font-weight: 760;
 }
@@ -2049,9 +1920,9 @@ watch(
   padding: var(--workbench-side-card-padding);
   border: 1px solid var(--workbench-border);
   border-radius: var(--workbench-card-radius);
-  background: var(--workbench-card);
+  background: var(--workbench-card-solid);
   box-shadow: var(--workbench-shadow-soft);
-  backdrop-filter: blur(18px);
+  backdrop-filter: none;
 }
 
 .side-card__header {
@@ -2061,46 +1932,8 @@ watch(
   gap: 9px;
 }
 
-.side-card__header--compact h3 {
-  font-size: 0.88rem;
-}
-
 .side-card__header--insights {
   align-items: flex-start;
-}
-
-.side-card__header h3 {
-  min-width: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  margin: 0;
-  color: var(--workbench-ink);
-  font-size: 0.98rem;
-  font-weight: 760;
-  letter-spacing: -0.03em;
-}
-
-.side-card__title-icon {
-  width: 22px;
-  height: 22px;
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px;
-}
-
-.side-card__title-icon--ai {
-  background: color-mix(in srgb, var(--workbench-blue) 14%, transparent);
-  color: color-mix(in srgb, var(--workbench-blue) 90%, #1e3a8a);
-}
-
-.side-card__title-icon--growth,
-.side-card__title-icon--tags,
-.side-card__title-icon--topic {
-  background: color-mix(in srgb, var(--workbench-blue) 14%, transparent);
-  color: color-mix(in srgb, var(--workbench-blue) 90%, #1e3a8a);
 }
 
 .state-pill {
@@ -2136,32 +1969,13 @@ watch(
   color: #c93068;
 }
 
-.side-card__muted {
-  margin: 0;
-  color: color-mix(in srgb, var(--workbench-ink) 58%, var(--workbench-muted));
-  font-size: 0.84rem;
-  font-weight: 560;
-  line-height: 1.58;
-}
-
-.side-card__muted--compact {
-  align-self: end;
-  display: -webkit-box;
-  overflow: hidden;
-  font-size: 0.76rem;
-  line-height: 1.42;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-}
-
 .side-card__action {
   height: 40px;
   border: 1px solid var(--workbench-border-strong);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.62);
+  background: var(--workbench-soft);
   color: var(--workbench-blue);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  box-shadow: none;
   cursor: pointer;
   font: inherit;
   font-weight: 760;
@@ -2170,9 +1984,9 @@ watch(
 
 .side-card__action--subtle {
   height: 34px;
-  border-color: color-mix(in srgb, var(--workbench-blue) 24%, var(--workbench-border));
-  background: rgba(61, 124, 255, 0.05);
-  color: color-mix(in srgb, var(--workbench-blue) 88%, #1e3a8a);
+  border-color: var(--workbench-border);
+  background: var(--workbench-soft);
+  color: color-mix(in srgb, var(--workbench-blue) 80%, var(--workbench-ink));
   font-size: 0.8rem;
   font-weight: 700;
 }
@@ -2216,104 +2030,108 @@ watch(
   flex-shrink: 0;
 }
 
-.stats-list {
+.insights-block {
+  min-width: 0;
   display: grid;
-  gap: 10px;
+  gap: 6px;
 }
 
-.stats-list--compact {
-  gap: 7px;
+.insights-block--stats {
+  align-content: start;
 }
 
-.stats-row {
+.insight-achievement-hero {
+  min-width: 0;
+  min-height: 60px;
   display: grid;
-  grid-template-columns: 15px minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) 26px;
+  align-items: start;
   gap: 8px;
-  align-items: center;
-  color: var(--workbench-muted);
-  font-size: 0.82rem;
-  font-weight: 630;
+  overflow: hidden;
+  padding: 0;
 }
 
-.stats-list--compact .stats-row {
-  grid-template-columns: 13px minmax(0, 1fr) auto;
-  gap: 7px;
-  font-size: 0.76rem;
+.insight-achievement-hero__main {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
 }
 
-.stats-row__icon {
-  color: color-mix(in srgb, var(--workbench-blue) 84%, white);
-  flex-shrink: 0;
-}
-
-.stats-row span {
+.insight-achievement-hero__label {
   min-width: 0;
   overflow: hidden;
+  color: color-mix(in srgb, var(--workbench-blue) 70%, var(--workbench-ink));
+  font-size: 0.68rem;
+  font-weight: 760;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.stats-row strong {
-  color: var(--workbench-ink);
-  font-size: 0.9rem;
-  font-weight: 780;
-  letter-spacing: -0.02em;
-}
-
-.stats-list--compact .stats-row strong {
-  font-size: 0.82rem;
-}
-
-.insights-block {
+.insight-achievement-hero__value {
   min-width: 0;
+  overflow: visible;
+  color: var(--workbench-ink);
+  font-size: 1.4rem;
+  font-weight: 820;
+  letter-spacing: 0;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.insight-achievement-hero__icon {
+  width: 26px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: start;
+  color: color-mix(in srgb, var(--workbench-blue) 82%, var(--workbench-ink));
+}
+
+.insight-summary-grid {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+  background: transparent;
 }
 
-.insights-block--growth {
-  height: 100%;
-  min-height: 0;
-  grid-template-rows: auto minmax(0, 1fr);
+.insight-summary-item {
+  min-width: 0;
+  min-height: 18px;
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 6px;
+  padding: 0;
 }
 
-.growth-chart {
-  height: var(--workbench-growth-chart-height);
+.insight-summary-item__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: color-mix(in srgb, var(--workbench-blue) 78%, var(--workbench-muted));
+}
+
+.insight-summary-item__label {
+  min-width: 0;
   overflow: hidden;
-  border: 1px solid var(--workbench-border);
-  border-radius: 14px;
-  background:
-    linear-gradient(180deg, rgba(61, 124, 255, 0.14), rgba(61, 124, 255, 0.03) 72%, transparent),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(248, 249, 255, 0.42));
+  color: var(--workbench-muted);
+  font-size: 0.66rem;
+  font-weight: 660;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-:global([data-theme='dark']) .growth-chart {
-  background:
-    linear-gradient(180deg, rgba(61, 124, 255, 0.2), rgba(61, 124, 255, 0.05) 72%, transparent),
-    linear-gradient(180deg, rgba(35, 39, 54, 0.82), rgba(29, 33, 46, 0.48));
-}
-
-.growth-chart svg {
-  width: 100%;
-  height: 100%;
-  padding: 16px 14px 12px;
-}
-
-.growth-chart--compact {
-  border-radius: 12px;
-}
-
-.growth-chart--compact svg {
-  padding: 11px 12px 9px;
-}
-
-.growth-chart polyline {
-  fill: none;
-  stroke: var(--workbench-blue);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 3.6;
-  vector-effect: non-scaling-stroke;
-  filter: drop-shadow(0 8px 14px rgba(61, 124, 255, 0.24));
+.insight-summary-item strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--workbench-ink);
+  font-size: 0.86rem;
+  font-weight: 780;
+  letter-spacing: 0;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .active-tag-list {
@@ -2342,8 +2160,8 @@ watch(
 }
 
 .active-tag-row:hover {
-  border-color: color-mix(in srgb, var(--workbench-blue) 20%, var(--workbench-border));
-  background: rgba(61, 124, 255, 0.05);
+  border-color: var(--workbench-border);
+  background: var(--workbench-soft);
 }
 
 .active-tag-row__main {
@@ -2432,15 +2250,15 @@ watch(
   height: 5px;
   overflow: hidden;
   border-radius: 999px;
-  background: rgba(61, 124, 255, 0.14);
+  background: var(--workbench-soft);
 }
 
 .topic-row__bar i {
   display: block;
   height: 100%;
   border-radius: inherit;
-  background: linear-gradient(90deg, #5aa7ff 0%, #3d7cff 100%);
-  box-shadow: 0 0 14px rgba(61, 124, 255, 0.24);
+  background: var(--workbench-blue);
+  box-shadow: none;
 }
 
 .topic-row__heat strong {
@@ -2460,7 +2278,7 @@ watch(
   color: var(--workbench-muted);
   font-size: 0.78rem;
   font-weight: 620;
-  background: rgba(255, 255, 255, 0.28);
+  background: var(--workbench-soft);
 }
 
 .module-empty {
@@ -2474,15 +2292,16 @@ watch(
   color: var(--workbench-muted);
   font-size: 0.82rem;
   font-weight: 610;
-  background: rgba(255, 255, 255, 0.36);
+  background: var(--workbench-soft);
 }
 
 .side-card--insights {
   grid-area: insights;
   align-self: stretch;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  gap: 11px;
-  padding: 14px 16px;
+  height: var(--workbench-overview-card-height);
+  grid-template-rows: auto auto;
+  gap: 10px;
+  padding: 8px 14px 12px;
 }
 
 .side-card--tags {
@@ -2541,12 +2360,6 @@ watch(
   .workbench-dashboard {
     --workbench-page-padding: 14px 18px 22px;
     --workbench-sidebar-min: 276px;
-    --workbench-overview-card-min-height: 50px;
-    --workbench-overview-card-padding: 6px 10px;
-  }
-
-  .overview-card__content {
-    font-size: 0.8rem;
   }
 }
 
@@ -2576,7 +2389,6 @@ watch(
   }
 
   .hero-card,
-  .overview-section,
   .panel-row--recent,
   .panel--smart,
   .side-card--insights,
@@ -2629,10 +2441,6 @@ watch(
     border-radius: 16px;
   }
 
-  .overview-grid {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
   .smart-grid {
     grid-template-columns: 1fr;
     gap: 12px;
@@ -2683,26 +2491,6 @@ watch(
     width: 100%;
   }
 
-  .overview-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .overview-card+.overview-card {
-    border-left: 0;
-  }
-
-  .overview-card {
-    border-top: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
-  }
-
-  .overview-card:nth-child(-n + 2) {
-    border-top: 0;
-  }
-
-  .overview-card:nth-child(even) {
-    border-left: 1px solid color-mix(in srgb, var(--workbench-border) 72%, transparent);
-  }
-
   .panel__header,
   .feed-list,
   .smart-grid {
@@ -2723,8 +2511,13 @@ watch(
   .feed-row {
     align-items: flex-start;
     min-height: 62px;
+    height: auto;
     padding-top: 12px;
     padding-bottom: 12px;
+  }
+
+  .panel-row--recent .feed-list {
+    grid-auto-rows: auto;
   }
 
   .feed-row__time {
