@@ -150,11 +150,11 @@
               <button type="button" class="smart-focus__body"
                 @click="openSmartRecommendation(primarySmartRecommendation)">
                 <span class="smart-focus__title">{{ primarySmartRecommendation.note.title }}</span>
-                <span class="smart-focus__preview">{{ getSmartNotePreview(primarySmartRecommendation.note) }}</span>
                 <span class="smart-focus__meta">
                   <span>{{ formatRelativeTime(primarySmartRecommendation.note.updatedAt) }}</span>
                   <span v-for="topic in topTopicLabels.slice(0, 3)" :key="topic">{{ topic }}</span>
                 </span>
+                <span class="smart-focus__preview">{{ getSmartNotePreview(primarySmartRecommendation.note) }}</span>
               </button>
             </article>
 
@@ -1592,7 +1592,8 @@ watch(
   min-width: 0;
   min-height: 120px;
   display: grid;
-  gap: 4px;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: 2px;
   padding: 12px 14px;
   border: 1px solid var(--workbench-border);
   border-radius: 12px;
@@ -1632,7 +1633,9 @@ watch(
 .smart-focus__body {
   min-width: 0;
   display: grid;
-  gap: 5px;
+  align-content: start;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  gap: 4px;
   margin-top: 0;
   padding: 0;
   border: 0;
@@ -1707,16 +1710,16 @@ watch(
 }
 
 .smart-focus__preview {
-  min-height: 18px;
+  min-height: 34px;
   overflow: hidden;
   color: color-mix(in srgb, var(--workbench-ink) 60%, var(--workbench-muted));
   display: -webkit-box;
   font-size: 0.72rem;
   font-weight: 560;
   line-height: 1.4;
-  line-clamp: 1;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
-  -webkit-line-clamp: 1;
+  -webkit-line-clamp: 2;
 }
 
 .smart-focus__meta {
@@ -1799,8 +1802,10 @@ watch(
 
 .smart-lanes {
   min-width: 0;
+  height: 100%;
   display: grid;
-  align-content: start;
+  align-content: stretch;
+  grid-auto-rows: minmax(50px, 1fr);
   gap: 5px;
 }
 
