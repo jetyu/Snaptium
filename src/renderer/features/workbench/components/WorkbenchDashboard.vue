@@ -1009,8 +1009,8 @@ watch(
   --workbench-shadow: 0 10px 24px rgba(43, 52, 82, 0.08);
   --workbench-shadow-soft: 0 6px 16px rgba(43, 52, 82, 0.06);
   --workbench-layout-max-width: 1920px;
-  --workbench-page-padding: 16px 20px 24px;
-  --workbench-gap: 14px;
+  --workbench-page-padding: var(--workbench-gap);
+  --workbench-gap: 10px;
   --workbench-card-radius: 16px;
   --workbench-sidebar-min: 300px;
   --workbench-overview-card-height: 220px;
@@ -2358,7 +2358,7 @@ watch(
 
 @media (max-width: 1520px) {
   .workbench-dashboard {
-    --workbench-page-padding: 14px 18px 22px;
+    --workbench-page-padding: var(--workbench-gap);
     --workbench-sidebar-min: 276px;
   }
 }
@@ -2429,11 +2429,11 @@ watch(
 
 @media (max-width: 900px) {
   .workbench-dashboard {
-    --workbench-page-padding: 12px;
+    --workbench-page-padding: var(--workbench-gap);
   }
 
   .workbench-main {
-    gap: 16px;
+    gap: 10px;
   }
 
   .hero-card {
@@ -2447,14 +2447,10 @@ watch(
     padding: 2px 16px 12px;
   }
 
-  .panel-row--recent {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-
+  .panel-row--recent,
   .workbench-side {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 10px;
   }
 
   .side-card--topic {
