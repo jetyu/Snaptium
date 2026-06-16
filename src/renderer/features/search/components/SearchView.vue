@@ -126,7 +126,7 @@ import { storeToRefs } from 'pinia';
 import { IconX, IconDatabaseSearch, IconTrash, IconFileText, IconPlus } from '@tabler/icons-vue';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { renderMarkdownEnhancements } from '@renderer/core/markdown/markdownEnhancements';
-import { useRAGConfig, useRAGSearch, useRAGChat } from '@renderer/features/rag';
+import { useRAGConfig, useRAGChat } from '@renderer/features/rag';
 import { useLicenseGate } from '@renderer/features/license';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
@@ -154,7 +154,6 @@ const { recentQuestions } = storeToRefs(workbenchStore);
 const appShellStore = useAppShellStore();
 const { selectNote } = useWorkspace();
 const { searchViewRequest } = useSearch();
-const { search: ragSearch } = useRAGSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
 const { askQuestion, isGenerating: isAIGenerating, usedSearchFallback } = useRAGChat();
 const ragLicenseGate = useLicenseGate('rag');
@@ -408,6 +407,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
   activeFallbackQuestionId.value = '';
   activeErrorQuestionId.value = '';
   activeErrorMessage.value = '';
+  semanticResults.value = [];
   isSearching.value = true;
   let draftQuestion: WorkbenchQuestionEntry | null = null;
 
@@ -428,22 +428,20 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       scrollChatToBottom();
     }
 
-    const ragResults = await ragSearch(query);
-    semanticResults.value = ragResults;
-
     let generatedAnswer = '';
-    if (ragResults.length > 0) {
-      try {
-        generatedAnswer = await askQuestion(query);
-      } catch (error) {
-        const message = getErrorMessage(error);
-        searchViewLogger.error(`Knowledge answer generation failed: ${message}`);
-        if (draftQuestion) {
-          activeErrorQuestionId.value = draftQuestion.id;
-          activeErrorMessage.value = message;
-        } else {
-          searchError.value = message;
-        }
+    try {
+      const result = await askQuestion(query);
+      semanticResults.value = result.sources;
+      generatedAnswer = result.answer || '';
+    } catch (error) {
+      const message = getErrorMessage(error);
+      semanticResults.value = [];
+      searchViewLogger.error(`Knowledge answer generation failed: ${message}`);
+      if (draftQuestion) {
+        activeErrorQuestionId.value = draftQuestion.id;
+        activeErrorMessage.value = message;
+      } else {
+        searchError.value = message;
       }
     }
 
@@ -456,7 +454,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       threadId,
       askedAt,
       answer: generatedAnswer,
-      sourceNoteIds: Array.from(new Set(ragResults.map((result) => result.chunk.noteId))),
+      sourceNoteIds: Array.from(new Set(semanticResults.value.map((result) => result.chunk.noteId))),
       sources: currentSources.value,
     });
     selectedQuestion.value = recordedQuestion;

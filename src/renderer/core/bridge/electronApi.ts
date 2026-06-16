@@ -300,11 +300,12 @@ export interface RagAskQuestionPayload {
   query: string;
 }
 
-export interface RagAskQuestionResult {
+export interface KnowledgeAnswerResult {
   success: boolean;
   answer?: string;
+  sources: RagSearchResult[];
   error?: string;
-  usedSearchFallback?: boolean;
+  usedSearchFallback: boolean;
 }
 
 export interface RagSearchResult {
@@ -736,11 +737,8 @@ export const electronApi = {
     indexNote: (payload: RagIndexNotePayload) => {
       return electronApi.rag.getApi().indexNote(payload);
     },
-    searchText: (payload: { query: string; topK?: number; similarityThreshold?: number }) => {
-      return electronApi.rag.getApi().searchText(payload);
-    },
-    askQuestion: (payload: RagAskQuestionPayload): Promise<RagAskQuestionResult> => {
-      return electronApi.rag.getApi().askQuestion(payload);
+    answerQuestion: (payload: RagAskQuestionPayload): Promise<KnowledgeAnswerResult> => {
+      return electronApi.rag.getApi().answerQuestion(payload);
     },
     deleteNoteIndex: (noteId: string) => {
       return electronApi.rag.getApi().deleteNoteIndex(noteId);
