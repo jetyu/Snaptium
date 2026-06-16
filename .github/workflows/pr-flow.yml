@@ -1,0 +1,74 @@
+name: Validate PR Flow
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+      - ready_for_review
+    branches:
+      - develop
+      - preview
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-flow-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate-pr-flow:
+    name: Validate PR Flow
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Validate source and target branches
+        shell: bash
+        env:
+          HEAD_BRANCH: ${{ github.head_ref }}
+          BASE_BRANCH: ${{ github.base_ref }}
+        run: |
+          set -euo pipefail
+
+          echo "Source branch: ${HEAD_BRANCH}"
+          echo "Target branch: ${BASE_BRANCH}"
+
+          case "${BASE_BRANCH}" in
+            develop)
+              if [[ ! "${HEAD_BRANCH}" =~ ^feature/.+ ]]; then
+                echo "::error title=Invalid PR flow::Pull requests targeting 'develop' must come from a 'feature/*' branch."
+                echo "Expected: feature/* -> develop"
+                echo "Actual:   ${HEAD_BRANCH} -> ${BASE_BRANCH}"
+                exit 1
+              fi
+              ;;
+
+            preview)
+              if [[ "${HEAD_BRANCH}" != "develop" ]]; then
+                echo "::error title=Invalid PR flow::Pull requests targeting 'preview' must come from 'develop'."
+                echo "Expected: develop -> preview"
+                echo "Actual:   ${HEAD_BRANCH} -> ${BASE_BRANCH}"
+                exit 1
+              fi
+              ;;
+
+            main)
+              if [[ "${HEAD_BRANCH}" != "preview" ]]; then
+                echo "::error title=Invalid PR flow::Pull requests targeting 'main' must come from 'preview'."
+                echo "Expected: preview -> main"
+                echo "Actual:   ${HEAD_BRANCH} -> ${BASE_BRANCH}"
+                exit 1
+              fi
+              ;;
+
+            *)
+              echo "::error title=Unsupported target branch::Target branch '${BASE_BRANCH}' is not supported."
+              exit 1
+              ;;
+          esac
+
+          echo "Valid PR flow: ${HEAD_BRANCH} -> ${BASE_BRANCH}"
