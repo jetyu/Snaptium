@@ -1,6 +1,6 @@
 {
   "name": "Snaptium",
-  "version": "2.0.0",
+  "version": "2.0.0-local",
   "author": "Snaptium Team",
   "private": true,
   "type": "module",
