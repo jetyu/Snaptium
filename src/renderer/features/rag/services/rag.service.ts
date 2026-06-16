@@ -1,7 +1,11 @@
-import { electronApi, type RagSearchResult, type RagStatusResult } from '@renderer/core/bridge/electronApi';
+import {
+  electronApi,
+  type KnowledgeAnswerResult,
+  type RagStatusResult,
+} from '@renderer/core/bridge/electronApi';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
-import { RAG_ERROR_MESSAGES, RAG_ERROR_CODES } from '../constants/rag.constants';
+import { RAG_ERROR_MESSAGES } from '../constants/rag.constants';
 
 const ragLogger = createLogger('Renderer:RAG Service');
 
@@ -122,56 +126,13 @@ export const ragService = {
     return { total, successCount, failCount };
   },
 
-  /**
-   * Orchestrate semantic search (Orchestration)
-   */
-  async search(params: { query: string; topK: number; similarityThreshold: number }): Promise<{ success: boolean; results: RagSearchResult[]; error?: string }> {
+  async answerQuestion(query: string): Promise<KnowledgeAnswerResult> {
     try {
-      const searchRes = await electronApi.rag.searchText({
-        query: params.query,
-        topK: params.topK,
-        similarityThreshold: params.similarityThreshold,
-      });
-
-      if (!searchRes.success) {
-        const errorMessage = searchRes.error || 'Search failed';
-        const isDimensionMismatch =
-          errorMessage.includes('No vector column found') &&
-          errorMessage.toLowerCase().includes('dimension');
-
-        return {
-          success: false,
-          results: [],
-          error: isDimensionMismatch ? RAG_ERROR_CODES.INDEX_DIMENSION_MISMATCH : errorMessage,
-        };
-      }
-
-      return searchRes;
-    } catch (error: unknown) {
-      const errorMessage = getErrorMessage(error);
-      ragLogger.error('RAG search failed', { error: errorMessage });
-      const isDimensionMismatch =
-        errorMessage.includes('No vector column found') &&
-        errorMessage.toLowerCase().includes('dimension');
-
-      return {
-        success: false,
-        results: [],
-        error: isDimensionMismatch ? RAG_ERROR_CODES.INDEX_DIMENSION_MISMATCH : errorMessage,
-      };
-    }
-  },
-
-  /**
-   * Orchestrate query -> search -> AI answer (Business Orchestration)
-   */
-  async askQuestion(query: string): Promise<{ success: boolean; answer?: string; error?: string; usedSearchFallback?: boolean }> {
-    try {
-      return await electronApi.rag.askQuestion({ query });
+      return await electronApi.rag.answerQuestion({ query });
     } catch (error: unknown) {
       const message = getErrorMessage(error);
       ragLogger.error('RAG question failed', { error: message });
-      return { success: false, error: message };
+      return { success: false, error: message, answer: undefined, sources: [], usedSearchFallback: false };
     }
   },
 

@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { createLogger } from '@renderer/features/logger';
+import type { KnowledgeAnswerResult } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { ragService } from '../services/rag.service';
 
@@ -14,7 +15,7 @@ export function useRAGChat() {
   /**
    * Ask a question using the RAG orchestration service
    */
-  const askQuestion = async (question: string): Promise<string> => {
+  const askQuestion = async (question: string): Promise<KnowledgeAnswerResult> => {
     if (!question.trim()) {
       throw new Error('Question cannot be empty');
     }
@@ -26,13 +27,13 @@ export function useRAGChat() {
     usedSearchFallback.value = false;
 
     try {
-      const result = await ragService.askQuestion(question);
+      const result = await ragService.answerQuestion(question);
 
       if (result.success) {
         const generatedAnswer = result.answer || 'No answer generated';
         answer.value = generatedAnswer;
-        usedSearchFallback.value = Boolean(result.usedSearchFallback);
-        return generatedAnswer;
+        usedSearchFallback.value = result.usedSearchFallback;
+        return result;
       } else {
         throw new Error(result.error || 'Failed to generate answer');
       }

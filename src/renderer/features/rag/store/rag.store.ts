@@ -22,12 +22,6 @@ export interface TextChunk {
   metadata?: Record<string, string | number | boolean | null>;
 }
 
-export interface SearchResult {
-  chunk: TextChunk;
-  score: number;
-  noteTitle?: string;
-}
-
 export interface IndexStatus {
   isIndexing: boolean;
   indexedNotes: number;
@@ -113,8 +107,6 @@ export const useRAGStore = defineStore('rag', () => {
     skippedNotes: 0,
   });
 
-  const searchResults = ref<SearchResult[]>([]);
-  const isSearching = ref(false);
   const statusCache = ref<StatusCachePayload | null>(null);
 
   const indexNote = async (
@@ -348,29 +340,6 @@ export const useRAGStore = defineStore('rag', () => {
     }
   };
 
-  const search = async (query: string, topK: number, threshold: number) => {
-    isSearching.value = true;
-    searchResults.value = [];
-
-    try {
-      const response = await ragService.search({ query, topK, similarityThreshold: threshold });
-
-      if (response.success) {
-        const results = response.results || [];
-        searchResults.value = results;
-        ragLogger.info(`Search completed: ${results.length} results`);
-        return results;
-      }
-
-      throw new Error(response.error || 'Search failed');
-    } catch (error) {
-      ragLogger.error(`Search failed: ${getErrorMessage(error)}`);
-      throw error;
-    } finally {
-      isSearching.value = false;
-    }
-  };
-
   const getStatus = async () => {
     try {
       const settingsStore = useSettingsStore();
@@ -494,20 +463,12 @@ export const useRAGStore = defineStore('rag', () => {
     }
   };
 
-  const clearSearchResults = () => {
-    searchResults.value = [];
-  };
-
   return {
     indexStatus,
-    searchResults,
-    isSearching,
     indexNote,
     rebuildIndex,
-    search,
     getStatus,
     deleteNoteIndex,
     clearIndex,
-    clearSearchResults,
   };
 });
