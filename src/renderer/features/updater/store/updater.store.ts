@@ -190,6 +190,18 @@ export const useUpdaterStore = defineStore('updater', () => {
     isSilentChecking.value = false;
   }
 
+  function handleDownloadStarted(_context: UpdateEventContext): void {
+    isChecking.value = false;
+    isDownloading.value = true;
+    isDownloadRequestPending.value = false;
+    isUpdateDownloaded.value = false;
+    availableActionsDismissed.value = true;
+    installActionsDismissed.value = false;
+    error.value = null;
+    showNoUpdateResult.value = false;
+    downloadProgress.value = createEmptyDownloadProgress();
+  }
+
   function handleUpdateNotAvailable(_info: UpdateInfo, context: UpdateEventContext): void {
     isChecking.value = false;
     isSilentChecking.value = false;
@@ -223,6 +235,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   function handleUpdateError(errorInfo: ErrorInfo, context: UpdateEventContext): void {
     isChecking.value = false;
     isDownloading.value = false;
+    isDownloadRequestPending.value = false;
     isSilentChecking.value = false;
     if (isCancelledUpdateError(errorInfo)) {
       resetDownloadState();
@@ -231,10 +244,6 @@ export const useUpdaterStore = defineStore('updater', () => {
       availableActionsDismissed.value = false;
       installActionsDismissed.value = false;
       showNoUpdateResult.value = false;
-      return;
-    }
-
-    if (context.silent) {
       return;
     }
     error.value = errorInfo;
@@ -328,6 +337,7 @@ export const useUpdaterStore = defineStore('updater', () => {
       onAvailable: handleUpdateAvailable,
       onCancelled: handleUpdateCancelled,
       onNotAvailable: handleUpdateNotAvailable,
+      onDownloadStarted: handleDownloadStarted,
       onDownloadProgress: handleDownloadProgress,
       onDownloaded: handleUpdateDownloaded,
       onError: handleUpdateError,

@@ -722,7 +722,7 @@
   "text.showLineNumbers ": "左侧边缘显示行号",
   "text.showStatusBar": "显示字数、光标、大小等信息",
   "text.snapshotInterval": "自动生成笔记版本快照的时间间隔",
-  "text.softwareAutoUpdate": "自动检查软件更新",
+  "text.softwareAutoUpdate": "自动检查并下载软件更新",
   "text.startupDefaultView": "选择应用启动时默认进入的界面",
   "text.syncAutoOnSave": "笔记保存后自动触发云同步",
   "text.syncInterval": "数据同步的时间间隔",

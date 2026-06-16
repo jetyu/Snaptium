@@ -91,6 +91,9 @@ class UpdaterService {
       });
 
       trayService.showUpdateNotification(info.version);
+      if (silent && !this.downloadCancellationToken) {
+        void this.downloadUpdate();
+      }
       this.currentCheckSilent = false;
     });
 
@@ -198,7 +201,7 @@ class UpdaterService {
 
     try {
       logger.debug('Starting update download');
-      this.sendToRenderer('updater:download-start');
+      this.sendToRenderer('updater:download-started', { silent: this.currentCheckSilent });
       await autoUpdater.downloadUpdate(this.downloadCancellationToken);
     } catch (error: unknown) {
       if (this.isDownloadCancelled(error)) {

@@ -105,6 +105,7 @@ export const IPC_CHANNELS = {
   UPDATER_CHECK: 'updater:check',
   UPDATER_CHECKING: 'updater:checking',
   UPDATER_DOWNLOAD: 'updater:download',
+  UPDATER_DOWNLOAD_STARTED: 'updater:download-started',
   UPDATER_DOWNLOADED: 'updater:downloaded',
   UPDATER_DOWNLOAD_PROGRESS: 'updater:download-progress',
   UPDATER_ERROR: 'updater:error',

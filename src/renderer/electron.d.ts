@@ -556,6 +556,7 @@ declare global {
         onAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onCancelled: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onNotAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
+        onDownloadStarted: (callback: (data: UpdaterCheckPayload) => void) => () => void;
         onDownloadProgress: (callback: (data: UpdaterProgressPayload) => void) => () => void;
         onDownloaded: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onError: (callback: (data: UpdaterErrorPayload) => void) => () => void;
