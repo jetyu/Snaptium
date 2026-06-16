@@ -32,8 +32,10 @@ import { LicenseDialog, useLicenseDialog } from '@renderer/features/license';
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import { useUpdaterStore } from '@renderer/features/updater';
 import { licenseService } from '@renderer/features/license/services/license.service';
+import { useAppShellStore } from './store/appShell.store';
 
 const settingsStore = useSettingsStore();
+const appShellStore = useAppShellStore();
 const shortcutsStore = useShortcutsStore();
 const workspaceStore = useWorkspaceStore();
 const favoritesStore = useFavoritesStore();
@@ -57,6 +59,7 @@ onMounted(async () => {
     unsubscribers.push(removeLicenseMenuListener);
   }
   await settingsStore.loadSettings();
+  appShellStore.initializeActiveMainView(settingsStore.config.appShell.activeMainView);
   await shortcutsStore.initialize();
   
   // 等待工作区初始化完成
