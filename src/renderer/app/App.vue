@@ -52,7 +52,7 @@ useCommandRegistration();
 const unsubscribers: Array<(() => void)> = [];
 
 onMounted(async () => {
-  updaterStore.initialize();
+  await updaterStore.initialize();
   await licenseService.initialize();
   const removeLicenseMenuListener = initMainProcessListeners();
   if (removeLicenseMenuListener) {

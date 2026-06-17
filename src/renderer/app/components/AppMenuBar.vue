@@ -44,7 +44,15 @@ let closeTimer: number | null = null;
 
 // Only show certain categories in the UI menu bar
 const visibleCategoryIds = ['file', 'view', 'help'];
-const filteredMenus = computed(() => MENU_CONFIG.filter(m => visibleCategoryIds.includes(m.id)));
+const filteredMenus = computed(() => MENU_CONFIG
+  .filter((menu) => visibleCategoryIds.includes(menu.id))
+  .map((menu) => ({
+    ...menu,
+    items: updaterStore.isStoreDistribution
+      ? menu.items.filter((item) => item.id !== 'update')
+      : menu.items,
+  }))
+);
 
 function formatShortcut(accelerator: string): string {
   const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -150,8 +158,10 @@ function handleAction(action?: MenuAction) {
       window.close();
       break;
     case 'update':
-      openSettings('software-update');
-      void updaterStore.checkForUpdates(false);
+      if (!updaterStore.isStoreDistribution) {
+        openSettings('software-update');
+        void updaterStore.checkForUpdates(false);
+      }
       break;
     case 'feedback':
       window.open('https://github.com/jetyu/NoteWizard/issues');

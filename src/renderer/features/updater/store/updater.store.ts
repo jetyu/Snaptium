@@ -1,5 +1,7 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
+import { APP_DISTRIBUTIONS } from '@shared/updater.constants';
+import { electronApi } from '@renderer/core/bridge/electronApi';
 import i18n from '@renderer/features/i18n/services/i18n.service';
 import {
   updaterService,
@@ -66,6 +68,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   const installActionsDismissed = ref(false);
   const showNoUpdateResult = ref(false);
   const isSilentChecking = ref(false);
+  const isStoreDistribution = ref(false);
 
   let cleanupListeners: (() => void) | null = null;
   let initialized = false;
@@ -125,6 +128,15 @@ export const useUpdaterStore = defineStore('updater', () => {
     isDownloading.value = false;
     isUpdateDownloaded.value = false;
     downloadProgress.value = createEmptyDownloadProgress();
+  }
+
+  async function syncDistribution(): Promise<void> {
+    try {
+      isStoreDistribution.value = (await electronApi.app.getDistribution()) === APP_DISTRIBUTIONS.MICROSOFT_STORE;
+    } catch (err) {
+      console.error('Failed to get app distribution:', err);
+      isStoreDistribution.value = false;
+    }
   }
 
   async function getCurrentVersion(): Promise<void> {
@@ -232,7 +244,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     installActionsDismissed.value = false;
   }
 
-  function handleUpdateError(errorInfo: ErrorInfo, context: UpdateEventContext): void {
+  function handleUpdateError(errorInfo: ErrorInfo, _context: UpdateEventContext): void {
     isChecking.value = false;
     isDownloading.value = false;
     isDownloadRequestPending.value = false;
@@ -251,6 +263,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   }
 
   async function checkForUpdates(silent = false): Promise<void> {
+    if (isStoreDistribution.value) return;
     if (isChecking.value) return;
 
     isChecking.value = true;
@@ -270,6 +283,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   }
 
   async function downloadUpdate(): Promise<void> {
+    if (isStoreDistribution.value) return;
     if (isDownloading.value || isDownloadRequestPending.value) return;
 
     isDownloadRequestPending.value = true;
@@ -294,6 +308,10 @@ export const useUpdaterStore = defineStore('updater', () => {
   }
 
   async function cancelDownload(): Promise<void> {
+    if (isStoreDistribution.value) {
+      return;
+    }
+
     if (!isDownloading.value) {
       return;
     }
@@ -302,6 +320,10 @@ export const useUpdaterStore = defineStore('updater', () => {
   }
 
   async function installUpdate(): Promise<void> {
+    if (isStoreDistribution.value) {
+      return;
+    }
+
     try {
       await updaterService.install();
     } catch (err) {
@@ -318,6 +340,10 @@ export const useUpdaterStore = defineStore('updater', () => {
   }
 
   async function updateConfig(config: UpdaterConfig): Promise<void> {
+    if (isStoreDistribution.value) {
+      return;
+    }
+
     try {
       await updaterService.updateConfig(config);
     } catch (err) {
@@ -325,12 +351,13 @@ export const useUpdaterStore = defineStore('updater', () => {
     }
   }
 
-  function initialize(): void {
+  async function initialize(): Promise<void> {
     if (initialized) {
       return;
     }
 
     initialized = true;
+    await syncDistribution();
     void getCurrentVersion();
     cleanupListeners = updaterService.subscribe({
       onChecking: handleUpdateChecking,
@@ -360,6 +387,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     downloadProgress,
     error,
     showNoUpdateResult,
+    isStoreDistribution,
     updatePanelState,
     isDownloadRequestPending,
     showAvailableUpdateActions,

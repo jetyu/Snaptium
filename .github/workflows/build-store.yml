@@ -1,0 +1,121 @@
+name: Snaptium Microsoft Store Package
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Optional package version override, for example 2.0.0'
+        required: false
+        type: string
+  push:
+    tags:
+      - 'v*.*'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  build-store:
+    name: Build Microsoft Store package
+    runs-on: windows-2022
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '20'
+          cache: npm
+          check-latest: true
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: Set package version
+        shell: pwsh
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          TAG_NAME: ${{ github.ref_name }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $targetVersion = $env:INPUT_VERSION
+          if (-not $targetVersion -and $env:TAG_NAME.StartsWith('v')) {
+            $targetVersion = $env:TAG_NAME.Substring(1)
+          }
+
+          if (-not $targetVersion) {
+            Write-Host 'No package version override requested; using package.json version.'
+            exit 0
+          }
+
+          $currentVersion = node -p "require('./package.json').version"
+          if ($currentVersion -eq $targetVersion) {
+            Write-Host "package.json version already set to $targetVersion; skipping npm version."
+            exit 0
+          }
+
+          npm version $targetVersion --no-git-tag-version
+
+      - name: Build Microsoft Store AppX package
+        shell: pwsh
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: false
+          ELECTRON_BUILDER_ALLOW_UNRESOLVED_DEPENDENCIES: true
+          USE_HARD_LINKS: false
+          STORE_IDENTITY_NAME: ${{ secrets.STORE_IDENTITY_NAME }}
+          STORE_PUBLISHER: ${{ secrets.STORE_PUBLISHER }}
+          STORE_PUBLISHER_DISPLAY_NAME: ${{ secrets.STORE_PUBLISHER_DISPLAY_NAME }}
+          STORE_DISPLAY_NAME: ${{ secrets.STORE_DISPLAY_NAME }}
+          STORE_APPLICATION_ID: ${{ secrets.STORE_APPLICATION_ID }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+
+          $builderArgs = @(
+            '--win',
+            'appx',
+            '--x64',
+            '--publish',
+            'never',
+            '--config.directories.output=dist/store'
+          )
+
+          function Add-BuilderConfigArg($name, $value) {
+            if ($value) {
+              $script:builderArgs += "--config.$name=$value"
+            }
+          }
+
+          Add-BuilderConfigArg 'appx.identityName' $env:STORE_IDENTITY_NAME
+          Add-BuilderConfigArg 'appx.publisher' $env:STORE_PUBLISHER
+          Add-BuilderConfigArg 'appx.publisherDisplayName' $env:STORE_PUBLISHER_DISPLAY_NAME
+          Add-BuilderConfigArg 'appx.displayName' $env:STORE_DISPLAY_NAME
+          Add-BuilderConfigArg 'appx.applicationId' $env:STORE_APPLICATION_ID
+
+          npm run build
+          npx electron-builder @builderArgs
+
+      - name: Upload Microsoft Store package artifacts
+        uses: actions/upload-artifact@v5
+        with:
+          name: Snaptium-microsoft-store-${{ github.sha }}
+          path: |
+            dist/store/*.appx
+            dist/store/*.msix
+            dist/store/*.appxbundle
+            dist/store/*.msixbundle
+            dist/store/*.appxupload
+            dist/store/*.msixupload
+            dist/store/*Package*.xml
+          retention-days: 30
+          if-no-files-found: error

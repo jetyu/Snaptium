@@ -199,6 +199,8 @@ export interface WallpaperResult {
   error?: string;
 }
 
+export type AppDistribution = import('@shared/updater.constants').AppDistribution;
+
 export interface UpdaterUpdateInfoPayload {
   version: string;
   releaseDate?: string;
@@ -471,6 +473,7 @@ export const electronApi = {
       return api;
     },
     getVersion: () => electronApi.app.getApi().getVersion(),
+    getDistribution: () => electronApi.app.getApi().getDistribution(),
     getName: () => electronApi.app.getApi().getName(),
     getEnvVersion: () => electronApi.app.getApi().getEnvVersion(),
   },
