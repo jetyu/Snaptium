@@ -32,8 +32,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useUpdaterStore } from '@renderer/features/updater';
 import { useSettings } from '../composables/useSettings';
 import GeneralSettings from './tabs/GeneralSettings.vue';
 import SoftwareUpdateSettings from './tabs/SoftwareUpdateSettings.vue';
@@ -50,13 +51,14 @@ import SecuritySettings from './tabs/SecuritySettings.vue';
 import AccessControlSettings from './tabs/AccessControlSettings.vue';
 
 const { t } = useI18n();
+const updaterStore = useUpdaterStore();
 const { activeTab, setActiveTab } = useSettings();
 
 type TabItem =
   | { id: string; type: 'separator' }
   | { id: string; type?: never; labelKey?: string; label?: string; component: unknown };
 
-const tabs: TabItem[] = [
+const baseTabs: TabItem[] = [
   { id: 'general', labelKey: 'pref.pane.general', component: GeneralSettings },
 
   { id: 'preview', labelKey: 'pref.pane.preview', component: PreviewSettings },
@@ -74,11 +76,21 @@ const tabs: TabItem[] = [
   { id: 'sep-4', type: 'separator' },
   { id: 'shortcuts', labelKey: 'pref.pane.shortcuts', component: ShortcutSettings },
   { id: 'log', labelKey: 'pref.pane.log', component: LogSettings },
-    { id: 'software-update', labelKey: 'label.softwareAutoUpdate', component: SoftwareUpdateSettings }
+  { id: 'software-update', labelKey: 'label.softwareAutoUpdate', component: SoftwareUpdateSettings }
 ];
 
+const tabs = computed(() => baseTabs.filter((tab) =>
+  tab.id !== 'software-update' || !updaterStore.isStoreDistribution
+));
+
+watchEffect(() => {
+  if (updaterStore.isStoreDistribution && activeTab.value === 'software-update') {
+    setActiveTab('general');
+  }
+});
+
 const currentComponent = computed(() => {
-  const tab = tabs.find((item) => item.id === activeTab.value);
+  const tab = tabs.value.find((item) => item.id === activeTab.value);
   return tab && tab.type !== 'separator' ? tab.component : null;
 });
 </script>

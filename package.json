@@ -25,6 +25,7 @@
     "test": "npm run test:unit",
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && node src/scripts/build-win.js",
+    "dist:win:store": "npm run build && electron-builder --win appx --x64 --publish never --config.directories.output=dist/store",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:linux": "npm run build && electron-builder --linux"
   },
