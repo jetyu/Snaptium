@@ -227,8 +227,7 @@ const electronAPI = Object.freeze({
     initialize: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_INITIALIZE),
     indexNote: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_NOTE, request),
     rebuildIndex: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_REBUILD_INDEX, request),
-    searchText: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_SEARCH_TEXT, request),
-    askQuestion: (payload: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_ASK_QUESTION, payload),
+    answerQuestion: (payload: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_ANSWER_QUESTION, payload),
     deleteNoteIndex: (noteId: string) => ipcRenderer.invoke(IPC_CHANNELS.RAG_DELETE_NOTE_INDEX, noteId),
     getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_STATUS),
   }),
@@ -239,12 +238,13 @@ const electronAPI = Object.freeze({
   updater: Object.freeze({
     check: (silent: boolean) => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_CHECK, silent),
     download: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_DOWNLOAD),
+    cancelDownload: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_USER_CANCEL_DOWNLOAD),
     install: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_INSTALL),
     getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_GET_VERSION),
     updateConfig: (config: { autoCheckUpdates: boolean; updateCheckInterval: number; updateChannel: 'stable' | 'beta' | 'dev' }) =>
       ipcRenderer.invoke(IPC_CHANNELS.UPDATER_UPDATE_CONFIG, config),
-    onChecking: (callback: VoidCallback) => {
-      const subscription = () => callback();
+    onChecking: (callback: DataCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
       ipcRenderer.on(IPC_CHANNELS.UPDATER_CHECKING, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_CHECKING, subscription);
     },
@@ -252,6 +252,11 @@ const electronAPI = Object.freeze({
       const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
       ipcRenderer.on(IPC_CHANNELS.UPDATER_AVAILABLE, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_AVAILABLE, subscription);
+    },
+    onCancelled: (callback: DataCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_DOWNLOAD_CANCELLED, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_DOWNLOAD_CANCELLED, subscription);
     },
     onNotAvailable: (callback: DataCallback) => {
       const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
@@ -262,6 +267,11 @@ const electronAPI = Object.freeze({
       const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
       ipcRenderer.on(IPC_CHANNELS.UPDATER_DOWNLOAD_PROGRESS, subscription);
       return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_DOWNLOAD_PROGRESS, subscription);
+    },
+    onDownloadStarted: (callback: DataCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_DOWNLOAD_STARTED, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_DOWNLOAD_STARTED, subscription);
     },
     onDownloaded: (callback: DataCallback) => {
       const subscription = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data);

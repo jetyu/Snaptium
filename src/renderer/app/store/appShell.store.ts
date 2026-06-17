@@ -1,10 +1,11 @@
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { storeToRefs } from 'pinia';
 import { useSettingsStore } from '@renderer/features/settings';
 import {
   APP_SHELL_CUSTOM_MODULE_MAP,
   APP_SHELL_CUSTOM_MODULES,
+  APP_SHELL_DEFAULT_MAIN_VIEW,
   APP_SHELL_MAIN_VIEWS,
   APP_SHELL_MAX_CUSTOM_MODULES,
   type AppShellMainViewId,
@@ -24,7 +25,7 @@ export const useAppShellStore = defineStore('app-shell', () => {
   const settingsStore = useSettingsStore();
   const { config } = storeToRefs(settingsStore);
 
-  const activeMainView = computed<AppShellMainViewId>(() => config.value.appShell.activeMainView);
+  const activeMainView = ref<AppShellMainViewId>(APP_SHELL_DEFAULT_MAIN_VIEW);
   const maxCustomModules = computed(() => APP_SHELL_MAX_CUSTOM_MODULES);
   const enabledCustomModuleIds = computed<AppShellModuleId[]>(() => {
     return sanitizeCustomModules(config.value.appShell.customSidebarModules);
@@ -57,12 +58,16 @@ export const useAppShellStore = defineStore('app-shell', () => {
     });
   }
 
+  function initializeActiveMainView(viewId: AppShellMainViewId) {
+    activeMainView.value = viewId;
+  }
+
   async function setActiveMainView(viewId: AppShellMainViewId) {
     if (activeMainView.value === viewId) {
       return;
     }
 
-    await saveAppShell({ activeMainView: viewId });
+    activeMainView.value = viewId;
   }
 
   async function enableCustomModule(moduleId: AppShellModuleId) {
@@ -94,6 +99,7 @@ export const useAppShellStore = defineStore('app-shell', () => {
     enabledCustomModuleIds,
     maxCustomModules,
     hasReachedCustomModuleLimit,
+    initializeActiveMainView,
     setActiveMainView,
     enableCustomModule,
     disableCustomModule,

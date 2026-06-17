@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="software-update-settings">
     <h3 class="panel-title">{{ t('label.softwareAutoUpdate') }}</h3>
 
@@ -8,13 +8,8 @@
           <p class="setting-label">{{ t('label.softwareAutoUpdate') }}</p>
           <p class="setting-description">{{ t('text.softwareAutoUpdate') }}</p>
         </div>
-        <button
-          type="button"
-          class="startup-switch"
-          :class="{ enabled: settingsStore.config.autoCheckUpdates }"
-          :aria-pressed="settingsStore.config.autoCheckUpdates"
-          @click="handleAutoUpdateToggle"
-        >
+        <button type="button" class="startup-switch" :class="{ enabled: settingsStore.config.autoCheckUpdates }"
+          :aria-pressed="settingsStore.config.autoCheckUpdates" @click="handleAutoUpdateToggle">
           <span class="startup-switch-track">
             <span class="startup-switch-thumb" />
           </span>
@@ -31,15 +26,8 @@
             <p class="setting-description">{{ t('text.updateCheckInterval') }}</p>
           </div>
           <div class="number-input-container">
-            <input
-              type="number"
-              class="settings-input number-input"
-              :value="updateIntervalHours"
-              min="1"
-              max="168"
-              :disabled="!settingsStore.config.autoCheckUpdates"
-              @change="handleIntervalChange"
-            />
+            <input type="number" class="settings-input number-input" :value="updateIntervalHours" min="1" max="168"
+              :disabled="!settingsStore.config.autoCheckUpdates" @change="handleIntervalChange" />
           </div>
         </section>
 
@@ -65,44 +53,33 @@
             <span class="update-version-value">v{{ currentVersion }}</span>
           </div>
         </div>
-        <button
-          type="button"
-          class="action-button"
-          :disabled="isChecking || isDownloading"
-          @click="handleCheckForUpdates"
-        >
+        <button type="button" class="action-button" :disabled="isChecking || isDownloading || isDownloadRequestPending"
+          @click="handleCheckForUpdates">
           {{ isChecking ? t('button.checkingForUpdates') : t('menu.help.update') }}
         </button>
       </section>
 
       <section class="setting-card update-state-card">
-        <div class="setting-copy update-state-copy">
-          <p class="setting-label">{{ updateStateTitle }}</p>
-          <span class="update-state-message" :class="updateStateToneClass">
-            {{ updateStateMessage }}
-          </span>
-
-          <div v-if="updatePanelState === 'downloading'" class="update-progress">
-            <div class="update-progress-header">
-              <span>{{ t('updater.progress') }}</span>
-              <span>{{ progressPercent }}%</span>
-            </div>
-            <div class="update-progress-track">
-              <div class="update-progress-fill" :style="{ width: `${progressPercent}%` }" />
-            </div>
+        <div class="update-state-header">
+          <div class="setting-copy update-state-copy">
+            <p class="setting-label">{{ updateStateTitle }}</p>
+            <p class="update-state-message" :class="updateStateToneClass">
+              {{ updateStateMessage }}
+            </p>
           </div>
         </div>
-        <div class="update-actions">
+        <div v-if="showAvailableUpdateActions || isDownloadingState || showInstallActions || showRetryAction"
+          class="update-actions" :class="{ 'is-downloading': isDownloadingState }">
           <button v-if="showAvailableUpdateActions" type="button" class="action-button" @click="handleDownloadUpdate">
             {{ t('updater.download') }}
           </button>
-          <button
-            v-if="showAvailableUpdateActions"
-            type="button"
-            class="action-button secondary"
-            @click="handleDismissAvailableUpdate"
-          >
+          <button v-if="showAvailableUpdateActions" type="button" class="action-button secondary"
+            @click="handleDismissAvailableUpdate">
             {{ t('updater.later') }}
+          </button>
+          <button v-if="isDownloadingState" type="button" class="action-button secondary update-cancel-button"
+            @click="handleCancelDownload">
+            {{ t('updater.cancel') }}
           </button>
           <button v-if="showInstallActions" type="button" class="action-button" @click="handleInstallUpdate">
             {{ t('updater.installNow') }}
@@ -134,6 +111,7 @@ const {
   currentVersion,
   isChecking,
   isDownloading,
+  isDownloadRequestPending,
   updateAvailable,
   updateInfo,
   downloadProgress,
@@ -151,7 +129,35 @@ const channelOptions = computed(() => [
 
 const updateIntervalHours = computed(() => Math.round(settingsStore.config.updateCheckInterval / (60 * 60 * 1000)));
 const progressPercent = computed(() => Math.min(100, Math.max(0, Math.round(downloadProgress.value.percent || 0))));
-const showRetryAction = computed(() => Boolean(error.value) && !isChecking.value && !isDownloading.value);
+const isDownloadingState = computed(() => updatePanelState.value === 'downloading');
+const showRetryAction = computed(() =>
+  Boolean(error.value) && !isChecking.value && !isDownloading.value && !isDownloadRequestPending.value
+);
+
+function formatFileSize(sizeInBytes: number): string {
+  const safeSize = Number.isFinite(sizeInBytes) && sizeInBytes > 0 ? sizeInBytes : 0;
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+
+  if (safeSize === 0) {
+    return `0 ${units[0]}`;
+  }
+
+  let value = safeSize;
+  let unitIndex = 0;
+
+  while (value >= 1024 && unitIndex < units.length - 1) {
+    value /= 1024;
+    unitIndex += 1;
+  }
+
+  const digits = unitIndex === 0 ? 0 : 1;
+  return `${value.toFixed(digits)} ${units[unitIndex]}`;
+}
+
+const downloadProgressSummary = computed(() =>
+  `${formatFileSize(downloadProgress.value.transferred)} / ${formatFileSize(downloadProgress.value.total)} ${progressPercent.value}%`
+);
+
 const updateStateTitle = computed(() => {
   switch (updatePanelState.value) {
     case 'checking':
@@ -180,7 +186,7 @@ const updateStateMessage = computed(() => {
         ? t('updater.newVersionMessage', { version: updateInfo.value.version })
         : t('updater.newVersionAvailable');
     case 'downloading':
-      return t('updater.progress');
+      return downloadProgressSummary.value;
     case 'ready-to-install':
       return updateInfo.value
         ? t('updater.installMessage', { version: updateInfo.value.version })
@@ -214,6 +220,10 @@ const handleCheckForUpdates = async () => {
 
 const handleDownloadUpdate = async () => {
   await updaterStore.downloadUpdate();
+};
+
+const handleCancelDownload = async () => {
+  await updaterStore.cancelDownload();
 };
 
 const handleDismissAvailableUpdate = () => {
@@ -281,20 +291,31 @@ const handleChannelChange = async (event: Event) => {
 }
 
 .update-state-card {
-  align-items: stretch;
-  min-height: 92px;
+  gap: 0.75rem;
 }
 
 .update-state-copy {
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.update-state-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
 }
 
 .update-state-message {
+  margin: 0;
   color: #5f6b7a;
   font-size: 0.82rem;
   line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
 }
 
 .update-state-message.is-info {
@@ -317,33 +338,13 @@ const handleChannelChange = async (event: Event) => {
   flex-wrap: wrap;
 }
 
-.update-progress {
-  width: min(100%, 460px);
-  margin-top: 0.65rem;
+.update-actions.is-downloading {
+  justify-content: flex-end;
 }
 
-.update-progress-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  color: #5f6b7a;
-  font-size: 0.78rem;
-}
-
-.update-progress-track {
-  height: 6px;
-  margin: 0.35rem 0;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #e5e7eb;
-}
-
-.update-progress-fill {
-  height: 100%;
-  border-radius: inherit;
-  background: #0f6cbd;
-  transition: width 0.2s ease;
+.update-cancel-button {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 @media (max-width: 720px) {
@@ -351,10 +352,17 @@ const handleChannelChange = async (event: Event) => {
     justify-content: flex-start;
   }
 
-  .update-progress-header {
-    align-items: flex-start;
+  .update-actions.is-downloading {
+    justify-content: flex-end;
+  }
+
+  .update-state-header {
     flex-direction: column;
-    gap: 0.2rem;
+    align-items: stretch;
+  }
+
+  .update-cancel-button {
+    align-self: flex-end;
   }
 }
 </style>

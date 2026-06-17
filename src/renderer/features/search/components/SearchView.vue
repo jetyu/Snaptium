@@ -78,8 +78,8 @@
                     <div v-if="shouldDisplayFallbackNotice(question)" class="search-view__fallback-notice">
                       {{ $t('message.rag.noChatModel') }}
                     </div>
-                    <div v-if="getQuestionAnswer(question)" class="search-view__answer-content"
-                      v-html="renderQuestionAnswer(question)"></div>
+                     <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
+                       v-html="renderQuestionAnswer(question)"></div>
                     <p v-else class="search-view__status-text">{{ $t('search.noResultsSemantic') }}</p>
                     <div v-if="getQuestionSources(question).length > 0" class="search-view__sources">
                       <h3>{{ $t('search.knowledgeSources') }}</h3>
@@ -125,7 +125,8 @@ import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
 import { IconX, IconDatabaseSearch, IconTrash, IconFileText, IconPlus } from '@tabler/icons-vue';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
-import { useRAGConfig, useRAGSearch, useRAGChat } from '@renderer/features/rag';
+import { renderMarkdownEnhancements } from '@renderer/core/markdown/markdownEnhancements';
+import { useRAGConfig, useRAGChat } from '@renderer/features/rag';
 import { useLicenseGate } from '@renderer/features/license';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
@@ -153,7 +154,6 @@ const { recentQuestions } = storeToRefs(workbenchStore);
 const appShellStore = useAppShellStore();
 const { selectNote } = useWorkspace();
 const { searchViewRequest } = useSearch();
-const { search: ragSearch } = useRAGSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
 const { askQuestion, isGenerating: isAIGenerating, usedSearchFallback } = useRAGChat();
 const ragLicenseGate = useLicenseGate('rag');
@@ -173,6 +173,7 @@ const activeFallbackQuestionId = ref('');
 const activeErrorQuestionId = ref('');
 const activeErrorMessage = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+let markdownEnhancementRunId = 0;
 
 const canUseKnowledgeSearch = computed(() => ragLicenseGate.allowed.value && ragEnabled.value && ragConfigured.value);
 const isBusy = computed(() => isSearching.value || isAIGenerating.value);
@@ -295,6 +296,16 @@ function scrollChatToBottom(): void {
   });
 }
 
+async function syncMarkdownEnhancements(): Promise<void> {
+  const runId = ++markdownEnhancementRunId;
+  await nextTick();
+  if (runId !== markdownEnhancementRunId) {
+    return;
+  }
+
+  await renderMarkdownEnhancements(messageListRef.value);
+}
+
 function scrollQuestionIntoView(questionId: string): void {
   void nextTick(() => {
     const messageList = messageListRef.value;
@@ -396,6 +407,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
   activeFallbackQuestionId.value = '';
   activeErrorQuestionId.value = '';
   activeErrorMessage.value = '';
+  semanticResults.value = [];
   isSearching.value = true;
   let draftQuestion: WorkbenchQuestionEntry | null = null;
 
@@ -416,22 +428,20 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       scrollChatToBottom();
     }
 
-    const ragResults = await ragSearch(query);
-    semanticResults.value = ragResults;
-
     let generatedAnswer = '';
-    if (ragResults.length > 0) {
-      try {
-        generatedAnswer = await askQuestion(query);
-      } catch (error) {
-        const message = getErrorMessage(error);
-        searchViewLogger.error(`Knowledge answer generation failed: ${message}`);
-        if (draftQuestion) {
-          activeErrorQuestionId.value = draftQuestion.id;
-          activeErrorMessage.value = message;
-        } else {
-          searchError.value = message;
-        }
+    try {
+      const result = await askQuestion(query);
+      semanticResults.value = result.sources;
+      generatedAnswer = result.answer || '';
+    } catch (error) {
+      const message = getErrorMessage(error);
+      semanticResults.value = [];
+      searchViewLogger.error(`Knowledge answer generation failed: ${message}`);
+      if (draftQuestion) {
+        activeErrorQuestionId.value = draftQuestion.id;
+        activeErrorMessage.value = message;
+      } else {
+        searchError.value = message;
       }
     }
 
@@ -444,7 +454,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       threadId,
       askedAt,
       answer: generatedAnswer,
-      sourceNoteIds: Array.from(new Set(ragResults.map((result) => result.chunk.noteId))),
+      sourceNoteIds: Array.from(new Set(semanticResults.value.map((result) => result.chunk.noteId))),
       sources: currentSources.value,
     });
     selectedQuestion.value = recordedQuestion;
@@ -624,14 +634,24 @@ watch(questionThreads, (threads) => {
   }
 });
 
+watch(
+  chatQuestions,
+  () => {
+    void syncMarkdownEnhancements();
+  },
+  { deep: true, flush: 'post' },
+);
+
 onMounted(() => {
   applySearchRequest();
   focusSearchInput();
   scrollChatToBottom();
+  void syncMarkdownEnhancements();
 });
 
 onBeforeUnmount(() => {
   clearPendingSearch();
+  markdownEnhancementRunId += 1;
 });
 </script>
 
@@ -1115,42 +1135,7 @@ onBeforeUnmount(() => {
 .search-view__answer-content {
   color: var(--text);
   font-size: 0.92rem;
-  line-height: 1.76;
-}
-
-.search-view__answer-content :deep(h1),
-.search-view__answer-content :deep(h2),
-.search-view__answer-content :deep(h3) {
-  margin: 1em 0 0.45em;
-  color: var(--text);
-  line-height: 1.35;
-}
-
-.search-view__answer-content :deep(h1:first-child),
-.search-view__answer-content :deep(h2:first-child),
-.search-view__answer-content :deep(h3:first-child) {
-  margin-top: 0;
-}
-
-.search-view__answer-content :deep(p) {
-  margin: 0.55em 0;
-}
-
-.search-view__answer-content :deep(ul),
-.search-view__answer-content :deep(ol) {
-  margin: 0.55em 0;
-  padding-left: 1.4em;
-}
-
-.search-view__answer-content :deep(li + li) {
-  margin-top: 0.32em;
-}
-
-.search-view__answer-content :deep(code) {
-  padding: 1px 4px;
-  border-radius: 4px;
-  background: var(--panel-hover);
-  color: var(--text);
+  line-height: 1.5;
 }
 
 .search-view__sources {

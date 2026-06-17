@@ -202,6 +202,7 @@ interface UpdaterUpdateInfoPayload {
   releaseDate?: string;
   releaseNotes?: string;
   files?: Array<Record<string, JsonValue>>;
+  silent?: boolean;
 }
 
 interface UpdaterProgressPayload {
@@ -211,9 +212,14 @@ interface UpdaterProgressPayload {
   total: number;
 }
 
+interface UpdaterCheckPayload {
+  silent: boolean;
+}
+
 interface UpdaterErrorPayload {
   message: string;
   code: string;
+  silent?: boolean;
 }
 
 interface UpdaterConfigPayload {
@@ -493,13 +499,10 @@ declare global {
           chunkSize?: number;
           chunkOverlap?: number;
         }) => Promise<{ success: boolean; chunksIndexed?: number; error?: string }>;
-        searchText: (payload: {
-          query: string;
-          topK?: number;
-          similarityThreshold?: number;
-        }) => Promise<{
+        answerQuestion: (payload: { query: string }) => Promise<{
           success: boolean;
-          results: Array<{
+          answer?: string;
+          sources: Array<{
             chunk: {
               id: string;
               noteId: string;
@@ -511,12 +514,7 @@ declare global {
             noteTitle?: string;
           }>;
           error?: string;
-        }>;
-        askQuestion: (payload: { query: string }) => Promise<{
-          success: boolean;
-          answer?: string;
-          error?: string;
-          usedSearchFallback?: boolean;
+          usedSearchFallback: boolean;
         }>;
         deleteNoteIndex: (noteId: string) => Promise<{ success: boolean; error?: string }>;
         getStatus: () => Promise<{
@@ -542,12 +540,15 @@ declare global {
       updater?: {
         check: (silent?: boolean) => Promise<{ success: boolean }>;
         download: () => Promise<{ success: boolean }>;
+        cancelDownload: () => Promise<{ success: boolean }>;
         install: () => Promise<{ success: boolean }>;
         getVersion: () => Promise<string>;
         updateConfig: (config: UpdaterConfigPayload) => Promise<{ success: boolean }>;
-        onChecking: (callback: () => void) => () => void;
+        onChecking: (callback: (data: UpdaterCheckPayload) => void) => () => void;
         onAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
+        onCancelled: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onNotAvailable: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
+        onDownloadStarted: (callback: (data: UpdaterCheckPayload) => void) => () => void;
         onDownloadProgress: (callback: (data: UpdaterProgressPayload) => void) => () => void;
         onDownloaded: (callback: (data: UpdaterUpdateInfoPayload) => void) => () => void;
         onError: (callback: (data: UpdaterErrorPayload) => void) => () => void;

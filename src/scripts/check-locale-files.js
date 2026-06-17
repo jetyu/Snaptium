@@ -14,6 +14,7 @@ const srcDirs = [
 ];
 const extensions = ['.ts', '.js', '.vue', '.html', '.json'];
 const excludePaths = ['node_modules', 'dist', '.git', 'assets/locales'];
+const BOM = '\uFEFF';
 
 // --- Helper Functions ---
 
@@ -39,12 +40,20 @@ function walk(dir) {
   return results;
 }
 
+function readJsonFile(filePath) {
+  const rawContent = fs.readFileSync(filePath, 'utf8');
+  return JSON.parse(rawContent.startsWith(BOM) ? rawContent.slice(1) : rawContent);
+}
+
+function writeJsonFile(filePath, json) {
+  fs.writeFileSync(filePath, JSON.stringify(json, null, 2) + '\n');
+}
+
 // --- Phase 1: Reference Analysis & Pruning ---
 
 console.log('[INFO] Starting codebase scan to identify unused keys in zh-CN.json...');
 
-const zhCNContent = fs.readFileSync(referenceFile, 'utf8');
-const zhCN = JSON.parse(zhCNContent);
+const zhCN = readJsonFile(referenceFile);
 const allKeys = Object.keys(zhCN);
 
 const allSourceFiles = srcDirs.flatMap(dir => walk(dir));
@@ -97,21 +106,21 @@ if (unusedKeys.length > 0) {
   usedKeys.sort().forEach(k => {
     finalZhCN[k] = zhCN[k];
   });
-  fs.writeFileSync(referenceFile, JSON.stringify(finalZhCN, null, 2) + '\n');
+  writeJsonFile(referenceFile, finalZhCN);
 } else {
   // Ensure zh-CN is sorted even if no pruning needed
   const sortedZhCN = {};
   Object.keys(zhCN).sort().forEach(k => {
     sortedZhCN[k] = zhCN[k];
   });
-  fs.writeFileSync(referenceFile, JSON.stringify(sortedZhCN, null, 2) + '\n');
+  writeJsonFile(referenceFile, sortedZhCN);
   console.log('[INFO] No unused keys found in zh-CN.json.');
 }
 
 // --- Phase 2: Synchronization ---
 
 const referenceKeys = usedKeys.sort();
-const referenceObj = JSON.parse(fs.readFileSync(referenceFile, 'utf8'));
+const referenceObj = readJsonFile(referenceFile);
 
 const localeFiles = fs.readdirSync(localesDir)
   .filter(file => file.endsWith('.json') && file !== 'zh-CN.json');
@@ -121,9 +130,10 @@ console.log(`\n[INFO] Synchronizing ${localeFiles.length} other language files..
 localeFiles.forEach(file => {
   try {
     const filePath = path.join(localesDir, file);
-    const content = fs.existsSync(filePath)
-      ? fs.readFileSync(filePath, 'utf8').trim()
+    const rawContent = fs.existsSync(filePath)
+      ? fs.readFileSync(filePath, 'utf8')
       : '';
+    const content = rawContent.startsWith(BOM) ? rawContent.slice(1).trim() : rawContent.trim();
 
     let currentObj = {};
     if (content) {
@@ -152,7 +162,7 @@ localeFiles.forEach(file => {
     prunedCount = extraKeys.length;
 
     // Write back
-    fs.writeFileSync(filePath, JSON.stringify(sortedObj, null, 2) + '\n');
+    writeJsonFile(filePath, sortedObj);
     
     if (addedCount > 0 || prunedCount > 0) {
       console.log(`[SYNC] ${file}: Added ${addedCount} keys, Pruned ${prunedCount} keys.`);
