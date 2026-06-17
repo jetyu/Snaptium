@@ -6,7 +6,7 @@
 
 // Store
 export { useRAGStore } from './store/rag.store';
-export type { TextChunk, SearchResult, IndexStatus } from './store/rag.store';
+export type { TextChunk, IndexStatus } from './store/rag.store';
 
 // Services
 export { ragService } from './services/rag.service';
@@ -15,7 +15,6 @@ export type { IndexNoteRequest } from './services/rag.service';
 // Composables
 export { useRAGConfig } from './composables/useRAGConfig';
 export { useRAGIndex } from './composables/useRAGIndex';
-export { useRAGSearch } from './composables/useRAGSearch';
 export { useRAGInitialization } from './composables/useRAGInitialization';
 export { useRAGChat } from './composables/useRAGChat';
 
