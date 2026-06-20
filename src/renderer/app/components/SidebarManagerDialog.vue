@@ -9,8 +9,8 @@
               <h2>{{ t('label.sidebarConfig') }}</h2>
               <p class="sidebar-manager-dialog__intro">{{ t('appShell.sidebarManager.intro') }}</p>
             </div>
-            <button type="button" class="sidebar-manager-dialog__close dialog-close-button" :aria-label="t('common.close')"
-              @click="closeSidebarManager">
+            <button type="button" class="sidebar-manager-dialog__close dialog-close-button"
+              :aria-label="t('common.close')" @click="closeSidebarManager">
               <IconX :size="18" />
             </button>
           </header>
@@ -119,7 +119,7 @@ import {
   IconDashboard,
   IconPlus,
   IconMinus,
-  IconDatabaseSearch,
+  IconSubtitlesAi,
   IconSettings,
   IconAdjustmentsHorizontal,
   IconTrash,
@@ -156,14 +156,14 @@ const mainViewIconMap: Record<AppShellMainViewId, typeof IconNotebook> = {
   workspace: IconNotebook,
   tags: IconTag,
   favorites: IconStar,
-  search: IconDatabaseSearch,
+  search: IconSubtitlesAi,
   settings: IconSettings,
 };
 
-const moduleIconMap: Record<AppShellModuleId, typeof IconDatabaseSearch> = {
+const moduleIconMap: Record<AppShellModuleId, typeof IconSubtitlesAi> = {
   favorites: IconStar,
   tags: IconTag,
-  search: IconDatabaseSearch,
+  search: IconSubtitlesAi,
   settings: IconSettings,
   trash: IconTrash,
   about: IconInfoCircle,
@@ -174,7 +174,7 @@ function getMainViewIcon(viewId: AppShellMainViewId) {
 }
 
 function getModuleIcon(moduleId: AppShellModuleId) {
-  return moduleIconMap[moduleId] ?? IconDatabaseSearch;
+  return moduleIconMap[moduleId] ?? IconSubtitlesAi;
 }
 
 function isModuleEnabled(moduleId: AppShellModuleId) {

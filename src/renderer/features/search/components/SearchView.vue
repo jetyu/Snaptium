@@ -3,14 +3,14 @@
     <header class="search-view__header">
       <div class="search-view__title-wrap">
         <span class="search-view__title-icon">
-          <IconDatabaseSearch :size="18" />
+          <IconSubtitlesAi :size="18" />
         </span>
         <h1 class="search-view__title">{{ $t('search.knowledgeSearch') }}</h1>
       </div>
     </header>
 
-    <main class="search-view__content">
-      <aside class="search-view__history-pane">
+    <main ref="contentRef" class="search-view__content" :class="{ 'is-resizing-pane': isResizingPane }">
+      <aside class="search-view__history-pane" :style="historyPaneStyle">
         <header class="search-view__pane-header">
           <h2>{{ $t('search.recentRecords') }}</h2>
           <button type="button" class="search-view__new-thread icon-action-button" :disabled="isBusy"
@@ -38,6 +38,8 @@
         </div>
       </aside>
 
+      <div class="search-view__pane-divider" @pointerdown="handleDividerPointerDown"></div>
+
       <section class="search-view__answer-pane">
         <header class="search-view__pane-header">
           <h2>{{ $t('label.aiRAGSearch') }}</h2>
@@ -63,7 +65,7 @@
               </div>
               <div class="search-view__message search-view__message--assistant">
                 <span class="search-view__assistant-avatar">
-                  <IconDatabaseSearch :size="15" />
+                  <IconSubtitlesAi :size="15" />
                 </span>
                 <div class="search-view__assistant-card">
                   <div v-if="isGeneratingQuestion(question)" class="search-view__thinking">
@@ -78,8 +80,8 @@
                     <div v-if="shouldDisplayFallbackNotice(question)" class="search-view__fallback-notice">
                       {{ $t('message.rag.noChatModel') }}
                     </div>
-                     <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
-                       v-html="renderQuestionAnswer(question)"></div>
+                    <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
+                      v-html="renderQuestionAnswer(question)"></div>
                     <p v-else class="search-view__status-text">{{ $t('search.noResultsSemantic') }}</p>
                     <div v-if="getQuestionSources(question).length > 0" class="search-view__sources">
                       <h3>{{ $t('search.knowledgeSources') }}</h3>
@@ -125,7 +127,8 @@
                             :disabled="Boolean(applyingWriteProposalId)"
                             @click="applyWriteProposal(question, proposal)">
                             <IconCheck :size="14" />
-                            <span>{{ applyingWriteProposalId === proposal.id ? $t('search.agentTaskApplying') : getWriteProposalActionLabel(proposal) }}</span>
+                            <span>{{ applyingWriteProposalId === proposal.id ? $t('search.agentTaskApplying') :
+                              getWriteProposalActionLabel(proposal) }}</span>
                           </button>
                           <button type="button" class="search-view__agent-write-dismiss"
                             :disabled="Boolean(applyingWriteProposalId)"
@@ -162,40 +165,49 @@
 
         <section class="search-view__query">
           <div class="search-view__input-shell" :class="{ 'is-disabled': !canUseKnowledgeSearch }">
-            <div class="search-view__mode-selector">
-              <button type="button" class="search-view__mode-button" :disabled="isBusy"
-                :aria-label="$t('search.inputModeLabel')" :aria-expanded="isModeMenuOpen"
-                @click.stop="toggleModeMenu">
-                <IconRobot v-if="inputMode === 'agent-task'" :size="14" />
-                <IconDatabaseSearch v-else :size="14" />
-                <span>{{ $t(activeInputMode.labelKey) }}</span>
-                <IconChevronDown :size="13" />
+            <div class="search-view__input-main">
+              <textarea ref="searchInput" v-model="searchQuery" class="search-view__input" rows="1"
+                :disabled="!canUseKnowledgeSearch" :placeholder="composerPlaceholder" @input="resizeComposer"
+                @keydown="handleComposerKeydown" />
+              <button v-if="searchQuery" type="button" class="search-view__clear-button" :title="$t('button.clear')"
+                @click="clearQuery">
+                <IconX :size="14" />
               </button>
-              <div v-if="isModeMenuOpen" class="search-view__mode-menu">
-                <button v-for="mode in inputModes" :key="mode.id" type="button" class="search-view__mode-option"
-                  :class="{ 'is-active': inputMode === mode.id }" @click="selectInputMode(mode.id)">
-                  <span>{{ $t(mode.labelKey) }}</span>
-                  <small>{{ $t(mode.descriptionKey) }}</small>
+            </div>
+            <div class="search-view__input-toolbar">
+              <div class="search-view__toolbar-left">
+                <div class="search-view__mode-selector">
+                  <button type="button" class="search-view__mode-button" :disabled="isBusy"
+                    :aria-label="$t('search.inputModeLabel')" :aria-expanded="isModeMenuOpen"
+                    @click.stop="toggleModeMenu">
+                    <IconTextScanAi v-if="inputMode === 'agent-task'" :size="14" />
+                    <IconMessage2Bolt v-else :size="14" />
+                    <span>{{ $t(activeInputMode.labelKey) }}</span>
+                    <IconChevronDown :size="13" />
+                  </button>
+                  <div v-if="isModeMenuOpen" class="search-view__mode-menu">
+                    <button v-for="mode in inputModes" :key="mode.id" type="button" class="search-view__mode-option"
+                      :class="{ 'is-active': inputMode === mode.id }" @click="selectInputMode(mode.id)">
+                      <span>{{ $t(mode.labelKey) }}</span>
+                      <small>{{ $t(mode.descriptionKey) }}</small>
+                    </button>
+                  </div>
+                </div>
+                <button v-if="inputMode === 'agent-task'" type="button" class="search-view__execution-button"
+                  :disabled="isBusy"
+                  :title="$t(agentWriteMode === 'auto' ? 'search.agentWriteModeAutoDescription' : 'search.agentWriteModeConfirmDescription')"
+                  @click="toggleAgentWriteMode">
+                  {{ $t(agentWriteMode === 'auto' ? 'search.agentWriteModeAuto' : 'search.agentWriteModeConfirm') }}
+                </button>
+              </div>
+              <div class="search-view__toolbar-right">
+                <button type="button" class="search-view__ask-button icon-action-button" :disabled="!canAsk"
+                  :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason"
+                  @click="handleAsk">
+                  <IconSend :size="15" />
                 </button>
               </div>
             </div>
-            <button v-if="inputMode === 'agent-task'" type="button" class="search-view__execution-button"
-              :disabled="isBusy" :title="$t(agentWriteMode === 'auto' ? 'search.agentWriteModeAutoDescription' : 'search.agentWriteModeConfirmDescription')"
-              @click="toggleAgentWriteMode">
-              {{ $t(agentWriteMode === 'auto' ? 'search.agentWriteModeAuto' : 'search.agentWriteModeConfirm') }}
-            </button>
-            <textarea ref="searchInput" v-model="searchQuery" class="search-view__input" rows="1"
-              :disabled="!canUseKnowledgeSearch" :placeholder="composerPlaceholder" @input="resizeComposer"
-              @keydown="handleComposerKeydown" />
-            <button v-if="searchQuery" type="button" class="search-view__icon-button" :title="$t('button.clear')"
-              @click="clearQuery">
-              <IconX :size="14" />
-            </button>
-            <button type="button" class="search-view__ask-button icon-action-button" :disabled="!canAsk"
-              :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason"
-              @click="handleAsk">
-              <span>{{ $t('search.knowledgeAskShortcut') }}</span>
-            </button>
           </div>
         </section>
       </section>
@@ -207,7 +219,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { IconX, IconDatabaseSearch, IconTrash, IconFileText, IconPlus, IconRobot, IconChevronDown, IconCheck } from '@tabler/icons-vue';
+import { IconX, IconMessage2Bolt, IconSubtitlesAi, IconTrash, IconFileText, IconPlus, IconTextScanAi, IconChevronDown, IconCheck, IconSend } from '@tabler/icons-vue';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { renderMarkdownEnhancements } from '@renderer/core/markdown/markdownEnhancements';
 import { useRAGConfig, useRAGChat, useRAGAgentTask } from '@renderer/features/rag';
@@ -292,6 +304,7 @@ const isSearching = ref(false);
 const searchError = ref('');
 const searchInput = ref<HTMLTextAreaElement | null>(null);
 const messageListRef = ref<HTMLElement | null>(null);
+const contentRef = ref<HTMLElement | null>(null);
 const selectedQuestion = ref<WorkbenchQuestionEntry | null>(null);
 const activeThreadId = ref<string | null>(null);
 const draftThreadId = ref<string | null>(null);
@@ -306,6 +319,58 @@ const agentTaskMetadata = ref<Record<string, AgentTaskMetadata>>({});
 const applyingWriteProposalId = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 let markdownEnhancementRunId = 0;
+
+const HISTORY_PANE_DEFAULT_WIDTH = 300;
+const HISTORY_PANE_MIN_WIDTH = 220;
+const HISTORY_PANE_MAX_WIDTH = 480;
+const ANSWER_PANE_MIN_WIDTH = 400;
+
+const historyPaneWidth = ref(HISTORY_PANE_DEFAULT_WIDTH);
+const isResizingPane = ref(false);
+
+const historyPaneStyle = computed(() => {
+  const w = `${historyPaneWidth.value}px`;
+  return { width: w, minWidth: w, maxWidth: w, flex: `0 0 ${w}` };
+});
+
+function clampHistoryPaneWidth(): void {
+  const container = contentRef.value;
+  if (!container) return;
+  const maxW = Math.min(HISTORY_PANE_MAX_WIDTH, container.clientWidth - ANSWER_PANE_MIN_WIDTH);
+  historyPaneWidth.value = Math.round(
+    Math.max(HISTORY_PANE_MIN_WIDTH, Math.min(historyPaneWidth.value, maxW)),
+  );
+}
+
+function handlePaneResizeMove(event: PointerEvent): void {
+  const container = contentRef.value;
+  if (!container) return;
+  const rect = container.getBoundingClientRect();
+  const maxW = Math.min(HISTORY_PANE_MAX_WIDTH, rect.width - ANSWER_PANE_MIN_WIDTH);
+  historyPaneWidth.value = Math.round(
+    Math.max(HISTORY_PANE_MIN_WIDTH, Math.min(event.clientX - rect.left, maxW)),
+  );
+}
+
+function handlePaneResizeEnd(): void {
+  isResizingPane.value = false;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+  window.removeEventListener('pointermove', handlePaneResizeMove);
+  window.removeEventListener('pointerup', handlePaneResizeEnd);
+  window.removeEventListener('pointercancel', handlePaneResizeEnd);
+}
+
+function handleDividerPointerDown(event: PointerEvent): void {
+  if (!event.isPrimary || event.button !== 0) return;
+  event.preventDefault();
+  isResizingPane.value = true;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+  window.addEventListener('pointermove', handlePaneResizeMove);
+  window.addEventListener('pointerup', handlePaneResizeEnd);
+  window.addEventListener('pointercancel', handlePaneResizeEnd);
+}
 
 const canUseKnowledgeSearch = computed(() => ragLicenseGate.allowed.value && ragEnabled.value && ragConfigured.value);
 const isBusy = computed(() => isSearching.value || isAIGenerating.value || isAgentRunning.value);
@@ -1175,16 +1240,28 @@ watch(
   { deep: true, flush: 'post' },
 );
 
+function handleDocumentClick(event: MouseEvent): void {
+  const target = event.target as HTMLElement;
+  if (isModeMenuOpen.value && !target.closest('.search-view__mode-selector')) {
+    isModeMenuOpen.value = false;
+  }
+}
+
 onMounted(() => {
   applySearchRequest();
   focusSearchInput();
   scrollChatToBottom();
   void syncMarkdownEnhancements();
+  document.addEventListener('click', handleDocumentClick);
+  window.addEventListener('resize', clampHistoryPaneWidth);
 });
 
 onBeforeUnmount(() => {
   clearPendingSearch();
   markdownEnhancementRunId += 1;
+  document.removeEventListener('click', handleDocumentClick);
+  handlePaneResizeEnd();
+  window.removeEventListener('resize', clampHistoryPaneWidth);
 });
 </script>
 
@@ -1244,124 +1321,46 @@ onBeforeUnmount(() => {
 
 .search-view__query {
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 22px 14px;
+  padding: 12px 20px 14px;
   border-top: 1px solid var(--panel-border);
-  background: color-mix(in srgb, var(--panel) 88%, var(--bg));
+  background: var(--bg);
 }
 
 .search-view__input-shell {
-  position: relative;
   width: 100%;
-  max-width: var(--search-chat-max-width);
-  flex: 0 1 var(--search-chat-max-width);
   min-width: 0;
   display: flex;
-  align-items: flex-end;
-  min-height: 42px;
+  flex-direction: column;
+  align-items: stretch;
   border: 1px solid var(--search-chat-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--panel) 96%, var(--bg));
   transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 .search-view__input-shell:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .search-view__input-shell.is-disabled {
   opacity: 0.64;
 }
 
-.search-view__mode-selector {
+.search-view__input-main {
   position: relative;
-  flex: 0 0 auto;
-  margin: 0 6px 5px 5px;
-}
-
-.search-view__mode-button {
-  height: 32px;
-  min-width: 118px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 0 9px;
-  border: 1px solid var(--search-chat-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--panel-hover) 58%, var(--panel));
-  color: var(--text);
-  font-size: 0.76rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.search-view__mode-button:hover {
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--search-chat-border));
-  color: var(--accent-hover);
-}
-
-.search-view__mode-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.7;
-}
-
-.search-view__mode-menu {
-  position: absolute;
-  left: 0;
-  bottom: calc(100% + 8px);
-  z-index: 10;
-  width: 228px;
-  padding: 6px;
-  border: 1px solid var(--search-chat-border);
-  border-radius: 10px;
-  background: var(--panel);
-  box-shadow: 0 12px 30px color-mix(in srgb, #000 16%, transparent);
-}
-
-.search-view__mode-option {
-  width: 100%;
   display: flex;
-  flex-direction: column;
   align-items: flex-start;
-  gap: 3px;
-  padding: 9px 10px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--text);
-  text-align: left;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.search-view__mode-option:hover,
-.search-view__mode-option.is-active {
-  border-color: color-mix(in srgb, var(--accent) 18%, transparent);
-  background: color-mix(in srgb, var(--accent) 8%, transparent);
-}
-
-.search-view__mode-option span {
-  font-size: 0.8rem;
-  font-weight: 700;
-}
-
-.search-view__mode-option small {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  line-height: 1.35;
+  padding: 4px;
 }
 
 .search-view__input {
   flex: 1;
   min-width: 0;
   height: auto;
-  max-height: 96px;
-  padding: 10px 8px 9px 12px;
+  min-height: 44px;
+  max-height: 140px;
+  padding: 8px 10px;
   border: none;
   outline: none;
   resize: none;
@@ -1381,24 +1380,147 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
 }
 
-.search-view__execution-button {
+.search-view__clear-button {
   flex: 0 0 auto;
-  height: 32px;
-  margin: 0 4px 5px 0;
+  width: 28px;
+  height: 28px;
+  margin: 6px 6px 0 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.search-view__clear-button:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.search-view__input-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: color-mix(in srgb, var(--panel) 92%, var(--bg));
+  border-top: 1px solid color-mix(in srgb, var(--search-chat-border) 60%, transparent);
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+}
+
+.search-view__toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-view__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-view__mode-selector {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.search-view__mode-button {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   padding: 0 10px;
   border: 1px solid var(--search-chat-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--panel-hover) 48%, var(--panel));
-  color: var(--text);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-muted);
   font-size: 0.76rem;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.search-view__mode-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--search-chat-border));
+  color: var(--text);
+  background: var(--panel-hover);
+}
+
+.search-view__mode-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.search-view__mode-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 10;
+  width: 228px;
+  padding: 6px;
+  border: 1px solid var(--search-chat-border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 10px 25px color-mix(in srgb, #000 12%, transparent);
+}
+
+.search-view__mode-option {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.search-view__mode-option:hover,
+.search-view__mode-option.is-active {
+  border-color: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.search-view__mode-option span {
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.search-view__mode-option small {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.search-view__execution-button {
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--search-chat-border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, opacity 0.12s ease;
 }
 
 .search-view__execution-button:hover {
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--search-chat-border));
-  color: var(--accent-hover);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--search-chat-border));
+  color: var(--text);
+  background: var(--panel-hover);
 }
 
 .search-view__execution-button:disabled {
@@ -1406,31 +1528,14 @@ onBeforeUnmount(() => {
   opacity: 0.7;
 }
 
-.search-view__icon-button,
 .search-view__ask-button {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
-}
-
-.search-view__icon-button {
-  width: 28px;
   height: 28px;
-  margin: 0 2px 6px 0;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-}
-
-.search-view__ask-button {
-  min-width: 52px;
-  height: 32px;
-  padding: 0 10px;
-  margin: 0 5px 5px 0;
+  padding: 0 14px;
+  border-radius: 6px;
   font-size: 0.76rem;
   font-weight: 700;
 }
@@ -1448,13 +1553,39 @@ onBeforeUnmount(() => {
 }
 
 .search-view__history-pane {
-  flex: 0 0 300px;
-  min-width: 240px;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--panel-border);
   background: color-mix(in srgb, var(--panel) 76%, var(--bg));
+}
+
+.search-view__pane-divider {
+  flex: 0 0 auto;
+  width: 6px;
+  margin: 0 -2px;
+  position: relative;
+  z-index: 2;
+  cursor: col-resize;
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.search-view__pane-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--panel-border);
+  transition: width 0.12s ease, background-color 0.12s ease;
+}
+
+.search-view__pane-divider:hover::after,
+.search-view__content.is-resizing-pane .search-view__pane-divider::after {
+  width: 3px;
+  background: var(--accent);
 }
 
 .search-view__answer-pane {
@@ -1501,13 +1632,11 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 22px;
+  padding: 18px 20px;
 }
 
 .search-view__chat-inner {
   width: 100%;
-  max-width: var(--search-chat-max-width);
-  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -1540,7 +1669,7 @@ onBeforeUnmount(() => {
 }
 
 .search-view__user-bubble {
-  max-width: min(620px, 76%);
+  max-width: min(680px, 72%);
   padding: 9px 12px;
   border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--panel-border));
   border-radius: 12px 12px 4px 12px;
@@ -1995,33 +2124,22 @@ onBeforeUnmount(() => {
   }
 
   .search-view__history-pane {
-    flex: 0 0 190px;
-    min-width: 0;
-    border-right: none;
+    flex: 0 0 190px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
     border-bottom: 1px solid var(--panel-border);
+  }
+
+  .search-view__pane-divider {
+    display: none;
   }
 
   .search-view__history-item {
     min-height: 70px;
   }
 
-  .search-view__input-shell {
-    flex-wrap: wrap;
-  }
-
-  .search-view__mode-selector {
-    width: calc(100% - 10px);
-    margin-right: 5px;
-  }
-
-  .search-view__mode-button {
-    width: 100%;
-  }
-
-  .search-view__input {
-    flex-basis: 100%;
-    padding-top: 0;
-  }
+  /* Responsive input-shell is handled automatically by column layout */
 
   .search-view__agent-write-card {
     flex-direction: column;
