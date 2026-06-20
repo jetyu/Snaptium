@@ -5,10 +5,49 @@ const logger = loggerService.createLogger('Electron:Remote AI Service');
 
 type JsonObject = Record<string, unknown>;
 
-interface AiChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
+export interface AiChatToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
 }
+
+export type AiChatMessage =
+  | {
+    role: 'system' | 'user';
+    content: string;
+  }
+  | {
+    role: 'assistant';
+    content?: string | null;
+    tool_calls?: AiChatToolCall[];
+  }
+  | {
+    role: 'tool';
+    content: string;
+    tool_call_id: string;
+  };
+
+export interface AiChatTool {
+  type: 'function';
+  function: {
+    name: string;
+    description?: string;
+    parameters: JsonObject;
+  };
+}
+
+export type AiChatToolChoice =
+  | 'auto'
+  | 'none'
+  | {
+    type: 'function';
+    function: {
+      name: string;
+    };
+  };
 
 interface RequestConfig {
   endpoint: string;
@@ -21,6 +60,8 @@ interface ChatConfig extends RequestConfig {
   max_tokens?: number;
   temperature?: number;
   stream?: boolean;
+  tools?: AiChatTool[];
+  tool_choice?: AiChatToolChoice;
 }
 
 interface EmbedConfig extends RequestConfig {
@@ -36,8 +77,10 @@ interface TestConnectionConfig {
 
 interface ChatChoice {
   message?: {
-    content?: string;
+    content?: string | null;
+    tool_calls?: AiChatToolCall[];
   };
+  finish_reason?: string;
 }
 
 interface ChatResponse extends JsonObject {
@@ -146,7 +189,7 @@ export const remoteAiService = {
   },
 
   async chat(config: ChatConfig): Promise<ChatResponse> {
-    const { endpoint, apiKey, model, messages, max_tokens, temperature, stream } = config;
+    const { endpoint, apiKey, model, messages, max_tokens, temperature, stream, tools, tool_choice } = config;
 
     return await this.request<ChatResponse>(endpoint, apiKey, {
       model,
@@ -154,6 +197,8 @@ export const remoteAiService = {
       max_tokens: max_tokens ?? 512,
       temperature: temperature ?? 0.7,
       stream: Boolean(stream),
+      ...(tools?.length ? { tools } : {}),
+      ...(tool_choice ? { tool_choice } : {}),
     });
   },
 

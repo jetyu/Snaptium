@@ -229,6 +229,7 @@ const electronAPI = Object.freeze({
     indexNote: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_NOTE, request),
     rebuildIndex: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_REBUILD_INDEX, request),
     answerQuestion: (payload: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_ANSWER_QUESTION, payload),
+    runTask: (payload: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_RUN_TASK, payload),
     deleteNoteIndex: (noteId: string) => ipcRenderer.invoke(IPC_CHANNELS.RAG_DELETE_NOTE_INDEX, noteId),
     getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_STATUS),
   }),

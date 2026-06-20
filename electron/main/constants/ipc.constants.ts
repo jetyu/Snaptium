@@ -66,6 +66,7 @@ export const IPC_CHANNELS = {
   RAG_INDEX_NOTE: 'rag:index-note',
   RAG_INITIALIZE: 'rag:initialize',
   RAG_REBUILD_INDEX: 'rag:rebuild-index',
+  RAG_RUN_TASK: 'rag:run-task',
   SAVE_FILE: 'editor:save-file',
   SEARCH_NOTES: 'search:notes',
   SETTINGS_CONFIRM_DELETE_AI_SOURCE: 'settings:confirm-delete-ai-source',
