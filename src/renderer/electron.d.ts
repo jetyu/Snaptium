@@ -102,6 +102,8 @@ interface AiCompletePayload {
   systemPrompt?: string;
 }
 
+type AiPromptPreset = import('@shared/ai.constants').AiPromptPreset;
+
 interface AiCompleteResult {
   success: boolean;
   completion?: string;
@@ -604,6 +606,8 @@ declare global {
             role: 'system' | 'user' | 'assistant';
             content: string;
           }>;
+          systemPrompt?: string;
+          promptPreset?: AiPromptPreset;
         }) => Promise<{ success: boolean; answer?: string; error?: string }>;
         generateCompletion: (payload: AiCompletePayload) => Promise<{ success: boolean; answer?: string; error?: string }>;
       };

@@ -53,6 +53,7 @@
             <p class="search-view__status-text">{{ knowledgeUnavailableReason }}</p>
           </div>
           <div v-else-if="!hasChatMessages" class="search-view__status">
+            <IconMessageChatbot :size="72" class="search-view__status-icon" />
             <p class="search-view__status-text">{{ $t('search.semanticHint') }}</p>
           </div>
           <div v-else class="search-view__chat-inner">
@@ -83,6 +84,22 @@
                     <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
                       v-html="renderQuestionAnswer(question)"></div>
                     <p v-else class="search-view__status-text">{{ $t('search.noResultsSemantic') }}</p>
+                    <div v-if="canSaveQuestionAsNote(question) || canUpdateQuestionToCurrentNote(question)"
+                      class="search-view__answer-actions">
+                      <button type="button" class="search-view__save-note-button icon-action-button"
+                        :disabled="Boolean(savingSummaryActionId)" @click="saveQuestionAsNote(question)">
+                        <IconPlus :size="14" />
+                        <span>{{ savingSummaryActionId === `${question.id}:create` ? $t('search.agentTaskApplying') :
+                          $t('search.agentTaskSaveAsNote') }}</span>
+                      </button>
+                      <button v-if="canUpdateQuestionToCurrentNote(question)" type="button"
+                        class="search-view__save-note-button icon-action-button"
+                        :disabled="Boolean(savingSummaryActionId)" @click="updateQuestionToCurrentNote(question)">
+                        <IconFileText :size="14" />
+                        <span>{{ savingSummaryActionId === `${question.id}:update` ? $t('search.agentTaskApplying') :
+                          $t('search.agentTaskUpdateCurrentNote') }}</span>
+                      </button>
+                    </div>
                     <div v-if="getQuestionSources(question).length > 0" class="search-view__sources">
                       <h3>{{ $t('search.knowledgeSources') }}</h3>
                       <button v-for="source in getQuestionSources(question)" :key="source.noteId" type="button"
@@ -219,7 +236,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { IconX, IconMessage2Bolt, IconSubtitlesAi, IconTrash, IconFileText, IconPlus, IconTextScanAi, IconChevronDown, IconCheck, IconSend } from '@tabler/icons-vue';
+import { IconX, IconMessage2Bolt, IconSubtitlesAi, IconTrash, IconFileText, IconPlus, IconTextScanAi, IconChevronDown, IconCheck, IconSend, IconMessageChatbot } from '@tabler/icons-vue';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { renderMarkdownEnhancements } from '@renderer/core/markdown/markdownEnhancements';
 import { useRAGConfig, useRAGChat, useRAGAgentTask } from '@renderer/features/rag';
@@ -276,7 +293,7 @@ const { recentQuestions } = storeToRefs(workbenchStore);
 const appShellStore = useAppShellStore();
 const settingsStore = useSettingsStore();
 const { config } = storeToRefs(settingsStore);
-const { selectNote, createNote, initializeWorkspace, applyNoteContentUpdate } = useWorkspace();
+const { activeNote, selectNote, createNote, initializeWorkspace, applyNoteContentUpdate } = useWorkspace();
 const { searchViewRequest } = useSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
 const { askQuestion, isGenerating: isAIGenerating, usedSearchFallback } = useRAGChat();
@@ -317,6 +334,7 @@ const activeErrorMessage = ref('');
 const questionModes = ref<Record<string, KnowledgeInputMode>>({});
 const agentTaskMetadata = ref<Record<string, AgentTaskMetadata>>({});
 const applyingWriteProposalId = ref('');
+const savingSummaryActionId = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 let markdownEnhancementRunId = 0;
 
@@ -942,6 +960,14 @@ function getQuestionAnswer(question: WorkbenchQuestionEntry): string {
   return question.fullAnswer || question.answer;
 }
 
+function canSaveQuestionAsNote(question: WorkbenchQuestionEntry): boolean {
+  return getQuestionMode(question) === 'agent-task' && getQuestionAnswer(question).trim().length > 0;
+}
+
+function canUpdateQuestionToCurrentNote(question: WorkbenchQuestionEntry): boolean {
+  return canSaveQuestionAsNote(question) && Boolean(activeNote.value?.id);
+}
+
 function getQuestionSources(question: WorkbenchQuestionEntry): WorkbenchQuestionSource[] {
   if (question.sources?.length) {
     return question.sources;
@@ -1070,6 +1096,94 @@ function getWriteProposalActionLabel(proposal: KnowledgeAgentWriteProposal): str
     : t('search.agentTaskApplyUpdate');
 }
 
+function buildSummaryNoteTitle(question: WorkbenchQuestionEntry): string {
+  const normalizedQuery = question.query.trim().replace(/\s+/g, ' ');
+  if (!normalizedQuery) {
+    return t('search.agentTaskSavedNoteFallbackTitle');
+  }
+
+  const maxLength = 42;
+  const baseTitle = normalizedQuery.length > maxLength
+    ? `${normalizedQuery.slice(0, maxLength).trim()}...`
+    : normalizedQuery;
+
+  return t('search.agentTaskSavedNoteTitle', { query: baseTitle });
+}
+
+function buildSummaryNoteContent(question: WorkbenchQuestionEntry): string {
+  const title = buildSummaryNoteTitle(question);
+  const answer = getQuestionAnswer(question).trim();
+  const sources = getQuestionSources(question);
+  const sourceBlock = sources.length > 0
+    ? [
+      '',
+      `## ${t('search.knowledgeSources')}`,
+      ...sources.map((source) => `- ${source.noteTitle}`),
+    ].join('\n')
+    : '';
+
+  return [
+    `# ${title}`,
+    '',
+    answer,
+    sourceBlock,
+  ].join('\n');
+}
+
+function buildCurrentNoteUpdateContent(question: WorkbenchQuestionEntry): string {
+  const answer = getQuestionAnswer(question).trim();
+  const heading = buildSummaryNoteTitle(question);
+  const sources = getQuestionSources(question);
+  const sourceBlock = sources.length > 0
+    ? [
+      '',
+      `### ${t('search.knowledgeSources')}`,
+      ...sources.map((source) => `- ${source.noteTitle}`),
+    ].join('\n')
+    : '';
+  const addition = [
+    '',
+    `## ${heading}`,
+    '',
+    answer,
+    sourceBlock,
+  ].join('\n');
+
+  const currentContent = activeNote.value?.content?.trimEnd() ?? '';
+  return `${currentContent}${addition}\n`;
+}
+
+async function persistFullQuestion(
+  question: WorkbenchQuestionEntry,
+  metadata: AgentTaskMetadata,
+): Promise<WorkbenchQuestionEntry | null> {
+  const updatedQuestion = await workbenchStore.recordQuestion({
+    query: question.query,
+    threadId: question.threadId,
+    mode: getQuestionMode(question),
+    agentWriteMode: metadata.writeMode,
+    askedAt: question.askedAt,
+    answer: getQuestionAnswer(question),
+    sourceNoteIds: question.sourceNoteIds,
+    sources: getQuestionSources(question),
+    agentSteps: metadata.steps,
+    agentTraceEvents: metadata.traceEvents,
+    pendingWrites: metadata.pendingWrites,
+    executedWrites: metadata.executedWrites,
+    dismissedWriteIds: metadata.dismissedWriteIds,
+    createdWriteIds: metadata.createdWriteIds,
+  });
+
+  if (updatedQuestion) {
+    setAgentTaskMetadata(updatedQuestion.id, metadata);
+    if (selectedQuestion.value?.id === question.id) {
+      selectedQuestion.value = updatedQuestion;
+    }
+  }
+
+  return updatedQuestion;
+}
+
 function getExecutedWritePreview(write: KnowledgeAgentExecutedWrite): string {
   const content = write.content.trim();
   return content.length > 240 ? `${content.slice(0, 240)}...` : content;
@@ -1078,6 +1192,132 @@ function getExecutedWritePreview(write: KnowledgeAgentExecutedWrite): string {
 async function openExecutedWrite(write: KnowledgeAgentExecutedWrite): Promise<void> {
   await initializeWorkspace();
   await openNoteResult(write.noteId, write.noteTitle);
+}
+
+async function saveQuestionAsNote(question: WorkbenchQuestionEntry): Promise<void> {
+  const metadata = getAgentMetadata(question);
+  if (!metadata || savingSummaryActionId.value) {
+    return;
+  }
+
+  const proposal: KnowledgeAgentWriteProposal = {
+    id: `agent-write-manual-${Date.now()}`,
+    type: 'create-note',
+    title: buildSummaryNoteTitle(question),
+    content: buildSummaryNoteContent(question),
+    reason: t('search.agentTaskSaveAsNoteReason'),
+  };
+
+  savingSummaryActionId.value = `${question.id}:create`;
+  try {
+    if (metadata.writeMode === 'auto') {
+      await initializeWorkspace();
+      const createdNote = await createNote(null, proposal.title, proposal.content);
+      if (!createdNote) {
+        return;
+      }
+
+      const executedWrite: KnowledgeAgentExecutedWrite = {
+        id: proposal.id,
+        type: 'create-note',
+        noteId: createdNote.id,
+        noteTitle: createdNote.title,
+        content: proposal.content,
+        reason: proposal.reason,
+      };
+
+      const nextMetadata: AgentTaskMetadata = {
+        ...metadata,
+        executedWrites: [executedWrite, ...metadata.executedWrites].slice(0, 8),
+      };
+
+      await persistFullQuestion(question, nextMetadata);
+      await appShellStore.setActiveMainView('workspace');
+      selectNote(createdNote.id);
+      return;
+    }
+
+    const nextMetadata: AgentTaskMetadata = {
+      ...metadata,
+      pendingWrites: [proposal, ...metadata.pendingWrites].slice(0, 8),
+      dismissedWriteIds: metadata.dismissedWriteIds.filter((id) => id !== proposal.id),
+      createdWriteIds: metadata.createdWriteIds.filter((id) => id !== proposal.id),
+    };
+
+    await persistFullQuestion(question, nextMetadata);
+  } catch (error) {
+    const message = getErrorMessage(error);
+    searchViewLogger.error(`Save question as note failed: ${message}`);
+    activeErrorQuestionId.value = question.id;
+    activeErrorMessage.value = message;
+  } finally {
+    savingSummaryActionId.value = '';
+    focusSearchInput();
+  }
+}
+
+async function updateQuestionToCurrentNote(question: WorkbenchQuestionEntry): Promise<void> {
+  const metadata = getAgentMetadata(question);
+  const currentActiveNote = activeNote.value;
+  if (!metadata || !currentActiveNote || savingSummaryActionId.value) {
+    return;
+  }
+
+  const proposal: KnowledgeAgentWriteProposal = {
+    id: `agent-write-manual-${Date.now()}`,
+    type: 'update-note',
+    noteId: currentActiveNote.id,
+    noteTitle: currentActiveNote.title,
+    content: buildCurrentNoteUpdateContent(question),
+    reason: t('search.agentTaskUpdateCurrentNoteReason'),
+  };
+
+  savingSummaryActionId.value = `${question.id}:update`;
+  try {
+    if (metadata.writeMode === 'auto') {
+      await initializeWorkspace();
+      const updated = await applyNoteContentUpdate(proposal.noteId, proposal.content);
+      if (!updated) {
+        throw new Error(t('search.agentTaskApplyUpdateFailed'));
+      }
+
+      const executedWrite: KnowledgeAgentExecutedWrite = {
+        id: proposal.id,
+        type: 'update-note',
+        noteId: proposal.noteId,
+        noteTitle: proposal.noteTitle,
+        content: proposal.content,
+        reason: proposal.reason,
+      };
+
+      const nextMetadata: AgentTaskMetadata = {
+        ...metadata,
+        executedWrites: [executedWrite, ...metadata.executedWrites].slice(0, 8),
+      };
+
+      await persistFullQuestion(question, nextMetadata);
+      await appShellStore.setActiveMainView('workspace');
+      selectNote(proposal.noteId);
+      return;
+    }
+
+    const nextMetadata: AgentTaskMetadata = {
+      ...metadata,
+      pendingWrites: [proposal, ...metadata.pendingWrites].slice(0, 8),
+      dismissedWriteIds: metadata.dismissedWriteIds.filter((id) => id !== proposal.id),
+      createdWriteIds: metadata.createdWriteIds.filter((id) => id !== proposal.id),
+    };
+
+    await persistFullQuestion(question, nextMetadata);
+  } catch (error) {
+    const message = getErrorMessage(error);
+    searchViewLogger.error(`Update question to current note failed: ${message}`);
+    activeErrorQuestionId.value = question.id;
+    activeErrorMessage.value = message;
+  } finally {
+    savingSummaryActionId.value = '';
+    focusSearchInput();
+  }
 }
 
 async function persistAgentWriteState(question: WorkbenchQuestionEntry, metadata: AgentTaskMetadata): Promise<void> {
@@ -1849,12 +2089,18 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   padding: 28px;
   color: var(--text-muted);
   text-align: center;
+}
+
+.search-view__status-icon {
+  color: color-mix(in srgb, var(--accent) 35%, var(--text-muted));
+  margin-bottom: 4px;
 }
 
 .search-view__chat-scroll>.search-view__status {
@@ -1912,6 +2158,21 @@ onBeforeUnmount(() => {
   gap: 8px;
   padding-top: 14px;
   border-top: 1px solid var(--search-chat-border);
+}
+
+.search-view__answer-actions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-view__save-note-button {
+  height: 32px;
+  padding: 0 12px;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
 }
 
 .search-view__sources h3 {

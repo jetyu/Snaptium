@@ -1,5 +1,5 @@
 import type { EditorView } from '@codemirror/view';
-import { AI_TEXT_OPERATION_PROMPTS } from '@shared/ai.constants';
+import { AI_PROMPT_PRESETS, type AiPromptPreset } from '@shared/ai.constants';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { aiService } from '@renderer/features/ai/services/ai.service';
 import { createLogger } from '@renderer/features/logger';
@@ -31,24 +31,24 @@ export function useEditorContextMenu(options: UseEditorContextMenuOptions) {
     if (!view || !selectedText) return;
 
     try {
-      let systemPrompt = AI_TEXT_OPERATION_PROMPTS.DEFAULT;
+      let promptPreset: AiPromptPreset = AI_PROMPT_PRESETS.EDITOR_DEFAULT;
       switch (operation) {
         case EDITOR_CONSTANTS.ACTIONS.AI_REWRITE:
-          systemPrompt = AI_TEXT_OPERATION_PROMPTS.REWRITE;
+          promptPreset = AI_PROMPT_PRESETS.EDITOR_REWRITE;
           break;
         case EDITOR_CONSTANTS.ACTIONS.AI_EXPAND:
-          systemPrompt = AI_TEXT_OPERATION_PROMPTS.EXPAND;
+          promptPreset = AI_PROMPT_PRESETS.EDITOR_EXPAND;
           break;
         case EDITOR_CONSTANTS.ACTIONS.AI_SIMPLIFY:
-          systemPrompt = AI_TEXT_OPERATION_PROMPTS.SIMPLIFY;
+          promptPreset = AI_PROMPT_PRESETS.EDITOR_SIMPLIFY;
           break;
         case EDITOR_CONSTANTS.ACTIONS.AI_SUMMARIZE:
-          systemPrompt = AI_TEXT_OPERATION_PROMPTS.SUMMARIZE;
+          promptPreset = AI_PROMPT_PRESETS.EDITOR_SUMMARIZE;
           break;
       }
 
       const result = await aiService.generate({
-        systemPrompt,
+        promptPreset,
         messages: [
           { role: 'user', content: selectedText },
         ],
