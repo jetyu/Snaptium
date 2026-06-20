@@ -1,5 +1,6 @@
 import {
   electronApi,
+  type KnowledgeAgentWriteMode,
   type KnowledgeAgentTaskResult,
   type KnowledgeAnswerResult,
   type RagStatusResult,
@@ -137,13 +138,23 @@ export const ragService = {
     }
   },
 
-  async runTask(task: string): Promise<KnowledgeAgentTaskResult> {
+  async runTask(task: string, writeMode: KnowledgeAgentWriteMode = 'confirm'): Promise<KnowledgeAgentTaskResult> {
     try {
-      return await electronApi.rag.runTask({ task });
+      return await electronApi.rag.runTask({ task, writeMode });
     } catch (error: unknown) {
       const message = getErrorMessage(error);
       ragLogger.error('RAG agent task failed', { error: message });
-      return { success: false, error: message, finalAnswer: undefined, steps: [], sources: [], pendingWrites: [] };
+      return {
+        success: false,
+        error: message,
+        finalAnswer: undefined,
+        steps: [],
+        traceEvents: [],
+        sources: [],
+        writeMode,
+        pendingWrites: [],
+        executedWrites: [],
+      };
     }
   },
 

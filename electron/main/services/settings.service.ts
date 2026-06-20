@@ -110,6 +110,7 @@ interface AppSettings {
     recommendationFeedback: unknown[];
     onboardingGuideActivated: boolean;
     onboardingGuideDismissed: boolean;
+    agentWriteMode: 'confirm' | 'auto';
   };
   accessControl: AccessControlConfig;
 }
@@ -294,6 +295,7 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
         : defaultConfig.workbench.recommendationFeedback,
       onboardingGuideActivated: incomingConfig.workbench?.onboardingGuideActivated === true,
       onboardingGuideDismissed: incomingConfig.workbench?.onboardingGuideDismissed === true,
+      agentWriteMode: incomingConfig.workbench?.agentWriteMode === 'auto' ? 'auto' : 'confirm',
     },
   };
 }
@@ -387,6 +389,7 @@ export const settingsService = {
         recommendationFeedback: [],
         onboardingGuideActivated: false,
         onboardingGuideDismissed: false,
+        agentWriteMode: 'confirm',
       },
       accessControl: {
         enabled: false,

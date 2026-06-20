@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { createLogger } from '@renderer/features/logger';
-import type { KnowledgeAgentTaskResult } from '@renderer/core/bridge/electronApi';
+import type { KnowledgeAgentTaskResult, KnowledgeAgentWriteMode } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { ragService } from '../services/rag.service';
 
@@ -11,7 +11,10 @@ export function useRAGAgentTask() {
   const result = ref<KnowledgeAgentTaskResult | null>(null);
   const error = ref<string | null>(null);
 
-  const runTask = async (task: string): Promise<KnowledgeAgentTaskResult> => {
+  const runTask = async (
+    task: string,
+    writeMode: KnowledgeAgentWriteMode = 'confirm',
+  ): Promise<KnowledgeAgentTaskResult> => {
     if (!task.trim()) {
       throw new Error('Task cannot be empty');
     }
@@ -22,7 +25,7 @@ export function useRAGAgentTask() {
     result.value = null;
 
     try {
-      const taskResult = await ragService.runTask(task);
+      const taskResult = await ragService.runTask(task, writeMode);
       if (!taskResult.success) {
         throw new Error(taskResult.error || 'Failed to run agent task');
       }
