@@ -14,7 +14,9 @@ import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
 import { getErrorMessage } from '../../services/error.service.js';
 import { LICENSE_RUNTIME_FEATURES, licenseService } from '../../services/license.service.js';
+import { assessRagEvidence } from '../../services/rag-evidence-assessment.service.js';
 import { buildRagAnswerPrompt } from '../../prompts/index.js';
+import { $t } from '../../utils/i18n.js';
 
 const logger = loggerService.createLogger('Main:RAG IPC');
 
@@ -44,7 +46,15 @@ interface KnowledgeAnswerResult {
   answer?: string;
   sources: RagSearchResults;
   usedSearchFallback: boolean;
+  insufficientEvidence?: boolean;
   error?: string;
+}
+
+function createInsufficientEvidenceMessage(): string {
+  return $t(
+    'search.ragInsufficientEvidence',
+    'The current knowledge base does not contain enough evidence to answer this question.',
+  );
 }
 
 async function ensureRagReady(): Promise<Awaited<ReturnType<typeof aiConfigService.resolveRagConfig>>> {
@@ -71,9 +81,26 @@ async function answerKnowledgeQuestion(query: string): Promise<KnowledgeAnswerRe
   if (!results.length) {
     return {
       success: false,
-      error: 'No relevant context found in notes',
+      error: createInsufficientEvidenceMessage(),
       sources: [],
       usedSearchFallback: false,
+      insufficientEvidence: true,
+    };
+  }
+
+  const evidence = assessRagEvidence(results);
+  if (!evidence.sufficient) {
+    logger.info('RAG answer rejected due to insufficient evidence', {
+      highestScore: evidence.highestScore,
+      averageScore: evidence.averageScore,
+      consideredCount: evidence.consideredCount,
+    });
+    return {
+      success: false,
+      error: createInsufficientEvidenceMessage(),
+      sources: results,
+      usedSearchFallback: false,
+      insufficientEvidence: true,
     };
   }
 
@@ -148,7 +175,13 @@ export function registerRAGHandlers() {
     } catch (error) {
       const message = getErrorMessage(error);
       logger.error(`RAG_ANSWER_QUESTION error: ${message}`);
-      return { success: false, error: message, sources: [], usedSearchFallback: false };
+      return {
+        success: false,
+        error: message,
+        sources: [],
+        usedSearchFallback: false,
+        insufficientEvidence: false,
+      };
     }
   });
 
@@ -170,6 +203,7 @@ export function registerRAGHandlers() {
         writeMode: 'confirm',
         pendingWrites: [],
         executedWrites: [],
+        stopReason: undefined,
       };
     }
   });

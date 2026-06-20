@@ -638,6 +638,8 @@
   "search.moreMatches": "个更多匹配",
   "search.newKnowledgeChat": "新建对话",
   "search.newKnowledgeChatPreview": "输入问题后开始问答",
+  "search.ragInsufficientEvidence": "当前知识库中没有足够依据回答这个问题",
+  "search.agentWriteBlockedInsufficientEvidence": "当前证据不足，不能执行写入操作",
   "search.noResultsLocal": "未在本地笔记中找到匹配内容",
   "search.noResultsSemantic": "暂未找到相关笔记，请确认知识库索引已更新或尝试使用不同关键词重新检索",
   "search.openSearch": "打开搜索",

@@ -317,6 +317,7 @@ export interface KnowledgeAnswerResult {
   sources: RagSearchResult[];
   error?: string;
   usedSearchFallback: boolean;
+  insufficientEvidence?: boolean;
 }
 
 export interface KnowledgeAgentStep {
@@ -390,6 +391,14 @@ export interface KnowledgeAgentTaskResult {
   writeMode: KnowledgeAgentWriteMode;
   pendingWrites: KnowledgeAgentWriteProposal[];
   executedWrites: KnowledgeAgentExecutedWrite[];
+  stopReason?:
+    | 'completed'
+    | 'insufficient-evidence'
+    | 'tool-call-limit'
+    | 'iteration-limit'
+    | 'runtime-limit'
+    | 'tool-failure-limit'
+    | 'weak-search-limit';
   error?: string;
 }
 
