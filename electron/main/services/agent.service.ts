@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { aiConfigService } from './ai-config.service.js';
-import { generateEmbeddingSingle } from './embedding.service.js';
 import { getErrorMessage } from './error.service.js';
 import { ragService } from './rag.service.js';
 import {
@@ -309,11 +308,11 @@ async function executeSearchKnowledgeBaseTool(
   state: AgentExecutionState,
 ): Promise<string> {
   const validated = SearchKnowledgeBaseToolArgsSchema.parse(args);
-  const queryEmbedding = await generateEmbeddingSingle(validated.query, ragConfig.embeddingConfig);
-  const results = await ragService.searchByVector({
-    queryEmbedding,
+  const results = await ragService.searchKnowledgeBase({
+    query: validated.query,
     topK: Number(ragConfig.rag.topK),
     similarityThreshold: Number(ragConfig.rag.similarityThreshold),
+    rerankerConfig: ragConfig.rerankerConfig,
   });
   const evidence = assessRagEvidence(results);
 

@@ -21,9 +21,10 @@ import type { AppSettings, AISource } from '../store/settings.store';
 type SettingsChangeReason = 'save' | 'language' | 'import' | 'reset';
 
 export interface AiConnectionPayload {
-  aiEndpoint: string;
+  aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
+  capabilities: string[];
 }
 
 function normalizeAiSources(value: unknown): AISource[] {
@@ -33,13 +34,17 @@ function normalizeAiSources(value: unknown): AISource[] {
 
   return value.map((source) => {
     const normalized = (source ?? {}) as Partial<AISource>;
+    const capabilities = Array.isArray(normalized.capabilities)
+      ? normalized.capabilities.filter((capability): capability is string => typeof capability === 'string')
+      : [];
+
     return {
       id: String(normalized.id ?? ''),
       name: String(normalized.name ?? ''),
-      endpoint: String(normalized.endpoint ?? ''),
+      baseUrl: String(normalized.baseUrl ?? ''),
       apiKey: String(normalized.apiKey ?? ''),
       aiModel: String(normalized.aiModel ?? ''),
-      capabilities: Array.isArray(normalized.capabilities) ? normalized.capabilities : [],
+      capabilities,
     };
   });
 }
@@ -136,9 +141,10 @@ function buildAiConnectionPayload(config: AppSettings, override?: AiConnectionPa
 
   const selectedSource = config.aiSources.find((source) => source.id === config.aiAssistant.sourceId);
   return {
-    aiEndpoint: selectedSource?.endpoint ?? '',
+    aiBaseUrl: selectedSource?.baseUrl ?? '',
     aiApiKey: selectedSource?.apiKey ?? '',
     aiModel: config.aiAssistant.model,
+    capabilities: selectedSource?.capabilities ?? ['chat'],
   };
 }
 

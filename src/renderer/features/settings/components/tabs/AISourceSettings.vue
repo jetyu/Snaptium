@@ -3,12 +3,8 @@
     <div class="header-actions">
       <h3 class="panel-title">{{ t('pref.pane.aiSources') }}</h3>
     </div>
-    <LicenseGateNotice
-      v-if="isLicenseLocked"
-      class="license-gate"
-      title-key="license.gate.aiSources.title"
-      description-key="license.gate.aiSources.description"
-    />
+    <LicenseGateNotice v-if="isLicenseLocked" class="license-gate" title-key="license.gate.aiSources.title"
+      description-key="license.gate.aiSources.description" />
 
 
     <div class="source-list">
@@ -19,18 +15,20 @@
             <div class="source-header">
               <h4 class="source-title">{{ source.name }}</h4>
               <div class="settings-card-actions">
-                <button class="action-btn" :disabled="isLicenseLocked" @click="handleEditSource(source)" :title="t('common.editor')">
+                <button class="action-btn" :disabled="isLicenseLocked" @click="handleEditSource(source)"
+                  :title="t('common.editor')">
                   <IconPencil :size="14" />
                 </button>
-                <button class="action-btn delete" :disabled="isLicenseLocked" @click="removeSource(source)" :title="t('trash.delete')">
+                <button class="action-btn delete" :disabled="isLicenseLocked" @click="removeSource(source)"
+                  :title="t('trash.delete')">
                   <IconTrash :size="14" />
                 </button>
               </div>
             </div>
             <div class="source-details">
               <div class="detail-item">
-                <span class="label">{{ t('label.aiApiEndpoint') }}</span>
-                <span class="value" :title="source.endpoint">{{ source.endpoint }}</span>
+                <span class="label">{{ t('label.aiBaseUrl') }}</span>
+                <span class="value" :title="source.baseUrl">{{ source.baseUrl }}</span>
               </div>
               <div class="detail-item">
                 <span class="label">{{ t('label.aiModel') }}</span>
@@ -39,6 +37,11 @@
               <div class="detail-item">
                 <span class="label">{{ t('label.aiApiKey') }}</span>
                 <span class="value">{{ t('common.encrypted') }}</span>
+              </div>
+              <div class="detail-item">
+                <span class="label">{{ t('label.aiCapabilities') }}</span>
+                <span class="value" :title="formatCapabilities(source.capabilities)">{{
+                  formatCapabilities(source.capabilities) }}</span>
               </div>
             </div>
           </div>
@@ -50,39 +53,53 @@
         <div class="source-form-group">
           <label class="setting-label">
             {{ t('label.sourceName') }} <span class="required-mark">{{ t('label.starSign') }}</span>
-            <span class="char-counter">{{ newSource.name.length }}/10</span>
+            <span class="char-counter">{{ newSource.name.length }}/20</span>
           </label>
-          <input v-model="newSource.name" type="text" class="settings-input" maxlength="10"
+          <input v-model="newSource.name" type="text" class="settings-input" maxlength="20"
             :placeholder="t('placeholder.sourceName')" :disabled="isLicenseLocked" />
         </div>
 
         <div class="source-form-group">
-          <label class="setting-label">{{ t('label.aiApiEndpoint') }} <span class="required-mark">{{ t('label.starSign')
-          }}</span></label>
-          <input v-model="newSource.endpoint" type="text" class="settings-input"
+          <label class="setting-label">{{ t('label.aiBaseUrl') }} <span class="required-mark">{{ t('label.starSign')
+              }}</span></label>
+          <input v-model="newSource.baseUrl" type="text" class="settings-input"
             :placeholder="t('placeholder.aiAPIEndpoint')" :disabled="isLicenseLocked" />
         </div>
         <div class="source-form-group">
           <label class="setting-label">{{ t('label.aiModel') }} <span class="required-mark">{{ t('label.starSign')
           }}</span></label>
-          <input v-model="newSource.aiModel" type="text" class="settings-input"
-            :placeholder="t('placeholder.aiModel')" :disabled="isLicenseLocked" />
+          <input v-model="newSource.aiModel" type="text" class="settings-input" :placeholder="t('placeholder.aiModel')"
+            :disabled="isLicenseLocked" />
         </div>
         <div class="source-form-group">
           <label class="setting-label">{{ t('label.aiApiKey') }} <span class="required-mark">{{ t('label.starSign')
           }}</span></label>
-          <PasswordInput v-model="newSource.apiKey" :placeholder="t('placeholder.aiAPIKey')" autocomplete="off" :disabled="isLicenseLocked" />
+          <PasswordInput v-model="newSource.apiKey" :placeholder="t('placeholder.aiAPIKey')" autocomplete="off"
+            :disabled="isLicenseLocked" />
+        </div>
+        <div class="source-form-group">
+          <label class="setting-label">{{ t('label.aiCapabilities') }}</label>
+          <div class="capability-list">
+            <label v-for="option in capabilityOptions" :key="option.value" class="capability-option">
+              <input :checked="newSource.capabilities.includes(option.value)" type="checkbox"
+                :disabled="isLicenseLocked"
+                @change="toggleCapability(option.value, ($event.target as HTMLInputElement).checked)" />
+              <span>{{ t(option.labelKey) }}</span>
+            </label>
+          </div>
         </div>
         <div class="form-actions-row">
           <div class="buttons">
-            <button class="action-button secondary" @click="handleTestNewSource" :disabled="isLicenseLocked || !canTest || isTesting">
+            <button class="action-button secondary" @click="handleTestNewSource"
+              :disabled="isLicenseLocked || !canTest || isTesting">
               <span v-if="isTesting" class="spinner small"></span>
               {{ isTesting ? t('button.testing') : t('button.testConnection') }}
             </button>
             <button class="action-button secondary" @click="handleCancelAdd">
               {{ t('button.cancel') }}
             </button>
-            <button class="action-button primary" @click="handleAddSource" :disabled="isLicenseLocked || !isFormValid || isAdding">
+            <button class="action-button primary" @click="handleAddSource"
+              :disabled="isLicenseLocked || !isFormValid || isAdding">
               <template v-if="isAdding">
                 <span class="spinner small"></span>
               </template>
@@ -95,7 +112,8 @@
       </div>
 
       <!-- Add Source Card (Placeholder) -->
-      <div v-else-if="settingsStore.config.aiSources.length > 0" class="add-source-card" @click="handleAddSourceTrigger">
+      <div v-else-if="settingsStore.config.aiSources.length > 0" class="add-source-card"
+        @click="handleAddSourceTrigger">
         <div class="add-icon">
           <IconPlus :size="24" />
         </div>
@@ -143,16 +161,23 @@ const isEditMode = computed(() => !!editingSourceId.value);
 
 const newSource = reactive({
   name: '',
-  endpoint: '',
+  baseUrl: '',
   apiKey: '',
   aiModel: '',
+  capabilities: ['embedding', 'chat', 'reranker'],
 });
+
+const capabilityOptions = [
+  { value: 'embedding', labelKey: 'label.aiCapabilityEmbedding' },
+  { value: 'chat', labelKey: 'label.aiCapabilityChat' },
+  { value: 'reranker', labelKey: 'label.aiCapabilityReranker' },
+] as const;
 
 // Basic validation for testing (All 4 marked fields are now mandatory)
 const canTest = computed(() => {
   return !!(
     newSource.name.trim() &&
-    newSource.endpoint.trim() &&
+    newSource.baseUrl.trim() &&
     newSource.aiModel.trim() &&
     newSource.apiKey.trim()
   );
@@ -190,9 +215,10 @@ const handleAddSource = async () => {
   try {
     const payload = {
       name: newSource.name,
-      endpoint: newSource.endpoint,
+      baseUrl: newSource.baseUrl,
       apiKey: newSource.apiKey,
       aiModel: newSource.aiModel,
+      capabilities: [...newSource.capabilities],
     };
 
     if (isEditMode.value && editingSourceId.value) {
@@ -225,17 +251,19 @@ const handleEditSource = (source: AISource) => {
 
   editingSourceId.value = source.id;
   newSource.name = source.name;
-  newSource.endpoint = source.endpoint;
+  newSource.baseUrl = source.baseUrl;
   newSource.apiKey = source.apiKey;
   newSource.aiModel = source.aiModel;
+  newSource.capabilities = [...source.capabilities];
   showAddForm.value = true;
 };
 
 const resetForm = () => {
   newSource.name = '';
-  newSource.endpoint = '';
+  newSource.baseUrl = '';
   newSource.apiKey = '';
   newSource.aiModel = '';
+  newSource.capabilities = ['embedding', 'chat', 'reranker'];
   editingSourceId.value = null;
 };
 
@@ -251,14 +279,15 @@ const handleTestNewSource = async () => {
 
   if (!canTest.value || isTesting.value) return;
 
-  aisLogger.info(`Testing connectivity for new source: ${newSource.endpoint}`);
+  aisLogger.info(`Testing connectivity for new source: ${newSource.baseUrl}`);
   isTesting.value = true;
 
   try {
     const result = await settingsStore.testConnection({
-      aiEndpoint: newSource.endpoint,
+      aiBaseUrl: newSource.baseUrl,
       aiApiKey: newSource.apiKey,
       aiModel: newSource.aiModel,
+      capabilities: [...newSource.capabilities],
     });
 
     if (result?.success) {
@@ -297,6 +326,30 @@ const removeSource = async (source: AISource) => {
     await settingsStore.removeAiSource(source.id);
     aisLogger.info(`AI Source removed: ${source.id}`);
   }
+};
+
+const toggleCapability = (capability: string, checked: boolean) => {
+  if (checked) {
+    if (!newSource.capabilities.includes(capability)) {
+      newSource.capabilities.push(capability);
+    }
+    return;
+  }
+
+  newSource.capabilities = newSource.capabilities.filter((item) => item !== capability);
+};
+
+const formatCapabilities = (capabilities: string[]): string => {
+  const activeCapabilities = capabilities.length === 0
+    ? capabilityOptions.map((option) => option.value)
+    : capabilities;
+
+  return activeCapabilities
+    .map((capability) => {
+      const option = capabilityOptions.find((item) => item.value === capability);
+      return option ? t(option.labelKey) : capability;
+    })
+    .join(' / ');
 };
 </script>
 
@@ -442,6 +495,20 @@ const removeSource = async (source: AISource) => {
   gap: 4px;
 }
 
+.capability-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+
+.capability-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
 .detail-item {
   display: flex;
   align-items: baseline;
@@ -495,5 +562,4 @@ const removeSource = async (source: AISource) => {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
-
 </style>

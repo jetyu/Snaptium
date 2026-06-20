@@ -13,6 +13,7 @@ export const DEFAULT_RAG_CONFIG = {
   embeddingModel: '',
   ragChatSourceId: '',
   ragChatModel: '',
+  rerankerSourceId: '',
   chunkSize: 500,
   chunkOverlap: 50,
   topK: 5,

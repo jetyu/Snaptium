@@ -264,7 +264,7 @@
   "history.restoring": "Restaurando...",
   "history.title": "Histórico de Versões",
   "label.advanced": "Configurações Avançadas",
-  "label.aiApiEndpoint": "Endereço do Serviço",
+  "label.aiBaseUrl": "Endereço do Serviço",
   "label.aiApiKey": "Chave da API",
   "label.aiAssistant": "Escrita por IA",
   "label.aiAutoContinue": "Continuação Automática",

@@ -36,9 +36,9 @@
           <select class="settings-select" :value="settingsStore.config.rag.embeddingSourceId"
             @change="handleRAGUpdate('embeddingSourceId', ($event.target as HTMLSelectElement).value, $event)"
             :disabled="isLicenseLocked || !settingsStore.config.rag.enabled">
-            <option v-if="settingsStore.config.aiSources.length === 0" value="">{{
+            <option v-if="embeddingSources.length === 0" value="">{{
               t('option.default.selectOption') }}</option>
-            <option v-for="source in settingsStore.config.aiSources" :key="source.id" :value="source.id">
+            <option v-for="source in embeddingSources" :key="source.id" :value="source.id">
               {{ source.name }}
             </option>
           </select>
@@ -52,13 +52,33 @@
           <p class="setting-description">{{ t('text.ragChatModel') }}</p>
         </div>
         <label class="select-shell"
-          :class="{ disabled: isLicenseLocked || settingsStore.config.aiSources.length === 0 || !settingsStore.config.rag.enabled }">
+          :class="{ disabled: isLicenseLocked || chatSources.length === 0 || !settingsStore.config.rag.enabled }">
           <select class="settings-select" :value="settingsStore.config.rag.ragChatSourceId"
             @change="handleRAGUpdate('ragChatSourceId', ($event.target as HTMLSelectElement).value)"
-            :disabled="isLicenseLocked || settingsStore.config.aiSources.length === 0 || !settingsStore.config.rag.enabled">
+            :disabled="isLicenseLocked || chatSources.length === 0 || !settingsStore.config.rag.enabled">
             <option value="">{{
               t('option.rag.disabled') }}</option>
-            <option v-for="source in settingsStore.config.aiSources" :key="source.id" :value="source.id">
+            <option v-for="source in chatSources" :key="source.id" :value="source.id">
+              {{ source.name }}
+            </option>
+
+          </select>
+        </label>
+      </section>
+
+      <section class="setting-card">
+        <div class="setting-copy">
+          <p class="setting-label">{{ t('label.ragRerankerSource') }}</p>
+          <p class="setting-description">{{ t('text.ragRerankerSource') }}</p>
+        </div>
+        <label class="select-shell"
+          :class="{ disabled: isLicenseLocked || rerankerSources.length === 0 || !settingsStore.config.rag.enabled }">
+          <select class="settings-select" :value="settingsStore.config.rag.rerankerSourceId"
+            @change="handleRAGUpdate('rerankerSourceId', ($event.target as HTMLSelectElement).value)"
+            :disabled="isLicenseLocked || rerankerSources.length === 0 || !settingsStore.config.rag.enabled">
+            <option value="">{{
+              t('option.rag.disabled') }}</option>
+            <option v-for="source in rerankerSources" :key="source.id" :value="source.id">
               {{ source.name }}
             </option>
 
@@ -210,6 +230,22 @@ const { isConfigured } = useRAGConfig();
 const ragSettingsLogger = createLogger('RAGSettings');
 const ragLicenseGate = useLicenseGate('rag');
 const isLicenseLocked = computed(() => !ragLicenseGate.allowed.value);
+
+const sourceSupportsCapability = (capabilities: string[], capability: string): boolean => {
+  return capabilities.length === 0 || capabilities.includes(capability);
+};
+
+const embeddingSources = computed(() => {
+  return settingsStore.config.aiSources.filter((source) => sourceSupportsCapability(source.capabilities, 'embedding'));
+});
+
+const chatSources = computed(() => {
+  return settingsStore.config.aiSources.filter((source) => sourceSupportsCapability(source.capabilities, 'chat'));
+});
+
+const rerankerSources = computed(() => {
+  return settingsStore.config.aiSources.filter((source) => sourceSupportsCapability(source.capabilities, 'reranker'));
+});
 
 const requestLicenseAccessIfNeeded = (): boolean => {
   if (!isLicenseLocked.value) {

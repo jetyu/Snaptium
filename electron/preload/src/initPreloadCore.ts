@@ -20,7 +20,12 @@ interface WorkspaceContextMenuItemPayload {
 }
 interface WorkspaceContextMenuPayload { nodeId: string; nodeType?: string; isRoot?: boolean; items?: WorkspaceContextMenuItemPayload[]; }
 interface EditorContextMenuPayload { selectedText?: string; hasSelection?: boolean; canPaste?: boolean; }
-interface AiSourceTestConnectionPayload { aiEndpoint: string; aiApiKey: string; aiModel: string; }
+interface AiSourceTestConnectionPayload {
+  aiBaseUrl: string;
+  aiApiKey: string;
+  aiModel: string;
+  capabilities: string[];
+}
 type SyncProviderConfigPayload = JsonObject & { provider: string };
 interface SyncRunPayload { config: JsonObject; trigger: 'manual' | 'timer' | 'save'; }
 interface ShortcutKeybindingPayload { commandId: string; key: string; when?: string | null; }
