@@ -84,20 +84,12 @@
                     <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
                       v-html="renderQuestionAnswer(question)"></div>
                     <p v-else class="search-view__status-text">{{ $t('search.noResultsSemantic') }}</p>
-                    <div v-if="canSaveQuestionAsNote(question) || canUpdateQuestionToCurrentNote(question)"
-                      class="search-view__answer-actions">
+                    <div v-if="canSaveQuestionAsNote(question)" class="search-view__answer-actions">
                       <button type="button" class="search-view__save-note-button icon-action-button"
                         :disabled="Boolean(savingSummaryActionId)" @click="saveQuestionAsNote(question)">
                         <IconPlus :size="14" />
                         <span>{{ savingSummaryActionId === `${question.id}:create` ? $t('search.agentTaskApplying') :
                           $t('search.agentTaskSaveAsNote') }}</span>
-                      </button>
-                      <button v-if="canUpdateQuestionToCurrentNote(question)" type="button"
-                        class="search-view__save-note-button icon-action-button"
-                        :disabled="Boolean(savingSummaryActionId)" @click="updateQuestionToCurrentNote(question)">
-                        <IconFileText :size="14" />
-                        <span>{{ savingSummaryActionId === `${question.id}:update` ? $t('search.agentTaskApplying') :
-                          $t('search.agentTaskUpdateCurrentNote') }}</span>
                       </button>
                     </div>
                     <div v-if="getQuestionSources(question).length > 0" class="search-view__sources">
@@ -293,7 +285,7 @@ const { recentQuestions } = storeToRefs(workbenchStore);
 const appShellStore = useAppShellStore();
 const settingsStore = useSettingsStore();
 const { config } = storeToRefs(settingsStore);
-const { activeNote, selectNote, createNote, initializeWorkspace, applyNoteContentUpdate } = useWorkspace();
+const { selectNote, createNote, initializeWorkspace, applyNoteContentUpdate } = useWorkspace();
 const { searchViewRequest } = useSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
 const { askQuestion, isGenerating: isAIGenerating, usedSearchFallback } = useRAGChat();
@@ -964,10 +956,6 @@ function canSaveQuestionAsNote(question: WorkbenchQuestionEntry): boolean {
   return getQuestionMode(question) === 'agent-task' && getQuestionAnswer(question).trim().length > 0;
 }
 
-function canUpdateQuestionToCurrentNote(question: WorkbenchQuestionEntry): boolean {
-  return canSaveQuestionAsNote(question) && Boolean(activeNote.value?.id);
-}
-
 function getQuestionSources(question: WorkbenchQuestionEntry): WorkbenchQuestionSource[] {
   if (question.sources?.length) {
     return question.sources;
@@ -1130,29 +1118,6 @@ function buildSummaryNoteContent(question: WorkbenchQuestionEntry): string {
   ].join('\n');
 }
 
-function buildCurrentNoteUpdateContent(question: WorkbenchQuestionEntry): string {
-  const answer = getQuestionAnswer(question).trim();
-  const heading = buildSummaryNoteTitle(question);
-  const sources = getQuestionSources(question);
-  const sourceBlock = sources.length > 0
-    ? [
-      '',
-      `### ${t('search.knowledgeSources')}`,
-      ...sources.map((source) => `- ${source.noteTitle}`),
-    ].join('\n')
-    : '';
-  const addition = [
-    '',
-    `## ${heading}`,
-    '',
-    answer,
-    sourceBlock,
-  ].join('\n');
-
-  const currentContent = activeNote.value?.content?.trimEnd() ?? '';
-  return `${currentContent}${addition}\n`;
-}
-
 async function persistFullQuestion(
   question: WorkbenchQuestionEntry,
   metadata: AgentTaskMetadata,
@@ -1248,70 +1213,6 @@ async function saveQuestionAsNote(question: WorkbenchQuestionEntry): Promise<voi
   } catch (error) {
     const message = getErrorMessage(error);
     searchViewLogger.error(`Save question as note failed: ${message}`);
-    activeErrorQuestionId.value = question.id;
-    activeErrorMessage.value = message;
-  } finally {
-    savingSummaryActionId.value = '';
-    focusSearchInput();
-  }
-}
-
-async function updateQuestionToCurrentNote(question: WorkbenchQuestionEntry): Promise<void> {
-  const metadata = getAgentMetadata(question);
-  const currentActiveNote = activeNote.value;
-  if (!metadata || !currentActiveNote || savingSummaryActionId.value) {
-    return;
-  }
-
-  const proposal: KnowledgeAgentWriteProposal = {
-    id: `agent-write-manual-${Date.now()}`,
-    type: 'update-note',
-    noteId: currentActiveNote.id,
-    noteTitle: currentActiveNote.title,
-    content: buildCurrentNoteUpdateContent(question),
-    reason: t('search.agentTaskUpdateCurrentNoteReason'),
-  };
-
-  savingSummaryActionId.value = `${question.id}:update`;
-  try {
-    if (metadata.writeMode === 'auto') {
-      await initializeWorkspace();
-      const updated = await applyNoteContentUpdate(proposal.noteId, proposal.content);
-      if (!updated) {
-        throw new Error(t('search.agentTaskApplyUpdateFailed'));
-      }
-
-      const executedWrite: KnowledgeAgentExecutedWrite = {
-        id: proposal.id,
-        type: 'update-note',
-        noteId: proposal.noteId,
-        noteTitle: proposal.noteTitle,
-        content: proposal.content,
-        reason: proposal.reason,
-      };
-
-      const nextMetadata: AgentTaskMetadata = {
-        ...metadata,
-        executedWrites: [executedWrite, ...metadata.executedWrites].slice(0, 8),
-      };
-
-      await persistFullQuestion(question, nextMetadata);
-      await appShellStore.setActiveMainView('workspace');
-      selectNote(proposal.noteId);
-      return;
-    }
-
-    const nextMetadata: AgentTaskMetadata = {
-      ...metadata,
-      pendingWrites: [proposal, ...metadata.pendingWrites].slice(0, 8),
-      dismissedWriteIds: metadata.dismissedWriteIds.filter((id) => id !== proposal.id),
-      createdWriteIds: metadata.createdWriteIds.filter((id) => id !== proposal.id),
-    };
-
-    await persistFullQuestion(question, nextMetadata);
-  } catch (error) {
-    const message = getErrorMessage(error);
-    searchViewLogger.error(`Update question to current note failed: ${message}`);
     activeErrorQuestionId.value = question.id;
     activeErrorMessage.value = message;
   } finally {
