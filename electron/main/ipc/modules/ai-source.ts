@@ -9,9 +9,10 @@ import { LICENSE_RUNTIME_FEATURES, licenseService } from '../../services/license
 const logger = loggerService.createLogger('Electron:AI Source IPC');
 
 const TestConnectionSchema = z.object({
-  aiEndpoint: z.string().url(),
+  aiBaseUrl: z.string().url(),
   aiApiKey: z.string().min(1),
   aiModel: z.string().min(1),
+  capabilities: z.array(z.enum(['chat', 'embedding', 'reranker'])).default(['chat']),
 });
 
 /**

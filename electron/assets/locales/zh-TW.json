@@ -264,7 +264,7 @@
   "history.restoring": "恢復中...",
   "history.title": "版本歷史",
   "label.advanced": "進階設定",
-  "label.aiApiEndpoint": "API 端點",
+  "label.aiBaseUrl": "API 端點",
   "label.aiApiKey": "API 金鑰",
   "label.aiAssistant": "智能寫作",
   "label.aiAutoContinue": "自動續寫",

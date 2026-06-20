@@ -357,6 +357,7 @@ export const settingsService = {
         embeddingModel: '',
         ragChatSourceId: '',
         ragChatModel: '',
+        rerankerSourceId: '',
         chunkSize: 500,
         chunkOverlap: 50,
         topK: 5,

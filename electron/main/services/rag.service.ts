@@ -3,6 +3,7 @@ import { generateEmbeddingsBatch } from './embedding.service.js';
 import { chunkMarkdown } from '../utils/text-chunker.js';
 import { loggerService } from './logger.service.js';
 import { getErrorMessage } from '../services/error.service.js';
+import { remoteAiService } from './remote-ai.service.js';
 
 const logger = loggerService.createLogger('Main:RAG Service');
 
@@ -26,6 +27,19 @@ interface SearchByVectorParams {
   similarityThreshold: number;
 }
 
+interface RerankerConfig {
+  endpoint: string;
+  apiKey: string;
+  model: string;
+}
+
+interface SearchKnowledgeBaseParams {
+  query: string;
+  topK: number;
+  similarityThreshold: number;
+  rerankerConfig?: RerankerConfig | null;
+}
+
 interface SearchResultItem {
   chunk: {
     id: string;
@@ -37,6 +51,10 @@ interface SearchResultItem {
   score: number;
   noteTitle?: string;
 }
+
+const RERANK_CANDIDATE_MIN = 12;
+const RERANK_CANDIDATE_MULTIPLIER = 3;
+const RERANK_CANDIDATE_MAX = 20;
 
 /**
  * RAG Service - Execution Layer
@@ -192,6 +210,74 @@ class RAGService {
     } catch (error) {
       logger.error(`Search error: ${getErrorMessage(error)}`);
       throw error;
+    }
+  }
+
+  async searchKnowledgeBase(params: SearchKnowledgeBaseParams): Promise<SearchResultItem[]> {
+    if (!this.isInitialized) {
+      throw new Error('RAG service not initialized');
+    }
+
+    if (!this.embeddingConfig) {
+      throw new Error('Embedding configuration is unavailable');
+    }
+
+    const { query, topK, similarityThreshold, rerankerConfig } = params;
+    const candidateTopK = rerankerConfig
+      ? Math.min(Math.max(topK * RERANK_CANDIDATE_MULTIPLIER, RERANK_CANDIDATE_MIN), RERANK_CANDIDATE_MAX)
+      : topK;
+
+    const queryEmbedding = (await generateEmbeddingsBatch([query], this.embeddingConfig))[0];
+    const candidates = await this.searchByVector({
+      queryEmbedding,
+      topK: candidateTopK,
+      similarityThreshold,
+    });
+
+    if (!rerankerConfig || candidates.length < 2) {
+      return candidates.slice(0, topK);
+    }
+
+    try {
+      const reranked = await remoteAiService.rerank({
+        endpoint: rerankerConfig.endpoint,
+        apiKey: rerankerConfig.apiKey,
+        model: rerankerConfig.model,
+        query,
+        documents: candidates.map((candidate) => candidate.chunk.content),
+      });
+
+      if (!reranked.length) {
+        return candidates.slice(0, topK);
+      }
+
+      const orderedResults: SearchResultItem[] = [];
+      const consumedIndexes = new Set<number>();
+      for (const item of reranked) {
+        const candidate = candidates[item.index];
+        if (!candidate || consumedIndexes.has(item.index)) {
+          continue;
+        }
+
+        orderedResults.push({
+          ...candidate,
+          score: item.score,
+        });
+        consumedIndexes.add(item.index);
+      }
+
+      for (let index = 0; index < candidates.length; index += 1) {
+        if (consumedIndexes.has(index)) {
+          continue;
+        }
+
+        orderedResults.push(candidates[index]);
+      }
+
+      return orderedResults.slice(0, topK);
+    } catch (error) {
+      logger.warn(`Rerank fallback triggered: ${getErrorMessage(error)}`);
+      return candidates.slice(0, topK);
     }
   }
 

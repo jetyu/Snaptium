@@ -69,10 +69,17 @@ interface EmbedConfig extends RequestConfig {
   input: string | string[];
 }
 
+interface RerankConfig extends RequestConfig {
+  model: string;
+  query: string;
+  documents: string[];
+}
+
 interface TestConnectionConfig {
-  aiEndpoint: string;
+  aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
+  capabilities: string[];
 }
 
 interface ChatChoice {
@@ -93,6 +100,17 @@ interface EmbeddingItem {
 
 interface EmbeddingResponse extends JsonObject {
   data?: EmbeddingItem[];
+}
+
+interface RerankResultItem {
+  index?: unknown;
+  relevance_score?: unknown;
+  score?: unknown;
+}
+
+interface RerankResponse extends JsonObject {
+  results?: RerankResultItem[];
+  data?: RerankResultItem[];
 }
 
 interface RequestErrorBody {
@@ -124,6 +142,27 @@ function extractRequestErrorMessage(body: unknown, fallback: string): string {
  * Centralized service for OpenAI-compatible API communications.
  */
 export const remoteAiService = {
+  normalizeBaseUrl(baseUrl: string): string {
+    return baseUrl.trim().replace(/\/+$/, '');
+  },
+
+  resolveCapabilityEndpoint(baseUrl: string, capability: 'chat' | 'embedding' | 'reranker'): string {
+    const normalizedBaseUrl = this.normalizeBaseUrl(baseUrl);
+    if (!normalizedBaseUrl) {
+      throw new Error('Missing AI base URL');
+    }
+
+    if (capability === 'chat') {
+      return `${normalizedBaseUrl}/chat/completions`;
+    }
+
+    if (capability === 'embedding') {
+      return `${normalizedBaseUrl}/embeddings`;
+    }
+
+    return `${normalizedBaseUrl}/rerank`;
+  },
+
   getHeaders(apiKey: string): Record<string, string> {
     return {
       Authorization: `Bearer ${apiKey}`,
@@ -215,33 +254,63 @@ export const remoteAiService = {
     });
   },
 
+  async rerank(config: RerankConfig): Promise<Array<{ index: number; score: number }>> {
+    const { endpoint, apiKey, model, query, documents } = config;
+    const response = await this.request<RerankResponse>(endpoint, apiKey, {
+      model,
+      query,
+      documents,
+      top_n: documents.length,
+    });
+
+    const candidateResults = Array.isArray(response.results)
+      ? response.results
+      : Array.isArray(response.data)
+        ? response.data
+        : [];
+
+    return candidateResults
+      .map((item) => ({
+        index: Number(item.index),
+        score: Number(item.relevance_score ?? item.score),
+      }))
+      .filter((item) => Number.isInteger(item.index) && item.index >= 0 && Number.isFinite(item.score))
+      .sort((left, right) => right.score - left.score);
+  },
+
   async testConnection(config: TestConnectionConfig): Promise<{ success: boolean; message?: string }> {
-    const { aiEndpoint, aiApiKey, aiModel } = config;
-    const isEmbeddingModel = aiModel.toLowerCase().includes('embed');
+    const { aiBaseUrl, aiApiKey, aiModel, capabilities } = config;
+    const normalizedCapabilities = capabilities.length > 0 ? capabilities : ['chat', 'embedding', 'reranker'];
+    const orderedCapabilities: Array<'chat' | 'embedding' | 'reranker'> = ['chat', 'embedding', 'reranker'];
+    const requestedCapabilities = orderedCapabilities.filter((capability) => normalizedCapabilities.includes(capability));
 
-    const runTest = async (isEmbed: boolean): Promise<JsonObject> => {
-      const payload: JsonObject = isEmbed
-        ? { model: aiModel, input: ['test'] }
-        : { model: aiModel, messages: [{ role: 'user', content: 'hi' }], max_tokens: 5 };
+    const runTest = async (capability: 'chat' | 'embedding' | 'reranker'): Promise<JsonObject> => {
+      const endpoint = this.resolveCapabilityEndpoint(aiBaseUrl, capability);
+      const payload: JsonObject = capability === 'chat'
+        ? { model: aiModel, messages: [{ role: 'user', content: 'hi' }], max_tokens: 5 }
+        : capability === 'embedding'
+          ? { model: aiModel, input: ['test'] }
+          : { model: aiModel, query: 'test', documents: ['hello', 'world'], top_n: 2 };
 
-      return await this.request<JsonObject>(aiEndpoint, aiApiKey, payload);
+      return await this.request<JsonObject>(endpoint, aiApiKey, payload);
     };
 
-    try {
-      await runTest(isEmbeddingModel);
-      return { success: true };
-    } catch (firstError) {
-      if (!isEmbeddingModel) {
-        logger.info('Chat connectivity test failed, trying embedding fallback');
-        try {
-          await runTest(true);
-          return { success: true };
-        } catch {
-          return { success: false, message: getErrorMessage(firstError) };
-        }
+    let lastError: unknown = null;
+    for (const capability of requestedCapabilities) {
+      try {
+        await runTest(capability);
+        return { success: true };
+      } catch (error) {
+        lastError = error;
+        logger.info(`AI source ${capability} connectivity test failed`, {
+          error: getErrorMessage(error),
+        });
       }
-
-      return { success: false, message: getErrorMessage(firstError) };
     }
+
+    return {
+      success: false,
+      message: getErrorMessage(lastError, 'Failed to connect to AI source'),
+    };
   },
 };

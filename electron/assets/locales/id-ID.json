@@ -264,7 +264,7 @@
   "history.restoring": "Memulihkan...",
   "history.title": "Riwayat Versi",
   "label.advanced": "Pengaturan Lanjutan",
-  "label.aiApiEndpoint": "Alamat Layanan",
+  "label.aiBaseUrl": "Alamat Layanan",
   "label.aiApiKey": "Kunci API",
   "label.aiAssistant": "Penulisan AI",
   "label.aiAutoContinue": "Lanjutkan Otomatis",

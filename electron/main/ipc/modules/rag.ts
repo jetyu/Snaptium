@@ -6,7 +6,6 @@
 import { ipcMain } from 'electron';
 import { z } from 'zod';
 import { ragService } from '../../services/rag.service.js';
-import { generateEmbeddingSingle } from '../../services/embedding.service.js';
 import { runKnowledgeAgentTask } from '../../services/agent.service.js';
 import { remoteAiService } from '../../services/remote-ai.service.js';
 import { aiConfigService } from '../../services/ai-config.service.js';
@@ -71,11 +70,11 @@ async function ensureRagReady(): Promise<Awaited<ReturnType<typeof aiConfigServi
 
 async function answerKnowledgeQuestion(query: string): Promise<KnowledgeAnswerResult> {
   const ragConfig = await ensureRagReady();
-  const queryEmbedding = await generateEmbeddingSingle(query, ragConfig.embeddingConfig);
-  const results = await ragService.searchByVector({
-    queryEmbedding,
+  const results = await ragService.searchKnowledgeBase({
+    query,
     topK: Number(ragConfig.rag.topK),
     similarityThreshold: Number(ragConfig.rag.similarityThreshold),
+    rerankerConfig: ragConfig.rerankerConfig,
   });
 
   if (!results.length) {

@@ -10,9 +10,11 @@ import {
 
 interface AiSourceConfig {
   id: string;
-  endpoint: string;
+  name: string;
+  baseUrl: string;
   apiKey: string;
   aiModel: string;
+  capabilities: string[];
 }
 
 interface AiAssistantSettings {
@@ -30,6 +32,7 @@ interface RagSettings {
   embeddingModel: string;
   ragChatSourceId: string;
   ragChatModel: string;
+  rerankerSourceId: string;
   topK: number;
   similarityThreshold: number;
 }
@@ -54,6 +57,13 @@ interface ResolvedChatConfig {
   model: string;
 }
 
+interface ResolvedRerankerConfig {
+  sourceId: string;
+  endpoint: string;
+  apiKey: string;
+  model: string;
+}
+
 interface ResolvedAssistantConfig {
   endpoint: string;
   apiKey: string;
@@ -70,6 +80,7 @@ interface ResolvedRagConfig {
   rag: Pick<RagSettings, 'topK' | 'similarityThreshold'>;
   embeddingConfig: ResolvedEmbeddingConfig;
   chatConfig: ResolvedChatConfig | null;
+  rerankerConfig: ResolvedRerankerConfig | null;
 }
 
 type UnknownRecord = Record<string, unknown>;
@@ -106,11 +117,19 @@ function normalizeTopK(value: unknown): number {
 
 function normalizeAiSource(item: unknown): AiSourceConfig {
   const record = toRecord(item);
+  const capabilities = Array.isArray(record.capabilities)
+    ? record.capabilities
+      .filter((capability): capability is string => typeof capability === 'string' && capability.trim().length > 0)
+      .map((capability) => capability.trim())
+    : [];
+
   return {
     id: toText(record.id),
-    endpoint: toText(record.endpoint),
+    name: toText(record.name),
+    baseUrl: toText(record.baseUrl),
     apiKey: toText(record.apiKey),
     aiModel: toText(record.aiModel),
+    capabilities,
   };
 }
 
@@ -144,6 +163,7 @@ function normalizeRagSettings(rag: unknown): RagSettings {
     embeddingModel: toText(record.embeddingModel),
     ragChatSourceId: toText(record.ragChatSourceId),
     ragChatModel: toText(record.ragChatModel),
+    rerankerSourceId: toText(record.rerankerSourceId),
     topK: normalizeTopK(record.topK),
     similarityThreshold: normalizeSimilarityThreshold(record.similarityThreshold),
   };
@@ -206,6 +226,45 @@ function resolveAssistantPromptSettings(aiAssistant: AiAssistantSettings): {
   };
 }
 
+function supportsCapability(source: AiSourceConfig, capability: string): boolean {
+  return source.capabilities.length === 0 || source.capabilities.includes(capability);
+}
+
+function normalizeBaseUrl(baseUrl: string): string {
+  return baseUrl.trim().replace(/\/+$/, '');
+}
+
+function resolveSourceEndpoint(source: AiSourceConfig, capability: 'chat' | 'embedding' | 'reranker'): string {
+  const baseUrl = normalizeBaseUrl(source.baseUrl);
+  if (!baseUrl) {
+    throw new Error(`Missing ${capability} base URL`);
+  }
+
+  if (capability === 'chat') {
+    return `${baseUrl}/chat/completions`;
+  }
+
+  if (capability === 'embedding') {
+    return `${baseUrl}/embeddings`;
+  }
+
+  return `${baseUrl}/rerank`;
+}
+
+function requireConfiguredSourceWithCapability(
+  aiSources: AiSourceConfig[],
+  sourceId: string,
+  capability: string,
+  errorMessage: string,
+): AiSourceConfig {
+  const source = requireConfiguredSource(aiSources, sourceId, errorMessage);
+  if (!supportsCapability(source, capability)) {
+    throw new Error(errorMessage);
+  }
+
+  return source;
+}
+
 export const aiConfigService = {
   async loadAppConfig(): Promise<NormalizedAppConfig> {
     const config = await settingsService.loadConfig();
@@ -221,14 +280,15 @@ export const aiConfigService = {
       throw new Error($t('aiAssistant.error.disabled', 'AI Assistant is disabled'));
     }
 
-    const source = requireConfiguredSource(
+    const source = requireConfiguredSourceWithCapability(
       config.aiSources,
       aiAssistant.sourceId,
+      'chat',
       $t('aiAssistant.error.sourceNotFound', 'AI source not found'),
     );
 
     return {
-      endpoint: source.endpoint,
+      endpoint: resolveSourceEndpoint(source, 'chat'),
       apiKey: source.apiKey,
       model: resolveModel(
         aiAssistant.model,
@@ -254,14 +314,19 @@ export const aiConfigService = {
       throw new Error('No workspace root configured');
     }
 
-    const embeddingSource = requireConfiguredSource(
+    const embeddingSource = requireConfiguredSourceWithCapability(
       config.aiSources,
       rag.embeddingSourceId,
+      'embedding',
       'Embedding source not found',
     );
 
     const ragChatSource = rag.ragChatSourceId
-      ? config.aiSources.find((item) => item.id === rag.ragChatSourceId) ?? null
+      ? config.aiSources.find((item) => item.id === rag.ragChatSourceId && supportsCapability(item, 'chat')) ?? null
+      : null;
+
+    const rerankerSource = rag.rerankerSourceId
+      ? config.aiSources.find((item) => item.id === rag.rerankerSourceId && supportsCapability(item, 'reranker')) ?? null
       : null;
 
     return {
@@ -272,15 +337,23 @@ export const aiConfigService = {
         similarityThreshold: rag.similarityThreshold,
       },
       embeddingConfig: {
-        endpoint: embeddingSource.endpoint,
+        endpoint: resolveSourceEndpoint(embeddingSource, 'embedding'),
         apiKey: embeddingSource.apiKey,
         model: resolveModel(rag.embeddingModel, embeddingSource.aiModel, 'Embedding model not specified'),
       },
       chatConfig: ragChatSource
         ? {
-            endpoint: ragChatSource.endpoint,
+            endpoint: resolveSourceEndpoint(ragChatSource, 'chat'),
             apiKey: ragChatSource.apiKey,
             model: resolveModel(rag.ragChatModel, ragChatSource.aiModel, 'No chat model configured'),
+          }
+        : null,
+      rerankerConfig: rerankerSource
+        ? {
+            sourceId: rerankerSource.id,
+            endpoint: resolveSourceEndpoint(rerankerSource, 'reranker'),
+            apiKey: rerankerSource.apiKey,
+            model: resolveModel('', rerankerSource.aiModel, 'No reranker model configured'),
           }
         : null,
     };

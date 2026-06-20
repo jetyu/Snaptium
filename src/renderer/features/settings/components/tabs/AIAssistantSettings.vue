@@ -35,9 +35,9 @@
           <select class="settings-select" :value="settingsStore.config.aiAssistant.sourceId"
             @change="handleSourceIdChange"
             :disabled="isLicenseLocked || !settingsStore.config.aiAssistant.enabled">
-            <option v-if="settingsStore.config.aiSources.length === 0" value="" disabled>{{
+            <option v-if="chatSources.length === 0" value="" disabled>{{
               t('option.default.selectOption') }}</option>
-            <option v-for="source in settingsStore.config.aiSources" :key="source.id" :value="source.id">
+            <option v-for="source in chatSources" :key="source.id" :value="source.id">
               {{ source.name }}
             </option>
           </select>
@@ -131,6 +131,11 @@ const writingScenarioOptions = AI_WRITING_SCENARIO_OPTIONS;
 const writingModeOptions = AI_WRITING_MODE_OPTIONS;
 const aiAssistantLicenseGate = useLicenseGate('aiAssistant');
 const isLicenseLocked = computed(() => !aiAssistantLicenseGate.allowed.value);
+const chatSources = computed(() => {
+  return settingsStore.config.aiSources.filter((source) => (
+    source.capabilities.length === 0 || source.capabilities.includes('chat')
+  ));
+});
 
 const requestLicenseAccessIfNeeded = (): boolean => {
   if (!isLicenseLocked.value) {

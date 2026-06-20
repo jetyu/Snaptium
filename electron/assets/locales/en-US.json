@@ -264,7 +264,7 @@
   "history.restoring": "Restoring...",
   "history.title": "Version History",
   "label.advanced": "Advanced Settings",
-  "label.aiApiEndpoint": "Service Address",
+  "label.aiBaseUrl": "Service Address",
   "label.aiApiKey": "API Key",
   "label.aiAssistant": "AI Writing",
   "label.aiAutoContinue": "Auto Continue",

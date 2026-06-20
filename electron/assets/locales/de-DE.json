@@ -264,7 +264,7 @@
   "history.restoring": "Wiederherstellung...",
   "history.title": "Versionsverlauf",
   "label.advanced": "Erweiterte Einstellungen",
-  "label.aiApiEndpoint": "Service-Adresse",
+  "label.aiBaseUrl": "Service-Adresse",
   "label.aiApiKey": "API-Schlüssel",
   "label.aiAssistant": "KI-Schreiben",
   "label.aiAutoContinue": "Automatisches Fortsetzen",

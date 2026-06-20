@@ -264,7 +264,7 @@
   "history.restoring": "복구 중...",
   "history.title": "버전 기록",
   "label.advanced": "고급 설정",
-  "label.aiApiEndpoint": "API 엔드포인트",
+  "label.aiBaseUrl": "API 엔드포인트",
   "label.aiApiKey": "API 키",
   "label.aiAssistant": "지능형 집필",
   "label.aiAutoContinue": "자동 이어서 쓰기",

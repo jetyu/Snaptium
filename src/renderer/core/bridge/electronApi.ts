@@ -24,9 +24,10 @@ export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };
 
 export interface AiSourceConfig {
-  aiEndpoint: string;
+  aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
+  capabilities: string[];
 }
 
 export interface AiSourceTestResult {

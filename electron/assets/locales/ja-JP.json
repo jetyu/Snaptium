@@ -264,7 +264,7 @@
   "history.restoring": "復元中...",
   "history.title": "バージョン履歴",
   "label.advanced": "詳細設定",
-  "label.aiApiEndpoint": "APIエンドポイント",
+  "label.aiBaseUrl": "APIエンドポイント",
   "label.aiApiKey": "APIキー",
   "label.aiAssistant": "インテリジェント執筆",
   "label.aiAutoContinue": "自動続行",

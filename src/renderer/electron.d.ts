@@ -92,9 +92,10 @@ interface WallpaperResult {
 }
 
 interface AiSourceConfig {
-  aiEndpoint: string;
+  aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
+  capabilities: string[];
 }
 
 interface AiCompletePayload {

@@ -264,7 +264,7 @@
   "history.restoring": "Ripristino in corso...",
   "history.title": "Cronologia versioni",
   "label.advanced": "Impostazioni avanzate",
-  "label.aiApiEndpoint": "Endpoint API",
+  "label.aiBaseUrl": "Endpoint API",
   "label.aiApiKey": "Chiave API",
   "label.aiAssistant": "Scrittura intelligente",
   "label.aiAutoContinue": "Continuazione automatica",

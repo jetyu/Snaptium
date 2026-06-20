@@ -264,7 +264,7 @@
   "history.restoring": "Restauration en cours...",
   "history.title": "Historique des versions",
   "label.advanced": "Paramètres avancés",
-  "label.aiApiEndpoint": "Point de terminaison API",
+  "label.aiBaseUrl": "Point de terminaison API",
   "label.aiApiKey": "Clé API",
   "label.aiAssistant": "Écriture intelligente",
   "label.aiAutoContinue": "Continuation automatique",
