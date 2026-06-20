@@ -13,7 +13,7 @@ export const WORKSPACE_CONSTANTS = {
     DEBOUNCE_DELAY: 600,
     STATUS_HIDE_DELAY: 3000,
   },
-  
+
   TIME_FORMAT: {
     JUST_NOW_THRESHOLD: 5,
     SECONDS_THRESHOLD: 60,
@@ -31,8 +31,8 @@ export const WORKSPACE_CONSTANTS = {
     NEW_NOTEBOOK: 'contextMenu.newNotebook',
     RENAME: 'contextMenu.rename',
     DELETE: 'contextMenu.delete',
-    LOCK: 'contextMenu.lock',
-    UNLOCK: 'contextMenu.unlock',
+    LOCK: 'contextMenu.readMode',
+    UNLOCK: 'contextMenu.editMode',
     MOVE_TO: 'contextMenu.moveTo',
     MOVE_TO_ROOT: 'contextMenu.moveToRoot',
     MOVE_TO_NOTEBOOK: 'contextMenu.moveToNotebook',
