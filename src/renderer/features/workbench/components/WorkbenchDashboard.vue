@@ -730,19 +730,6 @@ function formatSmartScore(score: number): string {
   return `${Math.max(1, Math.min(99, Math.round(score * 100)))}%`;
 }
 
-function getSmartNotePreview(note: Note): string {
-  const text = note.content
-    .replace(/```[\s\S]*?```/g, ' ')
-    .replace(/`[^`]*`/g, ' ')
-    .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')
-    .replace(/\[[^\]]+\]\([^)]+\)/g, ' ')
-    .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-
-  return text || t('workbench.empty.noContent');
-}
-
 function getSmartNotePreviewHtml(note: Note): string {
   const previewMarkdown = note.content
     .replace(/```[\s\S]*?```/g, '\n')
