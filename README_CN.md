@@ -20,6 +20,7 @@
 一款基于 Electron + Vue 3 构建的现代化跨平台 Markdown 智能工作空间。  
 专注于深度写作、知识管理与本地优先体验，支持 AI 辅助写作、知识库、端到端加密同步与多端协作。
 
+[![Snaptium Release](https://github.com/jetyu/Snaptium/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/jetyu/Snaptium/actions/workflows/build.yml)
 [![Latest Release](https://img.shields.io/github/v/release/jetyu/Snaptium?style=flat&logo=github)](https://github.com/jetyu/Snaptium/releases/latest)
 ![GitHub Pre-release](https://img.shields.io/github/v/release/jetyu/Snaptium?include_prereleases&label=pre-release&logo=github)
 [![Downloads](https://img.shields.io/github/downloads/jetyu/Snaptium/total?style=flat&logo=github)](https://github.com/jetyu/Snaptium/releases)
