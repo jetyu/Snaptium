@@ -75,7 +75,7 @@
             <header class="panel__header">
               <h2 class="module-title">
                 <span class="module-title__icon">
-                  <IconDatabaseSearch :size="14" />
+                  <IconSubtitlesAi :size="14" />
                 </span>
                 {{ t('workbench.module.recentQuestions') }}
               </h2>
@@ -85,7 +85,7 @@
               <button v-for="question in recentQuestionEntriesPreview" :key="question.id" type="button" class="feed-row"
                 :title="question.query" @click="openSearchView({ query: question.query, mode: 'semantic', run: true })">
                 <span class="feed-row__icon">
-                  <IconDatabaseSearch :size="14" />
+                  <IconSubtitlesAi :size="14" />
                 </span>
                 <span class="feed-row__main">
                   <span class="feed-row__title">{{ question.query }}</span>
@@ -313,7 +313,7 @@ import {
   IconChartRadar,
   IconHierarchy,
   IconAlignBoxBottomCenter,
-  IconDatabaseSearch,
+  IconSubtitlesAi,
   IconChartHistogram,
   IconClock,
   IconFlame,
@@ -590,7 +590,7 @@ const insightSummaryItems = computed<InsightSummaryItem[]>(() => {
       id: 'today-questions',
       label: t('workbench.stats.todayQuestions'),
       value: formatNumber(todayQuestionCount.value),
-      icon: IconDatabaseSearch,
+      icon: IconSubtitlesAi,
     },
     {
       id: 'streak',
@@ -742,7 +742,7 @@ function getSmartNotePreviewHtml(note: Note): string {
         return true;
       }
       const previousLine = lines[index - 1];
-        return Boolean(previousLine?.trim());
+      return Boolean(previousLine?.trim());
     })
     .slice(0, 15)
     .join('\n')
