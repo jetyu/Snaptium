@@ -96,8 +96,18 @@
                       <ol>
                         <li v-for="(step, index) in getAgentSteps(question)" :key="`${question.id}:step:${index}`"
                           :class="`is-${step.status}`">
-                          <span>{{ step.title }}</span>
-                          <small>{{ step.detail }}</small>
+                          <span>{{ formatAgentStepTitle(step) }}</span>
+                          <small>{{ formatAgentStepDetail(step) }}</small>
+                        </li>
+                      </ol>
+                    </div>
+                    <div v-if="getAgentTraceEvents(question).length > 0" class="search-view__agent-trace">
+                      <h3>{{ $t('search.agentTaskTrace') }}</h3>
+                      <ol>
+                        <li v-for="event in getAgentTraceEvents(question)" :key="event.id"
+                          :class="`is-${event.status}`">
+                          <span>{{ formatAgentTraceTitle(event) }}</span>
+                          <small>{{ formatAgentTraceDetail(event) }}</small>
                         </li>
                       </ol>
                     </div>
@@ -106,7 +116,7 @@
                       <article v-for="proposal in getVisibleWriteProposals(question)" :key="proposal.id"
                         class="search-view__agent-write-card">
                         <div class="search-view__agent-write-main">
-                          <strong>{{ proposal.title }}</strong>
+                          <strong>{{ getWriteProposalTitle(proposal) }}</strong>
                           <p>{{ proposal.reason }}</p>
                           <pre>{{ getWriteProposalPreview(proposal) }}</pre>
                         </div>
@@ -115,12 +125,30 @@
                             :disabled="Boolean(applyingWriteProposalId)"
                             @click="applyWriteProposal(question, proposal)">
                             <IconCheck :size="14" />
-                            <span>{{ applyingWriteProposalId === proposal.id ? $t('search.agentTaskCreating') : $t('search.agentTaskApplyWrite') }}</span>
+                            <span>{{ applyingWriteProposalId === proposal.id ? $t('search.agentTaskApplying') : getWriteProposalActionLabel(proposal) }}</span>
                           </button>
                           <button type="button" class="search-view__agent-write-dismiss"
                             :disabled="Boolean(applyingWriteProposalId)"
                             @click="dismissWriteProposal(question, proposal.id)">
                             {{ $t('search.agentTaskDismissWrite') }}
+                          </button>
+                        </div>
+                      </article>
+                    </div>
+                    <div v-if="getExecutedWrites(question).length > 0" class="search-view__agent-writes">
+                      <h3>{{ $t('search.agentTaskExecutedWrites') }}</h3>
+                      <article v-for="write in getExecutedWrites(question)" :key="write.id"
+                        class="search-view__agent-write-card search-view__agent-write-card--executed">
+                        <div class="search-view__agent-write-main">
+                          <strong>{{ write.noteTitle }}</strong>
+                          <p>{{ write.reason }}</p>
+                          <pre>{{ getExecutedWritePreview(write) }}</pre>
+                        </div>
+                        <div class="search-view__agent-write-actions">
+                          <button type="button" class="search-view__agent-write-apply icon-action-button"
+                            @click="openExecutedWrite(write)">
+                            <IconFileText :size="14" />
+                            <span>{{ $t('search.agentTaskOpenExecutedWrite') }}</span>
                           </button>
                         </div>
                       </article>
@@ -151,6 +179,11 @@
                 </button>
               </div>
             </div>
+            <button v-if="inputMode === 'agent-task'" type="button" class="search-view__execution-button"
+              :disabled="isBusy" :title="$t(agentWriteMode === 'auto' ? 'search.agentWriteModeAutoDescription' : 'search.agentWriteModeConfirmDescription')"
+              @click="toggleAgentWriteMode">
+              {{ $t(agentWriteMode === 'auto' ? 'search.agentWriteModeAuto' : 'search.agentWriteModeConfirm') }}
+            </button>
             <textarea ref="searchInput" v-model="searchQuery" class="search-view__input" rows="1"
               :disabled="!canUseKnowledgeSearch" :placeholder="composerPlaceholder" @input="resizeComposer"
               @keydown="handleComposerKeydown" />
@@ -184,7 +217,15 @@ import { getErrorMessage } from '@shared/utils/error.utils';
 import { useWorkbenchStore } from '@renderer/features/workbench';
 import { useWorkspace } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
-import type { KnowledgeAgentStep, KnowledgeAgentWriteProposal, RagSearchResult } from '@renderer/core/bridge/electronApi';
+import { useSettingsStore } from '@renderer/features/settings';
+import type {
+  KnowledgeAgentExecutedWrite,
+  KnowledgeAgentStep,
+  KnowledgeAgentTraceEvent,
+  KnowledgeAgentWriteMode,
+  KnowledgeAgentWriteProposal,
+  RagSearchResult,
+} from '@renderer/core/bridge/electronApi';
 import type { WorkbenchQuestionEntry, WorkbenchQuestionSource } from '@renderer/features/workbench/constants/workbench.constants';
 import { useSearch } from '../composables/useSearch';
 
@@ -207,8 +248,11 @@ interface QuestionThread {
 }
 
 interface AgentTaskMetadata {
+  writeMode: KnowledgeAgentWriteMode;
   steps: KnowledgeAgentStep[];
+  traceEvents: KnowledgeAgentTraceEvent[];
   pendingWrites: KnowledgeAgentWriteProposal[];
+  executedWrites: KnowledgeAgentExecutedWrite[];
   dismissedWriteIds: string[];
   createdWriteIds: string[];
 }
@@ -218,7 +262,9 @@ const { t } = useI18n();
 const workbenchStore = useWorkbenchStore();
 const { recentQuestions } = storeToRefs(workbenchStore);
 const appShellStore = useAppShellStore();
-const { selectNote, createNote } = useWorkspace();
+const settingsStore = useSettingsStore();
+const { config } = storeToRefs(settingsStore);
+const { selectNote, createNote, initializeWorkspace, applyNoteContentUpdate } = useWorkspace();
 const { searchViewRequest } = useSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
 const { askQuestion, isGenerating: isAIGenerating, usedSearchFallback } = useRAGChat();
@@ -265,6 +311,7 @@ const canUseKnowledgeSearch = computed(() => ragLicenseGate.allowed.value && rag
 const isBusy = computed(() => isSearching.value || isAIGenerating.value || isAgentRunning.value);
 const canAsk = computed(() => canUseKnowledgeSearch.value && Boolean(searchQuery.value.trim()) && !isBusy.value);
 const activeInputMode = computed(() => inputModes.find((mode) => mode.id === inputMode.value) ?? inputModes[0]);
+const agentWriteMode = computed<KnowledgeAgentWriteMode>(() => config.value.workbench.agentWriteMode ?? 'confirm');
 const composerPlaceholder = computed(() => (
   inputMode.value === 'agent-task'
     ? t('search.agentTaskPlaceholder')
@@ -528,7 +575,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
     const askedAt = Date.now();
     const threadId = activeThreadId.value ?? createThreadId(askedAt);
     activeThreadId.value = threadId;
-    draftQuestion = await workbenchStore.recordQuestion({ query, threadId, askedAt });
+    draftQuestion = await workbenchStore.recordQuestion({ query, threadId, mode: 'qa', askedAt });
     if (draftThreadId.value === threadId) {
       draftThreadId.value = null;
       draftThreadCreatedAt.value = 0;
@@ -576,6 +623,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       answer: generatedAnswer,
       sourceNoteIds: Array.from(new Set(semanticResults.value.map((result) => result.chunk.noteId))),
       sources: currentSources.value,
+      mode: 'qa',
     });
     selectedQuestion.value = recordedQuestion;
     if (recordedQuestion) {
@@ -612,6 +660,16 @@ function setAgentTaskMetadata(questionId: string, metadata: AgentTaskMetadata): 
   };
 }
 
+async function toggleAgentWriteMode(): Promise<void> {
+  const nextMode: KnowledgeAgentWriteMode = agentWriteMode.value === 'auto' ? 'confirm' : 'auto';
+  await settingsStore.saveSettings({
+    workbench: {
+      ...config.value.workbench,
+      agentWriteMode: nextMode,
+    },
+  });
+}
+
 async function runAgentTaskQuestion(query: string): Promise<void> {
   if (!canUseKnowledgeSearch.value) {
     searchError.value = knowledgeUnavailableReason.value;
@@ -627,12 +685,27 @@ async function runAgentTaskQuestion(query: string): Promise<void> {
   semanticResults.value = [];
   isSearching.value = true;
   let draftQuestion: WorkbenchQuestionEntry | null = null;
+  let metadata: AgentTaskMetadata = {
+    writeMode: agentWriteMode.value,
+    steps: [],
+    traceEvents: [],
+    pendingWrites: [],
+    executedWrites: [],
+    dismissedWriteIds: [],
+    createdWriteIds: [],
+  };
 
   try {
     const askedAt = Date.now();
     const threadId = activeThreadId.value ?? createThreadId(askedAt);
     activeThreadId.value = threadId;
-    draftQuestion = await workbenchStore.recordQuestion({ query, threadId, askedAt });
+    draftQuestion = await workbenchStore.recordQuestion({
+      query,
+      threadId,
+      mode: 'agent-task',
+      agentWriteMode: agentWriteMode.value,
+      askedAt,
+    });
     if (draftThreadId.value === threadId) {
       draftThreadId.value = null;
       draftThreadCreatedAt.value = 0;
@@ -652,16 +725,23 @@ async function runAgentTaskQuestion(query: string): Promise<void> {
 
     let generatedAnswer = '';
     try {
-      const result = await runTask(query);
+      const result = await runTask(query, agentWriteMode.value);
       semanticResults.value = result.sources;
       generatedAnswer = result.finalAnswer || '';
+      metadata = {
+        writeMode: result.writeMode,
+        steps: result.steps,
+        traceEvents: result.traceEvents,
+        pendingWrites: result.pendingWrites,
+        executedWrites: result.executedWrites,
+        dismissedWriteIds: [],
+        createdWriteIds: [],
+      };
+      if (result.executedWrites.length > 0) {
+        await initializeWorkspace();
+      }
       if (draftQuestion) {
-        setAgentTaskMetadata(draftQuestion.id, {
-          steps: result.steps,
-          pendingWrites: result.pendingWrites,
-          dismissedWriteIds: [],
-          createdWriteIds: [],
-        });
+        setAgentTaskMetadata(draftQuestion.id, metadata);
       }
     } catch (error) {
       const message = getErrorMessage(error);
@@ -682,6 +762,14 @@ async function runAgentTaskQuestion(query: string): Promise<void> {
       answer: generatedAnswer,
       sourceNoteIds: Array.from(new Set(semanticResults.value.map((result) => result.chunk.noteId))),
       sources: currentSources.value,
+      mode: 'agent-task',
+      agentWriteMode: metadata.writeMode,
+      agentSteps: metadata.steps,
+      agentTraceEvents: metadata.traceEvents,
+      pendingWrites: metadata.pendingWrites,
+      executedWrites: metadata.executedWrites,
+      dismissedWriteIds: metadata.dismissedWriteIds,
+      createdWriteIds: metadata.createdWriteIds,
     });
     selectedQuestion.value = recordedQuestion;
     if (recordedQuestion) {
@@ -774,7 +862,7 @@ function getQuestionPreview(question: WorkbenchQuestionEntry): string {
 }
 
 function getQuestionMode(question: WorkbenchQuestionEntry): KnowledgeInputMode {
-  return questionModes.value[question.id] ?? 'qa';
+  return question.mode ?? questionModes.value[question.id] ?? 'qa';
 }
 
 function getQuestionThinkingLabel(question: WorkbenchQuestionEntry): string {
@@ -802,11 +890,88 @@ function getAgentMetadata(question: WorkbenchQuestionEntry): AgentTaskMetadata |
     return null;
   }
 
-  return agentTaskMetadata.value[question.id] ?? null;
+  const localMetadata = agentTaskMetadata.value[question.id];
+  if (localMetadata) {
+    return localMetadata;
+  }
+
+  return {
+    writeMode: (question.agentWriteMode === 'auto' ? 'auto' : 'confirm'),
+    steps: question.agentSteps ?? [],
+    traceEvents: question.agentTraceEvents ?? [],
+    pendingWrites: question.pendingWrites ?? [],
+    executedWrites: question.executedWrites ?? [],
+    dismissedWriteIds: question.dismissedWriteIds ?? [],
+    createdWriteIds: question.createdWriteIds ?? [],
+  };
 }
 
 function getAgentSteps(question: WorkbenchQuestionEntry): KnowledgeAgentStep[] {
   return getAgentMetadata(question)?.steps ?? [];
+}
+
+function getAgentTraceEvents(question: WorkbenchQuestionEntry): KnowledgeAgentTraceEvent[] {
+  return getAgentMetadata(question)?.traceEvents ?? [];
+}
+
+function getExecutedWrites(question: WorkbenchQuestionEntry): KnowledgeAgentExecutedWrite[] {
+  return getAgentMetadata(question)?.executedWrites ?? [];
+}
+
+function formatAgentStepTitle(step: KnowledgeAgentStep): string {
+  const keyMap: Record<string, string> = {
+    searchKnowledgeBase: 'search.agentStep.searchKnowledgeBase',
+    listRecentNotes: 'search.agentStep.listRecentNotes',
+    readNote: 'search.agentStep.readNote',
+    proposeCreateNote: 'search.agentStep.proposeCreateNote',
+    proposeUpdateNote: 'search.agentStep.proposeUpdateNote',
+    createNote: 'search.agentStep.createNote',
+    updateNote: 'search.agentStep.updateNote',
+    configureChatModel: 'search.agentStep.configureChatModel',
+  };
+
+  const key = keyMap[step.title];
+  return key ? t(key) : step.title;
+}
+
+function formatAgentStepDetail(step: KnowledgeAgentStep): string {
+  if (step.title === 'searchKnowledgeBase') {
+    return t('search.agentStep.searchKnowledgeBaseDetail', { count: step.detail });
+  }
+
+  if (step.title === 'configureChatModel') {
+    return t('search.agentStep.configureChatModelDetail');
+  }
+
+  return step.detail;
+}
+
+function formatAgentTraceTitle(event: KnowledgeAgentTraceEvent): string {
+  if (event.type === 'model-response') {
+    return t('search.agentTrace.modelResponse');
+  }
+
+  if (event.type === 'tool-call') {
+    return t('search.agentTrace.toolCall', { tool: event.toolName ?? event.title });
+  }
+
+  if (event.type === 'tool-error') {
+    return t('search.agentTrace.toolError', { tool: event.toolName ?? event.title });
+  }
+
+  return t('search.agentTrace.toolResult', { tool: event.toolName ?? event.title });
+}
+
+function formatAgentTraceDetail(event: KnowledgeAgentTraceEvent): string {
+  const duration = typeof event.durationMs === 'number'
+    ? t('search.agentTrace.duration', { duration: event.durationMs })
+    : '';
+  if (event.type === 'model-response') {
+    return `${t('search.agentTrace.modelResponseDetail', { count: event.detail })}${duration}`;
+  }
+
+  const detail = event.detail.length > 180 ? `${event.detail.slice(0, 180)}...` : event.detail;
+  return duration ? `${detail} ${duration}` : detail;
 }
 
 function getVisibleWriteProposals(question: WorkbenchQuestionEntry): KnowledgeAgentWriteProposal[] {
@@ -826,13 +991,50 @@ function getWriteProposalPreview(proposal: KnowledgeAgentWriteProposal): string 
   return content.length > 240 ? `${content.slice(0, 240)}...` : content;
 }
 
-function dismissWriteProposal(question: WorkbenchQuestionEntry, proposalId: string): void {
+function getWriteProposalTitle(proposal: KnowledgeAgentWriteProposal): string {
+  if (proposal.type === 'create-note') {
+    return proposal.title;
+  }
+
+  return proposal.noteTitle;
+}
+
+function getWriteProposalActionLabel(proposal: KnowledgeAgentWriteProposal): string {
+  return proposal.type === 'create-note'
+    ? t('search.agentTaskApplyWrite')
+    : t('search.agentTaskApplyUpdate');
+}
+
+function getExecutedWritePreview(write: KnowledgeAgentExecutedWrite): string {
+  const content = write.content.trim();
+  return content.length > 240 ? `${content.slice(0, 240)}...` : content;
+}
+
+async function openExecutedWrite(write: KnowledgeAgentExecutedWrite): Promise<void> {
+  await initializeWorkspace();
+  await openNoteResult(write.noteId, write.noteTitle);
+}
+
+async function persistAgentWriteState(question: WorkbenchQuestionEntry, metadata: AgentTaskMetadata): Promise<void> {
+  setAgentTaskMetadata(question.id, metadata);
+  const updatedQuestion = await workbenchStore.updateQuestionAgentWriteState({
+    questionId: question.id,
+    dismissedWriteIds: metadata.dismissedWriteIds,
+    createdWriteIds: metadata.createdWriteIds,
+  });
+
+  if (updatedQuestion && selectedQuestion.value?.id === question.id) {
+    selectedQuestion.value = updatedQuestion;
+  }
+}
+
+async function dismissWriteProposal(question: WorkbenchQuestionEntry, proposalId: string): Promise<void> {
   const metadata = getAgentMetadata(question);
   if (!metadata || metadata.dismissedWriteIds.includes(proposalId)) {
     return;
   }
 
-  setAgentTaskMetadata(question.id, {
+  await persistAgentWriteState(question, {
     ...metadata,
     dismissedWriteIds: [...metadata.dismissedWriteIds, proposalId],
   });
@@ -849,17 +1051,31 @@ async function applyWriteProposal(
 
   applyingWriteProposalId.value = proposal.id;
   try {
-    const createdNote = await createNote(null, proposal.title, proposal.content);
-    if (!createdNote) {
-      return;
+    await initializeWorkspace();
+    let targetNoteId = '';
+
+    if (proposal.type === 'create-note') {
+      const createdNote = await createNote(null, proposal.title, proposal.content);
+      if (!createdNote) {
+        return;
+      }
+
+      targetNoteId = createdNote.id;
+    } else {
+      const updated = await applyNoteContentUpdate(proposal.noteId, proposal.content);
+      if (!updated) {
+        throw new Error(t('search.agentTaskApplyUpdateFailed'));
+      }
+
+      targetNoteId = proposal.noteId;
     }
 
-    setAgentTaskMetadata(question.id, {
+    await persistAgentWriteState(question, {
       ...metadata,
       createdWriteIds: [...metadata.createdWriteIds, proposal.id],
     });
     await appShellStore.setActiveMainView('workspace');
-    selectNote(createdNote.id);
+    selectNote(targetNoteId);
   } catch (error) {
     const message = getErrorMessage(error);
     searchViewLogger.error(`Create note from agent proposal failed: ${message}`);
@@ -1163,6 +1379,31 @@ onBeforeUnmount(() => {
 
 .search-view__input::placeholder {
   color: var(--text-muted);
+}
+
+.search-view__execution-button {
+  flex: 0 0 auto;
+  height: 32px;
+  margin: 0 4px 5px 0;
+  padding: 0 10px;
+  border: 1px solid var(--search-chat-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--panel-hover) 48%, var(--panel));
+  color: var(--text);
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.search-view__execution-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--search-chat-border));
+  color: var(--accent-hover);
+}
+
+.search-view__execution-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .search-view__icon-button,
@@ -1553,6 +1794,7 @@ onBeforeUnmount(() => {
 }
 
 .search-view__agent-steps,
+.search-view__agent-trace,
 .search-view__agent-writes {
   margin-top: 14px;
   padding-top: 14px;
@@ -1560,6 +1802,7 @@ onBeforeUnmount(() => {
 }
 
 .search-view__agent-steps h3,
+.search-view__agent-trace h3,
 .search-view__agent-writes h3 {
   margin: 0 0 10px;
   color: var(--text-muted);
@@ -1567,7 +1810,8 @@ onBeforeUnmount(() => {
   font-weight: 700;
 }
 
-.search-view__agent-steps ol {
+.search-view__agent-steps ol,
+.search-view__agent-trace ol {
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -1576,7 +1820,8 @@ onBeforeUnmount(() => {
   list-style: none;
 }
 
-.search-view__agent-steps li {
+.search-view__agent-steps li,
+.search-view__agent-trace li {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -1584,7 +1829,8 @@ onBeforeUnmount(() => {
   font-size: 0.8rem;
 }
 
-.search-view__agent-steps li::before {
+.search-view__agent-steps li::before,
+.search-view__agent-trace li::before {
   content: '';
   flex: 0 0 auto;
   width: 7px;
@@ -1594,16 +1840,19 @@ onBeforeUnmount(() => {
   background: var(--accent);
 }
 
-.search-view__agent-steps li.is-failed::before {
+.search-view__agent-steps li.is-failed::before,
+.search-view__agent-trace li.is-failed::before {
   background: var(--color-danger, #ef4444);
 }
 
-.search-view__agent-steps span {
+.search-view__agent-steps span,
+.search-view__agent-trace span {
   flex: 0 0 auto;
   font-weight: 700;
 }
 
-.search-view__agent-steps small {
+.search-view__agent-steps small,
+.search-view__agent-trace small {
   min-width: 0;
   color: var(--text-muted);
   font-size: 0.76rem;
@@ -1619,6 +1868,11 @@ onBeforeUnmount(() => {
   border: 1px solid var(--search-chat-accent-border);
   border-radius: 10px;
   background: color-mix(in srgb, var(--accent) 5%, var(--search-chat-surface));
+}
+
+.search-view__agent-write-card--executed {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--search-chat-border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--search-chat-surface));
 }
 
 .search-view__agent-write-card+.search-view__agent-write-card {

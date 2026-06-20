@@ -304,6 +304,7 @@ export interface RagAskQuestionPayload {
 
 export interface RagRunTaskPayload {
   task: string;
+  writeMode?: KnowledgeAgentWriteMode;
 }
 
 export interface KnowledgeAnswerResult {
@@ -320,7 +321,18 @@ export interface KnowledgeAgentStep {
   status: 'completed' | 'failed';
 }
 
-export interface KnowledgeAgentWriteProposal {
+export interface KnowledgeAgentTraceEvent {
+  id: string;
+  type: 'model-response' | 'tool-call' | 'tool-result' | 'tool-error';
+  title: string;
+  detail: string;
+  status: 'completed' | 'failed';
+  at: number;
+  durationMs?: number;
+  toolName?: string;
+}
+
+export interface KnowledgeAgentCreateNoteProposal {
   id: string;
   type: 'create-note';
   title: string;
@@ -328,12 +340,52 @@ export interface KnowledgeAgentWriteProposal {
   reason: string;
 }
 
+export interface KnowledgeAgentUpdateNoteProposal {
+  id: string;
+  type: 'update-note';
+  noteId: string;
+  noteTitle: string;
+  content: string;
+  reason: string;
+}
+
+export type KnowledgeAgentWriteProposal =
+  | KnowledgeAgentCreateNoteProposal
+  | KnowledgeAgentUpdateNoteProposal;
+
+export type KnowledgeAgentWriteMode = 'confirm' | 'auto';
+
+export interface KnowledgeAgentExecutedCreateNote {
+  id: string;
+  type: 'create-note';
+  noteId: string;
+  noteTitle: string;
+  content: string;
+  reason: string;
+}
+
+export interface KnowledgeAgentExecutedUpdateNote {
+  id: string;
+  type: 'update-note';
+  noteId: string;
+  noteTitle: string;
+  content: string;
+  reason: string;
+}
+
+export type KnowledgeAgentExecutedWrite =
+  | KnowledgeAgentExecutedCreateNote
+  | KnowledgeAgentExecutedUpdateNote;
+
 export interface KnowledgeAgentTaskResult {
   success: boolean;
   finalAnswer?: string;
   steps: KnowledgeAgentStep[];
+  traceEvents: KnowledgeAgentTraceEvent[];
   sources: RagSearchResult[];
+  writeMode: KnowledgeAgentWriteMode;
   pendingWrites: KnowledgeAgentWriteProposal[];
+  executedWrites: KnowledgeAgentExecutedWrite[];
   error?: string;
 }
 

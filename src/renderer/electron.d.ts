@@ -519,13 +519,23 @@ declare global {
           error?: string;
           usedSearchFallback: boolean;
         }>;
-        runTask: (payload: { task: string }) => Promise<{
+        runTask: (payload: { task: string; writeMode?: 'confirm' | 'auto' }) => Promise<{
           success: boolean;
           finalAnswer?: string;
           steps: Array<{
             title: string;
             detail: string;
             status: 'completed' | 'failed';
+          }>;
+          traceEvents: Array<{
+            id: string;
+            type: 'model-response' | 'tool-call' | 'tool-result' | 'tool-error';
+            title: string;
+            detail: string;
+            status: 'completed' | 'failed';
+            at: number;
+            durationMs?: number;
+            toolName?: string;
           }>;
           sources: Array<{
             chunk: {
@@ -538,13 +548,42 @@ declare global {
             score: number;
             noteTitle?: string;
           }>;
-          pendingWrites: Array<{
-            id: string;
-            type: 'create-note';
-            title: string;
-            content: string;
-            reason: string;
-          }>;
+          writeMode: 'confirm' | 'auto';
+          pendingWrites: Array<
+            {
+              id: string;
+              type: 'create-note';
+              title: string;
+              content: string;
+              reason: string;
+            }
+            | {
+              id: string;
+              type: 'update-note';
+              noteId: string;
+              noteTitle: string;
+              content: string;
+              reason: string;
+            }
+          >;
+          executedWrites: Array<
+            {
+              id: string;
+              type: 'create-note';
+              noteId: string;
+              noteTitle: string;
+              content: string;
+              reason: string;
+            }
+            | {
+              id: string;
+              type: 'update-note';
+              noteId: string;
+              noteTitle: string;
+              content: string;
+              reason: string;
+            }
+          >;
           error?: string;
         }>;
         deleteNoteIndex: (noteId: string) => Promise<{ success: boolean; error?: string }>;
