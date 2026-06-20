@@ -14,6 +14,7 @@ import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
 import { getErrorMessage } from '../../services/error.service.js';
 import { LICENSE_RUNTIME_FEATURES, licenseService } from '../../services/license.service.js';
+import { buildRagAnswerPrompt } from '../../prompts/index.js';
 
 const logger = loggerService.createLogger('Main:RAG IPC');
 
@@ -90,17 +91,7 @@ async function answerKnowledgeQuestion(query: string): Promise<KnowledgeAnswerRe
   }
 
   const contextText = results.map((res) => res.chunk.content).join('\n---\n');
-  const systemPrompt = [
-    'You are a professional note assistant. Answer concisely and accurately based only on the provided note context.',
-    '',
-    'Rules:',
-    '1. Use only the provided note content.',
-    '2. Answer directly with clear conclusions and key points.',
-    '3. Do not introduce external knowledge that is not present in the notes.',
-    '',
-    'Note context:',
-    contextText,
-  ].join('\n');
+  const systemPrompt = buildRagAnswerPrompt(ragConfig.uiLanguage, query, contextText);
 
   const response = await remoteAiService.chat({
     endpoint: ragConfig.chatConfig.endpoint,

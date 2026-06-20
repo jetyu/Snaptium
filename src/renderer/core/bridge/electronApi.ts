@@ -155,10 +155,14 @@ export interface AiChatMessage {
 
 export interface AiChatGeneratePayload {
   messages: AiChatMessage[];
+  // Optional explicit override for advanced callers. Default system prompts are built in main.
+  systemPrompt?: string;
+  promptPreset?: import('@shared/ai.constants').AiPromptPreset;
 }
 
 export interface AiChatGenerateCompletionPayload {
   context: string;
+  // Optional explicit override for advanced callers. Default system prompts are built in main.
   systemPrompt?: string;
 }
 

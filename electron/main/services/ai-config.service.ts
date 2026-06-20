@@ -2,7 +2,8 @@ import { settingsService } from './settings.service.js';
 import { $t } from '../utils/i18n.js';
 import {
   AI_WRITING_DEFAULTS,
-  buildAiAssistantSystemPrompt,
+  type AiWritingScenario,
+  type AiWritingStyle,
   isValidAiWritingScenario,
   isValidAiWritingStyle,
 } from '../../shared/ai.constants.js';
@@ -34,6 +35,7 @@ interface RagSettings {
 }
 
 interface NormalizedAppConfig {
+  language: string;
   noteSavePath: string;
   aiSources: AiSourceConfig[];
   aiAssistant: AiAssistantSettings;
@@ -56,10 +58,14 @@ interface ResolvedAssistantConfig {
   endpoint: string;
   apiKey: string;
   model: string;
-  systemPrompt: string;
+  uiLanguage: string;
+  customSystemPrompt: string;
+  writingStyle: AiWritingStyle;
+  writingScenario: AiWritingScenario;
 }
 
 interface ResolvedRagConfig {
+  uiLanguage: string;
   workspaceRoot: string;
   rag: Pick<RagSettings, 'topK' | 'similarityThreshold'>;
   embeddingConfig: ResolvedEmbeddingConfig;
@@ -145,6 +151,7 @@ function normalizeRagSettings(rag: unknown): RagSettings {
 
 function normalizeAppConfig(config: LoadedAppConfig): NormalizedAppConfig {
   return {
+    language: toText(config.language),
     noteSavePath: toText(config.noteSavePath),
     aiSources: normalizeAiSources(config.aiSources),
     aiAssistant: normalizeAiAssistant(config.aiAssistant),
@@ -177,21 +184,26 @@ function resolveModel(preferredModel: string, fallbackModel: string, errorMessag
   return model;
 }
 
-function resolveAssistantSystemPrompt(aiAssistant: AiAssistantSettings): string {
-  const legacySystemPrompt = aiAssistant.systemPrompt.trim();
+function resolveAssistantPromptSettings(aiAssistant: AiAssistantSettings): {
+  customSystemPrompt: string;
+  writingStyle: AiWritingStyle;
+  writingScenario: AiWritingScenario;
+} {
+  const customSystemPrompt = aiAssistant.systemPrompt.trim();
   const writingStyleCandidate = aiAssistant.writingStyle;
   const writingScenarioCandidate = aiAssistant.writingScenario;
-  const hasWritingStyle = isValidAiWritingStyle(writingStyleCandidate);
-  const hasWritingScenario = isValidAiWritingScenario(writingScenarioCandidate);
+  const writingStyle = isValidAiWritingStyle(writingStyleCandidate)
+    ? writingStyleCandidate
+    : AI_WRITING_DEFAULTS.STYLE;
+  const writingScenario = isValidAiWritingScenario(writingScenarioCandidate)
+    ? writingScenarioCandidate
+    : AI_WRITING_DEFAULTS.SCENARIO;
 
-  if (!hasWritingStyle && !hasWritingScenario && legacySystemPrompt) {
-    return legacySystemPrompt;
-  }
-
-  return buildAiAssistantSystemPrompt(
-    hasWritingStyle ? writingStyleCandidate : AI_WRITING_DEFAULTS.STYLE,
-    hasWritingScenario ? writingScenarioCandidate : AI_WRITING_DEFAULTS.SCENARIO,
-  );
+  return {
+    customSystemPrompt,
+    writingStyle,
+    writingScenario,
+  };
 }
 
 export const aiConfigService = {
@@ -203,6 +215,7 @@ export const aiConfigService = {
   async resolveAssistantConfig(): Promise<ResolvedAssistantConfig> {
     const config = await this.loadAppConfig();
     const aiAssistant = config.aiAssistant;
+    const promptSettings = resolveAssistantPromptSettings(aiAssistant);
 
     if (!aiAssistant.enabled) {
       throw new Error($t('aiAssistant.error.disabled', 'AI Assistant is disabled'));
@@ -222,7 +235,10 @@ export const aiConfigService = {
         source.aiModel,
         $t('aiAssistant.error.noModelConfigured', 'No model configured'),
       ),
-      systemPrompt: resolveAssistantSystemPrompt(aiAssistant),
+      uiLanguage: config.language,
+      customSystemPrompt: promptSettings.customSystemPrompt,
+      writingStyle: promptSettings.writingStyle,
+      writingScenario: promptSettings.writingScenario,
     };
   },
 
@@ -249,6 +265,7 @@ export const aiConfigService = {
       : null;
 
     return {
+      uiLanguage: config.language,
       workspaceRoot: config.noteSavePath,
       rag: {
         topK: rag.topK,

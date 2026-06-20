@@ -1,5 +1,6 @@
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import { createLogger } from '@renderer/features/logger';
+import type { AiPromptPreset } from '@shared/ai.constants';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { AI_ERROR_MESSAGES } from '../constants/ai.constants';
 
@@ -12,7 +13,9 @@ export interface AiChatMessage {
 
 export interface AiGenerateRequest {
   messages: AiChatMessage[];
+  // Optional explicit override. Built-in prompts are always resolved in main.
   systemPrompt?: string;
+  promptPreset?: AiPromptPreset;
 }
 
 /**
@@ -25,14 +28,11 @@ export const aiService = {
    */
   async generate(request: AiGenerateRequest): Promise<{ success: boolean; answer?: string; error?: string }> {
     try {
-      const messages = [...request.messages];
-
-      // Inject system prompt if provided and not already present
-      if (request.systemPrompt && !messages.find(m => m.role === 'system')) {
-        messages.unshift({ role: 'system', content: request.systemPrompt });
-      }
-
-      const response = await electronApi.aiChat.generate({ messages });
+      const response = await electronApi.aiChat.generate({
+        messages: [...request.messages],
+        systemPrompt: request.systemPrompt,
+        promptPreset: request.promptPreset,
+      });
 
       return response;
     } catch (error: unknown) {

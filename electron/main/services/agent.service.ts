@@ -11,6 +11,7 @@ import {
 } from './remote-ai.service.js';
 import { vfsService } from './vfs.service.js';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
+import { buildAgentSystemPrompt as buildAgentPromptTemplate } from '../prompts/index.js';
 
 const AGENT_MAX_TOOL_ITERATIONS = 5;
 const AGENT_TOOL_CONTENT_LIMIT = 1800;
@@ -675,36 +676,6 @@ async function executeAgentTool(
   }
 }
 
-function createAgentSystemPrompt(writeMode: KnowledgeAgentWriteMode): string {
-  const writeModeRules = writeMode === 'auto'
-    ? [
-        '4. Use createNote only when the user clearly wants a new note or artifact to be created.',
-        '5. Use updateNote only when changing an existing note directly is the right action.',
-        '6. When you create or update a note, tell the user what was changed in the final answer.',
-      ]
-    : [
-        '4. Use proposeCreateNote only when creating a new note would help the user.',
-        '5. Use proposeUpdateNote only when changing an existing note would help the user.',
-        '6. Never claim a note has been created or modified. Write proposals require user confirmation.',
-      ];
-
-  return [
-    'You are Snaptium Agent, an assistant for a local-first note workspace.',
-    '',
-    'You can use tools to inspect the user knowledge base and help the user complete note tasks.',
-    '',
-    `Current write mode: ${writeMode}.`,
-    '',
-    'Rules:',
-    '1. Use searchKnowledgeBase before answering tasks that require knowledge from notes.',
-    '2. Use listRecentNotes when the user refers to recent notes or does not provide a specific note id.',
-    '3. Use readNote when full note content is needed after locating a specific note.',
-    ...writeModeRules,
-    '7. Keep final answers direct, practical, and in the same language as the user task.',
-    '8. If tool results are insufficient, say what is missing.',
-  ].join('\n');
-}
-
 export async function runKnowledgeAgentTask(
   task: string,
   options: RunKnowledgeAgentTaskOptions = {},
@@ -745,7 +716,7 @@ export async function runKnowledgeAgentTask(
   }
 
   const messages: AiChatMessage[] = [
-    { role: 'system', content: createAgentSystemPrompt(writeMode) },
+    { role: 'system', content: buildAgentPromptTemplate(writeMode, ragConfig.uiLanguage, task) },
     { role: 'user', content: task },
   ];
 
