@@ -37,6 +37,7 @@ const electronAPI = Object.freeze({
   }),
   app: Object.freeze({
     getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_VERSION),
+    getDistribution: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_DISTRIBUTION),
     getEnvVersion: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_ENV_VERSION),
     getName: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_NAME),
   }),

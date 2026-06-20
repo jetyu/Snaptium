@@ -10,6 +10,10 @@ export function registerAppEnvInfoIpcHandlers() {
     logger.debug('Getting app version...');
     return appEnvInfoService.getAppVersion();
   });
+  ipcMain.handle(IPC_CHANNELS.APP_GET_DISTRIBUTION, () => {
+    logger.debug('Getting app distribution...');
+    return appEnvInfoService.getDistribution();
+  });
   ipcMain.handle(IPC_CHANNELS.APP_GET_ENV_VERSION, () => {
     logger.debug('Getting environment version...');
     return appEnvInfoService.getEnvVersion();

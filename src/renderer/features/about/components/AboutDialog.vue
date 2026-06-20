@@ -14,6 +14,15 @@
               <img src="@assets/logo/app-logo-512.png" alt="Snaptium Logo" class="about-logo" />
               <h1 class="about-title">{{ appName }}</h1>
               <p class="about-version">{{ t('about.version') }}: {{ appVersion }}</p>
+              <div v-if="isMicrosoftStoreDistribution" class="store-badge" :aria-label="t('about.microsoftStore')">
+                <span class="store-badge__logo" aria-hidden="true">
+                  <span class="store-badge__tile is-blue" />
+                  <span class="store-badge__tile is-green" />
+                  <span class="store-badge__tile is-yellow" />
+                  <span class="store-badge__tile is-red" />
+                </span>
+                <span>{{ t('about.microsoftStore') }}</span>
+              </div>
             </div>
 
             <div class="about-description">
@@ -67,7 +76,16 @@ import { useAbout } from '../composables/useAbout';
 import { IconX } from '@tabler/icons-vue';
 
 const { t } = useI18n();
-const { isOpen, appVersion, appName, envVersion, closeAbout, loadVersionInfo, initMainProcessListeners } = useAbout();
+const {
+  isOpen,
+  appVersion,
+  appName,
+  envVersion,
+  isMicrosoftStoreDistribution,
+  closeAbout,
+  loadVersionInfo,
+  initMainProcessListeners,
+} = useAbout();
 
 const overlayRef = ref<HTMLElement | null>(null);
 let removeListener: (() => void) | null = null;
@@ -161,6 +179,49 @@ onUnmounted(() => {
   color: #6b7280;
   margin: 0;
   font-weight: 400;
+}
+
+.store-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.55rem;
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #d8dee8;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #374151;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.store-badge__logo {
+  display: grid;
+  grid-template-columns: repeat(2, 0.34rem);
+  grid-template-rows: repeat(2, 0.34rem);
+  gap: 0.07rem;
+}
+
+.store-badge__tile {
+  display: block;
+  border-radius: 0.05rem;
+}
+
+.store-badge__tile.is-blue {
+  background: #00a4ef;
+}
+
+.store-badge__tile.is-green {
+  background: #7fba00;
+}
+
+.store-badge__tile.is-yellow {
+  background: #ffb900;
+}
+
+.store-badge__tile.is-red {
+  background: #f25022;
 }
 
 .about-description {

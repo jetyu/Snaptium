@@ -91,11 +91,17 @@ async function openModule(moduleId: AppShellModuleId) {
 }
 
 async function showSettings(tab: string = 'general'): Promise<void> {
-  setActiveTab(tab);
+  const targetTab = updaterStore.isStoreDistribution && tab === 'software-update' ? 'general' : tab;
+  setActiveTab(targetTab);
   await setActiveMainView('settings');
 }
 
 async function showSoftwareUpdateAndCheck(): Promise<void> {
+  if (updaterStore.isStoreDistribution) {
+    await showSettings('general');
+    return;
+  }
+
   await showSettings('software-update');
   await updaterStore.checkForUpdates(false);
 }

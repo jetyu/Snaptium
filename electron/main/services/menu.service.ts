@@ -7,6 +7,7 @@ import {
 } from 'electron';
 import { $t, i18n } from '../utils/i18n.js';
 import { IPC_CHANNELS } from '../constants/ipc.constants.js';
+import { isMicrosoftStoreDistribution } from '../../shared/updater.constants.js';
 import { MENU_CONFIG, type MenuAction, type MenuItemConfig } from '../../shared/menu.config.js';
 
 function isMacPlatform(): boolean {
@@ -25,6 +26,10 @@ function mapConfigToMenuItem(
 
   if (config.role) {
     item.role = config.role as NonNullable<MenuItemConstructorOptions['role']>;
+  }
+
+  if (config.id === 'update' && isMicrosoftStoreDistribution()) {
+    item.visible = false;
   }
 
   if (config.id && !config.role) {
@@ -128,9 +133,13 @@ export function setupAppMenu(mainWindow: BrowserWindow, locale?: string): void {
   }
 
   MENU_CONFIG.forEach((category) => {
+    const items = isMicrosoftStoreDistribution()
+      ? category.items.filter((item) => item.id !== 'update')
+      : category.items;
+
     template.push({
       label: $t(category.labelKey),
-      submenu: category.items.map((item) => mapConfigToMenuItem(item, mainWindow)),
+      submenu: items.map((item) => mapConfigToMenuItem(item, mainWindow)),
     });
   });
 

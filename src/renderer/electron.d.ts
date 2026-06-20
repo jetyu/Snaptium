@@ -180,6 +180,8 @@ interface HistoryVersion {
   size: number;
 }
 
+type AppDistribution = import('@shared/updater.constants').AppDistribution;
+
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
 type JsonObject = { [key: string]: JsonValue };
@@ -247,6 +249,7 @@ declare global {
 
       app: {
         getVersion: () => Promise<string>;
+        getDistribution: () => Promise<AppDistribution>;
         getEnvVersion: () => Promise<AppEnvVersion>;
         getName: () => Promise<string>;
       };
