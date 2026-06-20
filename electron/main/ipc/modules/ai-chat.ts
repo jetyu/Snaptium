@@ -48,7 +48,7 @@ async function generateAIResponse(config: GenerateAIResponseConfig): Promise<str
       hasChoices: Array.isArray(data?.choices),
       choiceCount: Array.isArray(data?.choices) ? data.choices.length : 0,
     });
-    const answer = data.choices?.[0]?.message?.content;
+    const answer = data.choices?.[0]?.message?.content ?? undefined;
     return answer;
   } catch (error) {
     logger.error('Failed to generate AI response', { error: getErrorMessage(error) });

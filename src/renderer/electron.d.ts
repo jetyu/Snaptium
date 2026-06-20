@@ -520,6 +520,34 @@ declare global {
           error?: string;
           usedSearchFallback: boolean;
         }>;
+        runTask: (payload: { task: string }) => Promise<{
+          success: boolean;
+          finalAnswer?: string;
+          steps: Array<{
+            title: string;
+            detail: string;
+            status: 'completed' | 'failed';
+          }>;
+          sources: Array<{
+            chunk: {
+              id: string;
+              noteId: string;
+              content: string;
+              startPos: number;
+              endPos: number;
+            };
+            score: number;
+            noteTitle?: string;
+          }>;
+          pendingWrites: Array<{
+            id: string;
+            type: 'create-note';
+            title: string;
+            content: string;
+            reason: string;
+          }>;
+          error?: string;
+        }>;
         deleteNoteIndex: (noteId: string) => Promise<{ success: boolean; error?: string }>;
         getStatus: () => Promise<{
           success: boolean;

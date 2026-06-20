@@ -1,5 +1,6 @@
 import {
   electronApi,
+  type KnowledgeAgentTaskResult,
   type KnowledgeAnswerResult,
   type RagStatusResult,
 } from '@renderer/core/bridge/electronApi';
@@ -133,6 +134,16 @@ export const ragService = {
       const message = getErrorMessage(error);
       ragLogger.error('RAG question failed', { error: message });
       return { success: false, error: message, answer: undefined, sources: [], usedSearchFallback: false };
+    }
+  },
+
+  async runTask(task: string): Promise<KnowledgeAgentTaskResult> {
+    try {
+      return await electronApi.rag.runTask({ task });
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      ragLogger.error('RAG agent task failed', { error: message });
+      return { success: false, error: message, finalAnswer: undefined, steps: [], sources: [], pendingWrites: [] };
     }
   },
 

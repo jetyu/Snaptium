@@ -302,12 +302,39 @@ export interface RagAskQuestionPayload {
   query: string;
 }
 
+export interface RagRunTaskPayload {
+  task: string;
+}
+
 export interface KnowledgeAnswerResult {
   success: boolean;
   answer?: string;
   sources: RagSearchResult[];
   error?: string;
   usedSearchFallback: boolean;
+}
+
+export interface KnowledgeAgentStep {
+  title: string;
+  detail: string;
+  status: 'completed' | 'failed';
+}
+
+export interface KnowledgeAgentWriteProposal {
+  id: string;
+  type: 'create-note';
+  title: string;
+  content: string;
+  reason: string;
+}
+
+export interface KnowledgeAgentTaskResult {
+  success: boolean;
+  finalAnswer?: string;
+  steps: KnowledgeAgentStep[];
+  sources: RagSearchResult[];
+  pendingWrites: KnowledgeAgentWriteProposal[];
+  error?: string;
 }
 
 export interface RagSearchResult {
@@ -743,6 +770,9 @@ export const electronApi = {
     },
     answerQuestion: (payload: RagAskQuestionPayload): Promise<KnowledgeAnswerResult> => {
       return electronApi.rag.getApi().answerQuestion(payload);
+    },
+    runTask: (payload: RagRunTaskPayload): Promise<KnowledgeAgentTaskResult> => {
+      return electronApi.rag.getApi().runTask(payload);
     },
     deleteNoteIndex: (noteId: string) => {
       return electronApi.rag.getApi().deleteNoteIndex(noteId);
