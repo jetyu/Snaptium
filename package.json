@@ -1,6 +1,6 @@
 {
   "name": "Snaptium",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "author": "Snaptium Team",
   "private": true,
   "type": "module",
@@ -95,7 +95,7 @@
     "copyright": "Copyright © 2026 ${author}",
     "directories": {
       "output": "dist",
-      "buildResources": "assets"
+      "buildResources": "electron/assets"
     },
     "compression": "maximum",
     "electronLanguages": [
