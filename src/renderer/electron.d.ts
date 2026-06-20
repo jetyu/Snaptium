@@ -520,6 +520,7 @@ declare global {
           }>;
           error?: string;
           usedSearchFallback: boolean;
+          insufficientEvidence?: boolean;
         }>;
         runTask: (payload: { task: string; writeMode?: 'confirm' | 'auto' }) => Promise<{
           success: boolean;
@@ -586,6 +587,14 @@ declare global {
               reason: string;
             }
           >;
+          stopReason?:
+            | 'completed'
+            | 'insufficient-evidence'
+            | 'tool-call-limit'
+            | 'iteration-limit'
+            | 'runtime-limit'
+            | 'tool-failure-limit'
+            | 'weak-search-limit';
           error?: string;
         }>;
         deleteNoteIndex: (noteId: string) => Promise<{ success: boolean; error?: string }>;

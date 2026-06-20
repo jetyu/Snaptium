@@ -134,7 +134,14 @@ export const ragService = {
     } catch (error: unknown) {
       const message = getErrorMessage(error);
       ragLogger.error('RAG question failed', { error: message });
-      return { success: false, error: message, answer: undefined, sources: [], usedSearchFallback: false };
+      return {
+        success: false,
+        error: message,
+        answer: undefined,
+        sources: [],
+        usedSearchFallback: false,
+        insufficientEvidence: false,
+      };
     }
   },
 
@@ -154,6 +161,7 @@ export const ragService = {
         writeMode,
         pendingWrites: [],
         executedWrites: [],
+        stopReason: undefined,
       };
     }
   },

@@ -9,11 +9,17 @@ import {
   type AiChatTool,
   type AiChatToolCall,
 } from './remote-ai.service.js';
+import { assessRagEvidence } from './rag-evidence-assessment.service.js';
 import { vfsService } from './vfs.service.js';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { buildAgentSystemPrompt as buildAgentPromptTemplate } from '../prompts/index.js';
+import { $t } from '../utils/i18n.js';
 
 const AGENT_MAX_TOOL_ITERATIONS = 5;
+const AGENT_MAX_TOOL_CALLS = 8;
+const AGENT_MAX_CONSECUTIVE_TOOL_FAILURES = 2;
+const AGENT_MAX_WEAK_SEARCHES = 2;
+const AGENT_MAX_RUNTIME_MS = 45000;
 const AGENT_TOOL_CONTENT_LIMIT = 1800;
 const AGENT_NOTE_CONTENT_LIMIT = 6000;
 
@@ -106,6 +112,15 @@ export type KnowledgeAgentExecutedWrite =
   | KnowledgeAgentExecutedCreateNote
   | KnowledgeAgentExecutedUpdateNote;
 
+export type KnowledgeAgentStopReason =
+  | 'completed'
+  | 'insufficient-evidence'
+  | 'tool-call-limit'
+  | 'iteration-limit'
+  | 'runtime-limit'
+  | 'tool-failure-limit'
+  | 'weak-search-limit';
+
 export interface KnowledgeAgentTaskResult {
   success: boolean;
   finalAnswer?: string;
@@ -115,6 +130,7 @@ export interface KnowledgeAgentTaskResult {
   writeMode: KnowledgeAgentWriteMode;
   pendingWrites: KnowledgeAgentWriteProposal[];
   executedWrites: KnowledgeAgentExecutedWrite[];
+  stopReason?: KnowledgeAgentStopReason;
   error?: string;
 }
 
@@ -124,6 +140,12 @@ interface AgentExecutionState {
   executedWrites: KnowledgeAgentExecutedWrite[];
   steps: KnowledgeAgentStep[];
   traceEvents: KnowledgeAgentTraceEvent[];
+  toolCallCount: number;
+  consecutiveToolFailures: number;
+  weakSearchCount: number;
+  startedAt: number;
+  lastSearchHadSufficientEvidence: boolean | null;
+  hadSufficientEvidence: boolean;
 }
 
 interface AgentToolDefinition {
@@ -168,6 +190,38 @@ function createToolResponse(payload: Record<string, unknown>): string {
   return JSON.stringify(payload);
 }
 
+function createInsufficientEvidenceMessage(): string {
+  return $t(
+    'search.ragInsufficientEvidence',
+    'The current knowledge base does not contain enough evidence to answer this question.',
+  );
+}
+
+function createWriteBlockedMessage(): string {
+  return $t(
+    'search.agentWriteBlockedInsufficientEvidence',
+    'Current evidence is insufficient to perform a write action.',
+  );
+}
+
+function parseToolResponseMetadata(result: string): {
+  success: boolean;
+  insufficientEvidence: boolean;
+} {
+  try {
+    const parsed = JSON.parse(result) as { success?: unknown; insufficientEvidence?: unknown };
+    return {
+      success: parsed.success !== false,
+      insufficientEvidence: parsed.insufficientEvidence === true,
+    };
+  } catch {
+    return {
+      success: true,
+      insufficientEvidence: false,
+    };
+  }
+}
+
 function createTraceEvent(
   state: AgentExecutionState,
   event: Omit<KnowledgeAgentTraceEvent, 'id' | 'at'> & { at?: number },
@@ -177,6 +231,54 @@ function createTraceEvent(
     at: event.at ?? Date.now(),
     ...event,
   });
+}
+
+function recordAgentStop(
+  state: AgentExecutionState,
+  stopReason: KnowledgeAgentStopReason,
+  detail: string,
+): KnowledgeAgentStopReason {
+  state.steps.push({
+    title: 'agentStop',
+    detail,
+    status: 'failed',
+  });
+  createTraceEvent(state, {
+    type: 'tool-error',
+    title: 'agentStop',
+    detail,
+    status: 'failed',
+  });
+
+  return stopReason;
+}
+
+function hasRuntimeLimitExceeded(state: AgentExecutionState): boolean {
+  return Date.now() - state.startedAt >= AGENT_MAX_RUNTIME_MS;
+}
+
+function ensureWriteEvidenceAllowed(state: AgentExecutionState): void {
+  if (state.lastSearchHadSufficientEvidence === false) {
+    throw new Error(createWriteBlockedMessage());
+  }
+}
+
+function buildForcedFinalInstruction(stopReason: KnowledgeAgentStopReason): string {
+  switch (stopReason) {
+    case 'insufficient-evidence':
+    case 'weak-search-limit':
+      return 'Provide the final answer now without calling any more tools. State clearly that the current knowledge base does not contain enough evidence to complete the request. Do not make strong claims.';
+    case 'tool-failure-limit':
+      return 'Provide the final answer now without calling any more tools. Explain briefly that tool execution stopped after repeated failures and answer conservatively using only reliable evidence already collected.';
+    case 'tool-call-limit':
+      return 'Provide the final answer now without calling any more tools. Explain briefly that execution stopped after reaching the tool call limit and answer conservatively using only the evidence already collected.';
+    case 'runtime-limit':
+      return 'Provide the final answer now without calling any more tools. Explain briefly that execution stopped after reaching the runtime limit and answer conservatively using only the evidence already collected.';
+    case 'iteration-limit':
+      return 'Provide the final answer now without calling any more tools. Explain briefly that execution stopped after reaching the iteration limit and answer conservatively using only the evidence already collected.';
+    default:
+      return 'Provide the final answer now without calling any more tools.';
+  }
 }
 
 function addUniqueSources(target: RagSearchResults, nextSources: RagSearchResults): void {
@@ -213,22 +315,44 @@ async function executeSearchKnowledgeBaseTool(
     topK: Number(ragConfig.rag.topK),
     similarityThreshold: Number(ragConfig.rag.similarityThreshold),
   });
+  const evidence = assessRagEvidence(results);
 
   addUniqueSources(state.sources, results);
-  state.steps.push({
-    title: 'searchKnowledgeBase',
-    detail: `${results.length}`,
-    status: 'completed',
-  });
+  state.lastSearchHadSufficientEvidence = evidence.sufficient;
+  if (evidence.sufficient) {
+    state.hadSufficientEvidence = true;
+    state.steps.push({
+      title: 'searchKnowledgeBase',
+      detail: `${results.length}`,
+      status: 'completed',
+    });
+  } else {
+    state.steps.push({
+      title: 'searchKnowledgeBase',
+      detail: createInsufficientEvidenceMessage(),
+      status: 'failed',
+    });
+  }
+
+  const toolResults = results.map((result) => ({
+    noteId: result.chunk.noteId,
+    noteTitle: result.noteTitle ?? '',
+    score: result.score,
+    content: limitText(result.chunk.content, AGENT_TOOL_CONTENT_LIMIT),
+  }));
+
+  if (!evidence.sufficient) {
+    return createToolResponse({
+      success: false,
+      insufficientEvidence: true,
+      error: createInsufficientEvidenceMessage(),
+      results: toolResults,
+    });
+  }
 
   return createToolResponse({
     success: true,
-    results: results.map((result) => ({
-      noteId: result.chunk.noteId,
-      noteTitle: result.noteTitle ?? '',
-      score: result.score,
-      content: limitText(result.chunk.content, AGENT_TOOL_CONTENT_LIMIT),
-    })),
+    results: toolResults,
   });
 }
 
@@ -292,6 +416,7 @@ async function executeProposeCreateNoteTool(
   _ragConfig: RagConfig,
   state: AgentExecutionState,
 ): Promise<string> {
+  ensureWriteEvidenceAllowed(state);
   const validated = ProposeCreateNoteToolArgsSchema.parse(args);
   const proposal: KnowledgeAgentCreateNoteProposal = {
     id: `agent-write-${Date.now()}-${state.pendingWrites.length}`,
@@ -319,6 +444,7 @@ async function executeProposeUpdateNoteTool(
   _ragConfig: RagConfig,
   state: AgentExecutionState,
 ): Promise<string> {
+  ensureWriteEvidenceAllowed(state);
   const validated = ProposeUpdateNoteToolArgsSchema.parse(args);
   const node = getActiveNoteNode(validated.noteId);
 
@@ -353,6 +479,7 @@ async function executeCreateNoteTool(
   _ragConfig: RagConfig,
   state: AgentExecutionState,
 ): Promise<string> {
+  ensureWriteEvidenceAllowed(state);
   const validated = ProposeCreateNoteToolArgsSchema.parse(args);
   const node = await vfsService.createFile(null, validated.title.trim(), validated.content.trim());
   const executedWrite: KnowledgeAgentExecutedCreateNote = {
@@ -385,6 +512,7 @@ async function executeUpdateNoteTool(
   _ragConfig: RagConfig,
   state: AgentExecutionState,
 ): Promise<string> {
+  ensureWriteEvidenceAllowed(state);
   const validated = ProposeUpdateNoteToolArgsSchema.parse(args);
   const node = getActiveNoteNode(validated.noteId);
 
@@ -620,7 +748,7 @@ async function executeAgentTool(
   ragConfig: RagConfig,
   state: AgentExecutionState,
   toolMap: Map<string, AgentToolDefinition>,
-): Promise<string> {
+): Promise<{ content: string; success: boolean; insufficientEvidence: boolean }> {
   const startedAt = Date.now();
   const toolName = toolCall.function.name;
 
@@ -641,17 +769,22 @@ async function executeAgentTool(
     }
 
     const result = await toolDefinition.execute(args, ragConfig, state);
+    const metadata = parseToolResponseMetadata(result);
     createTraceEvent(state, {
       type: 'tool-result',
       title: toolName,
       detail: limitText(result, 800),
-      status: 'completed',
+      status: metadata.success ? 'completed' : 'failed',
       toolName,
       at: startedAt,
       durationMs: Date.now() - startedAt,
     });
 
-    return result;
+    return {
+      content: result,
+      success: metadata.success,
+      insufficientEvidence: metadata.insufficientEvidence,
+    };
   } catch (error) {
     const message = getErrorMessage(error);
     state.steps.push({
@@ -669,10 +802,14 @@ async function executeAgentTool(
       durationMs: Date.now() - startedAt,
     });
 
-    return createToolResponse({
+    return {
+      content: createToolResponse({
+        success: false,
+        error: message,
+      }),
       success: false,
-      error: message,
-    });
+      insufficientEvidence: false,
+    };
   }
 }
 
@@ -693,6 +830,12 @@ export async function runKnowledgeAgentTask(
     executedWrites: [],
     steps: [],
     traceEvents: [],
+    toolCallCount: 0,
+    consecutiveToolFailures: 0,
+    weakSearchCount: 0,
+    startedAt: Date.now(),
+    lastSearchHadSufficientEvidence: null,
+    hadSufficientEvidence: false,
   };
 
   if (!ragConfig.chatConfig) {
@@ -712,6 +855,7 @@ export async function runKnowledgeAgentTask(
       writeMode,
       pendingWrites: [],
       executedWrites: [],
+      stopReason: undefined,
     };
   }
 
@@ -719,8 +863,14 @@ export async function runKnowledgeAgentTask(
     { role: 'system', content: buildAgentPromptTemplate(writeMode, ragConfig.uiLanguage, task) },
     { role: 'user', content: task },
   ];
+  let stopReason: KnowledgeAgentStopReason | undefined;
 
   for (let iteration = 0; iteration < AGENT_MAX_TOOL_ITERATIONS; iteration += 1) {
+    if (hasRuntimeLimitExceeded(state)) {
+      stopReason = recordAgentStop(state, 'runtime-limit', 'runtime-limit');
+      break;
+    }
+
     const modelStartedAt = Date.now();
     const response = await remoteAiService.chat({
       endpoint: ragConfig.chatConfig.endpoint,
@@ -749,7 +899,9 @@ export async function runKnowledgeAgentTask(
     });
 
     if (toolCalls.length === 0) {
-      const finalAnswer = assistantMessage.content?.trim() || 'Agent task completed.';
+      const finalAnswer = state.lastSearchHadSufficientEvidence === false && !state.hadSufficientEvidence
+        ? createInsufficientEvidenceMessage()
+        : (assistantMessage.content?.trim() || 'Agent task completed.');
       return {
         success: true,
         finalAnswer,
@@ -759,7 +911,15 @@ export async function runKnowledgeAgentTask(
         writeMode,
         pendingWrites: state.pendingWrites,
         executedWrites: state.executedWrites,
+        stopReason: state.lastSearchHadSufficientEvidence === false && !state.hadSufficientEvidence
+          ? 'insufficient-evidence'
+          : 'completed',
       };
+    }
+
+    if (state.toolCallCount + toolCalls.length > AGENT_MAX_TOOL_CALLS) {
+      stopReason = recordAgentStop(state, 'tool-call-limit', 'tool-call-limit');
+      break;
     }
 
     messages.push({
@@ -769,13 +929,49 @@ export async function runKnowledgeAgentTask(
     });
 
     for (const toolCall of toolCalls) {
+      state.toolCallCount += 1;
       const toolResult = await executeAgentTool(toolCall, ragConfig, state, agentToolMap);
+      if (!toolResult.success) {
+        state.consecutiveToolFailures += 1;
+      } else {
+        state.consecutiveToolFailures = 0;
+      }
+      if (toolCall.function.name === 'searchKnowledgeBase') {
+        if (toolResult.insufficientEvidence) {
+          state.weakSearchCount += 1;
+        } else if (toolResult.success) {
+          state.weakSearchCount = 0;
+        }
+      }
       messages.push({
         role: 'tool',
         tool_call_id: toolCall.id,
-        content: toolResult,
+        content: toolResult.content,
       });
+
+      if (state.weakSearchCount >= AGENT_MAX_WEAK_SEARCHES) {
+        stopReason = recordAgentStop(state, 'weak-search-limit', 'weak-search-limit');
+        break;
+      }
+
+      if (state.consecutiveToolFailures >= AGENT_MAX_CONSECUTIVE_TOOL_FAILURES) {
+        stopReason = recordAgentStop(state, 'tool-failure-limit', 'tool-failure-limit');
+        break;
+      }
+
+      if (hasRuntimeLimitExceeded(state)) {
+        stopReason = recordAgentStop(state, 'runtime-limit', 'runtime-limit');
+        break;
+      }
     }
+
+    if (stopReason) {
+      break;
+    }
+  }
+
+  if (!stopReason) {
+    stopReason = recordAgentStop(state, 'iteration-limit', 'iteration-limit');
   }
 
   const finalResponse = await remoteAiService.chat({
@@ -786,7 +982,7 @@ export async function runKnowledgeAgentTask(
       ...messages,
       {
         role: 'user',
-        content: 'Provide the final answer now without calling any more tools.',
+        content: buildForcedFinalInstruction(stopReason),
       },
     ],
     tools: agentTools,
@@ -804,5 +1000,6 @@ export async function runKnowledgeAgentTask(
     writeMode,
     pendingWrites: state.pendingWrites,
     executedWrites: state.executedWrites,
+    stopReason,
   };
 }
