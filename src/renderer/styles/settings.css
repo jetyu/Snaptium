@@ -20,14 +20,14 @@
   margin: -6px 0 0;
   font-size: 0.8rem;
   line-height: 1.45;
-  color: #5f6b7a;
+  color: var(--text-secondary);
 }
 
 .panel-title {
   margin: 0 0 1rem 0;
   font-size: 1.25rem;
   font-weight: 600;
-  color: var(--text-primary, #111827);
+  color: var(--text-primary);
 }
 
 .settings-subview {
@@ -56,7 +56,7 @@
 }
 
 .settings-subview-footer.with-divider {
-  border-top: 1px solid var(--border-color, #e5e7eb);
+  border-top: 1px solid var(--border-color);
 }
 
 .settings-subview-footer-buttons {
@@ -91,11 +91,11 @@
 }
 
 .settings-subview-status-text.success {
-  color: #10b981;
+  color: var(--status-success-text);
 }
 
 .settings-subview-status-text.error {
-  color: #ef4444;
+  color: var(--status-danger-text);
 }
 
 .settings-fade-in {
@@ -124,23 +124,23 @@
   justify-content: center;
   width: 32px;
   height: 32px;
-  background: #eff6ff;
-  border: 1px solid #bfd3ff;
+  background: var(--status-info-bg);
+  border: 1px solid var(--status-info-border);
   border-radius: 8px;
-  color: #0f6cbd;
+  color: var(--status-info-text);
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .settings-nav-btn:hover:not(:disabled) {
-  background: #dbeafe;
-  border-color: #7aa7ff;
+  background: color-mix(in srgb, var(--status-info-bg) 78%, var(--surface-raised));
+  border-color: var(--input-border-focus);
 }
 
 .settings-nav-btn:disabled {
-  background: #f3f4f6;
-  border-color: #e5e7eb;
-  color: #9ca3af;
+  background: var(--input-bg-disabled);
+  border-color: var(--border-color);
+  color: var(--text-disabled);
   cursor: not-allowed;
   opacity: 0.6;
 }
@@ -178,9 +178,9 @@
   gap: 1rem;
   min-height: 64px;
   padding: 0.75rem 1rem;
-  border: 1px solid #e7eaf0;
+  border: 1px solid var(--border-muted);
   border-radius: 10px;
-  background: #fbfbfc;
+  background: var(--surface-subtle);
   transition: border-color 0.2s ease;
 }
 
@@ -202,12 +202,12 @@
   margin: 0 0 0.2rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .setting-description {
   margin: 0;
-  color: #5f6b7a;
+  color: var(--text-secondary);
   font-size: 0.8rem;
   line-height: 1.4;
 }
@@ -222,10 +222,10 @@
   width: 100%;
   min-height: 32px;
   padding: 0.4rem 0.75rem;
-  border: 1px solid #c9d1dc;
+  border: 1px solid var(--input-border);
   border-radius: 8px;
-  background: #ffffff;
-  color: #111827;
+  background: var(--input-bg);
+  color: var(--text-primary);
   font-size: 0.9rem;
   transition: all 0.15s ease;
 }
@@ -247,16 +247,16 @@
 .settings-input:focus,
 .settings-select:focus,
 .settings-textarea:focus {
-  border-color: #7aa7ff;
-  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.14);
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 2px var(--focus-ring);
   outline: none;
 }
 
 .settings-input:disabled,
 .settings-select:disabled,
 .settings-textarea:disabled {
-  background: #f3f4f6;
-  color: #9ca3af;
+  background: var(--input-bg-disabled);
+  color: var(--text-disabled);
   cursor: not-allowed;
 }
 
@@ -271,7 +271,7 @@
 }
 
 .select-shell.disabled::after {
-  color: #9ca3af;
+  color: var(--text-disabled);
 }
 
 .settings-textarea {
@@ -285,10 +285,10 @@
   min-width: 80px;
   min-height: 32px;
   padding: 0.4rem 1rem;
-  border: 1px solid #c9d1dc;
+  border: 1px solid var(--input-border);
   border-radius: 8px;
-  background: #ffffff;
-  color: #111827;
+  background: var(--button-bg);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 500;
   cursor: pointer;
@@ -300,13 +300,13 @@
 }
 
 .action-button:hover:not(:disabled) {
-  background: #f3f4f6;
-  border-color: #7aa7ff;
-  color: #0f6cbd;
+  background: var(--button-bg-hover);
+  border-color: var(--input-border-focus);
+  color: var(--accent-hover);
 }
 
 .action-button:active:not(:disabled) {
-  background: #e5e7eb;
+  background: var(--button-bg-active);
 }
 
 .action-button:disabled {
@@ -315,15 +315,15 @@
 }
 
 .action-button.secondary {
-  background: #ffffff;
-  color: #111827;
-  border-color: #c9d1dc;
+  background: var(--button-bg);
+  color: var(--text-primary);
+  border-color: var(--input-border);
 }
 
 .action-button.secondary:hover:not(:disabled) {
-  background: #f3f4f6;
-  border-color: #7aa7ff;
-  color: #111827;
+  background: var(--button-bg-hover);
+  border-color: var(--input-border-focus);
+  color: var(--text-primary);
 }
 
 .startup-switch-text {
@@ -335,17 +335,17 @@
   display: inline-flex;
   align-items: center;
   padding: 0.2rem 0.45rem 0.2rem 0.25rem;
-  border: 1px solid #d7dce3;
+  border: 1px solid var(--border-strong);
   border-radius: 999px;
-  background: #ffffff;
-  color: #111827;
+  background: var(--surface-raised);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 .startup-switch.enabled {
-  background: #f6f9ff;
-  border-color: #bfd3ff;
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border-color));
 }
 
 .startup-switch-track {
@@ -353,12 +353,12 @@
   width: 2.8rem;
   height: 1.55rem;
   border-radius: 999px;
-  background: #c7ced8;
+  background: color-mix(in srgb, var(--text-muted) 42%, var(--surface-soft));
   transition: background-color 0.15s ease;
 }
 
 .startup-switch.enabled .startup-switch-track {
-  background: #0f6cbd;
+  background: var(--accent);
 }
 
 .startup-switch-thumb {
@@ -368,8 +368,8 @@
   width: 1.35rem;
   height: 1.35rem;
   border-radius: 50%;
-  background: #ffffff;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.2);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-soft);
   transition: transform 0.15s ease;
 }
 
@@ -393,7 +393,7 @@
   height: 0.6rem;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
-  color: #6b7280;
+  color: var(--text-tertiary);
   pointer-events: none;
   transform: translateY(-65%) rotate(45deg);
 }
@@ -402,8 +402,8 @@
 .spinner {
   width: 14px;
   height: 14px;
-  border: 2px solid #e5e7eb;
-  border-top-color: #0f6cbd;
+  border: 2px solid var(--border-color);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }

@@ -138,11 +138,12 @@ const openStorePage = async (): Promise<void> => {
 .about-modal {
   position: relative;
   width: 500px;
-  background-color: var(--bg-primary, #ffffff);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .about-close-btn-wrapper {
@@ -153,7 +154,7 @@ const openStorePage = async (): Promise<void> => {
 }
 
 .about-close-btn {
-  color: var(--text-secondary, #4b5563);
+  color: var(--text-secondary);
 }
 
 .icon-wrapper {
@@ -181,13 +182,13 @@ const openStorePage = async (): Promise<void> => {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 6px 0;
-  color: #111827;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
 .about-version {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-tertiary);
   margin: 0;
   font-weight: 400;
 }
@@ -198,10 +199,10 @@ const openStorePage = async (): Promise<void> => {
   gap: 0.4rem;
   margin-top: 0.55rem;
   padding: 0.3rem 0.55rem;
-  border: 1px solid #d8dee8;
+  border: 1px solid var(--border-strong);
   border-radius: 999px;
-  background: #ffffff;
-  color: #374151;
+  background: var(--surface-raised);
+  color: var(--text-primary);
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
@@ -211,12 +212,12 @@ const openStorePage = async (): Promise<void> => {
 }
 
 .store-badge:hover {
-  border-color: #c7d2e0;
+  border-color: var(--input-border-focus);
 }
 
 .store-badge:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.18);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .store-badge:active {
@@ -239,13 +240,13 @@ const openStorePage = async (): Promise<void> => {
 .about-description p {
   font-size: 0.875rem;
   line-height: 1.55;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .about-env-info {
-  background: #fafbfc;
-  border: 1px solid #e5e8ec;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-muted);
   border-radius: 8px;
   padding: 10px 14px;
   margin-bottom: 14px;
@@ -260,16 +261,16 @@ const openStorePage = async (): Promise<void> => {
 }
 
 .env-item:not(:last-child) {
-  border-bottom: 1px solid #eff1f3;
+  border-bottom: 1px solid var(--border-muted);
 }
 
 .env-label {
-  color: #6b7280;
+  color: var(--text-tertiary);
   font-weight: 500;
 }
 
 .env-value {
-  color: #374151;
+  color: var(--text-primary);
   font-family: ui-monospace, 'SF Mono', 'Cascadia Code', 'Segoe UI Mono', Consolas, monospace;
   font-size: 0.8125rem;
   font-weight: 400;
@@ -290,21 +291,21 @@ const openStorePage = async (): Promise<void> => {
   border-radius: 5px;
   overflow: hidden;
   font-size: 0.75rem;
-  border: 1px solid #e5e8ec;
-  background: #fafbfc;
+  border: 1px solid var(--border-muted);
+  background: var(--surface-subtle);
 }
 
 .badge-label {
-  background: #f5f6f7;
-  color: #6b7280;
+  background: var(--surface-soft);
+  color: var(--text-tertiary);
   padding: 5px 9px;
   font-weight: 500;
-  border-right: 1px solid #e5e8ec;
+  border-right: 1px solid var(--border-muted);
 }
 
 .badge-value {
-  background: #fafbfc;
-  color: #374151;
+  background: var(--surface-subtle);
+  color: var(--text-primary);
   padding: 5px 11px;
   font-weight: 400;
 }
@@ -312,12 +313,12 @@ const openStorePage = async (): Promise<void> => {
 .about-footer {
   text-align: center;
   padding-top: 14px;
-  border-top: 1px solid #e5e8ec;
+  border-top: 1px solid var(--border-muted);
 }
 
 .about-footer p {
   font-size: 0.75rem;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.4;
 }

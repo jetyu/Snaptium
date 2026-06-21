@@ -105,10 +105,9 @@ watch(
   background: var(--panel);
   border: 1px solid var(--panel-border);
   border-radius: 16px;
-  box-shadow: 
-    0 10px 25px -5px rgba(0, 0, 0, 0.1),
-    0 25px 50px -12px rgba(0, 0, 0, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
   position: relative;
 }
 
@@ -143,16 +142,16 @@ watch(
   align-items: center;
   justify-content: center;
   gap: 6px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid var(--input-border);
+  background: var(--button-bg);
+  color: var(--text-primary);
   cursor: pointer;
   transition: all 0.15s ease;
 }
 
 :deep(.license-btn:hover:not(:disabled)) {
-  background: var(--panel-hover);
-  border-color: var(--accent);
+  background: var(--button-bg-hover);
+  border-color: var(--input-border-focus);
   color: var(--accent);
 }
 

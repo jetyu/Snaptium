@@ -171,7 +171,7 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
 
 .device-card:hover {
   border-color: color-mix(in srgb, var(--accent) 35%, var(--panel-border));
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-soft);
 }
 
 .device-card.is-current {
@@ -295,23 +295,13 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
 }
 
 .status-pill.is-active {
-  color: #166534;
-  background: #ecfdf3;
-  border-color: #bbf7d0;
-}
-
-[data-theme='dark'] .status-pill.is-active {
-  color: #4ade80;
-  background: rgba(22, 101, 52, 0.2);
-  border-color: rgba(74, 222, 128, 0.3);
+  color: var(--status-success-text);
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
 }
 
 .status-pill.is-active .status-indicator-dot {
-  background: #166534;
-}
-
-[data-theme='dark'] .status-pill.is-active .status-indicator-dot {
-  background: #4ade80;
+  background: var(--status-success-text);
 }
 
 .status-pill.is-inactive {
@@ -325,23 +315,13 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
 }
 
 .status-pill.is-revoked {
-  color: #9f1239;
-  background: #fff1f2;
-  border-color: #fecdd3;
-}
-
-[data-theme='dark'] .status-pill.is-revoked {
-  color: #fb7185;
-  background: rgba(159, 18, 57, 0.2);
-  border-color: rgba(251, 113, 133, 0.3);
+  color: var(--status-danger-text);
+  background: var(--status-danger-bg);
+  border-color: var(--status-danger-border);
 }
 
 .status-pill.is-revoked .status-indicator-dot {
-  background: #9f1239;
-}
-
-[data-theme='dark'] .status-pill.is-revoked .status-indicator-dot {
-  background: #fb7185;
+  background: var(--status-danger-text);
 }
 
 .status-pill.is-default {
