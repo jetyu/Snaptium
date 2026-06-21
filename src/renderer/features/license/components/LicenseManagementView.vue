@@ -223,7 +223,7 @@ async function handleClear(): Promise<void> {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--shadow-soft);
 }
 
 .license-summary-card.expired,
@@ -232,19 +232,19 @@ async function handleClear(): Promise<void> {
 }
 
 .license-summary-card.plan-free {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--panel-hover) 80%, white), var(--panel));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-soft) 72%, white), var(--panel));
 }
 
 .license-summary-card.plan-pro {
-  background: linear-gradient(180deg, rgba(239, 246, 255, 0.7), var(--panel));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--status-info-bg) 80%, var(--surface-raised)), var(--panel));
 }
 
 .license-summary-card.plan-trial {
-  background: linear-gradient(180deg, rgba(239, 246, 255, 0.7), var(--panel));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--status-info-bg) 80%, var(--surface-raised)), var(--panel));
 }
 
 .license-summary-card.plan-ultimate {
-  background: linear-gradient(180deg, rgba(255, 251, 235, 0.82), var(--panel));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--status-warning-bg) 88%, var(--surface-raised)), var(--panel));
 }
 
 .summary-top {
@@ -271,47 +271,47 @@ async function handleClear(): Promise<void> {
   border-radius: 14px;
   border: 1px solid color-mix(in srgb, var(--panel-border) 88%, white);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 246, 250, 0.9));
+    linear-gradient(180deg, var(--surface-overlay), var(--surface-scrim));
   color: var(--text-muted);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.78),
-    0 1px 2px rgba(15, 23, 42, 0.06);
+    inset 0 1px 0 color-mix(in srgb, white 78%, transparent),
+    var(--shadow-soft);
 }
 
 .plan-icon.free {
-  color: #6b7280;
-  background: linear-gradient(180deg, rgba(249, 250, 251, 0.98), rgba(229, 231, 235, 0.92));
-  border-color: rgba(107, 114, 128, 0.16);
+  color: var(--status-neutral-text);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--status-neutral-bg) 60%, var(--surface-raised)), var(--surface-soft));
+  border-color: var(--status-neutral-border);
 }
 
 .plan-icon.insider {
-  color: #0f766e;
-  background: linear-gradient(180deg, rgba(240, 253, 250, 0.98), rgba(204, 251, 241, 0.9));
-  border-color: rgba(13, 148, 136, 0.18);
+  color: var(--status-success-text);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--status-success-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  border-color: var(--status-success-border);
 }
 
 .plan-icon.pro {
-  color: #1d5f8f;
-  background: linear-gradient(180deg, rgba(245, 249, 255, 0.98), rgba(222, 235, 255, 0.92));
-  border-color: rgba(59, 130, 246, 0.2);
+  color: var(--status-info-text);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--status-info-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  border-color: var(--status-info-border);
 }
 
 .plan-icon.trial {
-  color: #1d5f8f;
-  background: linear-gradient(180deg, rgba(245, 249, 255, 0.98), rgba(222, 235, 255, 0.92));
-  border-color: rgba(59, 130, 246, 0.2);
+  color: var(--status-info-text);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--status-info-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  border-color: var(--status-info-border);
 }
 
 .plan-icon.ultimate {
-  color: #8b5a00;
-  background: linear-gradient(180deg, rgba(255, 251, 235, 0.98), rgba(254, 240, 198, 0.92));
-  border-color: rgba(202, 138, 4, 0.22);
+  color: var(--status-warning-text);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--status-warning-bg) 72%, var(--surface-raised)), var(--surface-soft));
+  border-color: var(--status-warning-border);
 }
 
 .plan-icon.enterprise {
-  color: #0f766e;
-  background: linear-gradient(180deg, rgba(240, 253, 250, 0.98), rgba(204, 251, 241, 0.9));
-  border-color: rgba(13, 148, 136, 0.18);
+  color: var(--status-success-text);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--status-success-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  border-color: var(--status-success-border);
 }
 
 .plan-copy {
@@ -338,27 +338,27 @@ async function handleClear(): Promise<void> {
 
 .summary-plan.plan-free .plan-kicker,
 .summary-plan.plan-free .plan-title {
-  color: #4b5563;
+  color: var(--status-neutral-text);
 }
 
 .summary-plan.plan-pro .plan-kicker,
 .summary-plan.plan-pro .plan-title {
-  color: #245ea8;
+  color: var(--status-info-text);
 }
 
 .summary-plan.plan-trial .plan-kicker,
 .summary-plan.plan-trial .plan-title {
-  color: #245ea8;
+  color: var(--status-info-text);
 }
 
 .summary-plan.plan-ultimate .plan-kicker,
 .summary-plan.plan-ultimate .plan-title {
-  color: #8b5a00;
+  color: var(--status-warning-text);
 }
 
 .summary-plan.plan-insider .plan-kicker,
 .summary-plan.plan-insider .plan-title {
-  color: #0f766e;
+  color: var(--status-success-text);
 }
 
 .summary-side {
@@ -382,64 +382,60 @@ async function handleClear(): Promise<void> {
 }
 
 .summary-status.plan-free {
-  background: rgba(107, 114, 128, 0.08);
-  border-color: rgba(107, 114, 128, 0.18);
-  color: #4b5563;
+  background: var(--status-neutral-bg);
+  border-color: var(--status-neutral-border);
+  color: var(--status-neutral-text);
 }
 
 .summary-status.plan-pro {
-  background: rgba(37, 99, 235, 0.08);
-  border-color: rgba(37, 99, 235, 0.18);
-  color: #245ea8;
+  background: var(--status-info-bg);
+  border-color: var(--status-info-border);
+  color: var(--status-info-text);
 }
 
 .summary-status.plan-trial {
-  background: rgba(37, 99, 235, 0.08);
-  border-color: rgba(37, 99, 235, 0.18);
-  color: #245ea8;
+  background: var(--status-info-bg);
+  border-color: var(--status-info-border);
+  color: var(--status-info-text);
 }
 
 .summary-status.plan-ultimate {
-  background: rgba(202, 138, 4, 0.1);
-  border-color: rgba(202, 138, 4, 0.22);
-  color: #8b5a00;
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+  color: var(--status-warning-text);
 }
 
 .summary-status.plan-insider {
-  background: rgba(13, 148, 136, 0.08);
-  border-color: rgba(13, 148, 136, 0.18);
-  color: #0f766e;
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+  color: var(--status-success-text);
 }
 
 .status-dot {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10b981;
+  background: var(--status-success-text);
 }
 
 .summary-status.plan-free .status-dot {
-  background: #6b7280;
+  background: var(--status-neutral-text);
 }
 
 .summary-status.plan-pro .status-dot {
-  background: #3b82f6;
+  background: var(--status-info-text);
 }
 
 .summary-status.plan-trial .status-dot {
-  background: #3b82f6;
+  background: var(--status-info-text);
 }
 
 .summary-status.plan-ultimate .status-dot {
-  background: #ca8a04;
+  background: var(--status-warning-text);
 }
 
 .summary-status.plan-insider .status-dot {
-  background: #14b8a6;
-}
-
-[data-theme='dark'] .status-dot {
-  background: #34d399;
+  background: var(--status-success-text);
 }
 
 .summary-status.expired .status-dot,
@@ -527,23 +523,23 @@ async function handleClear(): Promise<void> {
 }
 
 .metric-card.plan-free:hover {
-  border-color: rgba(107, 114, 128, 0.24);
+  border-color: var(--status-neutral-border);
 }
 
 .metric-card.plan-pro:hover {
-  border-color: rgba(37, 99, 235, 0.24);
+  border-color: var(--status-info-border);
 }
 
 .metric-card.plan-trial:hover {
-  border-color: rgba(37, 99, 235, 0.24);
+  border-color: var(--status-info-border);
 }
 
 .metric-card.plan-ultimate:hover {
-  border-color: rgba(202, 138, 4, 0.26);
+  border-color: var(--status-warning-border);
 }
 
 .metric-card.plan-insider:hover {
-  border-color: rgba(13, 148, 136, 0.24);
+  border-color: var(--status-success-border);
 }
 
 .metric-header {
@@ -562,38 +558,38 @@ async function handleClear(): Promise<void> {
 }
 
 .metric-icon.time {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  color: var(--accent);
 }
 
 .metric-icon.device {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
 }
 
 .metric-icon.plan-free {
-  background: rgba(107, 114, 128, 0.1);
-  color: #6b7280;
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-text);
 }
 
 .metric-icon.plan-pro {
-  background: rgba(37, 99, 235, 0.1);
-  color: #245ea8;
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
 }
 
 .metric-icon.plan-trial {
-  background: rgba(37, 99, 235, 0.1);
-  color: #245ea8;
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
 }
 
 .metric-icon.plan-ultimate {
-  background: rgba(202, 138, 4, 0.12);
-  color: #8b5a00;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
 }
 
 .metric-icon.plan-insider {
-  background: rgba(13, 148, 136, 0.12);
-  color: #0f766e;
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
 }
 
 .metric-label {
@@ -633,33 +629,33 @@ async function handleClear(): Promise<void> {
 
 .device-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--status-info-text) 82%, white), var(--accent));
   border-radius: 999px;
 }
 
 .device-progress.plan-free .device-progress-bar,
 .device-progress-bar.plan-free {
-  background: linear-gradient(90deg, #9ca3af, #6b7280);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--status-neutral-text) 72%, white), var(--status-neutral-text));
 }
 
 .device-progress.plan-pro .device-progress-bar,
 .device-progress-bar.plan-pro {
-  background: linear-gradient(90deg, #60a5fa, #2563eb);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--status-info-text) 72%, white), var(--accent));
 }
 
 .device-progress.plan-trial .device-progress-bar,
 .device-progress-bar.plan-trial {
-  background: linear-gradient(90deg, #60a5fa, #2563eb);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--status-info-text) 72%, white), var(--accent));
 }
 
 .device-progress.plan-ultimate .device-progress-bar,
 .device-progress-bar.plan-ultimate {
-  background: linear-gradient(90deg, #f3c969, #ca8a04);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--status-warning-text) 72%, white), var(--status-warning-text));
 }
 
 .device-progress.plan-insider .device-progress-bar,
 .device-progress-bar.plan-insider {
-  background: linear-gradient(90deg, #5eead4, #0d9488);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--status-success-text) 72%, white), var(--status-success-text));
 }
 
 /* Devices Section */

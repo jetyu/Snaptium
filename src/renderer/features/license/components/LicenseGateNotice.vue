@@ -46,10 +46,10 @@ const { openLicenseDialog } = useLicenseDialog();
   justify-content: space-between;
   gap: 16px;
   padding: 14px 16px;
-  border: 1px solid color-mix(in srgb, #f59e0b 25%, var(--panel-border));
+  border: 1px solid color-mix(in srgb, var(--status-warning-text) 25%, var(--panel-border));
   border-radius: 12px;
-  background: linear-gradient(135deg, color-mix(in srgb, #f59e0b 6%, var(--panel)), var(--panel));
-  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.03);
+  background: linear-gradient(135deg, color-mix(in srgb, var(--status-warning-text) 6%, var(--panel)), var(--panel));
+  box-shadow: var(--shadow-soft);
 }
 
 .notice-main {
@@ -67,14 +67,9 @@ const { openLicenseDialog } = useLicenseDialog();
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(245, 158, 11, 0.12);
-  color: #d97706;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
   flex-shrink: 0;
-}
-
-[data-theme='dark'] .notice-icon-wrapper {
-  background: rgba(245, 158, 11, 0.2);
-  color: #fbbf24;
 }
 
 .notice-copy {

@@ -40,6 +40,7 @@ const electronAPI = Object.freeze({
     getDistribution: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_DISTRIBUTION),
     getEnvVersion: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_ENV_VERSION),
     getName: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_NAME),
+    openStorePage: () => ipcRenderer.invoke(IPC_CHANNELS.APP_OPEN_STORE_PAGE),
   }),
   window: Object.freeze({
     minimize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MINIMIZE),

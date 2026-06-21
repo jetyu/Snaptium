@@ -11,6 +11,7 @@ export const IPC_CHANNELS = {
   APP_GET_DISTRIBUTION: 'app:get-distribution',
   APP_GET_ENV_VERSION: 'app:get-env-version',
   APP_GET_NAME: 'app:get-name',
+  APP_OPEN_STORE_PAGE: 'app:open-store-page',
   APP_GET_VERSION: 'app:get-version',
   APP_GET_WALLPAPER: 'app:get-wallpaper',
   DATA_EXPORT_MARKDOWN: 'data-transfer:export-markdown',

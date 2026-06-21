@@ -252,10 +252,10 @@ async function handleActivate(): Promise<void> {
   min-width: 80px;
   min-height: 32px;
   padding: 0.4rem 1rem;
-  border: 1px solid #e8c98f;
+  border: 1px solid var(--status-warning-border);
   border-radius: 8px;
-  background: #fff8eb;
-  color: #9a6700;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
@@ -277,9 +277,9 @@ async function handleActivate(): Promise<void> {
 }
 
 .header-purchase-link:hover {
-  background: #fff2d6;
-  border-color: #d9b46b;
-  color: #7a5200;
+  background: color-mix(in srgb, var(--status-warning-bg) 88%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--status-warning-border) 100%, var(--border-strong));
+  color: var(--status-warning-text);
 }
 
 .comparison-section {
@@ -314,13 +314,13 @@ async function handleActivate(): Promise<void> {
 }
 
 .comparison-card.plan-pro {
-  border-color: rgba(66, 133, 244, 0.22);
-  background: rgba(66, 133, 244, 0.05);
+  border-color: var(--status-info-border);
+  background: var(--status-info-bg);
 }
 
 .comparison-card.plan-ultimate {
-  border-color: rgba(217, 180, 107, 0.28);
-  background: rgba(217, 180, 107, 0.08);
+  border-color: var(--status-warning-border);
+  background: var(--status-warning-bg);
 }
 
 .comparison-card:hover {
@@ -346,18 +346,18 @@ async function handleActivate(): Promise<void> {
 }
 
 .plan-free .comparison-icon-wrapper {
-  background: rgba(148, 163, 184, 0.12);
-  color: #64748b;
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-text);
 }
 
 .plan-pro .comparison-icon-wrapper {
-  background: rgba(66, 133, 244, 0.12);
-  color: #356ac3;
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
 }
 
 .plan-ultimate .comparison-icon-wrapper {
-  background: rgba(217, 180, 107, 0.16);
-  color: #9a6700;
+  background: var(--status-warning-bg);
+  color: var(--status-warning-text);
 }
 
 .comparison-title {
@@ -395,11 +395,11 @@ async function handleActivate(): Promise<void> {
 }
 
 .plan-pro .comparison-check {
-  color: #356ac3;
+  color: var(--status-info-text);
 }
 
 .plan-ultimate .comparison-check {
-  color: #9a6700;
+  color: var(--status-warning-text);
 }
 
 .activation-form {
@@ -460,8 +460,8 @@ async function handleActivate(): Promise<void> {
 }
 
 .license-key-input:focus {
-  border-color: #7aa7ff;
-  box-shadow: 0 0 0 3px rgba(122, 167, 255, 0.12);
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
   background: var(--panel);
 }
 

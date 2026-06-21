@@ -14,15 +14,21 @@
               <img src="@assets/logo/app-logo-512.png" alt="Snaptium Logo" class="about-logo" />
               <h1 class="about-title">{{ appName }}</h1>
               <p class="about-version">{{ t('about.version') }}: {{ appVersion }}</p>
-              <div v-if="isMicrosoftStoreDistribution" class="store-badge" :aria-label="t('about.microsoftStore')">
-                <span class="store-badge__logo" aria-hidden="true">
-                  <span class="store-badge__tile is-blue" />
-                  <span class="store-badge__tile is-green" />
-                  <span class="store-badge__tile is-yellow" />
-                  <span class="store-badge__tile is-red" />
-                </span>
+              <button
+                v-if="isMicrosoftStoreDistribution"
+                type="button"
+                class="store-badge"
+                :aria-label="t('about.microsoftStore')"
+                @click="openStorePage"
+              >
+                <img
+                  src="@assets/logo/store_logo.svg"
+                  alt=""
+                  aria-hidden="true"
+                  class="store-badge__logo"
+                />
                 <span>{{ t('about.microsoftStore') }}</span>
-              </div>
+              </button>
             </div>
 
             <div class="about-description">
@@ -74,6 +80,7 @@ import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAbout } from '../composables/useAbout';
 import { IconX } from '@tabler/icons-vue';
+import { electronApi } from '@renderer/core/bridge/electronApi';
 
 const { t } = useI18n();
 const {
@@ -109,6 +116,10 @@ onUnmounted(() => {
     removeListener();
   }
 });
+
+const openStorePage = async (): Promise<void> => {
+  await electronApi.app.openStorePage();
+};
 </script>
 
 <style scoped>
@@ -127,11 +138,12 @@ onUnmounted(() => {
 .about-modal {
   position: relative;
   width: 500px;
-  background-color: var(--bg-primary, #ffffff);
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-lg);
   overflow: hidden;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .about-close-btn-wrapper {
@@ -142,7 +154,7 @@ onUnmounted(() => {
 }
 
 .about-close-btn {
-  color: var(--text-secondary, #4b5563);
+  color: var(--text-secondary);
 }
 
 .icon-wrapper {
@@ -170,13 +182,13 @@ onUnmounted(() => {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0 0 6px 0;
-  color: #111827;
+  color: var(--text-primary);
   letter-spacing: -0.01em;
 }
 
 .about-version {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-tertiary);
   margin: 0;
   font-weight: 400;
 }
@@ -187,41 +199,36 @@ onUnmounted(() => {
   gap: 0.4rem;
   margin-top: 0.55rem;
   padding: 0.3rem 0.55rem;
-  border: 1px solid #d8dee8;
+  border: 1px solid var(--border-strong);
   border-radius: 999px;
-  background: #ffffff;
-  color: #374151;
+  background: var(--surface-raised);
+  color: var(--text-primary);
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.store-badge:hover {
+  border-color: var(--input-border-focus);
+}
+
+.store-badge:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.store-badge:active {
+  transform: translateY(1px);
 }
 
 .store-badge__logo {
-  display: grid;
-  grid-template-columns: repeat(2, 0.34rem);
-  grid-template-rows: repeat(2, 0.34rem);
-  gap: 0.07rem;
-}
-
-.store-badge__tile {
   display: block;
-  border-radius: 0.05rem;
-}
-
-.store-badge__tile.is-blue {
-  background: #00a4ef;
-}
-
-.store-badge__tile.is-green {
-  background: #7fba00;
-}
-
-.store-badge__tile.is-yellow {
-  background: #ffb900;
-}
-
-.store-badge__tile.is-red {
-  background: #f25022;
+  width: 0.96rem;
+  height: 0.96rem;
+  flex: 0 0 auto;
 }
 
 .about-description {
@@ -233,13 +240,13 @@ onUnmounted(() => {
 .about-description p {
   font-size: 0.875rem;
   line-height: 1.55;
-  color: #6b7280;
+  color: var(--text-secondary);
   margin: 0;
 }
 
 .about-env-info {
-  background: #fafbfc;
-  border: 1px solid #e5e8ec;
+  background: var(--surface-subtle);
+  border: 1px solid var(--border-muted);
   border-radius: 8px;
   padding: 10px 14px;
   margin-bottom: 14px;
@@ -254,16 +261,16 @@ onUnmounted(() => {
 }
 
 .env-item:not(:last-child) {
-  border-bottom: 1px solid #eff1f3;
+  border-bottom: 1px solid var(--border-muted);
 }
 
 .env-label {
-  color: #6b7280;
+  color: var(--text-tertiary);
   font-weight: 500;
 }
 
 .env-value {
-  color: #374151;
+  color: var(--text-primary);
   font-family: ui-monospace, 'SF Mono', 'Cascadia Code', 'Segoe UI Mono', Consolas, monospace;
   font-size: 0.8125rem;
   font-weight: 400;
@@ -284,21 +291,21 @@ onUnmounted(() => {
   border-radius: 5px;
   overflow: hidden;
   font-size: 0.75rem;
-  border: 1px solid #e5e8ec;
-  background: #fafbfc;
+  border: 1px solid var(--border-muted);
+  background: var(--surface-subtle);
 }
 
 .badge-label {
-  background: #f5f6f7;
-  color: #6b7280;
+  background: var(--surface-soft);
+  color: var(--text-tertiary);
   padding: 5px 9px;
   font-weight: 500;
-  border-right: 1px solid #e5e8ec;
+  border-right: 1px solid var(--border-muted);
 }
 
 .badge-value {
-  background: #fafbfc;
-  color: #374151;
+  background: var(--surface-subtle);
+  color: var(--text-primary);
   padding: 5px 11px;
   font-weight: 400;
 }
@@ -306,12 +313,12 @@ onUnmounted(() => {
 .about-footer {
   text-align: center;
   padding-top: 14px;
-  border-top: 1px solid #e5e8ec;
+  border-top: 1px solid var(--border-muted);
 }
 
 .about-footer p {
   font-size: 0.75rem;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--text-secondary);
   margin: 0;
   line-height: 1.4;
 }

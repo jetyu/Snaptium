@@ -156,31 +156,31 @@ watch(() => props.hasConflict, (hasConflict) => {
 
 .shortcut-input input {
   padding: 6px 32px 6px 12px;
-  border: 1px solid var(--border-color, #ddd);
-  border-radius: 4px;
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
   font-family: monospace;
   font-size: 13px;
   min-width: 200px;
   cursor: pointer;
-  background-color: var(--input-bg, #fff);
-  color: var(--text-color, #333);
+  background-color: var(--input-bg);
+  color: var(--text-primary);
   transition: all 0.2s;
 }
 
 .shortcut-input input:focus {
   outline: none;
-  border-color: var(--primary-color, #007bff);
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 .shortcut-input input.is-recording {
-  border-color: var(--primary-color, #007bff);
-  background-color: var(--recording-bg, #f0f8ff);
+  border-color: var(--input-border-focus);
+  background-color: var(--surface-selected);
 }
 
 .shortcut-input input.has-conflict {
-  border-color: var(--error-color, #dc3545);
-  background-color: var(--error-bg, #fff5f5);
+  border-color: var(--status-danger-border);
+  background-color: var(--status-danger-bg);
 }
 
 .clear-button {
@@ -191,7 +191,7 @@ watch(() => props.hasConflict, (hasConflict) => {
   padding: 0;
   border: none;
   background: transparent;
-  color: var(--text-secondary, #999);
+  color: var(--text-secondary);
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
@@ -199,6 +199,6 @@ watch(() => props.hasConflict, (hasConflict) => {
 }
 
 .clear-button:hover {
-  color: var(--text-color, #333);
+  color: var(--text-primary);
 }
 </style>

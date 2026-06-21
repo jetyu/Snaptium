@@ -476,6 +476,7 @@ export const electronApi = {
     getDistribution: () => electronApi.app.getApi().getDistribution(),
     getName: () => electronApi.app.getApi().getName(),
     getEnvVersion: () => electronApi.app.getApi().getEnvVersion(),
+    openStorePage: () => electronApi.app.getApi().openStorePage(),
   },
 
   window: {
