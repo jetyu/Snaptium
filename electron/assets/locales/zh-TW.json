@@ -643,7 +643,7 @@
   "search.openSearch": "打開搜索",
   "search.placeholder": "輸入關鍵詞，探索筆記...",
   "search.quickPlaceholder": "快速查找筆記...",
-  "search.recentConversions": "最近記錄",
+  "search.recentConversations": "最近記錄",
   "search.searchNote": "搜索筆記",
   "search.semanticHint": "基於向量語義理解的知識庫智能檢索，精準匹配相關筆記",
   "search.semanticPlaceholder": "向知識庫提問...",

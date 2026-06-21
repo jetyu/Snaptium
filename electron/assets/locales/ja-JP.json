@@ -643,7 +643,7 @@
   "search.openSearch": "検索を開く",
   "search.placeholder": "キーワードを入力してノートを探索...",
   "search.quickPlaceholder": "ノートをすばやく検索...",
-  "search.recentConversions": "最近の記録",
+  "search.recentConversations": "最近の記録",
   "search.searchNote": "ノートを検索",
   "search.semanticHint": "ベクトルセマンティック理解に基づくナレッジベースのインテリジェント検索、関連ノートを正確に一致",
   "search.semanticPlaceholder": "ナレッジベースに質問...",

@@ -643,7 +643,7 @@
   "search.openSearch": "Buka Pencarian",
   "search.placeholder": "Masukkan kata kunci, jelajahi catatan...",
   "search.quickPlaceholder": "Temukan catatan dengan cepat...",
-  "search.recentConversions": "catatan terkini",
+  "search.recentConversations": "catatan terkini",
   "search.searchNote": "Cari Catatan",
   "search.semanticHint": "Pencarian basis pengetahuan cerdas berdasarkan pemahaman semantik vektor, mencocokkan catatan terkait dengan presisi",
   "search.semanticPlaceholder": "Masukkan pertanyaan dan tekan Enter untuk mencari...",

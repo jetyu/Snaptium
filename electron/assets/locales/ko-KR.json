@@ -643,7 +643,7 @@
   "search.openSearch": "검색 열기",
   "search.placeholder": "노트를 탐색하려면 키워드를 입력하세요...",
   "search.quickPlaceholder": "빠르게 메모 찾기...",
-  "search.recentConversions": "최근 기록",
+  "search.recentConversations": "최근 기록",
   "search.searchNote": "노트 검색",
   "search.semanticHint": "벡터 의미론적 이해를 기반으로 지식 기반을 지능적으로 검색하여 관련 메모를 정확하게 일치시킵니다.",
   "search.semanticPlaceholder": "지식 베이스에 질문을 해보세요...",
