@@ -14,15 +14,21 @@
               <img src="@assets/logo/app-logo-512.png" alt="Snaptium Logo" class="about-logo" />
               <h1 class="about-title">{{ appName }}</h1>
               <p class="about-version">{{ t('about.version') }}: {{ appVersion }}</p>
-              <div v-if="isMicrosoftStoreDistribution" class="store-badge" :aria-label="t('about.microsoftStore')">
-                <span class="store-badge__logo" aria-hidden="true">
-                  <span class="store-badge__tile is-blue" />
-                  <span class="store-badge__tile is-green" />
-                  <span class="store-badge__tile is-yellow" />
-                  <span class="store-badge__tile is-red" />
-                </span>
+              <button
+                v-if="isMicrosoftStoreDistribution"
+                type="button"
+                class="store-badge"
+                :aria-label="t('about.microsoftStore')"
+                @click="openStorePage"
+              >
+                <img
+                  src="@assets/logo/store_logo.svg"
+                  alt=""
+                  aria-hidden="true"
+                  class="store-badge__logo"
+                />
                 <span>{{ t('about.microsoftStore') }}</span>
-              </div>
+              </button>
             </div>
 
             <div class="about-description">
@@ -74,6 +80,7 @@ import { ref, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAbout } from '../composables/useAbout';
 import { IconX } from '@tabler/icons-vue';
+import { electronApi } from '@renderer/core/bridge/electronApi';
 
 const { t } = useI18n();
 const {
@@ -109,6 +116,10 @@ onUnmounted(() => {
     removeListener();
   }
 });
+
+const openStorePage = async (): Promise<void> => {
+  await electronApi.app.openStorePage();
+};
 </script>
 
 <style scoped>
@@ -194,34 +205,29 @@ onUnmounted(() => {
   font-size: 0.75rem;
   font-weight: 600;
   line-height: 1;
+  cursor: pointer;
+  appearance: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.store-badge:hover {
+  border-color: #c7d2e0;
+}
+
+.store-badge:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 120, 212, 0.18);
+}
+
+.store-badge:active {
+  transform: translateY(1px);
 }
 
 .store-badge__logo {
-  display: grid;
-  grid-template-columns: repeat(2, 0.34rem);
-  grid-template-rows: repeat(2, 0.34rem);
-  gap: 0.07rem;
-}
-
-.store-badge__tile {
   display: block;
-  border-radius: 0.05rem;
-}
-
-.store-badge__tile.is-blue {
-  background: #00a4ef;
-}
-
-.store-badge__tile.is-green {
-  background: #7fba00;
-}
-
-.store-badge__tile.is-yellow {
-  background: #ffb900;
-}
-
-.store-badge__tile.is-red {
-  background: #f25022;
+  width: 0.96rem;
+  height: 0.96rem;
+  flex: 0 0 auto;
 }
 
 .about-description {

@@ -22,4 +22,8 @@ export function registerAppEnvInfoIpcHandlers() {
     logger.debug('Getting app name...');
     return appEnvInfoService.getAppName();
   });
+  ipcMain.handle(IPC_CHANNELS.APP_OPEN_STORE_PAGE, async () => {
+    logger.debug('Opening Microsoft Store product page...');
+    await appEnvInfoService.openStorePage();
+  });
 }
