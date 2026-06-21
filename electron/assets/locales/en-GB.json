@@ -643,7 +643,7 @@
   "search.openSearch": "Open Search",
   "search.placeholder": "Enter keywords, explore notes...",
   "search.quickPlaceholder": "Quickly find notes...",
-  "search.recentRecords": "recent records",
+  "search.recentConversions": "recent records",
   "search.searchNote": "Search Notes",
   "search.semanticHint": "Knowledge base intelligent retrieval based on vector semantic understanding, accurately matching related notes",
   "search.semanticPlaceholder": "Enter question and press Enter to search...",

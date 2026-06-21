@@ -643,7 +643,7 @@
   "search.openSearch": "Apri ricerca",
   "search.placeholder": "Inserisci parole chiave per esplorare le note...",
   "search.quickPlaceholder": "Trova rapidamente le note...",
-  "search.recentRecords": "registrazioni recenti",
+  "search.recentConversions": "registrazioni recenti",
   "search.searchNote": "Cerca nelle note",
   "search.semanticHint": "Ricerca intelligente basata sulla semantica vettoriale",
   "search.semanticPlaceholder": "Inserisci una domanda e premi Invio...",
