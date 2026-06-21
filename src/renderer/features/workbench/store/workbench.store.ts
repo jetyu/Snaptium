@@ -90,6 +90,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     mode?: WorkbenchQuestionMode;
     agentWriteMode?: WorkbenchAgentWriteMode;
     askedAt?: number;
+    answeredAt?: number;
     answer?: string;
     sourceNoteIds?: string[];
     sources?: WorkbenchQuestionSource[];
@@ -117,12 +118,14 @@ export const useWorkbenchStore = defineStore('workbench', () => {
           .map((source) => source.noteId)
           .filter((noteId, index, items) => noteId.length > 0 && items.indexOf(noteId) === index);
     const fullAnswer = trimFullAnswer(payload.answer ?? '');
+    const answeredAt = Number(payload.answeredAt ?? 0);
 
     const nextEntry: WorkbenchQuestionEntry = {
       id: entryId,
       threadId,
       query,
       askedAt,
+      answeredAt: Number.isFinite(answeredAt) && answeredAt > 0 ? answeredAt : undefined,
       answer: trimAnswer(fullAnswer),
       fullAnswer: fullAnswer || undefined,
       sourceNoteIds,

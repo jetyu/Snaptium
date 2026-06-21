@@ -60,8 +60,13 @@
             <article v-for="question in chatQuestions" :key="question.id" class="search-view__chat-turn"
               :class="{ 'is-active': selectedQuestion?.id === question.id }" :data-question-id="question.id">
               <div class="search-view__message search-view__message--user">
-                <div class="search-view__user-bubble">
-                  {{ question.query }}
+                <div class="search-view__user-message">
+                  <div class="search-view__user-bubble">
+                    {{ question.query }}
+                  </div>
+                  <span v-if="formatQuestionAskedAt(question)" class="search-view__message-timestamp">
+                    {{ formatQuestionAskedAt(question) }}
+                  </span>
                 </div>
               </div>
               <div class="search-view__message search-view__message--assistant">
@@ -69,6 +74,9 @@
                   <IconSubtitlesAi :size="15" />
                 </span>
                 <div class="search-view__assistant-card">
+                  <span v-if="formatQuestionAnsweredAt(question)" class="search-view__message-timestamp">
+                    {{ formatQuestionAnsweredAt(question) }}
+                  </span>
                   <div v-if="isGeneratingQuestion(question)" class="search-view__thinking">
                     <div class="search-view__spinner"></div>
                     <span>{{ getQuestionThinkingLabel(question) }}</span>
@@ -695,6 +703,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       query,
       threadId,
       askedAt,
+      answeredAt: generatedAnswer.trim() ? Date.now() : undefined,
       answer: generatedAnswer,
       sourceNoteIds: Array.from(new Set(semanticResults.value.map((result) => result.chunk.noteId))),
       sources: currentSources.value,
@@ -834,6 +843,7 @@ async function runAgentTaskQuestion(query: string): Promise<void> {
       query,
       threadId,
       askedAt,
+      answeredAt: generatedAnswer.trim() ? Date.now() : undefined,
       answer: generatedAnswer,
       sourceNoteIds: Array.from(new Set(semanticResults.value.map((result) => result.chunk.noteId))),
       sources: currentSources.value,
@@ -1128,6 +1138,7 @@ async function persistFullQuestion(
     mode: getQuestionMode(question),
     agentWriteMode: metadata.writeMode,
     askedAt: question.askedAt,
+    answeredAt: question.answeredAt,
     answer: getQuestionAnswer(question),
     sourceNoteIds: question.sourceNoteIds,
     sources: getQuestionSources(question),
@@ -1334,6 +1345,25 @@ function formatAskedAt(timestamp: number): string {
   }
 
   return new Date(timestamp).toLocaleString();
+}
+
+function formatMessageTimestamp(timestamp?: number): string {
+  if (!timestamp || !Number.isFinite(timestamp) || timestamp <= 0) {
+    return '';
+  }
+
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatQuestionAskedAt(question: WorkbenchQuestionEntry): string {
+  return formatMessageTimestamp(question.askedAt);
+}
+
+function formatQuestionAnsweredAt(question: WorkbenchQuestionEntry): string {
+  return formatMessageTimestamp(question.answeredAt);
 }
 
 function applySearchRequest(): void {
@@ -1809,8 +1839,16 @@ onBeforeUnmount(() => {
   gap: 9px;
 }
 
-.search-view__user-bubble {
+.search-view__user-message {
   max-width: min(680px, 72%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.search-view__user-bubble {
+  max-width: 100%;
   padding: 9px 12px;
   border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--panel-border));
   border-radius: 12px 12px 4px 12px;
@@ -1820,6 +1858,13 @@ onBeforeUnmount(() => {
   line-height: 1.52;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.search-view__message-timestamp {
+  display: inline-flex;
+  font-size: 0.73rem;
+  line-height: 1.2;
+  color: var(--text-muted);
 }
 
 .search-view__assistant-avatar {
@@ -1845,6 +1890,11 @@ onBeforeUnmount(() => {
   background: var(--search-chat-surface);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--panel-border) 22%, transparent);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-view__assistant-card > .search-view__message-timestamp {
+  display: block;
+  margin-bottom: 8px;
 }
 
 .search-view__thinking {

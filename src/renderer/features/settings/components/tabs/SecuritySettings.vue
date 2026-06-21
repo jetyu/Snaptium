@@ -599,9 +599,9 @@ onMounted(async () => {
 }
 
 .is-syncing {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.2);
-  color: #2563eb;
+  background: var(--status-info-bg);
+  border-color: var(--status-info-border);
+  color: var(--status-info-text);
 }
 
 .is-error {
@@ -675,7 +675,7 @@ onMounted(async () => {
   border: none;
   background: transparent;
   padding: 0;
-  color: #3b82f6;
+  color: var(--accent);
   font-size: 0.84rem;
   line-height: 1.4;
   cursor: pointer;
@@ -683,7 +683,7 @@ onMounted(async () => {
 }
 
 .unlock-link-button:hover {
-  color: #2563eb;
+  color: var(--accent);
   text-decoration: underline;
 }
 

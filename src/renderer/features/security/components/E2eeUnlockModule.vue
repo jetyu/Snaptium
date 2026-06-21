@@ -133,7 +133,7 @@ function emitSubmit(): void {
   border: none;
   background: transparent;
   padding: 0;
-  color: #3b82f6;
+  color: var(--accent);
   font-size: 0.84rem;
   line-height: 1.4;
   cursor: pointer;
@@ -144,7 +144,7 @@ function emitSubmit(): void {
 }
 
 .unlock-link-button:hover:not(:disabled) {
-  color: #2563eb;
+  color: var(--accent);
   text-decoration: underline;
 }
 

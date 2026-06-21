@@ -396,9 +396,9 @@ const formatCapabilities = (capabilities: string[]): string => {
 }
 
 .add-source-card:hover {
-  background: rgba(74, 144, 226, 0.04);
-  border-color: var(--primary-color, #4a90e2);
-  color: var(--primary-color);
+  background: var(--status-info-bg);
+  border-color: var(--accent);
+  color: var(--accent);
   transform: translateY(-2px);
 }
 
@@ -480,8 +480,8 @@ const formatCapabilities = (capabilities: string[]): string => {
 }
 
 .action-btn:hover {
-  color: var(--primary-color);
-  background: rgba(74, 144, 226, 0.1);
+  color: var(--accent);
+  background: var(--status-info-bg);
 }
 
 .action-btn.delete:hover {
@@ -518,8 +518,8 @@ const formatCapabilities = (capabilities: string[]): string => {
 
 .detail-item .label {
   padding: 1px 6px;
-  background: #f0f4ff;
-  color: var(--accent-hover, #2563eb);
+  background: var(--status-info-bg);
+  color: var(--accent);
   border-radius: 4px;
   font-size: 0.75rem;
   font-weight: 600;
@@ -527,7 +527,7 @@ const formatCapabilities = (capabilities: string[]): string => {
   min-width: 64px;
   display: inline-flex;
   justify-content: center;
-  border: 1px solid #e0e7ff;
+  border: 1px solid var(--status-info-border);
 }
 
 .detail-item .value {
@@ -557,7 +557,7 @@ const formatCapabilities = (capabilities: string[]): string => {
 
 .empty-action-text {
   font-size: 0.85rem;
-  color: var(--primary-color);
+  color: var(--accent);
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;

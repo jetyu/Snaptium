@@ -263,7 +263,7 @@ watch(() => workspaceStore.isHistoryDialogOpen, async (newVal) => {
   width: 30px;
   height: 30px;
   border: 3px solid var(--panel-border, #e5e7eb);
-  border-top-color: var(--accent, #3b82f6);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -304,8 +304,8 @@ watch(() => workspaceStore.isHistoryDialogOpen, async (newVal) => {
 }
 
 .btn-restore {
-  background: var(--accent, #3b82f6);
-  border: 1px solid var(--accent, #3b82f6);
+  background: var(--accent);
+  border: 1px solid var(--accent);
   color: white;
 }
 

@@ -17,8 +17,8 @@
   --panel-border: #dde1e9;
   --text: #1e2330;
   --text-muted: #8792a8;
-  --accent: #3b72f6;
-  --accent-hover: #2563eb;
+  --accent: #007aff;
+  --accent-hover: #0066d6;
   --danger: #e5484d;
   --surface-base: var(--bg);
   --surface-raised: var(--panel);
@@ -38,7 +38,7 @@
   --input-bg: #ffffff;
   --input-bg-disabled: #f3f4f6;
   --input-border: var(--border-strong);
-  --input-border-focus: #7aa7ff;
+  --input-border-focus: var(--accent);
   --focus-ring: color-mix(in srgb, var(--accent) 20%, transparent);
   --button-bg: #ffffff;
   --button-bg-hover: #f3f4f6;
@@ -53,9 +53,9 @@
   --status-success-bg: rgba(16, 185, 129, 0.08);
   --status-success-border: rgba(16, 185, 129, 0.2);
   --status-success-text: #03865d;
-  --status-info-bg: rgba(59, 130, 246, 0.08);
-  --status-info-border: rgba(59, 130, 246, 0.2);
-  --status-info-text: #2563eb;
+  --status-info-bg: color-mix(in srgb, var(--accent) 8%, transparent);
+  --status-info-border: color-mix(in srgb, var(--accent) 20%, transparent);
+  --status-info-text: #0066d6;
   --status-warning-bg: rgba(245, 158, 11, 0.08);
   --status-warning-border: rgba(245, 158, 11, 0.2);
   --status-warning-text: #b45309;
@@ -66,7 +66,7 @@
   --status-neutral-border: rgba(100, 116, 139, 0.16);
   --status-neutral-text: #475569;
   --notebook-icon-slate: #475569;
-  --notebook-icon-blue: #2563eb;
+  --notebook-icon-blue: #007aff;
   --notebook-icon-cyan: #0891b2;
   --notebook-icon-green: #16a34a;
   --notebook-icon-amber: #d97706;
@@ -87,8 +87,8 @@
   --panel-border: #2d333d;
   --text: #e1e3e8;
   --text-muted: #9ba3b3;
-  --accent: #4c82f8;
-  --accent-hover: #6091fa;
+  --accent: #0a84ff;
+  --accent-hover: #409cff;
   --danger: #f85a5e;
   --surface-base: var(--bg);
   --surface-raised: var(--panel);
@@ -108,7 +108,7 @@
   --input-bg: #161b24;
   --input-bg-disabled: #242a35;
   --input-border: #414a58;
-  --input-border-focus: #7aa7ff;
+  --input-border-focus: var(--accent);
   --focus-ring: color-mix(in srgb, var(--accent) 24%, transparent);
   --button-bg: #1d2330;
   --button-bg-hover: #252c39;
@@ -123,9 +123,9 @@
   --status-success-bg: rgba(46, 184, 137, 0.16);
   --status-success-border: rgba(46, 184, 137, 0.3);
   --status-success-text: #56d7a8;
-  --status-info-bg: rgba(61, 124, 255, 0.16);
-  --status-info-border: rgba(61, 124, 255, 0.32);
-  --status-info-text: #8ab2ff;
+  --status-info-bg: color-mix(in srgb, var(--accent) 16%, transparent);
+  --status-info-border: color-mix(in srgb, var(--accent) 32%, transparent);
+  --status-info-text: #409cff;
   --status-warning-bg: rgba(239, 138, 37, 0.18);
   --status-warning-border: rgba(239, 138, 37, 0.32);
   --status-warning-text: #ffbf75;
@@ -136,7 +136,7 @@
   --status-neutral-border: rgba(151, 162, 194, 0.22);
   --status-neutral-text: #c0cadf;
   --notebook-icon-slate: #94a3b8;
-  --notebook-icon-blue: #60a5fa;
+  --notebook-icon-blue: #0a84ff;
   --notebook-icon-cyan: #22d3ee;
   --notebook-icon-green: #4ade80;
   --notebook-icon-amber: #fbbf24;
