@@ -657,6 +657,7 @@
   "search.semanticSearch": "知识库",
   "search.titleMatch": "标题匹配",
   "search.typeToSearch": "输入关键词开始搜索",
+  "search.pressEnterToSelect": "按 ↑↓ 上下键选择，回车键跳转相应笔记",
   "shortcuts.addShortcut": "添加快捷键",
   "shortcuts.category.app": "应用",
   "shortcuts.category.file": "笔记",
