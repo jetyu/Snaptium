@@ -12,7 +12,7 @@
     <main ref="contentRef" class="search-view__content" :class="{ 'is-resizing-pane': isResizingPane }">
       <aside class="search-view__history-pane" :style="historyPaneStyle">
         <header class="search-view__pane-header">
-          <h2>{{ $t('search.recentConversions') }}</h2>
+          <h2>{{ $t('search.recentConversations') }}</h2>
           <button type="button" class="search-view__new-thread icon-action-button" :disabled="isBusy"
             :title="$t('search.newKnowledgeChat')" @click="startNewThread">
             <IconPlus :size="14" />
