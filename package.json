@@ -11,6 +11,7 @@
     "dev:main": "tsc -p tsconfig.electron.json --watch --preserveWatchOutput",
     "dev:preload": "vite build --config vite.preload.config.ts --watch",
     "dev:electron": "wait-on http://127.0.0.1:5173/ && nodemon --watch electron --watch main.ts --watch preload.ts --watch tsconfig.electron.json --watch vite.preload.config.ts --ext ts,js,json --exec \"npm run build:main && npm run build:preload && electron .\"",
+    "dev:store": "powershell -Command \"$env:SNAPTIUM_DISTRIBUTION='microsoft-store'; npm run dev\"",
     "dev": "concurrently \"npm:dev:renderer\" \"npm:dev:electron\"",
     "start": "npm run build:main && npm run build:preload && electron .",
     "build:main": "tsc -p tsconfig.electron.json",

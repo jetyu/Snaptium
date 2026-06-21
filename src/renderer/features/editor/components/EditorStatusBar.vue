@@ -125,10 +125,10 @@ const lastSaveTime = computed(() => {
   justify-content: space-between;
   align-items: center;
   padding: 4px 16px;
-  background: var(--bg-secondary, #f9fafb);
-  border-top: 1px solid var(--border-color, #e5e7eb);
+  background: var(--surface-scrim);
+  border-top: 1px solid var(--border-color);
   font-size: 12px;
-  color: var(--text-secondary, #6b7280);
+  color: var(--text-secondary);
   height: 28px;
   flex-shrink: 0;
 }
@@ -149,7 +149,7 @@ const lastSaveTime = computed(() => {
 .status-item:not(:last-child)::after {
   content: '|';
   margin-left: 16px;
-  color: var(--border-color, #e5e7eb);
+  color: var(--border-color);
 }
 
 @media (max-width: 800px) {

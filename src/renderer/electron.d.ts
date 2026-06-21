@@ -255,6 +255,7 @@ declare global {
         getDistribution: () => Promise<AppDistribution>;
         getEnvVersion: () => Promise<AppEnvVersion>;
         getName: () => Promise<string>;
+        openStorePage: () => Promise<void>;
       };
 
       window?: {

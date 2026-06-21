@@ -51,6 +51,7 @@ const args = [
   `--config.appx.publisherDisplayName=${env.STORE_PUBLISHER_DISPLAY_NAME}`,
   `--config.appx.displayName=${env.STORE_DISPLAY_NAME}`,
   `--config.appx.applicationId=${env.STORE_APPLICATION_ID}`,
+  '--config.appx.backgroundColor=#FFFFFF',
   ...process.argv.slice(2)
 ];
 

@@ -104,8 +104,8 @@ const currentComponent = computed(() => {
   display: grid;
   grid-template-columns: 240px minmax(0, 1fr);
   overflow: hidden;
-  color: var(--text-primary, #1a1a1a);
-  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary);
+  background: var(--surface-raised);
 }
 
 .settings-panel__sidebar {
@@ -113,19 +113,19 @@ const currentComponent = computed(() => {
   display: flex;
   flex-direction: column;
   background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 94%, white), var(--panel)),
-    var(--bg-secondary, #f8f9fa);
-  border-right: 1px solid var(--border-color, #e5e7eb);
+    linear-gradient(180deg, color-mix(in srgb, var(--panel) 94%, var(--surface-raised)), var(--panel)),
+    var(--surface-subtle);
+  border-right: 1px solid var(--border-color);
 }
 
 .settings-panel__sidebar-header {
   padding: 18px 20px 16px;
-  border-bottom: 1px solid var(--border-color, #e5e7eb);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .settings-panel__sidebar-header h2 {
   margin: 0;
-  color: var(--text-primary, #1a1a1a);
+  color: var(--text-primary);
   font-size: 1.15rem;
   font-weight: 700;
 }
@@ -149,7 +149,7 @@ const currentComponent = computed(() => {
 .settings-panel__separator {
   height: 1px;
   margin: 6px 4px;
-  background-color: var(--border-color, #e5e7eb);
+  background-color: var(--border-color);
 }
 
 .settings-panel__tab {
@@ -159,7 +159,7 @@ const currentComponent = computed(() => {
   border: 1px solid transparent;
   border-radius: 8px;
   background: transparent;
-  color: var(--text-secondary, #4b5563);
+  color: var(--text-secondary);
   cursor: pointer;
   font: inherit;
   font-size: 0.9rem;
@@ -168,15 +168,15 @@ const currentComponent = computed(() => {
 }
 
 .settings-panel__tab:hover {
-  background-color: var(--panel-hover, #eef2f5);
-  border-color: color-mix(in srgb, var(--accent) 14%, var(--border-color, #e5e7eb));
-  color: var(--text-primary, #253041);
+  background-color: var(--surface-hover);
+  border-color: color-mix(in srgb, var(--accent) 14%, var(--border-color));
+  color: var(--text-primary);
 }
 
 .settings-panel__tab.is-active {
-  background-color: color-mix(in srgb, var(--accent) 12%, var(--panel, #eef1f5));
-  border-color: color-mix(in srgb, var(--accent) 26%, var(--border-color, #c9d1dc));
-  color: var(--accent-hover, #1f2937);
+  background-color: var(--surface-selected);
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--border-color));
+  color: var(--accent-hover);
   font-weight: 650;
 }
 
@@ -184,7 +184,7 @@ const currentComponent = computed(() => {
   min-width: 0;
   min-height: 0;
   overflow: hidden;
-  background: var(--bg-primary, #ffffff);
+  background: var(--surface-raised);
 }
 
 .settings-panel__content-inner {

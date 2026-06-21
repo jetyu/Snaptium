@@ -55,7 +55,7 @@ const toneClass = computed(() => {
 }
 
 .license-badge:hover {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-soft);
 }
 
 
@@ -69,114 +69,78 @@ const toneClass = computed(() => {
 .license-badge.free {
   border-color: var(--panel-border);
   background: var(--panel-hover);
-  color: #6b7280;
+  color: var(--status-neutral-text);
 }
 
 .license-badge.free:hover {
-  border-color: rgba(107, 114, 128, 0.28);
-  background: rgba(107, 114, 128, 0.08);
-  color: #4b5563;
+  border-color: var(--status-neutral-border);
+  background: var(--status-neutral-bg);
+  color: var(--status-neutral-text);
 }
 
 /* Insider Plan */
 .license-badge.insider {
-  background: rgba(13, 148, 136, 0.08);
-  border-color: rgba(13, 148, 136, 0.25);
-  color: #0f766e;
-}
-
-[data-theme='dark'] .license-badge.insider {
-  background: rgba(13, 148, 136, 0.16);
-  border-color: rgba(45, 212, 191, 0.35);
-  color: #5eead4;
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+  color: var(--status-success-text);
 }
 
 .license-badge.insider:hover {
-  border-color: rgba(13, 148, 136, 0.35);
-  background: rgba(13, 148, 136, 0.12);
-  color: #0f766e;
+  border-color: color-mix(in srgb, var(--status-success-border) 100%, var(--border-strong));
+  background: color-mix(in srgb, var(--status-success-bg) 88%, var(--surface-raised));
+  color: var(--status-success-text);
 }
 
 /* Pro Plan */
 .license-badge.pro {
-  background: rgba(37, 99, 235, 0.08);
-  border-color: rgba(37, 99, 235, 0.25);
-  color: #245ea8;
-}
-
-[data-theme='dark'] .license-badge.pro {
-  background: rgba(37, 99, 235, 0.16);
-  border-color: rgba(96, 165, 250, 0.35);
-  color: #7db5ff;
+  background: var(--status-info-bg);
+  border-color: var(--status-info-border);
+  color: var(--status-info-text);
 }
 
 .license-badge.pro:hover {
-  border-color: rgba(37, 99, 235, 0.35);
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4f91;
+  border-color: color-mix(in srgb, var(--status-info-border) 100%, var(--border-strong));
+  background: color-mix(in srgb, var(--status-info-bg) 88%, var(--surface-raised));
+  color: var(--status-info-text);
 }
 
 /* Trial Plan */
 .license-badge.trial {
-  background: rgba(37, 99, 235, 0.08);
-  border-color: rgba(37, 99, 235, 0.25);
-  color: #245ea8;
-}
-
-[data-theme='dark'] .license-badge.trial {
-  background: rgba(37, 99, 235, 0.16);
-  border-color: rgba(96, 165, 250, 0.35);
-  color: #7db5ff;
+  background: var(--status-info-bg);
+  border-color: var(--status-info-border);
+  color: var(--status-info-text);
 }
 
 .license-badge.trial:hover {
-  border-color: rgba(37, 99, 235, 0.35);
-  background: rgba(37, 99, 235, 0.12);
-  color: #1d4f91;
+  border-color: color-mix(in srgb, var(--status-info-border) 100%, var(--border-strong));
+  background: color-mix(in srgb, var(--status-info-bg) 88%, var(--surface-raised));
+  color: var(--status-info-text);
 }
 
 /* Ultimate Plan */
 .license-badge.ultimate {
-  background: rgba(202, 138, 4, 0.1);
-  border-color: rgba(202, 138, 4, 0.25);
-  color: #8b5a00;
-}
-
-[data-theme='dark'] .license-badge.ultimate {
-  background: rgba(202, 138, 4, 0.16);
-  border-color: rgba(245, 158, 11, 0.35);
-  color: #f5c96b;
+  background: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+  color: var(--status-warning-text);
 }
 
 .license-badge.ultimate:hover {
-  border-color: rgba(202, 138, 4, 0.36);
-  background: rgba(202, 138, 4, 0.14);
-  color: #7a5200;
+  border-color: color-mix(in srgb, var(--status-warning-border) 100%, var(--border-strong));
+  background: color-mix(in srgb, var(--status-warning-bg) 88%, var(--surface-raised));
+  color: var(--status-warning-text);
 }
 
 /* Enterprise Plan */
 .license-badge.enterprise {
-  background: rgba(6, 182, 212, 0.08);
-  border-color: rgba(6, 182, 212, 0.25);
-  color: #06b6d4;
-}
-
-[data-theme='dark'] .license-badge.enterprise {
-  background: rgba(6, 182, 212, 0.15);
-  border-color: rgba(6, 182, 212, 0.35);
-  color: #22d3ee;
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+  color: var(--status-success-text);
 }
 
 /* Expired States */
 .license-badge.is-expired {
-  background: rgba(239, 68, 68, 0.08);
-  border-color: rgba(239, 68, 68, 0.25);
-  color: #ef4849;
-}
-
-[data-theme='dark'] .license-badge.is-expired {
-  background: rgba(239, 68, 68, 0.15);
-  border-color: rgba(239, 68, 68, 0.35);
-  color: #f87171;
+  background: var(--status-danger-bg);
+  border-color: var(--status-danger-border);
+  color: var(--status-danger-text);
 }
 </style>
