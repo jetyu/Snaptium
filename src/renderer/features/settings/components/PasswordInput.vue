@@ -136,8 +136,8 @@ function toggleVisibility(): void {
 }
 
 .password-toggle-btn:hover:not(:disabled) {
-  color: #1e40af;
-  background: rgba(59, 130, 246, 0.08);
+  color: var(--accent);
+  background: var(--status-info-bg);
 }
 
 .password-toggle-btn:disabled {

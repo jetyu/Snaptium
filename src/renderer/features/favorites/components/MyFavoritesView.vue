@@ -230,8 +230,8 @@ async function jumpToWorkspace(id: string, type: 'note' | 'notebook') {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: color-mix(in srgb, #3b82f6 78%, var(--text));
-  background: color-mix(in srgb, #3b82f6 14%, var(--panel));
+  color: color-mix(in srgb, var(--accent) 78%, var(--text));
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
 }
 
 .dashboard-content {
@@ -388,13 +388,13 @@ async function jumpToWorkspace(id: string, type: 'note' | 'notebook') {
 
 .action-btn:hover {
   transform: translateY(-1px);
-  background: color-mix(in srgb, #3b82f6 12%, var(--panel));
-  color: #2563eb;
+  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
+  color: var(--accent);
 }
 
 .action-btn.is-active {
-  background: color-mix(in srgb, #3b82f6 14%, var(--panel));
-  color: #2563eb;
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  color: var(--accent);
 }
 
 .favorites-empty {

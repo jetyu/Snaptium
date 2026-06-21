@@ -13,6 +13,7 @@ export interface WorkbenchQuestionEntry {
   agentWriteMode?: WorkbenchAgentWriteMode;
   query: string;
   askedAt: number;
+  answeredAt?: number;
   answer: string;
   fullAnswer?: string;
   sourceNoteIds: string[];
@@ -356,6 +357,7 @@ function sanitizeRecentQuestions(value: unknown): WorkbenchQuestionEntry[] {
             })
             .filter((source) => source.noteId.length > 0)
         : [];
+      const answeredAt = Number(normalized.answeredAt ?? 0);
 
       return {
         id: String(normalized.id ?? '').trim(),
@@ -364,6 +366,7 @@ function sanitizeRecentQuestions(value: unknown): WorkbenchQuestionEntry[] {
         agentWriteMode: sanitizeAgentWriteMode(normalized.agentWriteMode),
         query: String(normalized.query ?? '').trim(),
         askedAt: Number(normalized.askedAt ?? 0),
+        answeredAt: Number.isFinite(answeredAt) && answeredAt > 0 ? answeredAt : undefined,
         answer: String(normalized.answer ?? '').trim(),
         fullAnswer: String(normalized.fullAnswer ?? '').trim() || undefined,
         sourceNoteIds,

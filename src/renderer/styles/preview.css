@@ -431,7 +431,7 @@
 [data-theme='dark'] :is(.preview, .markdown-body) .hljs-title,
 [data-theme='dark'] :is(.preview, .markdown-body) .hljs-title.class_,
 [data-theme='dark'] :is(.preview, .markdown-body) .hljs-title.function_ {
-  color: #82aaff;
+  color: var(--accent);
 }
 
 [data-theme='dark'] :is(.preview, .markdown-body) .hljs-number,
