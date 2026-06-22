@@ -844,8 +844,28 @@ export class LicenseService {
       return this.getState();
     }
 
+    if (
+      this.token
+      && isPaidPlan(this.state.plan)
+      && (
+        this.state.status === LICENSE_STATUSES.ACTIVE
+        || this.state.status === LICENSE_STATUSES.OFFLINE_GRACE
+        || this.state.status === LICENSE_STATUSES.SESSION_GRACE
+      )
+    ) {
+      logger.warn('Preserving active license state after unexpected validation failure', {
+        code: error.code,
+        status: error.status,
+        message: error.message,
+      });
+      this.state.valid = true;
+      this.state.activated = true;
+      return this.getState();
+    }
+
     this.state.status = LICENSE_STATUSES.INVALID;
     this.state.valid = false;
+    this.state.activated = false;
     return this.getState();
   }
 

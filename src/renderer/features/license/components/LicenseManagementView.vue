@@ -60,7 +60,7 @@
         </div>
       </div>
 
-      <span v-if="!store.canManage && localizedErrorMessage" class="summary-error-msg">
+      <span v-if="localizedErrorMessage" class="summary-error-msg">
         {{ localizedErrorMessage }}
       </span>
     </div>
