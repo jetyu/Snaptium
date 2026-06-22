@@ -421,7 +421,7 @@ watch(
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  color: color-mix(in srgb, #3b82f6 78%, var(--text));
+  color: color-mix(in srgb, var(--accent) 78%, var(--text));
 }
 
 .tags-view__note-body {

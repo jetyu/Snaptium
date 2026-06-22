@@ -1,4 +1,14 @@
-### v2.0.1
+### v2.0.2 — 2026-06-30 
+This update primarily optimizes the knowledge base, application distribution channels, and overall user experience.
+#### New
+* Added support for the Microsoft Store channel
+#### Improvements
+* Improved the knowledge base question-and-answer experience issues
+* Improved several user experience issues
+#### Fixes
+* Fixed other known issues
+
+### v2.0.1 — 2026-06-11
 This release focuses on improving application stability, cloud sync performance, the update process, and the overall user experience.
 #### Improvements
 * Refined the Workbench module layout.
@@ -15,7 +25,7 @@ This release focuses on improving application stability, cloud sync performance,
 * Fixed an issue where license verification could fail in offline mode.
 * Fixed other known issues.
 
-### v2.0.0 — 2026-06-13
+### v2.0.0 — 2026-05-13
 We are excited to announce that NoteWizard has been fully upgraded to Snaptium. Rebuilt on an entirely new architecture, Snaptium delivers a more modern product experience and a significantly expanded set of capabilities.
 #### New
 * Added the Workbench module for centralized note management, related note recommendations, and recent activity.

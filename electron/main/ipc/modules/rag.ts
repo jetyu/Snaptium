@@ -6,13 +6,16 @@
 import { ipcMain } from 'electron';
 import { z } from 'zod';
 import { ragService } from '../../services/rag.service.js';
-import { generateEmbeddingSingle } from '../../services/embedding.service.js';
+import { runKnowledgeAgentTask } from '../../services/agent.service.js';
 import { remoteAiService } from '../../services/remote-ai.service.js';
 import { aiConfigService } from '../../services/ai-config.service.js';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
 import { getErrorMessage } from '../../services/error.service.js';
 import { LICENSE_RUNTIME_FEATURES, licenseService } from '../../services/license.service.js';
+import { assessRagEvidence } from '../../services/rag-evidence-assessment.service.js';
+import { buildRagAnswerPrompt } from '../../prompts/index.js';
+import { $t } from '../../utils/i18n.js';
 
 const logger = loggerService.createLogger('Main:RAG IPC');
 
@@ -30,12 +33,27 @@ const AskQuestionSchema = z.object({
   query: z.string().min(1),
 });
 
+const RunTaskSchema = z.object({
+  task: z.string().min(1),
+  writeMode: z.enum(['confirm', 'auto']).optional(),
+});
+
+type RagSearchResults = Awaited<ReturnType<typeof ragService.searchByVector>>;
+
 interface KnowledgeAnswerResult {
   success: boolean;
   answer?: string;
-  sources: Awaited<ReturnType<typeof ragService.searchByVector>>;
+  sources: RagSearchResults;
   usedSearchFallback: boolean;
+  insufficientEvidence?: boolean;
   error?: string;
+}
+
+function createInsufficientEvidenceMessage(): string {
+  return $t(
+    'search.ragInsufficientEvidence',
+    'The current knowledge base does not contain enough evidence to answer this question.',
+  );
 }
 
 async function ensureRagReady(): Promise<Awaited<ReturnType<typeof aiConfigService.resolveRagConfig>>> {
@@ -52,19 +70,36 @@ async function ensureRagReady(): Promise<Awaited<ReturnType<typeof aiConfigServi
 
 async function answerKnowledgeQuestion(query: string): Promise<KnowledgeAnswerResult> {
   const ragConfig = await ensureRagReady();
-  const queryEmbedding = await generateEmbeddingSingle(query, ragConfig.embeddingConfig);
-  const results = await ragService.searchByVector({
-    queryEmbedding,
+  const results = await ragService.searchKnowledgeBase({
+    query,
     topK: Number(ragConfig.rag.topK),
     similarityThreshold: Number(ragConfig.rag.similarityThreshold),
+    rerankerConfig: ragConfig.rerankerConfig,
   });
 
   if (!results.length) {
     return {
       success: false,
-      error: 'No relevant context found in notes',
+      error: createInsufficientEvidenceMessage(),
       sources: [],
       usedSearchFallback: false,
+      insufficientEvidence: true,
+    };
+  }
+
+  const evidence = assessRagEvidence(results);
+  if (!evidence.sufficient) {
+    logger.info('RAG answer rejected due to insufficient evidence', {
+      highestScore: evidence.highestScore,
+      averageScore: evidence.averageScore,
+      consideredCount: evidence.consideredCount,
+    });
+    return {
+      success: false,
+      error: createInsufficientEvidenceMessage(),
+      sources: results,
+      usedSearchFallback: false,
+      insufficientEvidence: true,
     };
   }
 
@@ -82,17 +117,7 @@ async function answerKnowledgeQuestion(query: string): Promise<KnowledgeAnswerRe
   }
 
   const contextText = results.map((res) => res.chunk.content).join('\n---\n');
-  const systemPrompt = [
-    'You are a professional note assistant. Answer concisely and accurately based only on the provided note context.',
-    '',
-    'Rules:',
-    '1. Use only the provided note content.',
-    '2. Answer directly with clear conclusions and key points.',
-    '3. Do not introduce external knowledge that is not present in the notes.',
-    '',
-    'Note context:',
-    contextText,
-  ].join('\n');
+  const systemPrompt = buildRagAnswerPrompt(ragConfig.uiLanguage, query, contextText);
 
   const response = await remoteAiService.chat({
     endpoint: ragConfig.chatConfig.endpoint,
@@ -108,7 +133,7 @@ async function answerKnowledgeQuestion(query: string): Promise<KnowledgeAnswerRe
 
   return {
     success: true,
-    answer: response.choices?.[0]?.message?.content,
+    answer: response.choices?.[0]?.message?.content ?? undefined,
     sources: results,
     usedSearchFallback: false,
   };
@@ -149,7 +174,36 @@ export function registerRAGHandlers() {
     } catch (error) {
       const message = getErrorMessage(error);
       logger.error(`RAG_ANSWER_QUESTION error: ${message}`);
-      return { success: false, error: message, sources: [], usedSearchFallback: false };
+      return {
+        success: false,
+        error: message,
+        sources: [],
+        usedSearchFallback: false,
+        insufficientEvidence: false,
+      };
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.RAG_RUN_TASK, async (_event, request) => {
+    try {
+      licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.RAG);
+      const validated = RunTaskSchema.parse(request);
+      return await runKnowledgeAgentTask(validated.task, { writeMode: validated.writeMode });
+    } catch (error) {
+      const message = getErrorMessage(error);
+      logger.error(`RAG_RUN_TASK error: ${message}`);
+      return {
+        success: false,
+        error: message,
+        finalAnswer: undefined,
+        steps: [],
+        traceEvents: [],
+        sources: [],
+        writeMode: 'confirm',
+        pendingWrites: [],
+        executedWrites: [],
+        stopReason: undefined,
+      };
     }
   });
 

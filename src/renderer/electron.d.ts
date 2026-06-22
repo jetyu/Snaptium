@@ -92,15 +92,18 @@ interface WallpaperResult {
 }
 
 interface AiSourceConfig {
-  aiEndpoint: string;
+  aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
+  capabilities: string[];
 }
 
 interface AiCompletePayload {
   context: string;
   systemPrompt?: string;
 }
+
+type AiPromptPreset = import('@shared/ai.constants').AiPromptPreset;
 
 interface AiCompleteResult {
   success: boolean;
@@ -180,6 +183,8 @@ interface HistoryVersion {
   size: number;
 }
 
+type AppDistribution = import('@shared/updater.constants').AppDistribution;
+
 type JsonPrimitive = string | number | boolean | null;
 type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
 type JsonObject = { [key: string]: JsonValue };
@@ -247,8 +252,10 @@ declare global {
 
       app: {
         getVersion: () => Promise<string>;
+        getDistribution: () => Promise<AppDistribution>;
         getEnvVersion: () => Promise<AppEnvVersion>;
         getName: () => Promise<string>;
+        openStorePage: () => Promise<void>;
       };
 
       window?: {
@@ -515,6 +522,82 @@ declare global {
           }>;
           error?: string;
           usedSearchFallback: boolean;
+          insufficientEvidence?: boolean;
+        }>;
+        runTask: (payload: { task: string; writeMode?: 'confirm' | 'auto' }) => Promise<{
+          success: boolean;
+          finalAnswer?: string;
+          steps: Array<{
+            title: string;
+            detail: string;
+            status: 'completed' | 'failed';
+          }>;
+          traceEvents: Array<{
+            id: string;
+            type: 'model-response' | 'tool-call' | 'tool-result' | 'tool-error';
+            title: string;
+            detail: string;
+            status: 'completed' | 'failed';
+            at: number;
+            durationMs?: number;
+            toolName?: string;
+          }>;
+          sources: Array<{
+            chunk: {
+              id: string;
+              noteId: string;
+              content: string;
+              startPos: number;
+              endPos: number;
+            };
+            score: number;
+            noteTitle?: string;
+          }>;
+          writeMode: 'confirm' | 'auto';
+          pendingWrites: Array<
+            {
+              id: string;
+              type: 'create-note';
+              title: string;
+              content: string;
+              reason: string;
+            }
+            | {
+              id: string;
+              type: 'update-note';
+              noteId: string;
+              noteTitle: string;
+              content: string;
+              reason: string;
+            }
+          >;
+          executedWrites: Array<
+            {
+              id: string;
+              type: 'create-note';
+              noteId: string;
+              noteTitle: string;
+              content: string;
+              reason: string;
+            }
+            | {
+              id: string;
+              type: 'update-note';
+              noteId: string;
+              noteTitle: string;
+              content: string;
+              reason: string;
+            }
+          >;
+          stopReason?:
+            | 'completed'
+            | 'insufficient-evidence'
+            | 'tool-call-limit'
+            | 'iteration-limit'
+            | 'runtime-limit'
+            | 'tool-failure-limit'
+            | 'weak-search-limit';
+          error?: string;
         }>;
         deleteNoteIndex: (noteId: string) => Promise<{ success: boolean; error?: string }>;
         getStatus: () => Promise<{
@@ -533,6 +616,8 @@ declare global {
             role: 'system' | 'user' | 'assistant';
             content: string;
           }>;
+          systemPrompt?: string;
+          promptPreset?: AiPromptPreset;
         }) => Promise<{ success: boolean; answer?: string; error?: string }>;
         generateCompletion: (payload: AiCompletePayload) => Promise<{ success: boolean; answer?: string; error?: string }>;
       };

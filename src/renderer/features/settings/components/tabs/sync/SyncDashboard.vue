@@ -410,25 +410,25 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 
 .setting-meta {
   font-size: 0.8rem;
-  color: #5f6b7a;
+  color: var(--text-secondary);
 }
 
 .is-idle {
-  background: rgba(16, 185, 129, 0.08);
-  border-color: rgba(16, 185, 129, 0.2);
-  color: #03865d;
+  background: var(--status-success-bg);
+  border-color: var(--status-success-border);
+  color: var(--status-success-text);
 }
 
 .is-syncing {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.2);
-  color: #2563eb;
+  background: var(--status-info-bg);
+  border-color: var(--status-info-border);
+  color: var(--status-info-text);
 }
 
 .is-error {
-  background: rgba(244, 63, 94, 0.08);
-  border-color: rgba(244, 63, 94, 0.2);
-  color: #e11d48;
+  background: var(--status-danger-bg);
+  border-color: var(--status-danger-border);
+  color: var(--status-danger-text);
 }
 
 .sync-summary-card .summary-pills {
@@ -439,18 +439,18 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 }
 
 .summary-pill {
-  background: rgba(100, 116, 139, 0.05);
-  border: 1px solid rgba(100, 116, 139, 0.15);
+  background: var(--status-neutral-bg);
+  border: 1px solid var(--status-neutral-border);
   padding: 2px 10px;
   border-radius: 6px;
   font-size: 0.8rem;
-  color: #475569;
+  color: var(--status-neutral-text);
   transition: all 0.2s ease;
 }
 
 .summary-pill:hover {
-  background: rgba(100, 116, 139, 0.08);
-  border-color: rgba(100, 116, 139, 0.3);
+  background: color-mix(in srgb, var(--status-neutral-bg) 88%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--status-neutral-border) 100%, var(--border-strong));
 }
 
 .provider-grid {
@@ -468,13 +468,13 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 }
 
 .provider-card:hover {
-  border-color: #bee3f8;
-  background: #f7fafc;
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border-color));
+  background: var(--surface-soft);
 }
 
 .provider-card.active {
-  border-color: #4a90e2;
-  background: #f0f7ff;
+  border-color: color-mix(in srgb, var(--accent) 42%, var(--border-color));
+  background: var(--surface-selected);
 }
 
 .provider-icon {
@@ -489,8 +489,8 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 
 .provider-icon.oss,
 .provider-icon.webdav {
-  background: #d2efff;
-  color: #3182ce;
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
 }
 
 .provider-info {
@@ -508,7 +508,7 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 .provider-name {
   font-weight: 600;
   font-size: 0.9rem;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .active-tag {
@@ -517,18 +517,18 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
   right: -1px;
   font-size: 0.65rem;
   font-weight: 700;
-  background: #4a90e2;
-  color: #ffffff;
+  background: var(--accent);
+  color: var(--notebook-icon-white);
   padding: 3px 10px 4px;
   border-radius: 0 10px 0 10px;
   line-height: 1;
   z-index: 10;
-  box-shadow: -1px 1px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-soft);
 }
 
 .provider-desc {
   font-size: 0.8rem;
-  color: #5f6b7a;
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -541,7 +541,7 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
 }
 
 .action-icon-btn {
-  background: #edf2f7;
+  background: var(--button-secondary-bg);
   border: none;
   border-radius: 6px;
   width: 30px;
@@ -551,17 +551,17 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s;
-  color: #4a5568;
+  color: var(--text-secondary);
 }
 
 .action-icon-btn:hover {
-  background: #e2e8f0;
-  color: #2d3748;
+  background: var(--button-secondary-bg-hover);
+  color: var(--text-primary);
 }
 
 .action-icon-btn.clear:hover {
-  background: #fff5f5;
-  color: #c53030;
+  background: var(--button-danger-soft);
+  color: var(--status-danger-text);
 }
 
 .provider-card.disabled {

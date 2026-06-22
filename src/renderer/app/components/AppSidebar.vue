@@ -30,7 +30,7 @@ import { useI18n } from 'vue-i18n';
 import {
   IconDashboard,
   IconNotebook,
-  IconDatabaseSearch,
+  IconSubtitlesAi,
   IconSettings,
   IconAdjustmentsHorizontal,
   IconTrash,
@@ -59,14 +59,14 @@ const mainViewIconMap = computed(() => ({
   workspace: IconNotebook,
   tags: IconTag,
   favorites: IconStar,
-  search: IconDatabaseSearch,
+  search: IconSubtitlesAi,
   settings: IconSettings,
 }));
 
 const moduleIconMap = computed(() => ({
   favorites: IconStar,
   tags: IconTag,
-  search: IconDatabaseSearch,
+  search: IconSubtitlesAi,
   settings: IconSettings,
   trash: IconTrash,
   about: IconInfoCircle,

@@ -8,7 +8,13 @@ import {
   sanitizeWorkbenchSettings,
   type WorkbenchRecommendationFeedbackAction,
   type WorkbenchRecommendationFeedbackEntry,
+  type WorkbenchQuestionAgentStep,
+  type WorkbenchQuestionAgentExecutedWrite,
+  type WorkbenchQuestionAgentTraceEvent,
+  type WorkbenchQuestionAgentWriteProposal,
+  type WorkbenchAgentWriteMode,
   type WorkbenchQuestionEntry,
+  type WorkbenchQuestionMode,
   type WorkbenchQuestionSource,
   type WorkbenchSettings,
 } from '../constants/workbench.constants';
@@ -44,6 +50,17 @@ function sanitizeQuestionSources(sources?: WorkbenchQuestionSource[]) {
     .slice(0, 8);
 }
 
+function sanitizeQuestionIdList(ids?: string[]): string[] {
+  if (!Array.isArray(ids)) {
+    return [];
+  }
+
+  return ids
+    .map((id) => String(id ?? '').trim())
+    .filter((id, index, items) => id.length > 0 && items.indexOf(id) === index)
+    .slice(0, 20);
+}
+
 function createQuestionId(query: string, askedAt: number) {
   return `${askedAt}:${query.trim().slice(0, 48)}`;
 }
@@ -70,10 +87,19 @@ export const useWorkbenchStore = defineStore('workbench', () => {
   async function recordQuestion(payload: {
     query: string;
     threadId?: string;
+    mode?: WorkbenchQuestionMode;
+    agentWriteMode?: WorkbenchAgentWriteMode;
     askedAt?: number;
+    answeredAt?: number;
     answer?: string;
     sourceNoteIds?: string[];
     sources?: WorkbenchQuestionSource[];
+    agentSteps?: WorkbenchQuestionAgentStep[];
+    agentTraceEvents?: WorkbenchQuestionAgentTraceEvent[];
+    pendingWrites?: WorkbenchQuestionAgentWriteProposal[];
+    executedWrites?: WorkbenchQuestionAgentExecutedWrite[];
+    dismissedWriteIds?: string[];
+    createdWriteIds?: string[];
   }): Promise<WorkbenchQuestionEntry | null> {
     const query = payload.query.trim();
     if (!query) {
@@ -92,16 +118,26 @@ export const useWorkbenchStore = defineStore('workbench', () => {
           .map((source) => source.noteId)
           .filter((noteId, index, items) => noteId.length > 0 && items.indexOf(noteId) === index);
     const fullAnswer = trimFullAnswer(payload.answer ?? '');
+    const answeredAt = Number(payload.answeredAt ?? 0);
 
     const nextEntry: WorkbenchQuestionEntry = {
       id: entryId,
       threadId,
       query,
       askedAt,
+      answeredAt: Number.isFinite(answeredAt) && answeredAt > 0 ? answeredAt : undefined,
       answer: trimAnswer(fullAnswer),
       fullAnswer: fullAnswer || undefined,
       sourceNoteIds,
       sources,
+      mode: payload.mode,
+      agentWriteMode: payload.agentWriteMode,
+      agentSteps: payload.agentSteps ?? [],
+      agentTraceEvents: payload.agentTraceEvents ?? [],
+      pendingWrites: payload.pendingWrites ?? [],
+      executedWrites: payload.executedWrites ?? [],
+      dismissedWriteIds: sanitizeQuestionIdList(payload.dismissedWriteIds),
+      createdWriteIds: sanitizeQuestionIdList(payload.createdWriteIds),
     };
 
     const nextQuestions = [
@@ -110,6 +146,37 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     ].slice(0, WORKBENCH_LIMITS.QUESTIONS);
 
     await saveWorkbench({ recentQuestions: nextQuestions });
+    return nextEntry;
+  }
+
+  async function updateQuestionAgentWriteState(payload: {
+    questionId: string;
+    dismissedWriteIds?: string[];
+    createdWriteIds?: string[];
+  }): Promise<WorkbenchQuestionEntry | null> {
+    const questionId = payload.questionId.trim();
+    if (!questionId) {
+      return null;
+    }
+
+    const targetQuestion = recentQuestions.value.find((entry) => entry.id === questionId);
+    if (!targetQuestion) {
+      return null;
+    }
+
+    const nextEntry: WorkbenchQuestionEntry = {
+      ...targetQuestion,
+      dismissedWriteIds: sanitizeQuestionIdList(payload.dismissedWriteIds ?? targetQuestion.dismissedWriteIds),
+      createdWriteIds: sanitizeQuestionIdList(payload.createdWriteIds ?? targetQuestion.createdWriteIds),
+    };
+
+    await saveWorkbench({
+      recentQuestions: [
+        nextEntry,
+        ...recentQuestions.value.filter((entry) => entry.id !== questionId),
+      ].slice(0, WORKBENCH_LIMITS.QUESTIONS),
+    });
+
     return nextEntry;
   }
 
@@ -168,6 +235,9 @@ export const useWorkbenchStore = defineStore('workbench', () => {
           ...entry,
           sourceNoteIds: entry.sourceNoteIds.filter((noteId) => validNoteIdSet.has(noteId)),
           sources: entry.sources?.filter((source) => validNoteIdSet.has(source.noteId)) ?? [],
+          pendingWrites: entry.pendingWrites?.filter((proposal) => (
+            proposal.type === 'create-note' || validNoteIdSet.has(proposal.noteId)
+          )) ?? [],
         };
       }),
       recommendationFeedback: recommendationFeedback.value.filter((entry) => validNoteIdSet.has(entry.noteId)),
@@ -187,6 +257,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     recentQuestions,
     recommendationFeedback,
     recordQuestion,
+    updateQuestionAgentWriteState,
     deleteQuestion,
     recordRecommendationFeedback,
     cleanupNoteReferences,

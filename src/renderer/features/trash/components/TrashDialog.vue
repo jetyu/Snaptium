@@ -147,22 +147,22 @@ watch(isOpen, async (newVal) => {
   width: 90%;
   max-width: 700px;
   height: 600px;
-  background: var(--panel, #ffffff);
+  background: var(--surface-raised);
   border-radius: 12px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid var(--panel-border, #e5e7eb);
+  border: 1px solid var(--border-color);
 }
 
 .trash-header {
   padding: 16px 20px;
-  border-bottom: 1px solid var(--panel-border, #e5e7eb);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: var(--panel-header, #f9fafb);
+  background: var(--surface-scrim);
 }
 
 .header-left {
@@ -175,11 +175,11 @@ watch(isOpen, async (newVal) => {
   margin: 0;
   font-size: 1.1rem;
   font-weight: 600;
-  color: var(--text, #111827);
+  color: var(--text-primary);
 }
 
 .trash-icon {
-  color: var(--accent, #dc2626);
+  color: var(--danger);
 }
 
 .header-right {
@@ -194,9 +194,9 @@ watch(isOpen, async (newVal) => {
   gap: 6px;
   padding: 6px 12px;
   background: transparent;
-  border: 1px solid var(--panel-border, #e5e7eb);
+  border: 1px solid var(--border-color);
   border-radius: 6px;
-  color: var(--text-muted, #ef4444);
+  color: var(--danger);
   font-size: 0.85rem;
   cursor: pointer;
   transition: all 0.2s;
@@ -209,7 +209,7 @@ watch(isOpen, async (newVal) => {
 }
 
 .btn-close {
-  color: var(--text, #111827);
+  color: var(--text-primary);
 }
 
 .trash-content {
@@ -226,9 +226,9 @@ watch(isOpen, async (newVal) => {
   margin: 12px 16px 0;
   padding: 10px 12px;
   border-radius: 8px;
-  border: 1px solid rgba(220, 38, 38, 0.24);
-  background: rgba(220, 38, 38, 0.08);
-  color: #991b1b;
+  border: 1px solid var(--status-danger-border);
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
 }
 
 .error-text {
@@ -252,7 +252,7 @@ watch(isOpen, async (newVal) => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-disabled);
   gap: 16px;
 }
 
@@ -270,8 +270,8 @@ watch(isOpen, async (newVal) => {
 .spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid var(--panel-border, #e5e7eb);
-  border-top-color: var(--accent, #3b82f6);
+  border: 3px solid var(--border-color);
+  border-top-color: var(--accent);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -295,19 +295,19 @@ watch(isOpen, async (newVal) => {
 .trash-table th {
   text-align: left;
   padding: 12px 20px;
-  background: var(--panel-header, #f9fafb);
-  color: var(--text-muted, #4b5563);
+  background: var(--surface-scrim);
+  color: var(--text-secondary);
   font-weight: 600;
   position: sticky;
   top: 0;
   z-index: 10;
-  border-bottom: 1px solid var(--panel-border, #e5e7eb);
+  border-bottom: 1px solid var(--border-color);
 }
 
 .trash-table td {
   padding: 10px 20px;
-  border-bottom: 1px solid var(--panel-border, #f3f4f6);
-  color: var(--text, #374151);
+  border-bottom: 1px solid var(--border-muted);
+  color: var(--text-primary);
 }
 
 .node-name {
@@ -327,7 +327,7 @@ watch(isOpen, async (newVal) => {
 .child-count {
   font-size: 0.75rem;
   font-weight: 400;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-disabled);
   flex-shrink: 0;
 }
 
@@ -349,7 +349,7 @@ watch(isOpen, async (newVal) => {
   padding: 4px;
   border-radius: 4px;
   cursor: pointer;
-  color: var(--text-muted, #9ca3af);
+  color: var(--text-disabled);
   transition: all 0.2s;
   display: flex;
 }
@@ -361,13 +361,13 @@ watch(isOpen, async (newVal) => {
 }
 
 .btn-inline-action.restore:hover {
-  background: color-mix(in srgb, #10b981 12%, transparent);
-  color: #059669;
+  background: var(--status-success-bg);
+  color: var(--status-success-text);
 }
 
 .btn-inline-action.delete:hover {
-  background: color-mix(in srgb, #ef4444 12%, transparent);
-  color: #dc2626;
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
 }
 
 /* Transitions */

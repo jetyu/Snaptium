@@ -24,3 +24,32 @@ export function resolveUpdateTargetChannel(channel: UpdateChannel): UpdateTarget
 export function buildUpdateFeedUrl(channel: UpdateChannel): string {
   return `${UPDATE_FEED_BASE_URL}/${resolveUpdateTargetChannel(channel)}`;
 }
+export const APP_DISTRIBUTIONS = {
+  DIRECT: 'direct',
+  MICROSOFT_STORE: 'microsoft-store',
+} as const satisfies Record<string, string>;
+
+export type AppDistribution = typeof APP_DISTRIBUTIONS[keyof typeof APP_DISTRIBUTIONS];
+
+type StoreAwareProcess = NodeJS.Process & {
+  windowsStore?: boolean;
+};
+
+export function getAppDistribution(): AppDistribution {
+  const storeAwareProcess = process as StoreAwareProcess;
+
+  if (storeAwareProcess.windowsStore === true) {
+    return APP_DISTRIBUTIONS.MICROSOFT_STORE;
+  }
+
+  if (process.env.SNAPTIUM_DISTRIBUTION === APP_DISTRIBUTIONS.MICROSOFT_STORE) {
+    return APP_DISTRIBUTIONS.MICROSOFT_STORE;
+  }
+
+  return APP_DISTRIBUTIONS.DIRECT;
+}
+
+export function isMicrosoftStoreDistribution(): boolean {
+  return getAppDistribution() === APP_DISTRIBUTIONS.MICROSOFT_STORE;
+}
+

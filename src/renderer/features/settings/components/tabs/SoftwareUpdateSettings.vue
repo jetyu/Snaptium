@@ -287,7 +287,7 @@ const handleChannelChange = async (event: Event) => {
 .update-version-value {
   font-size: 0.95rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .update-state-card {
@@ -311,7 +311,7 @@ const handleChannelChange = async (event: Event) => {
 
 .update-state-message {
   margin: 0;
-  color: #5f6b7a;
+  color: var(--text-secondary);
   font-size: 0.82rem;
   line-height: 1.45;
   font-variant-numeric: tabular-nums;
@@ -319,15 +319,15 @@ const handleChannelChange = async (event: Event) => {
 }
 
 .update-state-message.is-info {
-  color: #2563eb;
+  color: var(--status-info-text);
 }
 
 .update-state-message.is-success {
-  color: #15803d;
+  color: var(--status-success-text);
 }
 
 .update-state-message.is-error {
-  color: #dc2626;
+  color: var(--status-danger-text);
 }
 
 .update-actions {

@@ -4,7 +4,7 @@
       aria-labelledby="workbench-onboarding-title" tabindex="0" @keydown.esc="emit('dismiss')">
       <section class="workbench-onboarding__dialog" @click.stop>
         <button type="button" class="workbench-onboarding__close dialog-close-button" :aria-label="t('common.close')"
-            @click="emit('dismiss')">
+          @click="emit('dismiss')">
           <IconX :size="16" />
         </button>
 
@@ -153,7 +153,7 @@ import {
   IconFolderOpen,
   IconFileImport,
   IconFileText,
-  IconDatabaseSearch,
+  IconSubtitlesAi,
   IconShield,
   IconTag,
 } from '@tabler/icons-vue';
@@ -292,7 +292,7 @@ const workspaceMapItems = computed<Array<OnboardingCard<string>>>(() => [
     id: 'search',
     title: t('workbench.onboarding.map.search.title'),
     description: t('workbench.onboarding.map.search.description'),
-    icon: IconDatabaseSearch,
+    icon: IconSubtitlesAi,
     toneClass: 'tone-deep',
   },
 ]);
@@ -309,7 +309,7 @@ const finishItems = computed<Array<OnboardingCard<string>>>(() => [
     id: 'review',
     title: t('workbench.onboarding.finish.review.title'),
     description: t('workbench.onboarding.finish.review.description'),
-    icon: IconDatabaseSearch,
+    icon: IconSubtitlesAi,
     toneClass: 'tone-primary',
   },
 ]);
@@ -548,13 +548,13 @@ onMounted(async () => {
   cursor: pointer;
   text-align: left;
   transition: border-color 0.16s ease, background-color 0.16s ease, box-shadow 0.16s ease;
-  }
+}
 
-  .workbench-onboarding__choice-card:hover {
+.workbench-onboarding__choice-card:hover {
   border-color: var(--panel-border, #dbe3ef);
   background: var(--panel-hover, #f5f7fa);
   box-shadow: 0 10px 24px rgba(15, 23, 42, 0.09);
-  }
+}
 
 .workbench-onboarding__choice-card.is-selected {
   border-color: color-mix(in srgb, var(--accent) 58%, var(--panel-border, #dbe3ef));

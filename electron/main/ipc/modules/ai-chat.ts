@@ -6,6 +6,8 @@ import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
 import { getErrorMessage } from '../../services/error.service.js';
 import { LICENSE_RUNTIME_FEATURES, licenseService } from '../../services/license.service.js';
+import { isValidAiPromptPreset } from '../../../shared/ai.constants.js';
+import { buildAssistantSystemPrompt, buildEditorSystemPrompt } from '../../prompts/index.js';
 
 const logger = loggerService.createLogger('Electron:AI Chat IPC');
 
@@ -14,6 +16,8 @@ const AiChatGenerateSchema = z.object({
     role: z.enum(['system', 'user', 'assistant']),
     content: z.string(),
   })),
+  systemPrompt: z.string().optional(),
+  promptPreset: z.string().optional(),
 });
 
 const AiCompletionSchema = z.object({
@@ -48,7 +52,7 @@ async function generateAIResponse(config: GenerateAIResponseConfig): Promise<str
       hasChoices: Array.isArray(data?.choices),
       choiceCount: Array.isArray(data?.choices) ? data.choices.length : 0,
     });
-    const answer = data.choices?.[0]?.message?.content;
+    const answer = data.choices?.[0]?.message?.content ?? undefined;
     return answer;
   } catch (error) {
     logger.error('Failed to generate AI response', { error: getErrorMessage(error) });
@@ -62,11 +66,31 @@ export function registerAIChatHandlers(): void {
       licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.AI_ASSISTANT);
       const validatedPayload: AiChatGeneratePayload = AiChatGenerateSchema.parse(payload);
       const assistantConfig = await aiConfigService.resolveAssistantConfig();
+      const messages = [...validatedPayload.messages];
+      const promptPreset = isValidAiPromptPreset(validatedPayload.promptPreset)
+        ? validatedPayload.promptPreset
+        : null;
+      const userInput = messages
+        .filter((message) => message.role === 'user')
+        .map((message) => message.content)
+        .join('\n');
+
+      if (!messages.find((message) => message.role === 'system')) {
+        if (promptPreset) {
+          messages.unshift({
+            role: 'system',
+            content: buildEditorSystemPrompt(assistantConfig.uiLanguage, userInput, promptPreset),
+          });
+        } else if (validatedPayload.systemPrompt?.trim()) {
+          messages.unshift({ role: 'system', content: validatedPayload.systemPrompt.trim() });
+        }
+      }
+
       const answer = await generateAIResponse({
         endpoint: assistantConfig.endpoint,
         apiKey: assistantConfig.apiKey,
         model: assistantConfig.model,
-        messages: validatedPayload.messages,
+        messages,
       });
       logger.debug('Generated AI response delivered', {
         hasAnswer: Boolean(answer),
@@ -85,7 +109,14 @@ export function registerAIChatHandlers(): void {
       licenseService.ensureFeatureEnabled(LICENSE_RUNTIME_FEATURES.AI_ASSISTANT);
       const validatedPayload: AiCompletionPayload = AiCompletionSchema.parse(payload);
       const assistantConfig = await aiConfigService.resolveAssistantConfig();
-      const systemPrompt = validatedPayload.systemPrompt?.trim() || assistantConfig.systemPrompt;
+      const systemPrompt = validatedPayload.systemPrompt?.trim()
+        || assistantConfig.customSystemPrompt
+        || buildAssistantSystemPrompt(
+          assistantConfig.uiLanguage,
+          validatedPayload.context,
+          assistantConfig.writingStyle,
+          assistantConfig.writingScenario,
+        );
       const answer = await generateAIResponse({
         endpoint: assistantConfig.endpoint,
         apiKey: assistantConfig.apiKey,

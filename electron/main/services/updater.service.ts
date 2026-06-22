@@ -2,6 +2,7 @@ import updaterPkg from 'electron-updater';
 const { autoUpdater } = updaterPkg;
 import { CancellationToken } from 'builder-util-runtime';
 import { app, BrowserWindow } from 'electron';
+import { isMicrosoftStoreDistribution } from '../../shared/updater.constants.js';
 import {
   buildUpdateFeedUrl,
   resolveUpdateTargetChannel,
@@ -40,6 +41,12 @@ class UpdaterService {
   async initialize(mainWindow: BrowserWindow): Promise<void> {
     this.mainWindow = mainWindow;
 
+    if (isMicrosoftStoreDistribution()) {
+      this.stopAutoCheck();
+      logger.info('Updater service disabled for Microsoft Store distribution');
+      return;
+    }
+
     try {
       const config = await settingsService.loadConfig();
       this.applyUpdateSource(config.updateChannel);
@@ -54,7 +61,16 @@ class UpdaterService {
     }
   }
 
+  private isStoreManagedUpdates(): boolean {
+    return isMicrosoftStoreDistribution();
+  }
+
   private applyUpdateSource(channel: UpdateChannel): void {
+    if (this.isStoreManagedUpdates()) {
+      logger.debug('Skipping update feed configuration for Microsoft Store distribution');
+      return;
+    }
+
     const targetChannel = resolveUpdateTargetChannel(channel);
     const feedUrl = buildUpdateFeedUrl(channel);
 
@@ -162,6 +178,12 @@ class UpdaterService {
   }
 
   async checkForUpdates(silent = false): Promise<void> {
+    if (this.isStoreManagedUpdates()) {
+      logger.debug('Skipping update check for Microsoft Store distribution');
+      this.sendToRenderer('updater:not-available', { silent, version: app.getVersion() });
+      return;
+    }
+
     if (this.isChecking) {
       logger.warn('Update check already in progress');
       return;
@@ -192,6 +214,11 @@ class UpdaterService {
   }
 
   async downloadUpdate(): Promise<void> {
+    if (this.isStoreManagedUpdates()) {
+      logger.debug('Skipping update download for Microsoft Store distribution');
+      return;
+    }
+
     if (this.downloadCancellationToken) {
       logger.warn('Update download already in progress');
       return;
@@ -230,6 +257,11 @@ class UpdaterService {
   }
 
   quitAndInstall(): void {
+    if (this.isStoreManagedUpdates()) {
+      logger.debug('Skipping update install for Microsoft Store distribution');
+      return;
+    }
+
     logger.debug('Installing update and restarting app');
     autoUpdater.quitAndInstall(false, true);
   }
@@ -262,6 +294,12 @@ class UpdaterService {
   }
 
   async updateConfig(config: { autoCheckUpdates: boolean; updateCheckInterval: number; updateChannel: UpdateChannel }): Promise<void> {
+    if (this.isStoreManagedUpdates()) {
+      logger.debug('Ignoring updater config for Microsoft Store distribution');
+      this.stopAutoCheck();
+      return;
+    }
+
     this.applyUpdateSource(config.updateChannel);
 
     if (config.autoCheckUpdates) {

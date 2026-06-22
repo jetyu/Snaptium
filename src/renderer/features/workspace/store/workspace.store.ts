@@ -381,6 +381,39 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
     },
 
+    async applyNoteContentUpdate(noteId: string, content: string): Promise<boolean> {
+      const note = this.notes.find((candidate) => candidate.id === noteId);
+      if (!note) {
+        logger.warn(`Cannot apply note content update, note not found: ${noteId}`);
+        return false;
+      }
+
+      try {
+        const result = await workspaceService.saveNoteContent(note.id, note.contentId, content);
+        if (!result.success) {
+          return false;
+        }
+
+        note.content = result.content;
+        note.updatedAt = Date.now();
+        this.activeNoteId = note.id;
+        this.activeNotebookId = null;
+        this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
+        this.lastSaveTime = Date.now();
+        this.lastSavedNoteMeta = {
+          noteId: note.id,
+          title: note.title,
+          contentId: note.contentId,
+          savedAt: this.lastSaveTime,
+        };
+        return true;
+      } catch (err: unknown) {
+        const message = getErrorMessage(err);
+        logger.error(`Failed to apply note content update ${noteId}: ${message}`);
+        return false;
+      }
+    },
+
     async forceFlushAutoSave() {
       const promises: Promise<boolean>[] = [];
 

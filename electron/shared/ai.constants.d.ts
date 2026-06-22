@@ -35,15 +35,17 @@ export declare const AI_WRITING_DEFAULTS: {
   readonly AUTO_CONTINUE: boolean;
 };
 
-export declare const AI_TEXT_OPERATION_PROMPTS: {
-  readonly DEFAULT: string;
-  readonly REWRITE: string;
-  readonly EXPAND: string;
-  readonly SIMPLIFY: string;
-  readonly SUMMARIZE: string;
+export declare const AI_PROMPT_PRESETS: {
+  readonly EDITOR_DEFAULT: 'editor-default';
+  readonly EDITOR_REWRITE: 'editor-rewrite';
+  readonly EDITOR_EXPAND: 'editor-expand';
+  readonly EDITOR_SIMPLIFY: 'editor-simplify';
+  readonly EDITOR_SUMMARIZE: 'editor-summarize';
 };
+
+export type AiPromptPreset = (typeof AI_PROMPT_PRESETS)[keyof typeof AI_PROMPT_PRESETS];
 
 export declare function isValidAiWritingStyle(value: unknown): value is AiWritingStyle;
 export declare function isValidAiWritingScenario(value: unknown): value is AiWritingScenario;
 export declare function isValidAiWritingMode(value: unknown): value is AiWritingMode;
-export declare function buildAiAssistantSystemPrompt(style?: AiWritingStyle, scenario?: AiWritingScenario): string;
+export declare function isValidAiPromptPreset(value: unknown): value is AiPromptPreset;

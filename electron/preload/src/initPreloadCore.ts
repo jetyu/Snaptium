@@ -20,7 +20,12 @@ interface WorkspaceContextMenuItemPayload {
 }
 interface WorkspaceContextMenuPayload { nodeId: string; nodeType?: string; isRoot?: boolean; items?: WorkspaceContextMenuItemPayload[]; }
 interface EditorContextMenuPayload { selectedText?: string; hasSelection?: boolean; canPaste?: boolean; }
-interface AiSourceTestConnectionPayload { aiEndpoint: string; aiApiKey: string; aiModel: string; }
+interface AiSourceTestConnectionPayload {
+  aiBaseUrl: string;
+  aiApiKey: string;
+  aiModel: string;
+  capabilities: string[];
+}
 type SyncProviderConfigPayload = JsonObject & { provider: string };
 interface SyncRunPayload { config: JsonObject; trigger: 'manual' | 'timer' | 'save'; }
 interface ShortcutKeybindingPayload { commandId: string; key: string; when?: string | null; }
@@ -37,8 +42,10 @@ const electronAPI = Object.freeze({
   }),
   app: Object.freeze({
     getVersion: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_VERSION),
+    getDistribution: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_DISTRIBUTION),
     getEnvVersion: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_ENV_VERSION),
     getName: () => ipcRenderer.invoke(IPC_CHANNELS.APP_GET_NAME),
+    openStorePage: () => ipcRenderer.invoke(IPC_CHANNELS.APP_OPEN_STORE_PAGE),
   }),
   window: Object.freeze({
     minimize: () => ipcRenderer.invoke(IPC_CHANNELS.WINDOW_MINIMIZE),
@@ -228,6 +235,7 @@ const electronAPI = Object.freeze({
     indexNote: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_NOTE, request),
     rebuildIndex: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_REBUILD_INDEX, request),
     answerQuestion: (payload: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_ANSWER_QUESTION, payload),
+    runTask: (payload: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_RUN_TASK, payload),
     deleteNoteIndex: (noteId: string) => ipcRenderer.invoke(IPC_CHANNELS.RAG_DELETE_NOTE_INDEX, noteId),
     getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_STATUS),
   }),

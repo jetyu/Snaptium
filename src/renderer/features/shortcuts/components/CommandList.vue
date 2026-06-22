@@ -94,7 +94,7 @@ function handleRemoveShortcut(commandId: string, key: string) {
   font-size: 15px;
   font-weight: 600;
   margin: 0 0 10px 0;
-  color: var(--text-color, #333);
+  color: var(--text-primary);
 }
 
 .command-items {
@@ -109,14 +109,16 @@ function handleRemoveShortcut(commandId: string, key: string) {
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
-  background-color: var(--item-bg, #f9f9f9);
-  border-radius: 6px;
-  transition: background-color 0.2s;
+  background-color: var(--surface-subtle);
+  border: 1px solid var(--border-muted);
+  border-radius: 8px;
+  transition: background-color 0.2s, border-color 0.2s;
   min-height: 40px;
 }
 
 .command-item:hover {
-  background-color: var(--item-hover-bg, #f0f0f0);
+  background-color: var(--surface-hover);
+  border-color: var(--border-strong);
 }
 
 .command-info {
@@ -126,7 +128,7 @@ function handleRemoveShortcut(commandId: string, key: string) {
 
 .command-label {
   font-size: 0.875rem;
-  color: var(--text-color, #333);
+  color: var(--text-primary);
   font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -146,11 +148,11 @@ function handleRemoveShortcut(commandId: string, key: string) {
   align-items: center;
   gap: 4px;
   padding: 3px 6px;
-  background-color: var(--badge-bg, #e0e0e0);
+  background-color: var(--surface-soft);
   border-radius: 4px;
   font-family: monospace;
   font-size: 11px;
-  color: var(--text-color, #333);
+  color: var(--text-primary);
 }
 
 .remove-shortcut {
@@ -159,7 +161,7 @@ function handleRemoveShortcut(commandId: string, key: string) {
   height: 14px;
   border: none;
   background: transparent;
-  color: var(--text-secondary, #999);
+  color: var(--text-secondary);
   font-size: 14px;
   line-height: 1;
   cursor: pointer;
@@ -167,22 +169,22 @@ function handleRemoveShortcut(commandId: string, key: string) {
 }
 
 .remove-shortcut:hover {
-  color: var(--error-color, #dc3545);
+  color: var(--status-danger-text);
 }
 
 .add-shortcut-button {
   padding: 3px 10px;
-  border: 1px dashed var(--border-color, #ddd);
+  border: 1px dashed var(--input-border);
   background: transparent;
   border-radius: 4px;
   font-size: 13px;
-  color: var(--text-secondary, #999);
+  color: var(--text-secondary);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .add-shortcut-button:hover {
-  border-color: #b6c0cc;
-  color: #111827;
+  border-color: var(--input-border-focus);
+  color: var(--text-primary);
 }
 </style>
