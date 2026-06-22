@@ -121,6 +121,23 @@
       "icon": "electron/assets/logo/app-logo.ico",
       "verifyUpdateCodeSignature": false
     },
+    "appx": {
+      "languages": [
+        "en-US",
+        "zh-CN",
+        "zh-HK",
+        "zh-TW",
+        "ja-JP",
+        "ko-KR",
+        "fr-FR",
+        "de-DE",
+        "es-ES",
+        "it-IT",
+        "pt-BR",
+        "tr-TR",
+        "id-ID"
+      ]
+    },
     "mac": {
       "target": [
         {
