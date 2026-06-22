@@ -61,7 +61,7 @@
     "@vitest/coverage-v8": "^4.1.9",
     "@vue/eslint-config-typescript": "^14.8.0",
     "concurrently": "^10.0.3",
-    "dompurify": "^3.4.10",
+    "dompurify": "^3.4.11",
     "electron": "^41.7.2",
     "electron-builder": "^26.15.3",
     "eslint": "^10.5.0",
