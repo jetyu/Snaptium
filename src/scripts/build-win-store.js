@@ -1,11 +1,12 @@
 import { spawnSync } from 'node:child_process';
+import { rmSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const DEFAULT_STORE_CONFIG = {
   STORE_IDENTITY_NAME: 'jetyu.Snaptium',
   STORE_PUBLISHER: 'CN=35204487-FFB3-46AF-923C-85C032C655ED',
-  STORE_PUBLISHER_DISPLAY_NAME: 'jetyu',
+  STORE_PUBLISHER_DISPLAY_NAME: 'Snaptium Team',
   STORE_DISPLAY_NAME: 'Snaptium',
   STORE_APPLICATION_ID: 'jetyu.Snaptium'
 };
@@ -18,6 +19,7 @@ const command = resolve(
   `../../node_modules/.bin/electron-builder${process.platform === 'win32' ? '.cmd' : ''}`
 );
 const outputDir = 'dist/store';
+const staleUnpackedTmpDir = `${outputDir}/win-unpacked.tmp`;
 const env = {
   ...DEFAULT_STORE_CONFIG,
   ...process.env,
@@ -35,6 +37,14 @@ if (missingEnvVars.length > 0) {
 
   console.error('');
   console.error('Set these values from Partner Center before running this script.');
+  process.exit(1);
+}
+
+try {
+  rmSync(staleUnpackedTmpDir, { recursive: true, force: true });
+} catch (error) {
+  console.error(`Failed to clean stale temporary directory: ${staleUnpackedTmpDir}`);
+  console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 }
 
