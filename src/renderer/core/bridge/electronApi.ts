@@ -24,9 +24,10 @@ export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };
 
 export interface AiSourceConfig {
-  aiEndpoint: string;
+  aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
+  capabilities: string[];
 }
 
 export interface AiSourceTestResult {
@@ -155,10 +156,14 @@ export interface AiChatMessage {
 
 export interface AiChatGeneratePayload {
   messages: AiChatMessage[];
+  // Optional explicit override for advanced callers. Default system prompts are built in main.
+  systemPrompt?: string;
+  promptPreset?: import('@shared/ai.constants').AiPromptPreset;
 }
 
 export interface AiChatGenerateCompletionPayload {
   context: string;
+  // Optional explicit override for advanced callers. Default system prompts are built in main.
   systemPrompt?: string;
 }
 
@@ -198,6 +203,8 @@ export interface WallpaperResult {
   refreshedAt: number;
   error?: string;
 }
+
+export type AppDistribution = import('@shared/updater.constants').AppDistribution;
 
 export interface UpdaterUpdateInfoPayload {
   version: string;
@@ -300,12 +307,100 @@ export interface RagAskQuestionPayload {
   query: string;
 }
 
+export interface RagRunTaskPayload {
+  task: string;
+  writeMode?: KnowledgeAgentWriteMode;
+}
+
 export interface KnowledgeAnswerResult {
   success: boolean;
   answer?: string;
   sources: RagSearchResult[];
   error?: string;
   usedSearchFallback: boolean;
+  insufficientEvidence?: boolean;
+}
+
+export interface KnowledgeAgentStep {
+  title: string;
+  detail: string;
+  status: 'completed' | 'failed';
+}
+
+export interface KnowledgeAgentTraceEvent {
+  id: string;
+  type: 'model-response' | 'tool-call' | 'tool-result' | 'tool-error';
+  title: string;
+  detail: string;
+  status: 'completed' | 'failed';
+  at: number;
+  durationMs?: number;
+  toolName?: string;
+}
+
+export interface KnowledgeAgentCreateNoteProposal {
+  id: string;
+  type: 'create-note';
+  title: string;
+  content: string;
+  reason: string;
+}
+
+export interface KnowledgeAgentUpdateNoteProposal {
+  id: string;
+  type: 'update-note';
+  noteId: string;
+  noteTitle: string;
+  content: string;
+  reason: string;
+}
+
+export type KnowledgeAgentWriteProposal =
+  | KnowledgeAgentCreateNoteProposal
+  | KnowledgeAgentUpdateNoteProposal;
+
+export type KnowledgeAgentWriteMode = 'confirm' | 'auto';
+
+export interface KnowledgeAgentExecutedCreateNote {
+  id: string;
+  type: 'create-note';
+  noteId: string;
+  noteTitle: string;
+  content: string;
+  reason: string;
+}
+
+export interface KnowledgeAgentExecutedUpdateNote {
+  id: string;
+  type: 'update-note';
+  noteId: string;
+  noteTitle: string;
+  content: string;
+  reason: string;
+}
+
+export type KnowledgeAgentExecutedWrite =
+  | KnowledgeAgentExecutedCreateNote
+  | KnowledgeAgentExecutedUpdateNote;
+
+export interface KnowledgeAgentTaskResult {
+  success: boolean;
+  finalAnswer?: string;
+  steps: KnowledgeAgentStep[];
+  traceEvents: KnowledgeAgentTraceEvent[];
+  sources: RagSearchResult[];
+  writeMode: KnowledgeAgentWriteMode;
+  pendingWrites: KnowledgeAgentWriteProposal[];
+  executedWrites: KnowledgeAgentExecutedWrite[];
+  stopReason?:
+    | 'completed'
+    | 'insufficient-evidence'
+    | 'tool-call-limit'
+    | 'iteration-limit'
+    | 'runtime-limit'
+    | 'tool-failure-limit'
+    | 'weak-search-limit';
+  error?: string;
 }
 
 export interface RagSearchResult {
@@ -471,8 +566,10 @@ export const electronApi = {
       return api;
     },
     getVersion: () => electronApi.app.getApi().getVersion(),
+    getDistribution: () => electronApi.app.getApi().getDistribution(),
     getName: () => electronApi.app.getApi().getName(),
     getEnvVersion: () => electronApi.app.getApi().getEnvVersion(),
+    openStorePage: () => electronApi.app.getApi().openStorePage(),
   },
 
   window: {
@@ -739,6 +836,9 @@ export const electronApi = {
     },
     answerQuestion: (payload: RagAskQuestionPayload): Promise<KnowledgeAnswerResult> => {
       return electronApi.rag.getApi().answerQuestion(payload);
+    },
+    runTask: (payload: RagRunTaskPayload): Promise<KnowledgeAgentTaskResult> => {
+      return electronApi.rag.getApi().runTask(payload);
     },
     deleteNoteIndex: (noteId: string) => {
       return electronApi.rag.getApi().deleteNoteIndex(noteId);

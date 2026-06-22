@@ -36,6 +36,7 @@ export function useWorkspace() {
     addTagToActiveNote: store.addTagToActiveNote,
     removeTagFromActiveNote: store.removeTagFromActiveNote,
     updateActiveContent: store.updateActiveContent,
+    applyNoteContentUpdate: store.applyNoteContentUpdate,
     toggleNodeLock: store.toggleNodeLock,
     updateNotebookIconColor: store.updateNotebookIconColor,
     toggleNodeStar: store.toggleNodeStar,

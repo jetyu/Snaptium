@@ -30,10 +30,10 @@ import { settingsService } from '../services/settings.service';
 export interface AISource {
   id: string;
   name: string;
-  endpoint: string;
+  baseUrl: string;
   apiKey: string;
   aiModel: string;
-  capabilities?: string[];
+  capabilities: string[];
 }
 
 export interface AIAssistantSettings {
@@ -53,6 +53,7 @@ export interface RAGSettings {
   embeddingModel: string;
   ragChatSourceId: string;
   ragChatModel: string;
+  rerankerSourceId: string;
   chunkSize: number;
   chunkOverlap: number;
   topK: number;
@@ -208,6 +209,10 @@ export const useSettingsStore = defineStore('settings', () => {
   const config = ref<AppSettings>(createDefaultConfig());
 
   const isLoading = ref(false);
+
+  const sourceSupportsCapability = (source: AISource, capability: string): boolean => {
+    return source.capabilities.length === 0 || source.capabilities.includes(capability);
+  };
 
   /**
    * Load settings from persistent storage (via IPC or LocalStorage)
@@ -442,6 +447,17 @@ export const useSettingsStore = defineStore('settings', () => {
     if (config.value.aiAssistant.sourceId === id) {
       config.value.aiAssistant.sourceId = '';
     }
+    if (config.value.rag.embeddingSourceId === id) {
+      config.value.rag.embeddingSourceId = '';
+      config.value.rag.embeddingModel = '';
+    }
+    if (config.value.rag.ragChatSourceId === id) {
+      config.value.rag.ragChatSourceId = '';
+      config.value.rag.ragChatModel = '';
+    }
+    if (config.value.rag.rerankerSourceId === id) {
+      config.value.rag.rerankerSourceId = '';
+    }
     await saveSettings({});
   };
 
@@ -452,6 +468,20 @@ export const useSettingsStore = defineStore('settings', () => {
     const source = config.value.aiSources.find((s) => s.id === id);
     if (source) {
       Object.assign(source, updates);
+      if (config.value.aiAssistant.sourceId === id && !sourceSupportsCapability(source, 'chat')) {
+        config.value.aiAssistant.sourceId = '';
+      }
+      if (config.value.rag.embeddingSourceId === id && !sourceSupportsCapability(source, 'embedding')) {
+        config.value.rag.embeddingSourceId = '';
+        config.value.rag.embeddingModel = '';
+      }
+      if (config.value.rag.ragChatSourceId === id && !sourceSupportsCapability(source, 'chat')) {
+        config.value.rag.ragChatSourceId = '';
+        config.value.rag.ragChatModel = '';
+      }
+      if (config.value.rag.rerankerSourceId === id && !sourceSupportsCapability(source, 'reranker')) {
+        config.value.rag.rerankerSourceId = '';
+      }
       await saveSettings({});
     }
   };
@@ -460,23 +490,26 @@ export const useSettingsStore = defineStore('settings', () => {
    * Test AI connection with provided or saved config
    */
   const testConnection = async (testConfig?: {
-    aiEndpoint: string;
+    aiBaseUrl: string;
     aiApiKey: string;
     aiModel: string;
+    capabilities: string[];
   }): Promise<{ success: boolean; message?: string }> => {
     try {
       const payload = testConfig || {
-        aiEndpoint: '',
+        aiBaseUrl: '',
         aiApiKey: '',
         aiModel: config.value.aiAssistant.model,
+        capabilities: ['chat'],
       };
 
       // If no config provided, try to find the linked source
       if (!testConfig && config.value.aiAssistant.sourceId) {
         const source = config.value.aiSources.find((s) => s.id === config.value.aiAssistant.sourceId);
         if (source) {
-          payload.aiEndpoint = source.endpoint;
+          payload.aiBaseUrl = source.baseUrl;
           payload.aiApiKey = source.apiKey;
+          payload.capabilities = [...source.capabilities];
         }
       }
 

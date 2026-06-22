@@ -10,6 +10,10 @@ export function registerAppEnvInfoIpcHandlers() {
     logger.debug('Getting app version...');
     return appEnvInfoService.getAppVersion();
   });
+  ipcMain.handle(IPC_CHANNELS.APP_GET_DISTRIBUTION, () => {
+    logger.debug('Getting app distribution...');
+    return appEnvInfoService.getDistribution();
+  });
   ipcMain.handle(IPC_CHANNELS.APP_GET_ENV_VERSION, () => {
     logger.debug('Getting environment version...');
     return appEnvInfoService.getEnvVersion();
@@ -17,5 +21,9 @@ export function registerAppEnvInfoIpcHandlers() {
   ipcMain.handle(IPC_CHANNELS.APP_GET_NAME, () => {
     logger.debug('Getting app name...');
     return appEnvInfoService.getAppName();
+  });
+  ipcMain.handle(IPC_CHANNELS.APP_OPEN_STORE_PAGE, async () => {
+    logger.debug('Opening Microsoft Store product page...');
+    await appEnvInfoService.openStorePage();
   });
 }

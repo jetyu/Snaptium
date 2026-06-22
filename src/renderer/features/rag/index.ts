@@ -17,6 +17,7 @@ export { useRAGConfig } from './composables/useRAGConfig';
 export { useRAGIndex } from './composables/useRAGIndex';
 export { useRAGInitialization } from './composables/useRAGInitialization';
 export { useRAGChat } from './composables/useRAGChat';
+export { useRAGAgentTask } from './composables/useRAGAgentTask';
 
 // Constants
 export {

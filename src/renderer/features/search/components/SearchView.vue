@@ -3,16 +3,16 @@
     <header class="search-view__header">
       <div class="search-view__title-wrap">
         <span class="search-view__title-icon">
-          <IconDatabaseSearch :size="18" />
+          <IconSubtitlesAi :size="18" />
         </span>
         <h1 class="search-view__title">{{ $t('search.knowledgeSearch') }}</h1>
       </div>
     </header>
 
-    <main class="search-view__content">
-      <aside class="search-view__history-pane">
+    <main ref="contentRef" class="search-view__content" :class="{ 'is-resizing-pane': isResizingPane }">
+      <aside class="search-view__history-pane" :style="historyPaneStyle">
         <header class="search-view__pane-header">
-          <h2>{{ $t('search.knowledgeHistory') }}</h2>
+          <h2>{{ $t('search.recentConversations') }}</h2>
           <button type="button" class="search-view__new-thread icon-action-button" :disabled="isBusy"
             :title="$t('search.newKnowledgeChat')" @click="startNewThread">
             <IconPlus :size="14" />
@@ -38,6 +38,8 @@
         </div>
       </aside>
 
+      <div class="search-view__pane-divider" @pointerdown="handleDividerPointerDown"></div>
+
       <section class="search-view__answer-pane">
         <header class="search-view__pane-header">
           <h2>{{ $t('label.aiRAGSearch') }}</h2>
@@ -51,24 +53,33 @@
             <p class="search-view__status-text">{{ knowledgeUnavailableReason }}</p>
           </div>
           <div v-else-if="!hasChatMessages" class="search-view__status">
+            <IconMessageChatbot :size="72" class="search-view__status-icon" />
             <p class="search-view__status-text">{{ $t('search.semanticHint') }}</p>
           </div>
           <div v-else class="search-view__chat-inner">
             <article v-for="question in chatQuestions" :key="question.id" class="search-view__chat-turn"
               :class="{ 'is-active': selectedQuestion?.id === question.id }" :data-question-id="question.id">
               <div class="search-view__message search-view__message--user">
-                <div class="search-view__user-bubble">
-                  {{ question.query }}
+                <div class="search-view__user-message">
+                  <div class="search-view__user-bubble">
+                    {{ question.query }}
+                  </div>
+                  <span v-if="formatQuestionAskedAt(question)" class="search-view__message-timestamp">
+                    {{ formatQuestionAskedAt(question) }}
+                  </span>
                 </div>
               </div>
               <div class="search-view__message search-view__message--assistant">
                 <span class="search-view__assistant-avatar">
-                  <IconDatabaseSearch :size="15" />
+                  <IconSubtitlesAi :size="15" />
                 </span>
                 <div class="search-view__assistant-card">
+                  <span v-if="formatQuestionAnsweredAt(question)" class="search-view__message-timestamp">
+                    {{ formatQuestionAnsweredAt(question) }}
+                  </span>
                   <div v-if="isGeneratingQuestion(question)" class="search-view__thinking">
                     <div class="search-view__spinner"></div>
-                    <span>{{ $t('label.aiRAGThinking') }}</span>
+                    <span>{{ getQuestionThinkingLabel(question) }}</span>
                   </div>
                   <p v-else-if="getQuestionError(question)"
                     class="search-view__status-text search-view__status-text--error">
@@ -78,9 +89,17 @@
                     <div v-if="shouldDisplayFallbackNotice(question)" class="search-view__fallback-notice">
                       {{ $t('message.rag.noChatModel') }}
                     </div>
-                     <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
-                       v-html="renderQuestionAnswer(question)"></div>
+                    <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
+                      v-html="renderQuestionAnswer(question)"></div>
                     <p v-else class="search-view__status-text">{{ $t('search.noResultsSemantic') }}</p>
+                    <div v-if="canSaveQuestionAsNote(question)" class="search-view__answer-actions">
+                      <button type="button" class="search-view__save-note-button icon-action-button"
+                        :disabled="Boolean(savingSummaryActionId)" @click="saveQuestionAsNote(question)">
+                        <IconPlus :size="14" />
+                        <span>{{ savingSummaryActionId === `${question.id}:create` ? $t('search.agentTaskApplying') :
+                          $t('search.agentTaskSaveAsNote') }}</span>
+                      </button>
+                    </div>
                     <div v-if="getQuestionSources(question).length > 0" class="search-view__sources">
                       <h3>{{ $t('search.knowledgeSources') }}</h3>
                       <button v-for="source in getQuestionSources(question)" :key="source.noteId" type="button"
@@ -91,6 +110,69 @@
                         </span>
                       </button>
                     </div>
+                    <div v-if="getAgentSteps(question).length > 0" class="search-view__agent-steps">
+                      <h3>{{ $t('search.agentTaskSteps') }}</h3>
+                      <ol>
+                        <li v-for="(step, index) in getAgentSteps(question)" :key="`${question.id}:step:${index}`"
+                          :class="`is-${step.status}`">
+                          <span>{{ formatAgentStepTitle(step) }}</span>
+                          <small>{{ formatAgentStepDetail(step) }}</small>
+                        </li>
+                      </ol>
+                    </div>
+                    <div v-if="getAgentTraceEvents(question).length > 0" class="search-view__agent-trace">
+                      <h3>{{ $t('search.agentTaskTrace') }}</h3>
+                      <ol>
+                        <li v-for="event in getAgentTraceEvents(question)" :key="event.id"
+                          :class="`is-${event.status}`">
+                          <span>{{ formatAgentTraceTitle(event) }}</span>
+                          <small>{{ formatAgentTraceDetail(event) }}</small>
+                        </li>
+                      </ol>
+                    </div>
+                    <div v-if="getVisibleWriteProposals(question).length > 0" class="search-view__agent-writes">
+                      <h3>{{ $t('search.agentTaskWriteProposal') }}</h3>
+                      <article v-for="proposal in getVisibleWriteProposals(question)" :key="proposal.id"
+                        class="search-view__agent-write-card">
+                        <div class="search-view__agent-write-main">
+                          <strong>{{ getWriteProposalTitle(proposal) }}</strong>
+                          <p>{{ proposal.reason }}</p>
+                          <pre>{{ getWriteProposalPreview(proposal) }}</pre>
+                        </div>
+                        <div class="search-view__agent-write-actions">
+                          <button type="button" class="search-view__agent-write-apply icon-action-button"
+                            :disabled="Boolean(applyingWriteProposalId)"
+                            @click="applyWriteProposal(question, proposal)">
+                            <IconCheck :size="14" />
+                            <span>{{ applyingWriteProposalId === proposal.id ? $t('search.agentTaskApplying') :
+                              getWriteProposalActionLabel(proposal) }}</span>
+                          </button>
+                          <button type="button" class="search-view__agent-write-dismiss"
+                            :disabled="Boolean(applyingWriteProposalId)"
+                            @click="dismissWriteProposal(question, proposal.id)">
+                            {{ $t('search.agentTaskDismissWrite') }}
+                          </button>
+                        </div>
+                      </article>
+                    </div>
+                    <div v-if="getExecutedWrites(question).length > 0" class="search-view__agent-writes">
+                      <h3>{{ $t('search.agentTaskExecutedWrites') }}</h3>
+                      <article v-for="write in getExecutedWrites(question)" :key="write.id"
+                        class="search-view__agent-write-card search-view__agent-write-card--executed">
+                        <div class="search-view__agent-write-main">
+                          <strong>{{ write.noteTitle }}</strong>
+                          <p>{{ write.reason }}</p>
+                          <pre>{{ getExecutedWritePreview(write) }}</pre>
+                        </div>
+                        <div class="search-view__agent-write-actions">
+                          <button type="button" class="search-view__agent-write-apply icon-action-button"
+                            @click="openExecutedWrite(write)">
+                            <IconFileText :size="14" />
+                            <span>{{ $t('search.agentTaskOpenExecutedWrite') }}</span>
+                          </button>
+                        </div>
+                      </article>
+                    </div>
                   </template>
                 </div>
               </div>
@@ -100,18 +182,49 @@
 
         <section class="search-view__query">
           <div class="search-view__input-shell" :class="{ 'is-disabled': !canUseKnowledgeSearch }">
-            <textarea ref="searchInput" v-model="searchQuery" class="search-view__input" rows="1"
-              :disabled="!canUseKnowledgeSearch" :placeholder="$t('search.semanticPlaceholder')" @input="resizeComposer"
-              @keydown="handleComposerKeydown" />
-            <button v-if="searchQuery" type="button" class="search-view__icon-button" :title="$t('button.clear')"
-              @click="clearQuery">
-              <IconX :size="14" />
-            </button>
-            <button type="button" class="search-view__ask-button icon-action-button" :disabled="!canAsk"
-              :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason"
-              @click="handleAsk">
-              <span>{{ $t('search.knowledgeAskShortcut') }}</span>
-            </button>
+            <div class="search-view__input-main">
+              <textarea ref="searchInput" v-model="searchQuery" class="search-view__input" rows="1"
+                :disabled="!canUseKnowledgeSearch" :placeholder="composerPlaceholder" @input="resizeComposer"
+                @keydown="handleComposerKeydown" />
+              <button v-if="searchQuery" type="button" class="search-view__clear-button" :title="$t('button.clear')"
+                @click="clearQuery">
+                <IconX :size="14" />
+              </button>
+            </div>
+            <div class="search-view__input-toolbar">
+              <div class="search-view__toolbar-left">
+                <div class="search-view__mode-selector">
+                  <button type="button" class="search-view__mode-button" :disabled="isBusy"
+                    :aria-label="$t('search.inputModeLabel')" :aria-expanded="isModeMenuOpen"
+                    @click.stop="toggleModeMenu">
+                    <IconTextScanAi v-if="inputMode === 'agent-task'" :size="14" />
+                    <IconMessage2Bolt v-else :size="14" />
+                    <span>{{ $t(activeInputMode.labelKey) }}</span>
+                    <IconChevronDown :size="13" />
+                  </button>
+                  <div v-if="isModeMenuOpen" class="search-view__mode-menu">
+                    <button v-for="mode in inputModes" :key="mode.id" type="button" class="search-view__mode-option"
+                      :class="{ 'is-active': inputMode === mode.id }" @click="selectInputMode(mode.id)">
+                      <span>{{ $t(mode.labelKey) }}</span>
+                      <small>{{ $t(mode.descriptionKey) }}</small>
+                    </button>
+                  </div>
+                </div>
+                <button v-if="inputMode === 'agent-task'" type="button" class="search-view__execution-button"
+                  :disabled="isBusy"
+                  :title="$t(agentWriteMode === 'auto' ? 'search.agentWriteModeAutoDescription' : 'search.agentWriteModeConfirmDescription')"
+                  @click="toggleAgentWriteMode">
+                  {{ $t(agentWriteMode === 'auto' ? 'search.agentWriteModeAuto' : 'search.agentWriteModeConfirm') }}
+                </button>
+              </div>
+              <div class="search-view__toolbar-right">
+                <button type="button" class="search-view__ask-button icon-action-button" :disabled="!canAsk"
+                  :title="canUseKnowledgeSearch ? $t('search.knowledgeAsk') : knowledgeUnavailableReason"
+                  @click="handleAsk">
+                  <IconSend :size="15" />
+                </button>
+              </div>
+            </div>
           </div>
         </section>
       </section>
@@ -123,19 +236,35 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { storeToRefs } from 'pinia';
-import { IconX, IconDatabaseSearch, IconTrash, IconFileText, IconPlus } from '@tabler/icons-vue';
+import { IconX, IconMessage2Bolt, IconSubtitlesAi, IconTrash, IconFileText, IconPlus, IconTextScanAi, IconChevronDown, IconCheck, IconSend, IconMessageChatbot } from '@tabler/icons-vue';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { renderMarkdownEnhancements } from '@renderer/core/markdown/markdownEnhancements';
-import { useRAGConfig, useRAGChat } from '@renderer/features/rag';
+import { useRAGConfig, useRAGChat, useRAGAgentTask } from '@renderer/features/rag';
 import { useLicenseGate } from '@renderer/features/license';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { useWorkbenchStore } from '@renderer/features/workbench';
 import { useWorkspace } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
-import type { RagSearchResult } from '@renderer/core/bridge/electronApi';
+import { useSettingsStore } from '@renderer/features/settings';
+import type {
+  KnowledgeAgentExecutedWrite,
+  KnowledgeAgentStep,
+  KnowledgeAgentTraceEvent,
+  KnowledgeAgentWriteMode,
+  KnowledgeAgentWriteProposal,
+  RagSearchResult,
+} from '@renderer/core/bridge/electronApi';
 import type { WorkbenchQuestionEntry, WorkbenchQuestionSource } from '@renderer/features/workbench/constants/workbench.constants';
 import { useSearch } from '../composables/useSearch';
+
+type KnowledgeInputMode = 'qa' | 'agent-task';
+
+interface InputModeOption {
+  id: KnowledgeInputMode;
+  labelKey: string;
+  descriptionKey: string;
+}
 
 interface QuestionThread {
   id: string;
@@ -147,37 +276,130 @@ interface QuestionThread {
   isDraft: boolean;
 }
 
+interface AgentTaskMetadata {
+  writeMode: KnowledgeAgentWriteMode;
+  steps: KnowledgeAgentStep[];
+  traceEvents: KnowledgeAgentTraceEvent[];
+  pendingWrites: KnowledgeAgentWriteProposal[];
+  executedWrites: KnowledgeAgentExecutedWrite[];
+  dismissedWriteIds: string[];
+  createdWriteIds: string[];
+}
+
 const searchViewLogger = createLogger('SearchView');
 const { t } = useI18n();
 const workbenchStore = useWorkbenchStore();
 const { recentQuestions } = storeToRefs(workbenchStore);
 const appShellStore = useAppShellStore();
-const { selectNote } = useWorkspace();
+const settingsStore = useSettingsStore();
+const { config } = storeToRefs(settingsStore);
+const { selectNote, createNote, initializeWorkspace, applyNoteContentUpdate } = useWorkspace();
 const { searchViewRequest } = useSearch();
 const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
 const { askQuestion, isGenerating: isAIGenerating, usedSearchFallback } = useRAGChat();
+const { runTask, isRunning: isAgentRunning } = useRAGAgentTask();
 const ragLicenseGate = useLicenseGate('rag');
 
+const inputModes: InputModeOption[] = [
+  {
+    id: 'qa',
+    labelKey: 'search.inputModeQa',
+    descriptionKey: 'search.inputModeQaDescription',
+  },
+  {
+    id: 'agent-task',
+    labelKey: 'search.inputModeAgentTask',
+    descriptionKey: 'search.inputModeAgentTaskDescription',
+  },
+];
+
+const inputMode = ref<KnowledgeInputMode>('qa');
+const isModeMenuOpen = ref(false);
 const searchQuery = ref('');
 const semanticResults = ref<RagSearchResult[]>([]);
 const isSearching = ref(false);
 const searchError = ref('');
 const searchInput = ref<HTMLTextAreaElement | null>(null);
 const messageListRef = ref<HTMLElement | null>(null);
+const contentRef = ref<HTMLElement | null>(null);
 const selectedQuestion = ref<WorkbenchQuestionEntry | null>(null);
 const activeThreadId = ref<string | null>(null);
 const draftThreadId = ref<string | null>(null);
 const draftThreadCreatedAt = ref(0);
 const generatingQuestionId = ref('');
+const generatingQuestionMode = ref<KnowledgeInputMode | null>(null);
 const activeFallbackQuestionId = ref('');
 const activeErrorQuestionId = ref('');
 const activeErrorMessage = ref('');
+const questionModes = ref<Record<string, KnowledgeInputMode>>({});
+const agentTaskMetadata = ref<Record<string, AgentTaskMetadata>>({});
+const applyingWriteProposalId = ref('');
+const savingSummaryActionId = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 let markdownEnhancementRunId = 0;
 
+const HISTORY_PANE_DEFAULT_WIDTH = 300;
+const HISTORY_PANE_MIN_WIDTH = 220;
+const HISTORY_PANE_MAX_WIDTH = 480;
+const ANSWER_PANE_MIN_WIDTH = 400;
+
+const historyPaneWidth = ref(HISTORY_PANE_DEFAULT_WIDTH);
+const isResizingPane = ref(false);
+
+const historyPaneStyle = computed(() => {
+  const w = `${historyPaneWidth.value}px`;
+  return { width: w, minWidth: w, maxWidth: w, flex: `0 0 ${w}` };
+});
+
+function clampHistoryPaneWidth(): void {
+  const container = contentRef.value;
+  if (!container) return;
+  const maxW = Math.min(HISTORY_PANE_MAX_WIDTH, container.clientWidth - ANSWER_PANE_MIN_WIDTH);
+  historyPaneWidth.value = Math.round(
+    Math.max(HISTORY_PANE_MIN_WIDTH, Math.min(historyPaneWidth.value, maxW)),
+  );
+}
+
+function handlePaneResizeMove(event: PointerEvent): void {
+  const container = contentRef.value;
+  if (!container) return;
+  const rect = container.getBoundingClientRect();
+  const maxW = Math.min(HISTORY_PANE_MAX_WIDTH, rect.width - ANSWER_PANE_MIN_WIDTH);
+  historyPaneWidth.value = Math.round(
+    Math.max(HISTORY_PANE_MIN_WIDTH, Math.min(event.clientX - rect.left, maxW)),
+  );
+}
+
+function handlePaneResizeEnd(): void {
+  isResizingPane.value = false;
+  document.body.style.cursor = '';
+  document.body.style.userSelect = '';
+  window.removeEventListener('pointermove', handlePaneResizeMove);
+  window.removeEventListener('pointerup', handlePaneResizeEnd);
+  window.removeEventListener('pointercancel', handlePaneResizeEnd);
+}
+
+function handleDividerPointerDown(event: PointerEvent): void {
+  if (!event.isPrimary || event.button !== 0) return;
+  event.preventDefault();
+  isResizingPane.value = true;
+  document.body.style.cursor = 'col-resize';
+  document.body.style.userSelect = 'none';
+  window.addEventListener('pointermove', handlePaneResizeMove);
+  window.addEventListener('pointerup', handlePaneResizeEnd);
+  window.addEventListener('pointercancel', handlePaneResizeEnd);
+}
+
 const canUseKnowledgeSearch = computed(() => ragLicenseGate.allowed.value && ragEnabled.value && ragConfigured.value);
-const isBusy = computed(() => isSearching.value || isAIGenerating.value);
+const isBusy = computed(() => isSearching.value || isAIGenerating.value || isAgentRunning.value);
 const canAsk = computed(() => canUseKnowledgeSearch.value && Boolean(searchQuery.value.trim()) && !isBusy.value);
+const activeInputMode = computed(() => inputModes.find((mode) => mode.id === inputMode.value) ?? inputModes[0]);
+const agentWriteMode = computed<KnowledgeAgentWriteMode>(() => config.value.workbench.agentWriteMode ?? 'confirm');
+const composerPlaceholder = computed(() => (
+  inputMode.value === 'agent-task'
+    ? t('search.agentTaskPlaceholder')
+    : t('search.semanticPlaceholder')
+));
 const knowledgeUnavailableReason = computed(() => {
   if (!ragLicenseGate.allowed.value) {
     return t('license.gate.rag.title');
@@ -267,6 +489,20 @@ function focusSearchInput(): void {
   });
 }
 
+function toggleModeMenu(): void {
+  if (isBusy.value) {
+    return;
+  }
+
+  isModeMenuOpen.value = !isModeMenuOpen.value;
+}
+
+function selectInputMode(mode: KnowledgeInputMode): void {
+  inputMode.value = mode;
+  isModeMenuOpen.value = false;
+  focusSearchInput();
+}
+
 function createThreadId(askedAt: number): string {
   return `${askedAt}:thread`;
 }
@@ -332,6 +568,7 @@ function resetAnswer(): void {
   usedSearchFallback.value = false;
   selectedQuestion.value = null;
   generatingQuestionId.value = '';
+  generatingQuestionMode.value = null;
   activeFallbackQuestionId.value = '';
   activeErrorQuestionId.value = '';
   activeErrorMessage.value = '';
@@ -372,6 +609,7 @@ function handleComposerKeydown(event: KeyboardEvent): void {
 
 function handleAsk(): void {
   clearPendingSearch();
+  isModeMenuOpen.value = false;
 
   const query = searchQuery.value.trim();
   if (!query) {
@@ -391,6 +629,11 @@ function handleAsk(): void {
   void nextTick(resizeComposer);
 
   searchTimeout = setTimeout(() => {
+    if (inputMode.value === 'agent-task') {
+      void runAgentTaskQuestion(query);
+      return;
+    }
+
     void askKnowledgeQuestion(query);
   }, 0);
 }
@@ -415,13 +658,20 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
     const askedAt = Date.now();
     const threadId = activeThreadId.value ?? createThreadId(askedAt);
     activeThreadId.value = threadId;
-    draftQuestion = await workbenchStore.recordQuestion({ query, threadId, askedAt });
+    draftQuestion = await workbenchStore.recordQuestion({ query, threadId, mode: 'qa', askedAt });
     if (draftThreadId.value === threadId) {
       draftThreadId.value = null;
       draftThreadCreatedAt.value = 0;
     }
     selectedQuestion.value = draftQuestion;
     generatingQuestionId.value = draftQuestion?.id ?? '';
+    generatingQuestionMode.value = 'qa';
+    if (draftQuestion) {
+      questionModes.value = {
+        ...questionModes.value,
+        [draftQuestion.id]: 'qa',
+      };
+    }
     if (draftQuestion) {
       scrollQuestionIntoView(draftQuestion.id);
     } else {
@@ -453,11 +703,19 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       query,
       threadId,
       askedAt,
+      answeredAt: generatedAnswer.trim() ? Date.now() : undefined,
       answer: generatedAnswer,
       sourceNoteIds: Array.from(new Set(semanticResults.value.map((result) => result.chunk.noteId))),
       sources: currentSources.value,
+      mode: 'qa',
     });
     selectedQuestion.value = recordedQuestion;
+    if (recordedQuestion) {
+      questionModes.value = {
+        ...questionModes.value,
+        [recordedQuestion.id]: 'qa',
+      };
+    }
     if (recordedQuestion) {
       scrollQuestionIntoView(recordedQuestion.id);
     }
@@ -474,6 +732,152 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
   } finally {
     isSearching.value = false;
     generatingQuestionId.value = '';
+    generatingQuestionMode.value = null;
+    focusSearchInput();
+  }
+}
+
+function setAgentTaskMetadata(questionId: string, metadata: AgentTaskMetadata): void {
+  agentTaskMetadata.value = {
+    ...agentTaskMetadata.value,
+    [questionId]: metadata,
+  };
+}
+
+async function toggleAgentWriteMode(): Promise<void> {
+  const nextMode: KnowledgeAgentWriteMode = agentWriteMode.value === 'auto' ? 'confirm' : 'auto';
+  await settingsStore.saveSettings({
+    workbench: {
+      ...config.value.workbench,
+      agentWriteMode: nextMode,
+    },
+  });
+}
+
+async function runAgentTaskQuestion(query: string): Promise<void> {
+  if (!canUseKnowledgeSearch.value) {
+    searchError.value = knowledgeUnavailableReason.value;
+    return;
+  }
+
+  selectedQuestion.value = null;
+  usedSearchFallback.value = false;
+  searchError.value = '';
+  activeFallbackQuestionId.value = '';
+  activeErrorQuestionId.value = '';
+  activeErrorMessage.value = '';
+  semanticResults.value = [];
+  isSearching.value = true;
+  let draftQuestion: WorkbenchQuestionEntry | null = null;
+  let metadata: AgentTaskMetadata = {
+    writeMode: agentWriteMode.value,
+    steps: [],
+    traceEvents: [],
+    pendingWrites: [],
+    executedWrites: [],
+    dismissedWriteIds: [],
+    createdWriteIds: [],
+  };
+
+  try {
+    const askedAt = Date.now();
+    const threadId = activeThreadId.value ?? createThreadId(askedAt);
+    activeThreadId.value = threadId;
+    draftQuestion = await workbenchStore.recordQuestion({
+      query,
+      threadId,
+      mode: 'agent-task',
+      agentWriteMode: agentWriteMode.value,
+      askedAt,
+    });
+    if (draftThreadId.value === threadId) {
+      draftThreadId.value = null;
+      draftThreadCreatedAt.value = 0;
+    }
+    selectedQuestion.value = draftQuestion;
+    generatingQuestionId.value = draftQuestion?.id ?? '';
+    generatingQuestionMode.value = 'agent-task';
+    if (draftQuestion) {
+      questionModes.value = {
+        ...questionModes.value,
+        [draftQuestion.id]: 'agent-task',
+      };
+      scrollQuestionIntoView(draftQuestion.id);
+    } else {
+      scrollChatToBottom();
+    }
+
+    let generatedAnswer = '';
+    try {
+      const result = await runTask(query, agentWriteMode.value);
+      semanticResults.value = result.sources;
+      generatedAnswer = result.finalAnswer || '';
+      metadata = {
+        writeMode: result.writeMode,
+        steps: result.steps,
+        traceEvents: result.traceEvents,
+        pendingWrites: result.pendingWrites,
+        executedWrites: result.executedWrites,
+        dismissedWriteIds: [],
+        createdWriteIds: [],
+      };
+      if (result.executedWrites.length > 0) {
+        await initializeWorkspace();
+      }
+      if (draftQuestion) {
+        setAgentTaskMetadata(draftQuestion.id, metadata);
+      }
+    } catch (error) {
+      const message = getErrorMessage(error);
+      semanticResults.value = [];
+      searchViewLogger.error(`Agent task failed: ${message}`);
+      if (draftQuestion) {
+        activeErrorQuestionId.value = draftQuestion.id;
+        activeErrorMessage.value = message;
+      } else {
+        searchError.value = message;
+      }
+    }
+
+    const recordedQuestion = await workbenchStore.recordQuestion({
+      query,
+      threadId,
+      askedAt,
+      answeredAt: generatedAnswer.trim() ? Date.now() : undefined,
+      answer: generatedAnswer,
+      sourceNoteIds: Array.from(new Set(semanticResults.value.map((result) => result.chunk.noteId))),
+      sources: currentSources.value,
+      mode: 'agent-task',
+      agentWriteMode: metadata.writeMode,
+      agentSteps: metadata.steps,
+      agentTraceEvents: metadata.traceEvents,
+      pendingWrites: metadata.pendingWrites,
+      executedWrites: metadata.executedWrites,
+      dismissedWriteIds: metadata.dismissedWriteIds,
+      createdWriteIds: metadata.createdWriteIds,
+    });
+    selectedQuestion.value = recordedQuestion;
+    if (recordedQuestion) {
+      questionModes.value = {
+        ...questionModes.value,
+        [recordedQuestion.id]: 'agent-task',
+      };
+      scrollQuestionIntoView(recordedQuestion.id);
+    }
+  } catch (error) {
+    const message = getErrorMessage(error);
+    searchViewLogger.error(`Agent task record failed: ${message}`);
+    if (draftQuestion) {
+      activeErrorQuestionId.value = draftQuestion.id;
+      activeErrorMessage.value = message;
+    } else {
+      searchError.value = message;
+    }
+    semanticResults.value = [];
+  } finally {
+    isSearching.value = false;
+    generatingQuestionId.value = '';
+    generatingQuestionMode.value = null;
     focusSearchInput();
   }
 }
@@ -536,14 +940,30 @@ async function deleteQuestionThread(thread: QuestionThread): Promise<void> {
 
 function getQuestionPreview(question: WorkbenchQuestionEntry): string {
   if (isGeneratingQuestion(question)) {
-    return t('label.aiRAGThinking');
+    return getQuestionThinkingLabel(question);
   }
 
   return question.answer || t('workbench.empty.noAnswer');
 }
 
+function getQuestionMode(question: WorkbenchQuestionEntry): KnowledgeInputMode {
+  return question.mode ?? questionModes.value[question.id] ?? 'qa';
+}
+
+function getQuestionThinkingLabel(question: WorkbenchQuestionEntry): string {
+  if (generatingQuestionId.value === question.id && generatingQuestionMode.value === 'agent-task') {
+    return t('search.agentTaskThinking');
+  }
+
+  return t('label.aiRAGThinking');
+}
+
 function getQuestionAnswer(question: WorkbenchQuestionEntry): string {
   return question.fullAnswer || question.answer;
+}
+
+function canSaveQuestionAsNote(question: WorkbenchQuestionEntry): boolean {
+  return getQuestionMode(question) === 'agent-task' && getQuestionAnswer(question).trim().length > 0;
 }
 
 function getQuestionSources(question: WorkbenchQuestionEntry): WorkbenchQuestionSource[] {
@@ -552,6 +972,336 @@ function getQuestionSources(question: WorkbenchQuestionEntry): WorkbenchQuestion
   }
 
   return [];
+}
+
+function getAgentMetadata(question: WorkbenchQuestionEntry): AgentTaskMetadata | null {
+  if (getQuestionMode(question) !== 'agent-task') {
+    return null;
+  }
+
+  const localMetadata = agentTaskMetadata.value[question.id];
+  if (localMetadata) {
+    return localMetadata;
+  }
+
+  return {
+    writeMode: (question.agentWriteMode === 'auto' ? 'auto' : 'confirm'),
+    steps: question.agentSteps ?? [],
+    traceEvents: question.agentTraceEvents ?? [],
+    pendingWrites: question.pendingWrites ?? [],
+    executedWrites: question.executedWrites ?? [],
+    dismissedWriteIds: question.dismissedWriteIds ?? [],
+    createdWriteIds: question.createdWriteIds ?? [],
+  };
+}
+
+function getAgentSteps(question: WorkbenchQuestionEntry): KnowledgeAgentStep[] {
+  return getAgentMetadata(question)?.steps ?? [];
+}
+
+function getAgentTraceEvents(question: WorkbenchQuestionEntry): KnowledgeAgentTraceEvent[] {
+  return getAgentMetadata(question)?.traceEvents ?? [];
+}
+
+function getExecutedWrites(question: WorkbenchQuestionEntry): KnowledgeAgentExecutedWrite[] {
+  return getAgentMetadata(question)?.executedWrites ?? [];
+}
+
+function formatAgentStepTitle(step: KnowledgeAgentStep): string {
+  const keyMap: Record<string, string> = {
+    searchKnowledgeBase: 'search.agentStep.searchKnowledgeBase',
+    listRecentNotes: 'search.agentStep.listRecentNotes',
+    readNote: 'search.agentStep.readNote',
+    proposeCreateNote: 'search.agentStep.proposeCreateNote',
+    proposeUpdateNote: 'search.agentStep.proposeUpdateNote',
+    createNote: 'search.agentStep.createNote',
+    updateNote: 'search.agentStep.updateNote',
+    configureChatModel: 'search.agentStep.configureChatModel',
+  };
+
+  const key = keyMap[step.title];
+  return key ? t(key) : step.title;
+}
+
+function formatAgentStepDetail(step: KnowledgeAgentStep): string {
+  if (step.title === 'searchKnowledgeBase') {
+    return t('search.agentStep.searchKnowledgeBaseDetail', { count: step.detail });
+  }
+
+  if (step.title === 'configureChatModel') {
+    return t('search.agentStep.configureChatModelDetail');
+  }
+
+  return step.detail;
+}
+
+function formatAgentTraceTitle(event: KnowledgeAgentTraceEvent): string {
+  if (event.type === 'model-response') {
+    return t('search.agentTrace.modelResponse');
+  }
+
+  if (event.type === 'tool-call') {
+    return t('search.agentTrace.toolCall', { tool: event.toolName ?? event.title });
+  }
+
+  if (event.type === 'tool-error') {
+    return t('search.agentTrace.toolError', { tool: event.toolName ?? event.title });
+  }
+
+  return t('search.agentTrace.toolResult', { tool: event.toolName ?? event.title });
+}
+
+function formatAgentTraceDetail(event: KnowledgeAgentTraceEvent): string {
+  const duration = typeof event.durationMs === 'number'
+    ? t('search.agentTrace.duration', { duration: event.durationMs })
+    : '';
+  if (event.type === 'model-response') {
+    return `${t('search.agentTrace.modelResponseDetail', { count: event.detail })}${duration}`;
+  }
+
+  const detail = event.detail.length > 180 ? `${event.detail.slice(0, 180)}...` : event.detail;
+  return duration ? `${detail} ${duration}` : detail;
+}
+
+function getVisibleWriteProposals(question: WorkbenchQuestionEntry): KnowledgeAgentWriteProposal[] {
+  const metadata = getAgentMetadata(question);
+  if (!metadata) {
+    return [];
+  }
+
+  return metadata.pendingWrites.filter((proposal) => (
+    !metadata.dismissedWriteIds.includes(proposal.id)
+    && !metadata.createdWriteIds.includes(proposal.id)
+  ));
+}
+
+function getWriteProposalPreview(proposal: KnowledgeAgentWriteProposal): string {
+  const content = proposal.content.trim();
+  return content.length > 240 ? `${content.slice(0, 240)}...` : content;
+}
+
+function getWriteProposalTitle(proposal: KnowledgeAgentWriteProposal): string {
+  if (proposal.type === 'create-note') {
+    return proposal.title;
+  }
+
+  return proposal.noteTitle;
+}
+
+function getWriteProposalActionLabel(proposal: KnowledgeAgentWriteProposal): string {
+  return proposal.type === 'create-note'
+    ? t('search.agentTaskApplyWrite')
+    : t('search.agentTaskApplyUpdate');
+}
+
+function buildSummaryNoteTitle(question: WorkbenchQuestionEntry): string {
+  const normalizedQuery = question.query.trim().replace(/\s+/g, ' ');
+  if (!normalizedQuery) {
+    return t('search.agentTaskSavedNoteFallbackTitle');
+  }
+
+  const maxLength = 42;
+  const baseTitle = normalizedQuery.length > maxLength
+    ? `${normalizedQuery.slice(0, maxLength).trim()}...`
+    : normalizedQuery;
+
+  return t('search.agentTaskSavedNoteTitle', { query: baseTitle });
+}
+
+function buildSummaryNoteContent(question: WorkbenchQuestionEntry): string {
+  const title = buildSummaryNoteTitle(question);
+  const answer = getQuestionAnswer(question).trim();
+  const sources = getQuestionSources(question);
+  const sourceBlock = sources.length > 0
+    ? [
+      '',
+      `## ${t('search.knowledgeSources')}`,
+      ...sources.map((source) => `- ${source.noteTitle}`),
+    ].join('\n')
+    : '';
+
+  return [
+    `# ${title}`,
+    '',
+    answer,
+    sourceBlock,
+  ].join('\n');
+}
+
+async function persistFullQuestion(
+  question: WorkbenchQuestionEntry,
+  metadata: AgentTaskMetadata,
+): Promise<WorkbenchQuestionEntry | null> {
+  const updatedQuestion = await workbenchStore.recordQuestion({
+    query: question.query,
+    threadId: question.threadId,
+    mode: getQuestionMode(question),
+    agentWriteMode: metadata.writeMode,
+    askedAt: question.askedAt,
+    answeredAt: question.answeredAt,
+    answer: getQuestionAnswer(question),
+    sourceNoteIds: question.sourceNoteIds,
+    sources: getQuestionSources(question),
+    agentSteps: metadata.steps,
+    agentTraceEvents: metadata.traceEvents,
+    pendingWrites: metadata.pendingWrites,
+    executedWrites: metadata.executedWrites,
+    dismissedWriteIds: metadata.dismissedWriteIds,
+    createdWriteIds: metadata.createdWriteIds,
+  });
+
+  if (updatedQuestion) {
+    setAgentTaskMetadata(updatedQuestion.id, metadata);
+    if (selectedQuestion.value?.id === question.id) {
+      selectedQuestion.value = updatedQuestion;
+    }
+  }
+
+  return updatedQuestion;
+}
+
+function getExecutedWritePreview(write: KnowledgeAgentExecutedWrite): string {
+  const content = write.content.trim();
+  return content.length > 240 ? `${content.slice(0, 240)}...` : content;
+}
+
+async function openExecutedWrite(write: KnowledgeAgentExecutedWrite): Promise<void> {
+  await initializeWorkspace();
+  await openNoteResult(write.noteId, write.noteTitle);
+}
+
+async function saveQuestionAsNote(question: WorkbenchQuestionEntry): Promise<void> {
+  const metadata = getAgentMetadata(question);
+  if (!metadata || savingSummaryActionId.value) {
+    return;
+  }
+
+  const proposal: KnowledgeAgentWriteProposal = {
+    id: `agent-write-manual-${Date.now()}`,
+    type: 'create-note',
+    title: buildSummaryNoteTitle(question),
+    content: buildSummaryNoteContent(question),
+    reason: t('search.agentTaskSaveAsNoteReason'),
+  };
+
+  savingSummaryActionId.value = `${question.id}:create`;
+  try {
+    if (metadata.writeMode === 'auto') {
+      await initializeWorkspace();
+      const createdNote = await createNote(null, proposal.title, proposal.content);
+      if (!createdNote) {
+        return;
+      }
+
+      const executedWrite: KnowledgeAgentExecutedWrite = {
+        id: proposal.id,
+        type: 'create-note',
+        noteId: createdNote.id,
+        noteTitle: createdNote.title,
+        content: proposal.content,
+        reason: proposal.reason,
+      };
+
+      const nextMetadata: AgentTaskMetadata = {
+        ...metadata,
+        executedWrites: [executedWrite, ...metadata.executedWrites].slice(0, 8),
+      };
+
+      await persistFullQuestion(question, nextMetadata);
+      await appShellStore.setActiveMainView('workspace');
+      selectNote(createdNote.id);
+      return;
+    }
+
+    const nextMetadata: AgentTaskMetadata = {
+      ...metadata,
+      pendingWrites: [proposal, ...metadata.pendingWrites].slice(0, 8),
+      dismissedWriteIds: metadata.dismissedWriteIds.filter((id) => id !== proposal.id),
+      createdWriteIds: metadata.createdWriteIds.filter((id) => id !== proposal.id),
+    };
+
+    await persistFullQuestion(question, nextMetadata);
+  } catch (error) {
+    const message = getErrorMessage(error);
+    searchViewLogger.error(`Save question as note failed: ${message}`);
+    activeErrorQuestionId.value = question.id;
+    activeErrorMessage.value = message;
+  } finally {
+    savingSummaryActionId.value = '';
+    focusSearchInput();
+  }
+}
+
+async function persistAgentWriteState(question: WorkbenchQuestionEntry, metadata: AgentTaskMetadata): Promise<void> {
+  setAgentTaskMetadata(question.id, metadata);
+  const updatedQuestion = await workbenchStore.updateQuestionAgentWriteState({
+    questionId: question.id,
+    dismissedWriteIds: metadata.dismissedWriteIds,
+    createdWriteIds: metadata.createdWriteIds,
+  });
+
+  if (updatedQuestion && selectedQuestion.value?.id === question.id) {
+    selectedQuestion.value = updatedQuestion;
+  }
+}
+
+async function dismissWriteProposal(question: WorkbenchQuestionEntry, proposalId: string): Promise<void> {
+  const metadata = getAgentMetadata(question);
+  if (!metadata || metadata.dismissedWriteIds.includes(proposalId)) {
+    return;
+  }
+
+  await persistAgentWriteState(question, {
+    ...metadata,
+    dismissedWriteIds: [...metadata.dismissedWriteIds, proposalId],
+  });
+}
+
+async function applyWriteProposal(
+  question: WorkbenchQuestionEntry,
+  proposal: KnowledgeAgentWriteProposal,
+): Promise<void> {
+  const metadata = getAgentMetadata(question);
+  if (!metadata || applyingWriteProposalId.value) {
+    return;
+  }
+
+  applyingWriteProposalId.value = proposal.id;
+  try {
+    await initializeWorkspace();
+    let targetNoteId = '';
+
+    if (proposal.type === 'create-note') {
+      const createdNote = await createNote(null, proposal.title, proposal.content);
+      if (!createdNote) {
+        return;
+      }
+
+      targetNoteId = createdNote.id;
+    } else {
+      const updated = await applyNoteContentUpdate(proposal.noteId, proposal.content);
+      if (!updated) {
+        throw new Error(t('search.agentTaskApplyUpdateFailed'));
+      }
+
+      targetNoteId = proposal.noteId;
+    }
+
+    await persistAgentWriteState(question, {
+      ...metadata,
+      createdWriteIds: [...metadata.createdWriteIds, proposal.id],
+    });
+    await appShellStore.setActiveMainView('workspace');
+    selectNote(targetNoteId);
+  } catch (error) {
+    const message = getErrorMessage(error);
+    searchViewLogger.error(`Create note from agent proposal failed: ${message}`);
+    activeErrorQuestionId.value = question.id;
+    activeErrorMessage.value = message;
+  } finally {
+    applyingWriteProposalId.value = '';
+    focusSearchInput();
+  }
 }
 
 function getQuestionError(question: WorkbenchQuestionEntry): string {
@@ -595,6 +1345,25 @@ function formatAskedAt(timestamp: number): string {
   }
 
   return new Date(timestamp).toLocaleString();
+}
+
+function formatMessageTimestamp(timestamp?: number): string {
+  if (!timestamp || !Number.isFinite(timestamp) || timestamp <= 0) {
+    return '';
+  }
+
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
+
+function formatQuestionAskedAt(question: WorkbenchQuestionEntry): string {
+  return formatMessageTimestamp(question.askedAt);
+}
+
+function formatQuestionAnsweredAt(question: WorkbenchQuestionEntry): string {
+  return formatMessageTimestamp(question.answeredAt);
 }
 
 function applySearchRequest(): void {
@@ -642,16 +1411,28 @@ watch(
   { deep: true, flush: 'post' },
 );
 
+function handleDocumentClick(event: MouseEvent): void {
+  const target = event.target as HTMLElement;
+  if (isModeMenuOpen.value && !target.closest('.search-view__mode-selector')) {
+    isModeMenuOpen.value = false;
+  }
+}
+
 onMounted(() => {
   applySearchRequest();
   focusSearchInput();
   scrollChatToBottom();
   void syncMarkdownEnhancements();
+  document.addEventListener('click', handleDocumentClick);
+  window.addEventListener('resize', clampHistoryPaneWidth);
 });
 
 onBeforeUnmount(() => {
   clearPendingSearch();
   markdownEnhancementRunId += 1;
+  document.removeEventListener('click', handleDocumentClick);
+  handlePaneResizeEnd();
+  window.removeEventListener('resize', clampHistoryPaneWidth);
 });
 </script>
 
@@ -711,44 +1492,46 @@ onBeforeUnmount(() => {
 
 .search-view__query {
   flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 22px 14px;
+  padding: 12px 20px 14px;
   border-top: 1px solid var(--panel-border);
-  background: color-mix(in srgb, var(--panel) 88%, var(--bg));
+  background: var(--bg);
 }
 
 .search-view__input-shell {
-  position: relative;
   width: 100%;
-  max-width: var(--search-chat-max-width);
-  flex: 0 1 var(--search-chat-max-width);
   min-width: 0;
   display: flex;
-  align-items: flex-end;
-  min-height: 42px;
+  flex-direction: column;
+  align-items: stretch;
   border: 1px solid var(--search-chat-border);
-  border-radius: 10px;
+  border-radius: 8px;
   background: color-mix(in srgb, var(--panel) 96%, var(--bg));
   transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 .search-view__input-shell:focus-within {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 14%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .search-view__input-shell.is-disabled {
   opacity: 0.64;
 }
 
+.search-view__input-main {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  padding: 4px;
+}
+
 .search-view__input {
   flex: 1;
   min-width: 0;
   height: auto;
-  max-height: 96px;
-  padding: 10px 8px 9px 12px;
+  min-height: 44px;
+  max-height: 140px;
+  padding: 8px 10px;
   border: none;
   outline: none;
   resize: none;
@@ -768,31 +1551,162 @@ onBeforeUnmount(() => {
   color: var(--text-muted);
 }
 
-.search-view__icon-button,
+.search-view__clear-button {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  margin: 6px 6px 0 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+
+.search-view__clear-button:hover {
+  background: var(--panel-hover);
+  color: var(--text);
+}
+
+.search-view__input-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: color-mix(in srgb, var(--panel) 92%, var(--bg));
+  border-top: 1px solid color-mix(in srgb, var(--search-chat-border) 60%, transparent);
+  border-bottom-left-radius: 7px;
+  border-bottom-right-radius: 7px;
+}
+
+.search-view__toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-view__toolbar-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-view__mode-selector {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.search-view__mode-button {
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 0 10px;
+  border: 1px solid var(--search-chat-border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.search-view__mode-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--search-chat-border));
+  color: var(--text);
+  background: var(--panel-hover);
+}
+
+.search-view__mode-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.search-view__mode-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 6px);
+  z-index: 10;
+  width: 228px;
+  padding: 6px;
+  border: 1px solid var(--search-chat-border);
+  border-radius: 8px;
+  background: var(--panel);
+  box-shadow: 0 10px 25px color-mix(in srgb, #000 12%, transparent);
+}
+
+.search-view__mode-option {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.search-view__mode-option:hover,
+.search-view__mode-option.is-active {
+  border-color: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: color-mix(in srgb, var(--accent) 6%, transparent);
+}
+
+.search-view__mode-option span {
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.search-view__mode-option small {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  line-height: 1.3;
+}
+
+.search-view__execution-button {
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--search-chat-border);
+  border-radius: 6px;
+  background: var(--panel);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, opacity 0.12s ease;
+}
+
+.search-view__execution-button:hover {
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--search-chat-border));
+  color: var(--text);
+  background: var(--panel-hover);
+}
+
+.search-view__execution-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .search-view__ask-button {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 7px;
-  cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.12s ease, opacity 0.15s ease;
-}
-
-.search-view__icon-button {
-  width: 28px;
   height: 28px;
-  margin: 0 2px 6px 0;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-}
-
-.search-view__ask-button {
-  min-width: 52px;
-  height: 32px;
-  padding: 0 10px;
-  margin: 0 5px 5px 0;
+  padding: 0 14px;
+  border-radius: 6px;
   font-size: 0.76rem;
   font-weight: 700;
 }
@@ -810,13 +1724,39 @@ onBeforeUnmount(() => {
 }
 
 .search-view__history-pane {
-  flex: 0 0 300px;
-  min-width: 240px;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  border-right: 1px solid var(--panel-border);
   background: color-mix(in srgb, var(--panel) 76%, var(--bg));
+}
+
+.search-view__pane-divider {
+  flex: 0 0 auto;
+  width: 6px;
+  margin: 0 -2px;
+  position: relative;
+  z-index: 2;
+  cursor: col-resize;
+  background: transparent;
+  transition: background-color 0.15s ease;
+}
+
+.search-view__pane-divider::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  transform: translateX(-50%);
+  background: var(--panel-border);
+  transition: width 0.12s ease, background-color 0.12s ease;
+}
+
+.search-view__pane-divider:hover::after,
+.search-view__content.is-resizing-pane .search-view__pane-divider::after {
+  width: 3px;
+  background: var(--accent);
 }
 
 .search-view__answer-pane {
@@ -863,13 +1803,11 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 22px;
+  padding: 18px 20px;
 }
 
 .search-view__chat-inner {
   width: 100%;
-  max-width: var(--search-chat-max-width);
-  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -901,8 +1839,16 @@ onBeforeUnmount(() => {
   gap: 9px;
 }
 
+.search-view__user-message {
+  max-width: min(680px, 72%);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
 .search-view__user-bubble {
-  max-width: min(620px, 76%);
+  max-width: 100%;
   padding: 9px 12px;
   border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--panel-border));
   border-radius: 12px 12px 4px 12px;
@@ -912,6 +1858,13 @@ onBeforeUnmount(() => {
   line-height: 1.52;
   white-space: pre-wrap;
   overflow-wrap: anywhere;
+}
+
+.search-view__message-timestamp {
+  display: inline-flex;
+  font-size: 0.73rem;
+  line-height: 1.2;
+  color: var(--text-muted);
 }
 
 .search-view__assistant-avatar {
@@ -937,6 +1890,11 @@ onBeforeUnmount(() => {
   background: var(--search-chat-surface);
   box-shadow: 0 1px 0 color-mix(in srgb, var(--panel-border) 22%, transparent);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.search-view__assistant-card>.search-view__message-timestamp {
+  display: block;
+  margin-bottom: 8px;
 }
 
 .search-view__thinking {
@@ -1082,12 +2040,18 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 0;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 12px;
   padding: 28px;
   color: var(--text-muted);
   text-align: center;
+}
+
+.search-view__status-icon {
+  color: color-mix(in srgb, var(--accent) 35%, var(--text-muted));
+  margin-bottom: 4px;
 }
 
 .search-view__chat-scroll>.search-view__status {
@@ -1147,12 +2111,174 @@ onBeforeUnmount(() => {
   border-top: 1px solid var(--search-chat-border);
 }
 
+.search-view__answer-actions {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.search-view__save-note-button {
+  height: 32px;
+  padding: 0 12px;
+  gap: 6px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
 .search-view__sources h3 {
   flex: 0 0 auto;
   margin: 0 4px 0 0;
   color: var(--text-muted);
   font-size: 0.76rem;
   font-weight: 700;
+}
+
+.search-view__agent-steps,
+.search-view__agent-trace,
+.search-view__agent-writes {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--search-chat-border);
+}
+
+.search-view__agent-steps h3,
+.search-view__agent-trace h3,
+.search-view__agent-writes h3 {
+  margin: 0 0 10px;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.search-view__agent-steps ol,
+.search-view__agent-trace ol {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.search-view__agent-steps li,
+.search-view__agent-trace li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.search-view__agent-steps li::before,
+.search-view__agent-trace li::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 7px;
+  height: 7px;
+  margin-top: 6px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+.search-view__agent-steps li.is-failed::before,
+.search-view__agent-trace li.is-failed::before {
+  background: var(--color-danger, #ef4444);
+}
+
+.search-view__agent-steps span,
+.search-view__agent-trace span {
+  flex: 0 0 auto;
+  font-weight: 700;
+}
+
+.search-view__agent-steps small,
+.search-view__agent-trace small {
+  min-width: 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.search-view__agent-write-card {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px;
+  border: 1px solid var(--search-chat-accent-border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 5%, var(--search-chat-surface));
+}
+
+.search-view__agent-write-card--executed {
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--search-chat-border));
+  background: color-mix(in srgb, var(--accent) 8%, var(--search-chat-surface));
+}
+
+.search-view__agent-write-card+.search-view__agent-write-card {
+  margin-top: 10px;
+}
+
+.search-view__agent-write-main {
+  min-width: 0;
+  flex: 1;
+}
+
+.search-view__agent-write-main strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.84rem;
+}
+
+.search-view__agent-write-main p {
+  margin: 5px 0 0;
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.search-view__agent-write-main pre {
+  max-height: 112px;
+  margin: 9px 0 0;
+  overflow: auto;
+  white-space: pre-wrap;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.search-view__agent-write-actions {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 8px;
+}
+
+.search-view__agent-write-apply {
+  height: 30px;
+  padding: 0 10px;
+  gap: 5px;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.search-view__agent-write-dismiss {
+  height: 28px;
+  padding: 0 9px;
+  border: 1px solid var(--search-chat-border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+
+.search-view__agent-write-dismiss:hover {
+  color: var(--text);
+  background: var(--panel-hover);
 }
 
 .search-view__source-card {
@@ -1210,14 +2336,29 @@ onBeforeUnmount(() => {
   }
 
   .search-view__history-pane {
-    flex: 0 0 190px;
-    min-width: 0;
-    border-right: none;
+    flex: 0 0 190px !important;
+    width: auto !important;
+    min-width: 0 !important;
+    max-width: none !important;
     border-bottom: 1px solid var(--panel-border);
+  }
+
+  .search-view__pane-divider {
+    display: none;
   }
 
   .search-view__history-item {
     min-height: 70px;
+  }
+
+  /* Responsive input-shell is handled automatically by column layout */
+
+  .search-view__agent-write-card {
+    flex-direction: column;
+  }
+
+  .search-view__agent-write-actions {
+    flex-direction: row;
   }
 }
 </style>

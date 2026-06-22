@@ -14,11 +14,22 @@ import { vfsService } from './services/vfs.service.js';
 import { accessControlService } from './services/access-control.service.js';
 import { errorService } from './services/error.service.js';
 import { licenseService } from './services/license.service.js';
+import packageJson from '../../package.json' with { type: 'json' };
 
 const WORKSPACE_RESOURCE_SCHEME = 'note-resource';
+const FALLBACK_APP_DISPLAY_NAME = 'Snaptium';
 
 const isDev = !app.isPackaged;
 let isQuitting = false;
+
+function getAppDisplayName(): string {
+  const productName = (packageJson as { build?: { productName?: unknown } }).build?.productName;
+  return typeof productName === 'string' && productName.trim().length > 0
+    ? productName.trim()
+    : FALLBACK_APP_DISPLAY_NAME;
+}
+
+app.setName(getAppDisplayName());
 
 protocol.registerSchemesAsPrivileged([
   {

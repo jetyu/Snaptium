@@ -99,11 +99,11 @@ const handleDeleteHost = async (index: number) => {
   display: flex;
   flex-direction: column;
   min-height: 0;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
+  background: var(--surface-raised);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  box-shadow: var(--shadow-soft);
 }
 
 .hosts-scroll-area {
@@ -111,7 +111,7 @@ const handleDeleteHost = async (index: number) => {
   overflow-y: auto;
   min-height: 0;
   scrollbar-width: thin;
-  scrollbar-color: #cbd5e1 transparent;
+  scrollbar-color: var(--border-strong) transparent;
 }
 
 .hosts-scroll-area::-webkit-scrollbar {
@@ -119,7 +119,7 @@ const handleDeleteHost = async (index: number) => {
 }
 
 .hosts-scroll-area::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: var(--border-strong);
   border-radius: 10px;
 }
 
@@ -133,7 +133,7 @@ const handleDeleteHost = async (index: number) => {
   justify-content: space-between;
   align-items: center;
   padding: 10px 16px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .host-row:last-child {
@@ -141,7 +141,7 @@ const handleDeleteHost = async (index: number) => {
 }
 
 .host-row:hover {
-  background: #f8fafc;
+  background: var(--surface-soft);
 }
 
 .host-info {
@@ -154,8 +154,8 @@ const handleDeleteHost = async (index: number) => {
 .host-avatar {
   width: 28px;
   height: 28px;
-  background: #eff6ff;
-  color: #0f6cbd;
+  background: var(--status-info-bg);
+  color: var(--status-info-text);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -165,7 +165,7 @@ const handleDeleteHost = async (index: number) => {
 
 .host-text {
   font-size: 1rem;
-  color: #334155;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -180,33 +180,33 @@ const handleDeleteHost = async (index: number) => {
   background: transparent;
   border: none;
   border-radius: 6px;
-  color: #94a3b8;
+  color: var(--text-disabled);
   cursor: pointer;
 }
 
 .row-action-btn:hover {
-  background: #fee2e2;
-  color: #ef4444;
+  background: var(--status-danger-bg);
+  color: var(--status-danger-text);
 }
 
 .subpage-footer {
   flex-shrink: 0;
   padding: 12px 16px;
-  background: #f8fafc;
-  border-top: 1px solid #e2e8f0;
+  background: var(--surface-scrim);
+  border-top: 1px solid var(--border-color);
 }
 
 .footer-hint {
   margin: 0;
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-secondary);
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
 .hint-icon {
-  color: #0f6cbd;
+  color: var(--status-info-text);
   flex-shrink: 0;
 }
 
@@ -220,7 +220,7 @@ const handleDeleteHost = async (index: number) => {
   left: 10px;
   top: 50%;
   transform: translateY(-50%);
-  color: #94a3b8;
+  color: var(--text-disabled);
   pointer-events: none;
 }
 
@@ -228,22 +228,24 @@ const handleDeleteHost = async (index: number) => {
   width: 100%;
   height: 36px;
   padding: 0 12px 0 34px;
-  background: #ffffff;
-  border: 1px solid #cbd5e1;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
   border-radius: 8px;
   font-size: 0.9rem;
+  color: var(--text-primary);
 }
 
 .inline-input:focus {
   outline: none;
-  border-color: #0f6cbd;
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 2px var(--focus-ring);
 }
 
 .add-btn {
   padding: 0 16px;
   height: 36px;
-  background: #0f6cbd;
-  color: white;
+  background: var(--accent);
+  color: var(--notebook-icon-white);
   border: none;
   border-radius: 8px;
   font-weight: 500;
@@ -251,7 +253,8 @@ const handleDeleteHost = async (index: number) => {
 }
 
 .add-btn:disabled {
-  background: #cbd5e1;
+  background: var(--input-bg-disabled);
+  color: var(--text-disabled);
   cursor: not-allowed;
 }
 </style>

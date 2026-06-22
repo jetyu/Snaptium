@@ -18,6 +18,7 @@
 A modern cross-platform Markdown intelligent workspace built with Electron + Vue 3.  
 Focused on deep writing, knowledge management, and a local-first experience, supporting AI-assisted writing, knowledge bases, end-to-end encrypted sync, and multi-device collaboration.
 
+[![Snaptium Release](https://github.com/jetyu/Snaptium/actions/workflows/build.yml/badge.svg?event=push)](https://github.com/jetyu/Snaptium/actions/workflows/build.yml)
 [![Latest Release](https://img.shields.io/github/v/release/jetyu/Snaptium?style=flat&logo=github)](https://github.com/jetyu/Snaptium/releases/latest)
 ![GitHub Pre-release](https://img.shields.io/github/v/release/jetyu/Snaptium?include_prereleases&label=pre-release&logo=github)
 [![Downloads](https://img.shields.io/github/downloads/jetyu/Snaptium/total?style=flat&logo=github)](https://github.com/jetyu/Snaptium/releases)

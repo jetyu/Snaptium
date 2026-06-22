@@ -123,9 +123,9 @@ const cardRef = defineModel<HTMLElement | null>('cardRef', { default: null });
 }
 
 .is-syncing {
-  background: rgba(59, 130, 246, 0.08);
-  border-color: rgba(59, 130, 246, 0.2);
-  color: #2563eb;
+  background: var(--status-info-bg);
+  border-color: var(--status-info-border);
+  color: var(--status-info-text);
 }
 
 .is-error {

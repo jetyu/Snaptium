@@ -159,7 +159,7 @@ async function handleReset() {
   justify-content: flex-end;
   padding-top: 1rem;
   margin-top: 0.5rem;
-  border-top: 1px solid #e7eaf0;
+  border-top: 1px solid var(--border-muted);
 }
 
 .category-section {
@@ -174,7 +174,7 @@ async function handleReset() {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
 
 .shortcuts-list {
@@ -190,19 +190,19 @@ async function handleReset() {
   gap: 1rem;
   min-height: 48px;
   padding: 0.5rem 1rem;
-  border: 1px solid #e7eaf0;
+  border: 1px solid var(--border-muted);
   border-radius: 10px;
-  background: #fbfbfc;
+  background: var(--surface-subtle);
   transition: border-color 0.2s ease;
 }
 
 .shortcut-row:hover {
-  border-color: #c9d1dc;
+  border-color: var(--border-strong);
 }
 
 .command-name {
   font-size: 0.9rem;
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 500;
 }
 
@@ -222,15 +222,15 @@ async function handleReset() {
 .key-badge {
   display: inline-block;
   padding: 0.25rem 0.5rem;
-  background: linear-gradient(180deg, #ffffff 0%, #f5f5f5 100%);
-  border: 1px solid #c9d1dc;
+  background: linear-gradient(180deg, var(--surface-raised) 0%, var(--surface-soft) 100%);
+  border: 1px solid var(--input-border);
   border-bottom-width: 2px;
   border-radius: 6px;
   font-family: 'Segoe UI', system-ui, sans-serif;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #111827;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
   white-space: nowrap;
 }
 
@@ -240,7 +240,7 @@ async function handleReset() {
   padding: 0;
   border: none;
   background: transparent;
-  color: #9ca3af;
+  color: var(--text-disabled);
   font-size: 16px;
   line-height: 1;
   cursor: pointer;
@@ -249,18 +249,18 @@ async function handleReset() {
 }
 
 .key-remove:hover {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #dc2626;
+  background-color: var(--status-danger-bg);
+  color: var(--status-danger-text);
 }
 
 .key-add {
   width: 24px;
   height: 24px;
   padding: 0;
-  border: 1px dashed #c9d1dc;
+  border: 1px dashed var(--input-border);
   background: transparent;
   border-radius: 6px;
-  color: #9ca3af;
+  color: var(--text-disabled);
   cursor: pointer;
   transition: all 0.15s ease;
   display: flex;
@@ -270,9 +270,9 @@ async function handleReset() {
 }
 
 .key-add:hover {
-  border-color: #7aa7ff;
-  color: #0f6cbd;
-  background-color: rgba(96, 165, 250, 0.05);
+  border-color: var(--input-border-focus);
+  color: var(--accent-hover);
+  background-color: color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 /* 对话框 */
@@ -288,16 +288,17 @@ async function handleReset() {
 }
 
 .dialog {
-  background-color: #ffffff;
+  background-color: var(--surface-raised);
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   width: 90%;
   max-width: 480px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-lg);
 }
 
 .dialog-header {
   padding: 1.25rem 1.5rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -307,11 +308,11 @@ async function handleReset() {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .close-button {
-  color: #9ca3af;
+  color: var(--text-disabled);
   font-size: 0;
 }
 
@@ -338,22 +339,22 @@ async function handleReset() {
   margin-bottom: 0.5rem;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #111827;
+  color: var(--text-primary);
 }
 
 .command-display {
   padding: 0.75rem 1rem;
-  background-color: #f9fafb;
-  border: 1px solid #e5e7eb;
+  background-color: var(--surface-subtle);
+  border: 1px solid var(--border-color);
   border-radius: 8px;
   font-size: 0.875rem;
-  color: #6b7280;
+  color: var(--text-tertiary);
 }
 
 .conflict-warning {
   padding: 1rem;
-  background-color: #fef3c7;
-  border: 1px solid #fbbf24;
+  background-color: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
   border-radius: 8px;
   font-size: 0.875rem;
 }
@@ -361,18 +362,18 @@ async function handleReset() {
 .conflict-warning p {
   margin: 0 0 0.5rem 0;
   font-weight: 600;
-  color: #92400e;
+  color: var(--status-warning-text);
 }
 
 .conflict-warning ul {
   margin: 0;
   padding-left: 1.25rem;
-  color: #92400e;
+  color: var(--status-warning-text);
 }
 
 .dialog-footer {
   padding: 1rem 1.5rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid var(--border-color);
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;

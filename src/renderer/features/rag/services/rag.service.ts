@@ -1,5 +1,7 @@
 import {
   electronApi,
+  type KnowledgeAgentWriteMode,
+  type KnowledgeAgentTaskResult,
   type KnowledgeAnswerResult,
   type RagStatusResult,
 } from '@renderer/core/bridge/electronApi';
@@ -132,7 +134,35 @@ export const ragService = {
     } catch (error: unknown) {
       const message = getErrorMessage(error);
       ragLogger.error('RAG question failed', { error: message });
-      return { success: false, error: message, answer: undefined, sources: [], usedSearchFallback: false };
+      return {
+        success: false,
+        error: message,
+        answer: undefined,
+        sources: [],
+        usedSearchFallback: false,
+        insufficientEvidence: false,
+      };
+    }
+  },
+
+  async runTask(task: string, writeMode: KnowledgeAgentWriteMode = 'confirm'): Promise<KnowledgeAgentTaskResult> {
+    try {
+      return await electronApi.rag.runTask({ task, writeMode });
+    } catch (error: unknown) {
+      const message = getErrorMessage(error);
+      ragLogger.error('RAG agent task failed', { error: message });
+      return {
+        success: false,
+        error: message,
+        finalAnswer: undefined,
+        steps: [],
+        traceEvents: [],
+        sources: [],
+        writeMode,
+        pendingWrites: [],
+        executedWrites: [],
+        stopReason: undefined,
+      };
     }
   },
 
