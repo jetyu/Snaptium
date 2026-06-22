@@ -14,19 +14,9 @@
               <img src="@assets/logo/app-logo-512.png" alt="Snaptium Logo" class="about-logo" />
               <h1 class="about-title">{{ appName }}</h1>
               <p class="about-version">{{ t('about.version') }}: {{ appVersion }}</p>
-              <button
-                v-if="isMicrosoftStoreDistribution"
-                type="button"
-                class="store-badge"
-                :aria-label="t('about.microsoftStore')"
-                @click="openStorePage"
-              >
-                <img
-                  src="@assets/logo/store_logo.svg"
-                  alt=""
-                  aria-hidden="true"
-                  class="store-badge__logo"
-                />
+              <button v-if="isMicrosoftStoreDistribution" type="button" class="store-badge"
+                :aria-label="t('about.microsoftStore')" @click="openStorePage">
+                <img src="@assets/logo/store_logo.svg" alt="" aria-hidden="true" class="store-badge__logo" />
                 <span>{{ t('about.microsoftStore') }}</span>
               </button>
             </div>
@@ -37,19 +27,19 @@
 
             <div class="about-env-info">
               <div class="env-item">
-                <span class="env-label">{{ t('about.electron') }}:</span>
+                <span class="env-label">{{ t('about.electron') }}</span>
                 <span class="env-value">{{ envVersion.electron }}</span>
               </div>
               <div class="env-item">
-                <span class="env-label">{{ t('about.nodejs') }}:</span>
+                <span class="env-label">{{ t('about.nodejs') }}</span>
                 <span class="env-value">{{ envVersion.node }}</span>
               </div>
               <div class="env-item">
-                <span class="env-label">{{ t('about.chromium') }}:</span>
+                <span class="env-label">{{ t('about.chromium') }}</span>
                 <span class="env-value">{{ envVersion.chrome }}</span>
               </div>
               <div class="env-item">
-                <span class="env-label">{{ t('about.v8') }}:</span>
+                <span class="env-label">{{ t('about.v8') }}</span>
                 <span class="env-value">{{ envVersion.v8 }}</span>
               </div>
             </div>
