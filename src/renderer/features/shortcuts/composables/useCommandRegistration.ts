@@ -1,21 +1,21 @@
 import { onMounted, onUnmounted } from 'vue';
 import { commandService } from '../services/command.service';
-import { useWorkspace, useWorkspaceActions } from '@renderer/features/workspace';
+import { useWorkspace, useWorkspaceUiActions } from '@renderer/features/workspace';
 import { useSettings } from '@renderer/features/settings';
 import { useEditor } from '@renderer/features/editor';
-import { useSearch } from '@renderer/features/search';
 import { openSearchPanel } from '@codemirror/search';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
+import { useSearch } from '@renderer/features/search';
 
 const commandRegistrationLogger = createLogger('CommandRegistration');
 
 export function useCommandRegistration() {
-  const { createNote } = useWorkspace();
-  const { saveActiveNote, deleteActiveNote, renameActiveNote } = useWorkspaceActions();
+  const { createNote, openExternalFile } = useWorkspace();
+  const { saveActiveNote, deleteActiveNote, requestRenameActiveNode } = useWorkspaceUiActions();
   const { openSettings } = useSettings();
   const { getEditorView } = useEditor();
-  const { openSearchView } = useSearch();
+  const { requestFocusQuickSearch } = useSearch();
 
   const registerAllCommands = () => {
     commandService.registerCommand('file.new', async () => {
@@ -25,6 +25,11 @@ export function useCommandRegistration() {
       } catch (error) {
         commandRegistrationLogger.error(`Failed to create note: ${getErrorMessage(error)}`);
       }
+    });
+
+    commandService.registerCommand('file.open', async () => {
+      commandRegistrationLogger.debug('Command executed: file.open');
+      await openExternalFile();
     });
 
     commandService.registerCommand('file.save', async () => {
@@ -37,9 +42,9 @@ export function useCommandRegistration() {
       await deleteActiveNote();
     });
 
-    commandService.registerCommand('file.rename', async () => {
+    commandService.registerCommand('file.rename', () => {
       commandRegistrationLogger.debug('Command executed: file.rename');
-      await renameActiveNote();
+      requestRenameActiveNode();
     });
 
     commandService.registerCommand('search.find', () => {
@@ -49,12 +54,13 @@ export function useCommandRegistration() {
         openSearchPanel(editorView);
       } else {
         commandRegistrationLogger.warn('No active editor view');
+        requestFocusQuickSearch();
       }
     });
 
-    commandService.registerCommand('search.findInFiles', async () => {
+    commandService.registerCommand('search.findInFiles', () => {
       commandRegistrationLogger.debug('Command executed: search.findInFiles');
-      await openSearchView();
+      requestFocusQuickSearch();
     });
 
     commandService.registerCommand('app.preferences', () => {

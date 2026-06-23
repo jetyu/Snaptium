@@ -107,6 +107,7 @@
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useWorkspace } from "../composables/useWorkspace";
+import { useWorkspaceUiActions } from "../composables/useWorkspaceUiActions";
 import { buildNoteTemplate, type NoteTemplateId } from "../templates";
 import { WORKSPACE_CONSTANTS } from "../constants/workspace.constants";
 import SyncHoverCard from "../../sync/components/SyncHoverCard.vue";
@@ -184,6 +185,7 @@ const settingsStore = useSettingsStore();
 const workspaceStore = useWorkspaceStore();
 const appShellStore = useAppShellStore();
 const { statusLabel, statusToneClass, summaryItems, formattedLastSynced } = useSyncPresentation();
+const { workspaceRenameRequest } = useWorkspaceUiActions();
 const sidebarRef = ref<HTMLElement | null>(null);
 const renameTarget = ref<RenameTarget>(null);
 const syncButtonShellRef = ref<HTMLElement | null>(null);
@@ -865,6 +867,30 @@ function beginRenamingNotebook(notebook: Notebook) {
   renameDraft.value = notebook.name;
   focusRenameInput();
 }
+
+function handleRenameActiveNodeRequest() {
+  if (activeNoteId.value) {
+    const activeNote = notes.value.find((note) => note.id === activeNoteId.value);
+    if (activeNote) {
+      beginRenamingNote(activeNote);
+    }
+    return;
+  }
+
+  if (activeNotebookId.value) {
+    const activeNotebook = notebooks.value.find((notebook) => notebook.id === activeNotebookId.value);
+    if (activeNotebook) {
+      beginRenamingNotebook(activeNotebook);
+    }
+  }
+}
+
+watch(
+  () => workspaceRenameRequest.value.id,
+  () => {
+    handleRenameActiveNodeRequest();
+  },
+);
 
 function isEditing(entry: WorkspaceTreeEntry) {
   return (

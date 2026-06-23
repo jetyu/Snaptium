@@ -43,5 +43,6 @@ export function useWorkspace() {
     forceFlushAutoSave: store.forceFlushAutoSave,
     openHistoryDialog: store.openHistoryDialog,
     openNotePropertiesDialog: store.openNotePropertiesDialog,
+    openExternalFile: store.openExternalFile,
   };
 }
