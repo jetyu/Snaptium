@@ -12,7 +12,7 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { createCodeEditor } from '@renderer/core/editor/createCodeEditor';
 import { createLogger } from '@renderer/features/logger';
 import { useWorkspaceStore, workspaceService } from '@renderer/features/workspace';
@@ -41,6 +41,7 @@ const aiAssistant = useAiAssistant();
 
 const { activeNote } = storeToRefs(workspaceStore);
 const { config } = storeToRefs(settingsStore);
+const isActiveNoteReadMode = computed(() => Boolean(activeNote.value?.locked));
 
 const editorHost = ref<HTMLElement | null>(null);
 let editorApi: ReturnType<typeof createCodeEditor> | undefined;
@@ -166,7 +167,7 @@ function setSelectionFromDropEvent(event: DragEvent) {
 
 async function saveImagesAndInsertMarkdown(files: File[]) {
   const note = activeNote.value;
-  if (!note || note.locked || files.length === 0) {
+  if (!note || isActiveNoteReadMode.value || files.length === 0) {
     return;
   }
 
@@ -235,7 +236,7 @@ onMounted(() => {
   editorApi = createCodeEditor({
     target: editorHost.value,
     initialValue: props.modelValue,
-    readOnly: activeNote.value?.locked ?? false,
+    readOnly: isActiveNoteReadMode.value,
     showLineNumbers: config.value.showLineNumbers,
     wordWrap: config.value.wordWrap,
     codeFolding: config.value.codeFolding,
@@ -283,10 +284,10 @@ watch(
 );
 
 watch(
-  () => activeNote.value?.locked,
-  (nextLocked) => {
+  isActiveNoteReadMode,
+  (nextReadModeEnabled) => {
     if (!editorApi) return;
-    editorApi.setReadOnly(nextLocked ?? false);
+    editorApi.setReadOnly(nextReadModeEnabled);
   },
 );
 

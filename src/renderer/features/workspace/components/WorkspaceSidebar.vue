@@ -58,7 +58,7 @@
         <span v-else class="workspace-row__chevron workspace-row__chevron--placeholder" />
 
         <div class="workspace-row__icon icon-wrapper">
-          <IconFileCheck v-if="entry.kind === 'note' && entry.item.locked" :size="14" />
+          <IconFileCheck v-if="entry.kind === 'note' && isNoteReadMode(entry.item)" :size="14" />
           <NotebookVisualIcon v-else-if="entry.kind === 'notebook'" class="workspace-row__notebook-icon"
             :icon-color="entry.item.iconColor" />
           <IconFileText v-else :size="14" />
@@ -172,7 +172,7 @@ const {
   deleteNotebook,
   renameNote,
   renameNotebook,
-  toggleNodeLock,
+  setNoteReadMode,
   updateNotebookIconColor,
   toggleNodeStar,
   openHistoryDialog,
@@ -461,6 +461,10 @@ function hasSelectedAncestor(entry: WorkspaceTreeEntry) {
 
 function getEntryDisplayName(entry: WorkspaceTreeEntry) {
   return entry.kind === "note" ? entry.item.title : entry.item.name;
+}
+
+function isNoteReadMode(note: Note) {
+  return Boolean(note.locked);
 }
 
 function selectEntryRange(entry: WorkspaceTreeEntry) {
@@ -1139,7 +1143,7 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     selectNotebook,
     beginRenamingNote,
     beginRenamingNotebook,
-    toggleNodeLock,
+    setNoteReadMode,
     openNotebookAppearancePicker,
     toggleNodeStar,
     openHistory: openHistoryDialog,

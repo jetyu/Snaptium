@@ -12,7 +12,16 @@ const commandRegistrationLogger = createLogger('CommandRegistration');
 
 export function useCommandRegistration() {
   const { createNote, openExternalFile } = useWorkspace();
-  const { saveActiveNote, deleteActiveNote, requestRenameActiveNode } = useWorkspaceUiActions();
+  const {
+    createNotebookFromActiveContext,
+    saveActiveNote,
+    deleteActiveNote,
+    requestRenameActiveNode,
+    toggleActiveNoteReadMode,
+    toggleActiveNodeStar,
+    openActiveNoteProperties,
+    openActiveNoteHistory,
+  } = useWorkspaceUiActions();
   const { openSettings } = useSettings();
   const { getEditorView } = useEditor();
   const { requestFocusQuickSearch } = useSearch();
@@ -32,6 +41,11 @@ export function useCommandRegistration() {
       await openExternalFile();
     });
 
+    commandService.registerCommand('file.newNotebook', async () => {
+      commandRegistrationLogger.debug('Command executed: file.newNotebook');
+      await createNotebookFromActiveContext();
+    });
+
     commandService.registerCommand('file.save', async () => {
       commandRegistrationLogger.debug('Command executed: file.save');
       await saveActiveNote();
@@ -45,6 +59,26 @@ export function useCommandRegistration() {
     commandService.registerCommand('file.rename', () => {
       commandRegistrationLogger.debug('Command executed: file.rename');
       requestRenameActiveNode();
+    });
+
+    commandService.registerCommand('file.toggleReadMode', async () => {
+      commandRegistrationLogger.debug('Command executed: file.toggleReadMode');
+      await toggleActiveNoteReadMode();
+    });
+
+    commandService.registerCommand('file.toggleStar', async () => {
+      commandRegistrationLogger.debug('Command executed: file.toggleStar');
+      await toggleActiveNodeStar();
+    });
+
+    commandService.registerCommand('file.properties', () => {
+      commandRegistrationLogger.debug('Command executed: file.properties');
+      openActiveNoteProperties();
+    });
+
+    commandService.registerCommand('file.history', async () => {
+      commandRegistrationLogger.debug('Command executed: file.history');
+      await openActiveNoteHistory();
     });
 
     commandService.registerCommand('search.find', () => {
