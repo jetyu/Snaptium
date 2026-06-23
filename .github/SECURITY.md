@@ -2,7 +2,7 @@
 
 ### Supported Versions / 支持的版本
 
-Only the latest version of **Notewizard** are supported with security updates.  
+Only the latest version of **Snaptium** are supported with security updates.  
 仅最新版本提供安全更新。
 
 ### Reporting a Vulnerability / 报告安全漏洞
@@ -16,5 +16,5 @@ Instead, report it responsibly using the **GitHub Security Advisory**.
 You can expect an initial response within **48 hours**.  
 我们将在 **48 小时内**给予初步回复。
 
-Thank you for helping keep Notewizard secure.  
-感谢你帮助提升 Notewizard 的安全性。
+Thank you for helping keep Snaptium secure.  
+感谢你帮助提升 Snaptium 的安全性。
