@@ -1021,7 +1021,7 @@
   "workbench.sidebar.activeTags": "活躍標籤",
   "workbench.sidebar.knowledgeHeat": "知識熱力圖",
   "workbench.sidebar.knowledgeTopics": "主題熱度榜",
-  "workbench.sidebar.overview": "我的成就",
+  "workbench.sidebar.achievements": "我的成就",
   "workbench.startup.defaultToWorkbench": "啟動默認進入工作台",
   "workbench.startup.defaultToWorkbenchHint": "取消後默認進入工作區",
   "workbench.stats.favoriteCount": "收藏數",

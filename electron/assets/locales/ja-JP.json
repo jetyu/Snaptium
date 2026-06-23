@@ -1021,7 +1021,7 @@
   "workbench.sidebar.activeTags": "アクティブなタグ",
   "workbench.sidebar.knowledgeHeat": "知識ヒートマップ",
   "workbench.sidebar.knowledgeTopics": "トピックランキング",
-  "workbench.sidebar.overview": "私の功績",
+  "workbench.sidebar.achievements": "私の功績",
   "workbench.startup.defaultToWorkbench": "起動時にデフォルトでワークベンチを表示",
   "workbench.startup.defaultToWorkbenchHint": "オフにするとワークスペースに入ります",
   "workbench.stats.favoriteCount": "お気に入り",

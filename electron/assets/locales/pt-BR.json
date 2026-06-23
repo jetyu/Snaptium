@@ -1021,7 +1021,7 @@
   "workbench.sidebar.activeTags": "Etiquetas ativas",
   "workbench.sidebar.knowledgeHeat": "Mapa de calor de conhecimento",
   "workbench.sidebar.knowledgeTopics": "Tópicos de tendência",
-  "workbench.sidebar.overview": "minhas conquistas",
+  "workbench.sidebar.achievements": "minhas conquistas",
   "workbench.startup.defaultToWorkbench": "Entrar no painel de controle por padrão ao iniciar",
   "workbench.startup.defaultToWorkbenchHint": "Entrar no espaço de trabalho por padrão após o cancelamento",
   "workbench.stats.favoriteCount": "Favoritos",

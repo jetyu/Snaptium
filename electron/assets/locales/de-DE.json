@@ -1021,7 +1021,7 @@
   "workbench.sidebar.activeTags": "Aktive Tags",
   "workbench.sidebar.knowledgeHeat": "Wissens-Heatmap",
   "workbench.sidebar.knowledgeTopics": "Trendthemen",
-  "workbench.sidebar.overview": "meine Erfolge",
+  "workbench.sidebar.achievements": "meine Erfolge",
   "workbench.startup.defaultToWorkbench": "Beim Start standardmäßig die Workbench aufrufen",
   "workbench.startup.defaultToWorkbenchHint": "Nach der Abwahl standardmäßig den Arbeitsbereich aufrufen",
   "workbench.stats.favoriteCount": "Favoriten",
