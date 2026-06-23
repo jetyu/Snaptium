@@ -1021,7 +1021,7 @@
   "workbench.sidebar.activeTags": "Tag Aktif",
   "workbench.sidebar.knowledgeHeat": "Peta Panas Pengetahuan",
   "workbench.sidebar.knowledgeTopics": "Topik Tren",
-  "workbench.sidebar.overview": "prestasi saya",
+  "workbench.sidebar.achievements": "prestasi saya",
   "workbench.startup.defaultToWorkbench": "Masuk ke workbench secara default saat startup",
   "workbench.startup.defaultToWorkbenchHint": "Masuk ke ruang kerja secara default setelah pembatalan",
   "workbench.stats.favoriteCount": "Favorit",

@@ -1021,7 +1021,7 @@
   "workbench.sidebar.activeTags": "Active Tags",
   "workbench.sidebar.knowledgeHeat": "Knowledge Heat",
   "workbench.sidebar.knowledgeTopics": "Trending Topics",
-  "workbench.sidebar.overview": "my achievements",
+  "workbench.sidebar.achievements": "Achievements",
   "workbench.startup.defaultToWorkbench": "Enter workbench by default at startup",
   "workbench.startup.defaultToWorkbenchHint": "Enter workspace by default after cancellation",
   "workbench.stats.favoriteCount": "Favorites",

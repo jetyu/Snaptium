@@ -1021,7 +1021,7 @@
   "workbench.sidebar.activeTags": "Étiquettes actives",
   "workbench.sidebar.knowledgeHeat": "Carte de chaleur des connaissances",
   "workbench.sidebar.knowledgeTopics": "Sujets tendances",
-  "workbench.sidebar.overview": "mes réalisations",
+  "workbench.sidebar.achievements": "mes réalisations",
   "workbench.startup.defaultToWorkbench": "Accéder au bureau par défaut au démarrage",
   "workbench.startup.defaultToWorkbenchHint": "Si décoché, accède à l'espace de travail par défaut",
   "workbench.stats.favoriteCount": "Favoris",
