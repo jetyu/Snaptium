@@ -26,7 +26,7 @@
     "test": "npm run test:unit",
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && node src/scripts/build-win.js",
-    "dist:win:store": "npm run build && node src/scripts/build-win-store.js",
+    "dist:winstore": "npm run build && node src/scripts/build-win-store.js",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:linux": "npm run build && electron-builder --linux"
   },
@@ -124,7 +124,9 @@
     "appx": {
       "languages": [
         "en-US",
+        "en-GB",
         "zh-CN",
+        "zh-Hans",
         "zh-HK",
         "zh-TW",
         "ja-JP",
