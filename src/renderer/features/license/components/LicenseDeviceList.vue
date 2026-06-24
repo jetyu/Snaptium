@@ -35,9 +35,17 @@
             {{ getStatusLabel(device.status) }}
           </span>
 
-          <button type="button" class="deactivate-btn" :disabled="processingDeviceId === device.id"
-            @click="handleDeactivate(device.id, device.current)">
-            <span v-if="processingDeviceId === device.id" class="spinner small"></span>
+          <button
+            v-if="!device.current"
+            type="button"
+            class="deactivate-btn"
+            :disabled="processingDeviceId === device.id"
+            @click="handleDeactivate(device.id)"
+          >
+            <span v-if="processingDeviceId === device.id" class="deactivate-loading">
+              <span class="spinner small"></span>
+              <span>{{ t('license.devices.deactivate') }}</span>
+            </span>
             <span v-else>{{ t('license.devices.deactivate') }}</span>
           </button>
         </div>
@@ -126,10 +134,9 @@ function getStatusLabel(value: string): string {
   return te(key) ? t(key) : value;
 }
 
-async function handleDeactivate(deviceId: string, current: boolean): Promise<void> {
+async function handleDeactivate(deviceId: string): Promise<void> {
   errorMessage.value = '';
-  const confirmKey = current ? 'license.devices.deactivateCurrentConfirm' : 'license.devices.deactivateConfirm';
-  if (!window.confirm(t(confirmKey))) {
+  if (!window.confirm(t('license.devices.deactivateConfirm'))) {
     return;
   }
 
@@ -357,6 +364,12 @@ async function handleDeactivate(deviceId: string, current: boolean): Promise<voi
 .deactivate-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.deactivate-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .device-empty {

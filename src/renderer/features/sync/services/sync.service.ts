@@ -59,7 +59,7 @@ function normalizeSyncSummary(payload: unknown): SyncSummary | null {
 
 function resolveFallbackErrorMessage(code: string): string {
   const t = i18n.global.t.bind(i18n.global);
-  const fallbackMessages: Record<string, string> = {
+  const syncFlowMessages: Record<string, string> = {
     CANCELLED: t('sync.error.cancelled'),
     KEY_SLOTS_RESTORED: t('sync.notice.keySlotsRestored'),
     NOT_CONFIGURED: t('sync.error.notConfigured'),
@@ -67,11 +67,14 @@ function resolveFallbackErrorMessage(code: string): string {
     PROVIDER_CONNECTION_FAILED: t('sync.error.connectionFailed'),
     REMOTE_LOCKED: t('sync.error.remoteLocked'),
     WORKSPACE_UNAVAILABLE: t('sync.error.workspaceUnavailable'),
+  };
+
+  const e2eeReadinessMessages: Record<string, string> = {
     E2EE_NOT_UNLOCKED: t('e2ee.error.dekNotUnlocked'),
     MASTER_PASSWORD_REQUIRED: t('e2ee.error.masterPasswordRequired'),
   };
 
-  return fallbackMessages[code] ?? t('sync.error.unknown');
+  return syncFlowMessages[code] ?? e2eeReadinessMessages[code] ?? t('sync.error.unknown');
 }
 
 function createSyncRunError(code: string, message: string): Error {

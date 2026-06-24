@@ -97,7 +97,7 @@ function handleMenuAction(action: MenuAction, mainWindow: BrowserWindow) {
       shell.openExternal('https://snaptium.com/legal/terms');
       break;
     case 'feedback':
-      shell.openExternal('https://github.com/jetyu/NoteWizard/issues');
+      shell.openExternal('https://github.com/jetyu/Snaptium/issues');
       break;
     default:
       break;

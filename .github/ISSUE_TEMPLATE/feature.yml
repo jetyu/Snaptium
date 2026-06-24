@@ -38,10 +38,10 @@ body:
       required: true
 
   - type: input
-    id: notewizard_version
+    id: Snaptium_version
     attributes:
-      label: NoteWizard Version / NoteWizard版本
-      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
+      label: Snaptium Version / Snaptium版本
+      description: The version of Snaptium you are using. Required | 当前使用的Snaptium版本（必填）
       placeholder: e.g. 1.0.1
     validations:
       required: true

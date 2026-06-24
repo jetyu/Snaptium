@@ -36,16 +36,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onBeforeUnmount } from 'vue';
+import { nextTick, onBeforeUnmount, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { IconSearch, IconX, IconFileText } from '@tabler/icons-vue';
 import { searchService, type SearchResult, type SearchMatch } from '@renderer/features/search/services/search.service';
 import { useWorkspace } from '@renderer/features/workspace';
 import { useAppShellStore } from '../store/appShell.store';
+import { useSearch } from '@renderer/features/search';
 
 const { t } = useI18n();
 const { selectNote } = useWorkspace();
 const appShellStore = useAppShellStore();
+const { quickSearchRequest } = useSearch();
 
 const searchQuery = ref('');
 const results = ref<SearchResult[]>([]);
@@ -55,6 +57,17 @@ const highlightedIndex = ref(0);
 const inputRef = ref<HTMLInputElement | null>(null);
 let searchTimeout: number | null = null;
 let closeTimer: number | null = null;
+
+function focusInput(selectAll = true) {
+  clearCloseTimer();
+  inputRef.value?.focus({ preventScroll: true });
+  if (selectAll) {
+    inputRef.value?.select();
+  }
+  if (searchQuery.value && results.value.length > 0) {
+    showDropdown.value = true;
+  }
+}
 
 function handleFocus() {
   isFocused.value = true;
@@ -155,6 +168,15 @@ function escapeHtml(text: string): string {
   div.textContent = text;
   return div.innerHTML;
 }
+
+watch(
+  () => quickSearchRequest.value.id,
+  () => {
+    void nextTick(() => {
+      focusInput(quickSearchRequest.value.selectAll);
+    });
+  },
+);
 
 onBeforeUnmount(() => {
   if (searchTimeout) clearTimeout(searchTimeout);

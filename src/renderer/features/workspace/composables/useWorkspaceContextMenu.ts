@@ -29,7 +29,7 @@ interface UseWorkspaceContextMenuOptions {
   selectNotebook: (id: string) => void;
   beginRenamingNote: (note: Note) => void;
   beginRenamingNotebook: (notebook: Notebook) => void;
-  toggleNodeLock: (id: string, locked: boolean) => Promise<void>;
+  setNoteReadMode: (id: string, enabled: boolean) => Promise<void>;
   openNotebookAppearancePicker: (notebook: Notebook) => void;
   toggleNodeStar: (id: string, type: 'note' | 'notebook', starred: boolean) => Promise<void>;
   openHistory: (id: string) => void;
@@ -110,11 +110,9 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
           await options.deleteNotebook(context.notebook.id);
         }
         break;
-      case WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_LOCK:
+      case WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_READ_MODE:
         if (context.note) {
-          await options.toggleNodeLock(context.note.id, !context.note.locked);
-        } else if (context.notebook) {
-          await options.toggleNodeLock(context.notebook.id, !context.notebook.locked);
+          await options.setNoteReadMode(context.note.id, !context.note.locked);
         }
         break;
       case WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_STAR:

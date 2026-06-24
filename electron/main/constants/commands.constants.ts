@@ -23,6 +23,11 @@ export const COMMANDS = {
     category: COMMAND_CATEGORIES.FILE,
     defaultKeybinding: 'CommandOrControl+O',
   },
+  FILE_NEW_NOTEBOOK: {
+    id: 'file.newNotebook',
+    category: COMMAND_CATEGORIES.FILE,
+    defaultKeybinding: 'CommandOrControl+Shift+N',
+  },
   FILE_SAVE: {
     id: 'file.save',
     category: COMMAND_CATEGORIES.FILE,
@@ -37,6 +42,26 @@ export const COMMANDS = {
     id: 'file.rename',
     category: COMMAND_CATEGORIES.FILE,
     defaultKeybinding: 'F2',
+  },
+  FILE_TOGGLE_READ_MODE: {
+    id: 'file.toggleReadMode',
+    category: COMMAND_CATEGORIES.FILE,
+    defaultKeybinding: 'CommandOrControl+E',
+  },
+  FILE_TOGGLE_STAR: {
+    id: 'file.toggleStar',
+    category: COMMAND_CATEGORIES.FILE,
+    defaultKeybinding: 'CommandOrControl+D',
+  },
+  FILE_PROPERTIES: {
+    id: 'file.properties',
+    category: COMMAND_CATEGORIES.FILE,
+    defaultKeybinding: 'CommandOrControl+P',
+  },
+  FILE_HISTORY: {
+    id: 'file.history',
+    category: COMMAND_CATEGORIES.FILE,
+    defaultKeybinding: 'CommandOrControl+H',
   },
 
   // 搜索操作

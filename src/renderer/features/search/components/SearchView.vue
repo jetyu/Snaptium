@@ -50,6 +50,7 @@
             <p class="search-view__status-text search-view__status-text--error">{{ searchError }}</p>
           </div>
           <div v-else-if="!canUseKnowledgeSearch && !hasChatMessages" class="search-view__status">
+            <IconMessageChatbot :size="72" class="search-view__status-icon" />
             <p class="search-view__status-text">{{ knowledgeUnavailableReason }}</p>
           </div>
           <div v-else-if="!hasChatMessages" class="search-view__status">

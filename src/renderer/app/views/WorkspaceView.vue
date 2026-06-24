@@ -118,7 +118,7 @@ const activeSourceLine = ref(1);
 
 function handleSyncToSource(payload: { line: number; relativeOffset: number }) {
   const editorApi = editorPaneRef.value?.getEditorApi();
-  if (!editorApi || activeNote.value?.locked) {
+  if (!editorApi || isActiveNoteReadMode.value) {
     return;
   }
 
@@ -133,7 +133,8 @@ function handleSyncToSource(payload: { line: number; relativeOffset: number }) {
   });
 }
 const hasPreviewPane = computed(() => Boolean(activeNote.value || !activeNotebookId.value));
-const hasEditorPane = computed(() => !activeNote.value?.locked);
+const isActiveNoteReadMode = computed(() => Boolean(activeNote.value?.locked));
+const hasEditorPane = computed(() => !isActiveNoteReadMode.value);
 const hasTrailingContent = computed(() => hasEditorPane.value || hasPreviewPane.value);
 const canResizePreview = computed(() => hasEditorPane.value && hasPreviewPane.value);
 
@@ -316,7 +317,7 @@ function handlePreviewScroll() {
     activeSourceLine.value = line;
 
     const editorApi = editorPaneRef.value?.getEditorApi();
-    if (!editorApi || activeNote.value?.locked) {
+    if (!editorApi || isActiveNoteReadMode.value) {
       return;
     }
 
