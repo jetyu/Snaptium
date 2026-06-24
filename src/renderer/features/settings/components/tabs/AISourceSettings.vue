@@ -36,7 +36,7 @@
               </div>
               <div class="detail-item">
                 <span class="label">{{ t('label.aiApiKey') }}</span>
-                <span class="value">{{ t('common.encrypted') }}</span>
+                <span class="value">••••••••••••••••••••••••••</span>
               </div>
               <div class="detail-item">
                 <span class="label">{{ t('label.aiCapabilities') }}</span>
