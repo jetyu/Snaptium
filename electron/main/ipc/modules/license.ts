@@ -3,26 +3,43 @@ import { z } from 'zod';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { licenseService } from '../../services/license.service.js';
 import { getErrorCode, getErrorMessage } from '../../services/error.service.js';
+import type { LicenseClaimSnapshot } from '../../../shared/license.constants.js';
 
 const licenseKeySchema = z.string().trim().min(1);
 const deviceIdSchema = z.string().trim().min(1);
 const forceFlagSchema = z.boolean().optional();
+const claimDevicePayloadSchema = z.object({
+  licenseKey: licenseKeySchema,
+  deviceId: deviceIdSchema,
+});
 
 function serializeLicenseError(error: unknown): {
   success: false;
   code: string;
   message: string;
+  claimSnapshot?: LicenseClaimSnapshot;
 } {
+  const claimSnapshot = (
+    typeof error === 'object'
+    && error !== null
+    && 'claimSnapshot' in error
+    && error.claimSnapshot
+  )
+    ? error.claimSnapshot as LicenseClaimSnapshot
+    : undefined;
+
   return {
     success: false,
     code: getErrorCode(error) ?? 'unknown',
     message: getErrorMessage(error, 'License request failed.'),
+    ...(claimSnapshot ? { claimSnapshot } : {}),
   };
 }
 
 export function registerLicenseIpcHandlers(): void {
   ipcMain.removeHandler(IPC_CHANNELS.LICENSE_GET_STATE);
   ipcMain.removeHandler(IPC_CHANNELS.LICENSE_ACTIVATE);
+  ipcMain.removeHandler(IPC_CHANNELS.LICENSE_CLAIM_DEVICE);
   ipcMain.removeHandler(IPC_CHANNELS.LICENSE_VALIDATE);
   ipcMain.removeHandler(IPC_CHANNELS.LICENSE_REFRESH_DEVICES);
   ipcMain.removeHandler(IPC_CHANNELS.LICENSE_DEACTIVATE_DEVICE);
@@ -41,6 +58,18 @@ export function registerLicenseIpcHandlers(): void {
       return {
         success: true,
         data: await licenseService.activate(licenseKey),
+      };
+    } catch (error) {
+      return serializeLicenseError(error);
+    }
+  });
+
+  ipcMain.handle(IPC_CHANNELS.LICENSE_CLAIM_DEVICE, async (_event, rawPayload: unknown) => {
+    try {
+      const payload = claimDevicePayloadSchema.parse(rawPayload);
+      return {
+        success: true,
+        data: await licenseService.claimDevice(payload.licenseKey, payload.deviceId),
       };
     } catch (error) {
       return serializeLicenseError(error);

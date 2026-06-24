@@ -155,6 +155,13 @@ interface E2eeOperationResult {
   success: true;
 }
 
+interface LicenseErrorResult {
+  success: false;
+  code: string;
+  message: string;
+  claimSnapshot?: import('@shared/license.constants').LicenseClaimSnapshot;
+}
+
 interface AccessControlConfig {
   enabled: boolean;
   lockOnStartup: boolean;
@@ -333,12 +340,13 @@ declare global {
       };
 
       license?: {
-        getState: () => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | { success: false; code: string; message: string }>;
-        activate: (licenseKey: string) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | { success: false; code: string; message: string }>;
-        validate: (force?: boolean) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | { success: false; code: string; message: string }>;
-        refreshDevices: (force?: boolean) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | { success: false; code: string; message: string }>;
-        deactivateDevice: (deviceId: string) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | { success: false; code: string; message: string }>;
-        clear: () => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | { success: false; code: string; message: string }>;
+        getState: () => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
+        activate: (licenseKey: string) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
+        claimDevice: (licenseKey: string, deviceId: string) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
+        validate: (force?: boolean) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
+        refreshDevices: (force?: boolean) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
+        deactivateDevice: (deviceId: string) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
+        clear: () => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
         onStateChanged: (callback: (state: import('@shared/license.constants').LicenseState) => void) => () => void;
       };
 

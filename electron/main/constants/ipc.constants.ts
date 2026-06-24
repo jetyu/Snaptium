@@ -39,6 +39,7 @@ export const IPC_CHANNELS = {
   ELECTRON_CLOSE: 'close',
   ELECTRON_WIN_ALL_CLOSED: 'window-all-closed',
   LICENSE_ACTIVATE: 'license:activate',
+  LICENSE_CLAIM_DEVICE: 'license:claim-device',
   LICENSE_CLEAR: 'license:clear',
   LICENSE_DEACTIVATE_DEVICE: 'license:deactivate-device',
   LICENSE_GET_STATE: 'license:get-state',
