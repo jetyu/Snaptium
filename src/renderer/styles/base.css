@@ -277,9 +277,9 @@ button.icon-text svg,
 .dialog-close-button {
   width: 32px;
   height: 32px;
-  border: 1px solid var(--panel-border);
+  border: none;
   border-radius: 10px;
-  background: var(--panel);
+  background: transparent;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -287,16 +287,27 @@ button.icon-text svg,
   line-height: 0;
   cursor: pointer;
   color: var(--text-muted);
+  outline: none;
   transition:
-    border-color 0.15s ease,
     background-color 0.15s ease,
-    color 0.15s ease;
+    color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.12s ease;
 }
 
 .dialog-close-button:hover {
-  border-color: var(--accent);
-  background: var(--panel-hover);
-  color: var(--accent);
+  background: color-mix(in srgb, var(--button-bg-hover) 92%, var(--panel));
+  color: var(--text-primary);
+}
+
+.dialog-close-button:active {
+  background: color-mix(in srgb, var(--button-bg-active) 94%, var(--panel));
+  color: var(--text-primary);
+  transform: scale(0.97);
+}
+
+.dialog-close-button:focus-visible {
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .dialog-close-button svg {

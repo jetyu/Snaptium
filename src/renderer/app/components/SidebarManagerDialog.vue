@@ -42,11 +42,6 @@
                       <div class="sidebar-manager-dialog__preview-group sidebar-manager-dialog__preview-group--grow">
                         <div v-for="module in enabledCustomModules" :key="module.id"
                           class="sidebar-manager-dialog__preview-module">
-                          <button type="button" class="sidebar-manager-dialog__preview-remove"
-                            :aria-label="t('appShell.sidebarManager.removeModule', { module: t(module.labelKey) })"
-                            @click="removeFromPreview(module.id)">
-                            <IconMinus :size="16" stroke="3" />
-                          </button>
                           <button type="button" class="sidebar-manager-dialog__preview-button is-module">
                             <component :is="getModuleIcon(module.id)" :size="18" />
                           </button>
@@ -418,27 +413,6 @@ watch(isSidebarManagerOpen, async (open) => {
 .sidebar-manager-dialog__preview-button--view {
   cursor: default;
   pointer-events: none;
-}
-
-.sidebar-manager-dialog__preview-remove {
-  position: absolute;
-  top: -6px;
-  right: 3px;
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  border-radius: 6px;
-  background: rgba(244, 63, 94, 0.08);
-  color: #e11d48;
-  cursor: pointer;
-  transition: background-color 0.18s ease, color 0.18s ease;
-}
-
-.sidebar-manager-dialog__preview-remove:hover {
-  background: rgba(244, 63, 94, 0.14);
 }
 
 .sidebar-manager-dialog__preview-label {

@@ -1,8 +1,8 @@
 <template>
   <div class="password-input-shell">
-    <input :type="inputType" class="settings-input password-input-field" :value="boundValue" :placeholder="placeholder"
-      :autocomplete="autocomplete" :disabled="disabled" :name="name" :spellcheck="spellcheck" @input="handleInput"
-      @change="handleChange" @keyup.enter="handleEnter" />
+    <input ref="inputRef" :type="inputType" class="settings-input password-input-field" :value="boundValue"
+      :placeholder="placeholder" :autocomplete="autocomplete" :disabled="disabled" :name="name"
+      :spellcheck="spellcheck" @input="handleInput" @change="handleChange" @keyup.enter="handleEnter" />
     <button type="button" class="password-toggle-btn" :aria-label="toggleAriaLabel" :title="toggleAriaLabel"
       :disabled="disabled" @click="toggleVisibility">
       <IconEye v-if="isVisible" :size="14" />
@@ -43,6 +43,7 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const isVisible = ref(false);
+const inputRef = ref<HTMLInputElement | null>(null);
 
 const internalValue = ref((props.modelValue ?? props.value) ?? '');
 
@@ -105,6 +106,16 @@ function handleEnter(event: KeyboardEvent): void {
 function toggleVisibility(): void {
   isVisible.value = !isVisible.value;
 }
+
+function focus(): void {
+  inputRef.value?.focus();
+}
+
+defineExpose<{
+  focus: () => void;
+}>({
+  focus,
+});
 </script>
 
 <style scoped>

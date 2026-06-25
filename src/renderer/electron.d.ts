@@ -159,7 +159,6 @@ interface LicenseErrorResult {
   success: false;
   code: string;
   message: string;
-  claimSnapshot?: import('@shared/license.constants').LicenseClaimSnapshot;
 }
 
 interface AccessControlConfig {
@@ -342,7 +341,6 @@ declare global {
       license?: {
         getState: () => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
         activate: (licenseKey: string) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
-        claimDevice: (licenseKey: string, deviceId: string) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
         validate: (force?: boolean) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
         refreshDevices: (force?: boolean) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
         deactivateDevice: (deviceId: string) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;

@@ -36,11 +36,10 @@
           </span>
 
           <button
-            v-if="!device.current"
             type="button"
             class="deactivate-btn"
             :disabled="processingDeviceId === device.id"
-            @click="handleDeactivate(device.id)"
+            @click="handleDeactivate(device)"
           >
             <span v-if="processingDeviceId === device.id" class="deactivate-loading">
               <span class="spinner small"></span>
@@ -134,15 +133,18 @@ function getStatusLabel(value: string): string {
   return te(key) ? t(key) : value;
 }
 
-async function handleDeactivate(deviceId: string): Promise<void> {
+async function handleDeactivate(device: LicenseDevice): Promise<void> {
   errorMessage.value = '';
-  if (!window.confirm(t('license.devices.deactivateConfirm'))) {
+  const confirmKey = device.current
+    ? 'license.devices.deactivateCurrentConfirm'
+    : 'license.devices.deactivateConfirm';
+  if (!window.confirm(t(confirmKey))) {
     return;
   }
 
-  processingDeviceId.value = deviceId;
+  processingDeviceId.value = device.id;
   try {
-    await licenseService.deactivateDevice(deviceId);
+    await licenseService.deactivateDevice(device.id);
   } catch (error) {
     errorMessage.value = normalizeLicenseErrorMessage(error);
   } finally {

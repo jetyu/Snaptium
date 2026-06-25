@@ -186,32 +186,64 @@ const openStorePage = async (): Promise<void> => {
 .store-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.55rem;
-  padding: 0.3rem 0.55rem;
-  border: 1px solid var(--border-strong);
-  border-radius: 999px;
-  background: var(--surface-raised);
+  justify-content: center;
+  gap: 0.46rem;
+  margin-top: 0.7rem;
+  padding: 0.4rem 0.82rem;
+  min-height: 32px;
+  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border-color));
+  border-radius: 10px;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-soft) 82%, white 18%) 0%,
+    color-mix(in srgb, var(--surface-raised) 96%, var(--accent) 4%) 100%
+  );
   color: var(--text-primary);
-  font-size: 0.75rem;
+  font-size: 0.76rem;
   font-weight: 600;
+  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
+  letter-spacing: 0;
   line-height: 1;
   cursor: pointer;
   appearance: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  box-shadow:
+    var(--shadow-soft),
+    inset 0 1px 0 color-mix(in srgb, white 56%, transparent);
+  transition:
+    border-color 0.18s ease,
+    background 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .store-badge:hover {
-  border-color: var(--input-border-focus);
+  border-color: color-mix(in srgb, var(--accent) 20%, var(--border-strong));
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-soft) 78%, white 22%) 0%,
+    color-mix(in srgb, var(--surface-raised) 90%, var(--accent) 10%) 100%
+  );
+  box-shadow:
+    0 2px 10px color-mix(in srgb, var(--accent) 8%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 62%, transparent);
 }
 
 .store-badge:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  border-color: color-mix(in srgb, var(--accent) 28%, var(--border-strong));
+  box-shadow:
+    0 0 0 3px var(--focus-ring),
+    inset 0 1px 0 color-mix(in srgb, white 60%, transparent);
 }
 
 .store-badge:active {
-  transform: translateY(1px);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--surface-soft) 72%, var(--accent) 28%) 0%,
+    color-mix(in srgb, var(--surface-raised) 86%, var(--accent) 14%) 100%
+  );
+  box-shadow:
+    inset 0 1px 1px color-mix(in srgb, black 10%, transparent),
+    inset 0 1px 0 color-mix(in srgb, white 42%, transparent);
 }
 
 .store-badge__logo {
