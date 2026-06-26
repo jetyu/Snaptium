@@ -562,11 +562,11 @@ export const settingsService = {
 
     const dialogResult = await dialog.showMessageBox(focusedWindow, {
       type: 'warning',
-      buttons: [$t('button.cancel'), $t('trash.delete')],
+      buttons: [$t('button.cancel'), $t('button.clear')],
       defaultId: 0,
       cancelId: 0,
       noLink: true,
-      title: $t('common.delete'),
+      title: $t('title.clearConfiguration'),
       message: interpolateMessage($t('workspace.dialog.confirm'), { name: String(name) }),
     });
     // selectedButtonIndex is zero-based and follows the order of buttons[]
@@ -584,7 +584,7 @@ export const settingsService = {
       defaultId: 0,
       cancelId: 0,
       noLink: true,
-      title: $t('common.confirm'),
+      title: $t('title.resetConfiguration'),
       message: interpolateMessage($t('dialog.confirmResetSyncProvider'), { name: String(name) }),
     });
     // selectedButtonIndex is zero-based and follows the order of buttons[]

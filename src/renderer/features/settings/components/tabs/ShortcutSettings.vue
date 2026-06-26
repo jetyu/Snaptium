@@ -59,11 +59,11 @@
         </div>
         <div class="dialog-footer">
           <button class="action-button secondary" @click="closeAddDialog">
-            {{ t('common.cancel') }}
+            {{ t('button.cancel') }}
           </button>
           <button class="action-button primary" :disabled="!newShortcutKey || conflicts.length > 0"
             @click="confirmAddShortcut">
-            {{ t('common.confirm') }}
+            {{ t('button.confirm') }}
           </button>
         </div>
       </div>

@@ -4,7 +4,7 @@
       <div v-if="isOpen" class="about-overlay" @keydown.esc="closeAbout" tabindex="0" ref="overlayRef">
         <div class="about-modal" @click.stop>
           <div class="about-close-btn-wrapper">
-            <button @click="closeAbout" class="about-close-btn dialog-close-button" :aria-label="t('close')">
+            <button @click="closeAbout" class="about-close-btn dialog-close-button" :aria-label="t('button.close')">
               <IconX :size="16" />
             </button>
           </div>

@@ -10,7 +10,7 @@
               <p class="sidebar-manager-dialog__intro">{{ t('appShell.sidebarManager.intro') }}</p>
             </div>
             <button type="button" class="sidebar-manager-dialog__close dialog-close-button"
-              :aria-label="t('common.close')" @click="closeSidebarManager">
+              :aria-label="t('button.close')" @click="closeSidebarManager">
               <IconX :size="18" />
             </button>
           </header>

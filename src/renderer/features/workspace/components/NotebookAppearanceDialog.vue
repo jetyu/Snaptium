@@ -15,7 +15,7 @@
                 <p>{{ notebookName }}</p>
               </div>
             </div>
-            <button class="appearance-dialog__close dialog-close-button" :title="$t('common.close')" @click="closeDialog">
+            <button class="appearance-dialog__close dialog-close-button" :title="$t('button.close')" @click="closeDialog">
               <IconX :size="18" />
             </button>
           </header>

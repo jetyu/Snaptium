@@ -3,7 +3,7 @@
     <div ref="overlayRef" class="workbench-onboarding" role="dialog" aria-modal="true"
       aria-labelledby="workbench-onboarding-title" tabindex="0" @keydown.esc="emit('dismiss')">
       <section class="workbench-onboarding__dialog" @click.stop>
-        <button type="button" class="workbench-onboarding__close dialog-close-button" :aria-label="t('common.close')"
+        <button type="button" class="workbench-onboarding__close dialog-close-button" :aria-label="t('button.close')"
           @click="emit('dismiss')">
           <IconX :size="16" />
         </button>
