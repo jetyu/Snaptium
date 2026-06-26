@@ -158,11 +158,8 @@ import {
   IconNotebook,
   IconSparkles2,
 } from '@tabler/icons-vue';
-import { LICENSE_ERROR_CODES, type LicenseClaimSnapshot } from '@shared/license.constants';
 import {
-  getLicenseClaimSnapshot,
   licenseService,
-  normalizeLicenseError,
   normalizeLicenseErrorMessage,
 } from '../services/license.service';
 
@@ -218,10 +215,7 @@ const licenseKeyInputRef = ref<HTMLInputElement | null>(null);
 const isSubmitting = ref(false);
 const isClaiming = ref(false);
 const errorMessage = ref('');
-const claimSnapshot = ref<LicenseClaimSnapshot | null>(null);
-const selectedClaimDeviceId = ref('');
-const claimDevices = computed(() => claimSnapshot.value?.devices ?? []);
-const isBusy = computed(() => isSubmitting.value || isClaiming.value);
+const isBusy = isSubmitting;
 
 async function focusInput(): Promise<void> {
   await nextTick();
@@ -237,27 +231,8 @@ onMounted(() => {
   void focusInput();
 });
 
-function formatDate(value: string | null): string {
-  if (!value) {
-    return '-';
-  }
-
-  const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) {
-    return value;
-  }
-
-  return new Date(timestamp).toLocaleString();
-}
-
-function resetClaimState(): void {
-  claimSnapshot.value = null;
-  selectedClaimDeviceId.value = '';
-}
-
 function handleLicenseKeyInput(): void {
   errorMessage.value = '';
-  resetClaimState();
 }
 
 async function handleActivate(): Promise<void> {

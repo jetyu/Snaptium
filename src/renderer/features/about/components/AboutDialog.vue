@@ -4,7 +4,7 @@
       <div v-if="isOpen" class="about-overlay" @keydown.esc="closeAbout" tabindex="0" ref="overlayRef">
         <div class="about-modal" @click.stop>
           <div class="about-close-btn-wrapper">
-            <button @click="closeAbout" class="about-close-btn dialog-close-button" :aria-label="t('close')">
+            <button @click="closeAbout" class="about-close-btn dialog-close-button" :aria-label="t('button.close')">
               <IconX :size="16" />
             </button>
           </div>
@@ -186,38 +186,36 @@ const openStorePage = async (): Promise<void> => {
 .store-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  margin-top: 0.55rem;
-  padding: 0.3rem 0.55rem;
-  border: 1px solid var(--border-strong);
+  justify-content: center;
+  gap: 0.38rem;
+  margin-top: 0.72rem;
+  padding: 4px 10px;
+  min-height: 28px;
+  border: 1px solid var(--status-info-border);
   border-radius: 999px;
-  background: var(--surface-raised);
-  color: var(--text-primary);
-  font-size: 0.75rem;
+  background: transparent;
+  color: var(--status-info-text);
+  font-size: 0.72rem;
   font-weight: 600;
+  letter-spacing: 0.01em;
   line-height: 1;
   cursor: pointer;
   appearance: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+  outline: none;
 }
 
 .store-badge:hover {
-  border-color: var(--input-border-focus);
+  color: var(--status-info-text);
 }
 
 .store-badge:focus-visible {
-  outline: none;
   box-shadow: 0 0 0 3px var(--focus-ring);
-}
-
-.store-badge:active {
-  transform: translateY(1px);
 }
 
 .store-badge__logo {
   display: block;
-  width: 0.96rem;
-  height: 0.96rem;
+  width: 0.9rem;
+  height: 0.9rem;
   flex: 0 0 auto;
 }
 

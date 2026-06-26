@@ -184,7 +184,7 @@
             {{ t('button.cancel') }}
           </button>
           <button class="action-button primary" :disabled="!canSubmit" @click="handleSubmit">
-            {{ generatedRecoveryKey ? t('common.close') : t('common.confirm') }}
+            {{ generatedRecoveryKey ? t('button.close') : t('button.confirm') }}
           </button>
         </div>
       </div>

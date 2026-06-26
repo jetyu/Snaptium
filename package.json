@@ -123,21 +123,19 @@
     },
     "appx": {
       "languages": [
+        "de-DE",
         "en-US",
-        "en-GB",
-        "zh-CN",
-        "zh-Hans",
-        "zh-HK",
-        "zh-TW",
+        "es-ES",
+        "fr-FR",
+        "id-ID",
+        "it-IT",
         "ja-JP",
         "ko-KR",
-        "fr-FR",
-        "de-DE",
-        "es-ES",
-        "it-IT",
         "pt-BR",
         "tr-TR",
-        "id-ID"
+        "zh-CN",
+        "zh-HK",
+        "zh-TW"
       ]
     },
     "mac": {

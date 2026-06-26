@@ -28,7 +28,7 @@
               <span class="search-view__history-meta">{{ formatAskedAt(thread.askedAt) }}</span>
             </button>
             <button v-if="!isGeneratingThread(thread)" type="button" class="search-view__history-delete"
-              :title="$t('common.delete')" @click.stop.prevent="deleteQuestionThread(thread)">
+              :title="$t('button.delete')" @click.stop.prevent="deleteQuestionThread(thread)">
               <IconTrash :size="14" />
             </button>
           </div>

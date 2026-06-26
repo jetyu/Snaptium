@@ -24,7 +24,7 @@
               </div>
               <span class="host-text">{{ host }}</span>
             </div>
-            <button class="row-action-btn delete" @click="handleDeleteHost(index)" :title="t('common.delete')">
+            <button class="row-action-btn delete" @click="handleDeleteHost(index)" :title="t('button.delete')">
               <IconTrash :size="14" />
             </button>
           </div>

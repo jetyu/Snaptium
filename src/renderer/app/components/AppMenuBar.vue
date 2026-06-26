@@ -31,6 +31,7 @@ import { useLicenseDialog } from '@renderer/features/license';
 import { useUpdaterStore } from '@renderer/features/updater';
 import { MENU_CONFIG, type MenuAction } from '@shared/menu.config';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
+import { isDev } from '@renderer/config/env';
 
 const { t } = useI18n();
 const { openSettings } = useSettings();
@@ -49,9 +50,17 @@ const filteredMenus = computed(() => MENU_CONFIG
   .filter((menu) => visibleCategoryIds.includes(menu.id))
   .map((menu) => ({
     ...menu,
-    items: updaterStore.isStoreDistribution
-      ? menu.items.filter((item) => item.id !== 'update')
-      : menu.items,
+    items: menu.items.filter((item) => {
+      if (updaterStore.isStoreDistribution && item.id === 'update') {
+        return false;
+      }
+
+      if (!isDev && item.id === 'toggleDevTools') {
+        return false;
+      }
+
+      return true;
+    }),
   }))
 );
 

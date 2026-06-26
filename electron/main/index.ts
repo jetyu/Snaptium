@@ -142,9 +142,9 @@ app.whenReady().then(async () => {
   mainWindow.webContents.once('did-finish-load', () => {
     broadcastLicenseState();
   });
-  
+
   trayService.init(mainWindow);
-  
+
   if (!isDev) {
     await updaterService.initialize(mainWindow);
   }
@@ -152,7 +152,16 @@ app.whenReady().then(async () => {
   mainWindow.on(IPC_CHANNELS.ELECTRON_CLOSE, (event) => {
     if (!isQuitting) {
       event.preventDefault();
-      mainWindow.hide();
+      void settingsService.loadConfig().then((config) => {
+        if (config.windowCloseAction === 'exit') {
+          app.quit();
+          return;
+        }
+
+        if (!mainWindow.isDestroyed()) {
+          mainWindow.minimize();
+        }
+      });
     }
   });
 

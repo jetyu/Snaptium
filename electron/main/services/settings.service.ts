@@ -20,6 +20,7 @@ import type { KeySlots } from './crypto.service.js';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type RemoteImageMode = 'blocked' | 'trusted' | 'all';
+type WindowCloseAction = 'minimize' | 'exit';
 
 interface SyncWebDavConfig {
   url: string;
@@ -74,6 +75,7 @@ export interface AccessControlConfig {
 interface AppSettings {
   language: string;
   autoStartup: boolean;
+  windowCloseAction: WindowCloseAction;
   themeMode: 'system' | 'light' | 'dark';
   previewAppearance: PreviewAppearanceConfig;
   editorFontSize: number;
@@ -145,10 +147,16 @@ const LOG_AUTO_CLEAR_DAY_OPTIONS: ReadonlySet<number> = new Set<number>([0, 10, 
 const SNAPTIUM_CONFIG_PACKAGE_TYPE = 'sppcfg' as const;
 const SNAPTIUM_CONFIG_PACKAGE_VERSION = 1;
 const SNAPTIUM_CONFIG_EXTENSION = 'sppcfg' as const;
+const DEFAULT_WINDOW_CLOSE_ACTION: WindowCloseAction = 'minimize';
+
 function interpolateMessage(template: string, replacements: Record<string, string> = {}): string {
   return Object.entries(replacements).reduce((message, [key, value]) => {
     return message.replaceAll(`{${key}}`, String(value));
   }, template);
+}
+
+function normalizeWindowCloseAction(value: unknown): WindowCloseAction {
+  return value === 'exit' ? 'exit' : DEFAULT_WINDOW_CLOSE_ACTION;
 }
 
 function normalizeLogLevel(logLevel: unknown): LogLevel {
@@ -267,6 +275,7 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
   return {
     ...defaultConfig,
     ...incomingConfig,
+    windowCloseAction: normalizeWindowCloseAction(incomingConfig.windowCloseAction ?? defaultConfig.windowCloseAction),
     aiAssistant: {
       ...defaultConfig.aiAssistant,
       ...(incomingConfig.aiAssistant || {}),
@@ -321,6 +330,7 @@ export const settingsService = {
     return {
       language: app.getLocale().toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN',
       autoStartup: false,
+      windowCloseAction: DEFAULT_WINDOW_CLOSE_ACTION,
       themeMode: 'system',
       previewAppearance: {
         allowHtml: true,
@@ -552,11 +562,11 @@ export const settingsService = {
 
     const dialogResult = await dialog.showMessageBox(focusedWindow, {
       type: 'warning',
-      buttons: [$t('button.cancel'), $t('trash.delete')],
+      buttons: [$t('button.cancel'), $t('button.clear')],
       defaultId: 0,
       cancelId: 0,
       noLink: true,
-      title: $t('common.delete'),
+      title: $t('title.clearConfiguration'),
       message: interpolateMessage($t('workspace.dialog.confirm'), { name: String(name) }),
     });
     // selectedButtonIndex is zero-based and follows the order of buttons[]
@@ -574,7 +584,7 @@ export const settingsService = {
       defaultId: 0,
       cancelId: 0,
       noLink: true,
-      title: $t('common.confirm'),
+      title: $t('title.resetConfiguration'),
       message: interpolateMessage($t('dialog.confirmResetSyncProvider'), { name: String(name) }),
     });
     // selectedButtonIndex is zero-based and follows the order of buttons[]

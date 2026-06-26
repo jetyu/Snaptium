@@ -133,9 +133,17 @@ export function setupAppMenu(mainWindow: BrowserWindow, locale?: string): void {
   }
 
   MENU_CONFIG.forEach((category) => {
-    const items = isMicrosoftStoreDistribution()
-      ? category.items.filter((item) => item.id !== 'update')
-      : category.items;
+    const items = category.items.filter((item) => {
+      if (isMicrosoftStoreDistribution() && item.id === 'update') {
+        return false;
+      }
+
+      if (app.isPackaged && item.id === 'toggleDevTools') {
+        return false;
+      }
+
+      return true;
+    });
 
     template.push({
       label: $t(category.labelKey),

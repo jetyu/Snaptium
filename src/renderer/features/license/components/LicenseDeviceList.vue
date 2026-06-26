@@ -36,11 +36,10 @@
           </span>
 
           <button
-            v-if="!device.current"
             type="button"
             class="deactivate-btn"
             :disabled="processingDeviceId === device.id"
-            @click="handleDeactivate(device.id)"
+            @click="handleDeactivate(device)"
           >
             <span v-if="processingDeviceId === device.id" class="deactivate-loading">
               <span class="spinner small"></span>
@@ -111,11 +110,10 @@ function formatRelativeTime(value: string | null): string {
   const diffHour = Math.floor(diffMin / 60);
   const diffDay = Math.floor(diffHour / 24);
 
-  if (diffSec < 60) return t('saveStatus.justNow');
-  if (diffMin < 60) return t('saveStatus.minutesAgo', { minutes: diffMin });
-  if (diffHour < 24) return t('statusBar.savedHoursAgo', `${diffHour}小时前`); // Fallback formatting
-  if (diffDay === 1) return '昨天';
-  if (diffDay < 30) return `${diffDay}天前`;
+  if (diffSec < 60) return t('workbench.time.justNow');
+  if (diffMin < 60) return t('workbench.time.minutesAgo', { count: diffMin });
+  if (diffHour < 24) return t('workbench.time.hoursAgo', { count: diffHour });
+  if (diffDay < 30) return t('workbench.time.daysAgo', { count: diffDay });
 
   return new Date(timestamp).toLocaleDateString();
 }
@@ -134,15 +132,18 @@ function getStatusLabel(value: string): string {
   return te(key) ? t(key) : value;
 }
 
-async function handleDeactivate(deviceId: string): Promise<void> {
+async function handleDeactivate(device: LicenseDevice): Promise<void> {
   errorMessage.value = '';
-  if (!window.confirm(t('license.devices.deactivateConfirm'))) {
+  const confirmKey = device.current
+    ? 'license.devices.deactivateCurrentConfirm'
+    : 'license.devices.deactivateConfirm';
+  if (!window.confirm(t(confirmKey))) {
     return;
   }
 
-  processingDeviceId.value = deviceId;
+  processingDeviceId.value = device.id;
   try {
-    await licenseService.deactivateDevice(deviceId);
+    await licenseService.deactivateDevice(device.id);
   } catch (error) {
     errorMessage.value = normalizeLicenseErrorMessage(error);
   } finally {

@@ -107,7 +107,7 @@ const licenseDevicesResponseSchema = z.object({
   expires_at: z.string().nullable().optional(),
   grace_expires_at: z.string().nullable().optional(),
   max_devices: z.number().int().nonnegative(),
-  current_device_id: z.string().min(1),
+  current_device_id: z.string().min(1).nullable(),
   devices: z.array(devicePayloadSchema),
 });
 
@@ -118,7 +118,7 @@ const licenseHeartbeatResponseSchema = z.object({
   expires_at: z.string().nullable().optional(),
   grace_expires_at: z.string().nullable().optional(),
   max_devices: z.number().int().nonnegative().optional(),
-  current_device_id: z.string().optional(),
+  current_device_id: z.string().nullable().optional(),
   devices: z.array(devicePayloadSchema).optional(),
 });
 
@@ -166,23 +166,39 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function getStringField(value: Record<string, unknown>, keys: readonly string[]): string | undefined {
+  for (const key of keys) {
+    const candidate = value[key];
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return candidate;
+    }
+  }
+
+  return undefined;
+}
+
 function parseApiError(value: unknown): LicenseApiErrorResponse {
   if (!isObject(value)) {
     return {};
   }
 
-  const nestedError = isObject(value.error) ? value.error : null;
-  const source = nestedError ?? value;
+  const sources: Record<string, unknown>[] = [
+    value,
+    isObject(value.error) ? value.error : null,
+    isObject(value.data) ? value.data : null,
+    isObject(value.details) ? value.details : null,
+  ].filter((candidate): candidate is Record<string, unknown> => candidate !== null);
+
+  for (const source of sources) {
+    const code = getStringField(source, ['code', 'error_code']);
+    const message = getStringField(source, ['message', 'detail', 'msg', 'error_description', 'description', 'reason']);
+    if (code || message) {
+      return { code, message };
+    }
+  }
 
   return {
-    code: typeof source.code === 'string' ? source.code : undefined,
-    message: (
-      typeof source.message === 'string'
-        ? source.message
-        : typeof value.error === 'string'
-          ? value.error
-          : undefined
-    ),
+    message: typeof value.error === 'string' ? value.error : undefined,
   };
 }
 
@@ -636,6 +652,7 @@ export class LicenseService {
     if (!normalizedDeviceId) {
       throw createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, 'Device ID is required.');
     }
+    const isCurrentDevice = normalizedDeviceId === this.state.currentDeviceId;
 
     if (normalizedDeviceId === this.state.currentDeviceId) {
       throw createLicenseError(
@@ -659,6 +676,15 @@ export class LicenseService {
       );
 
       const data = response as LicenseDevicesResponse;
+      if (isCurrentDevice) {
+        await this.clearLicenseInternal(LICENSE_STATUSES.FREE, {
+          lastErrorCode: null,
+          lastErrorMessage: null,
+        });
+        this.notifyStateChange();
+        return this.getState();
+      }
+
       this.applyDevicesSnapshot(data);
       this.applyIssuedToken(data);
       this.state.lastErrorCode = null;
@@ -681,9 +707,6 @@ export class LicenseService {
         return this.getState();
       }
 
-      this.state.lastErrorCode = String(normalizedError.code);
-      this.state.lastErrorMessage = normalizedError.message;
-      this.notifyStateChange();
       throw normalizedError;
     }
   }
@@ -956,10 +979,6 @@ export class LicenseService {
       return serverCode.trim();
     }
 
-    const inferredCode = inferLicenseErrorCodeFromMessage(serverMessage ?? '');
-    if (inferredCode) {
-      return inferredCode;
-    }
 
     if (serverCode && serverCode.trim().length > 0) {
       return serverCode.trim();
@@ -1062,7 +1081,7 @@ export class LicenseService {
     this.state.activated = false;
   }
 
-  private mapDevice(payload: LicenseDevicePayload, currentDeviceId: string): LicenseDevice {
+  private mapDevice(payload: LicenseDevicePayload, currentDeviceId: string | null): LicenseDevice {
     return mapDevicePayload(payload, currentDeviceId);
   }
 

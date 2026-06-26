@@ -20,7 +20,7 @@
                   <IconPencil :size="14" />
                 </button>
                 <button class="action-btn delete" :disabled="isLicenseLocked" @click="removeSource(source)"
-                  :title="t('trash.delete')">
+                  :title="t('title.clearConfiguration')">
                   <IconTrash :size="14" />
                 </button>
               </div>
