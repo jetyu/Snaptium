@@ -1,10 +1,10 @@
 {
-  "about.author": "著者: ",
+  "about.author": "著者",
   "about.chromium": "Chromium",
   "about.copyrights": "Copyright © 2026 Snaptium Team. All rights reserved.",
   "about.description": "ローカル優先のインテリジェントな執筆空間、データは常にあなたのコントロール下にあります",
   "about.electron": "Electron",
-  "about.license": "ライセンス: ",
+  "about.license": "ライセンス",
   "about.microsoftStore": "Microsoft Store",
   "about.nodejs": "Node.js",
   "about.title": "Snaptiumについて",

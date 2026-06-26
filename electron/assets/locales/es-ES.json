@@ -1,10 +1,10 @@
 {
-  "about.author": "Autor: ",
+  "about.author": "Autor",
   "about.chromium": "Chromium",
   "about.copyrights": "Copyright © 2026 Snaptium Team. Todos los derechos reservados.",
   "about.description": "Espacio de escritura inteligente con prioridad local, tus datos siempre bajo tu control.",
   "about.electron": "Electron",
-  "about.license": "Licencia: ",
+  "about.license": "Licencia",
   "about.microsoftStore": "Microsoft Store",
   "about.nodejs": "Node.js",
   "about.title": "Acerca de Snaptium",

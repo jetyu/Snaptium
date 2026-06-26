@@ -1,10 +1,10 @@
 {
-  "about.author": "Author: ",
+  "about.author": "Author",
   "about.chromium": "Chromium",
   "about.copyrights": "Copyright © 2026 Snaptium Team. All rights reserved.",
   "about.description": "AI-powered smart note-taking and knowledge management tool, data always in your control.",
   "about.electron": "Electron",
-  "about.license": "Open Source License: ",
+  "about.license": "Open Source License",
   "about.microsoftStore": "Microsoft Store",
   "about.nodejs": "Node.js",
   "about.title": "About Snaptium",
