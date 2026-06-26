@@ -1,6 +1,6 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { app } from 'electron';
+import { app, safeStorage } from 'electron';
 import {
   E2EE_ERROR_CODES,
   type E2eeErrorCode,
@@ -16,6 +16,13 @@ const logger = loggerService.createLogger('Electron:Key Manager');
 const E2EE_ERROR_CODE_SET = new Set<E2eeErrorCode>(
   Object.values(E2EE_ERROR_CODES) as E2eeErrorCode[],
 );
+const AUTO_UNLOCK_FILE_NAME = 'e2ee-auto-unlock.json';
+const AUTO_UNLOCK_FILE_VERSION = 1;
+const AUTO_UNLOCK_RESET_CODES = new Set<E2eeErrorCode>([
+  E2EE_ERROR_CODES.KEY_SLOTS_NOT_FOUND,
+  E2EE_ERROR_CODES.KEY_SLOTS_CORRUPTED,
+  E2EE_ERROR_CODES.WRONG_PASSWORD,
+]);
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -29,6 +36,11 @@ interface KeySlotsFile {
     wrappedDEK: WrappedKey;
   };
   createdAt: number;
+}
+
+interface PersistedAutoUnlockState {
+  version: number;
+  encryptedPassword: string;
 }
 
 // ─── Internal Helpers ───────────────────────────────────────────────────────
@@ -50,6 +62,27 @@ function hasE2eeCode(error: unknown): error is Error & { code: E2eeErrorCode } {
 
 function getKeySlotsPath(): string {
   return path.join(app.getPath(VFS_CONSTANTS.USER_DATA), E2EE_KEY_SLOTS_FILE);
+}
+
+function getAutoUnlockStatePath(): string {
+  return path.join(app.getPath(VFS_CONSTANTS.USER_DATA), AUTO_UNLOCK_FILE_NAME);
+}
+
+function isAutoUnlockStorageAvailable(): boolean {
+  return safeStorage.isEncryptionAvailable();
+}
+
+function isPersistedAutoUnlockState(value: unknown): value is PersistedAutoUnlockState {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const record = value as Record<string, unknown>;
+  return (
+    record.version === AUTO_UNLOCK_FILE_VERSION &&
+    typeof record.encryptedPassword === 'string' &&
+    record.encryptedPassword.trim().length > 0
+  );
 }
 
 function isValidWrappedKey(value: unknown): value is WrappedKey {
@@ -120,6 +153,75 @@ function normalizeKeySlots(value: unknown): KeySlots {
   };
 }
 
+async function persistAutoUnlockPassword(password: string): Promise<void> {
+  try {
+    if (!isAutoUnlockStorageAvailable()) {
+      logger.warn('safeStorage is unavailable. Skipping auto-unlock password persistence.');
+      return;
+    }
+
+    const filePath = getAutoUnlockStatePath();
+    const payload: PersistedAutoUnlockState = {
+      version: AUTO_UNLOCK_FILE_VERSION,
+      encryptedPassword: safeStorage.encryptString(password).toString('base64'),
+    };
+
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, JSON.stringify(payload, null, 2), 'utf8');
+  } catch (error: unknown) {
+    logger.warn('Failed to persist auto-unlock password', { error: getErrorMessage(error) });
+  }
+}
+
+async function clearAutoUnlockPassword(): Promise<void> {
+  try {
+    await fs.unlink(getAutoUnlockStatePath());
+  } catch (error: unknown) {
+    const nodeError = error as NodeJS.ErrnoException;
+    if (nodeError.code !== 'ENOENT') {
+      logger.warn('Failed to clear auto-unlock password', { error: getErrorMessage(error) });
+    }
+  }
+}
+
+async function loadAutoUnlockPassword(): Promise<string | null> {
+  if (!isAutoUnlockStorageAvailable()) {
+    return null;
+  }
+
+  try {
+    const content = await fs.readFile(getAutoUnlockStatePath(), 'utf8');
+    const parsed: unknown = JSON.parse(content);
+    if (!isPersistedAutoUnlockState(parsed)) {
+      logger.warn('Persisted auto-unlock state is invalid');
+      await clearAutoUnlockPassword();
+      return null;
+    }
+
+    return safeStorage.decryptString(Buffer.from(parsed.encryptedPassword, 'base64'));
+  } catch (error: unknown) {
+    const nodeError = error as NodeJS.ErrnoException;
+    if (nodeError.code === 'ENOENT') {
+      return null;
+    }
+
+    logger.warn('Failed to load persisted auto-unlock password', {
+      error: getErrorMessage(error),
+    });
+    await clearAutoUnlockPassword();
+    return null;
+  }
+}
+
+function shouldResetAutoUnlockPassword(error: unknown): boolean {
+  const code = getErrorCode(error);
+  if (!code) {
+    return false;
+  }
+
+  return AUTO_UNLOCK_RESET_CODES.has(code as E2eeErrorCode);
+}
+
 // ─── State ──────────────────────────────────────────────────────────────────
 
 /**
@@ -169,6 +271,7 @@ export const keyManagerService = {
     const slots = normalizeKeySlots(rawSlots);
     await this.saveKeySlots(slots);
     this.lock();
+    await clearAutoUnlockPassword();
     logger.info('Key slots restored successfully');
   },
 
@@ -215,6 +318,7 @@ export const keyManagerService = {
 
       // 6. Unlock DEK into memory
       activeDEK = dek;
+      await persistAutoUnlockPassword(password);
 
       logger.info('Master Password setup completed successfully');
       return { recoveryKey: displayKey };
@@ -243,6 +347,7 @@ export const keyManagerService = {
     const dek = cryptoService.unwrapDEK(slots.passwordSlot.wrappedDEK, kek);
 
     activeDEK = dek;
+    await persistAutoUnlockPassword(password);
     logger.info('DEK unlocked successfully with Master Password');
   },
 
@@ -289,8 +394,34 @@ export const keyManagerService = {
     logger.info('DEK locked — cleared from memory');
   },
 
+  async clearAutoUnlockSession(): Promise<void> {
+    await clearAutoUnlockPassword();
+  },
+
   isUnlocked(): boolean {
     return activeDEK !== null;
+  },
+
+  async restoreAutoUnlockSession(): Promise<void> {
+    const password = await loadAutoUnlockPassword();
+    if (!password) {
+      return;
+    }
+
+    try {
+      await this.unlockWithPassword(password);
+      logger.info('DEK auto-unlocked successfully on startup');
+    } catch (error: unknown) {
+      this.lock();
+      logger.warn('Failed to auto-unlock DEK on startup', {
+        code: getErrorCode(error) ?? 'UNKNOWN',
+        error: getErrorMessage(error),
+      });
+
+      if (shouldResetAutoUnlockPassword(error)) {
+        await clearAutoUnlockPassword();
+      }
+    }
   },
 
   // ── DEK Access ────────────────────────────────────────────────────────
@@ -378,6 +509,7 @@ export const keyManagerService = {
 
       // 5. Keep DEK unlocked
       activeDEK = dek;
+      await persistAutoUnlockPassword(newPassword);
 
       logger.info('Master Password re-wrapped successfully');
       return { recoveryKey: displayKey };

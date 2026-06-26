@@ -20,7 +20,7 @@
                   <IconPencil :size="14" />
                 </button>
                 <button class="action-btn delete" :disabled="isLicenseLocked" @click="removeSource(source)"
-                  :title="t('trash.delete')">
+                  :title="t('title.clearConfiguration')">
                   <IconTrash :size="14" />
                 </button>
               </div>
@@ -36,7 +36,7 @@
               </div>
               <div class="detail-item">
                 <span class="label">{{ t('label.aiApiKey') }}</span>
-                <span class="value">{{ t('common.encrypted') }}</span>
+                <span class="value">••••••••••••••••••••••••••</span>
               </div>
               <div class="detail-item">
                 <span class="label">{{ t('label.aiCapabilities') }}</span>

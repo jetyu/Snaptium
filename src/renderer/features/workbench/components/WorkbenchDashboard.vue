@@ -210,7 +210,7 @@
               <span class="module-title__icon">
                 <IconChartRadar :size="14" />
               </span>
-              {{ t('workbench.sidebar.overview') }}
+              {{ t('workbench.sidebar.achievements') }}
             </h3>
           </header>
 

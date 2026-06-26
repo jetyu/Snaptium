@@ -19,6 +19,11 @@ import { normalizeTrustedRemoteImageHosts } from '@shared/preview-security.const
 import type { AppSettings, AISource } from '../store/settings.store';
 
 type SettingsChangeReason = 'save' | 'language' | 'import' | 'reset';
+type WindowCloseAction = AppSettings['windowCloseAction'];
+
+function normalizeWindowCloseAction(value: unknown): WindowCloseAction {
+  return value === 'exit' ? 'exit' : 'minimize';
+}
 
 export interface AiConnectionPayload {
   aiBaseUrl: string;
@@ -79,6 +84,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
   return {
     ...baseConfig,
     ...incomingConfig,
+    windowCloseAction: normalizeWindowCloseAction(incomingConfig.windowCloseAction ?? baseConfig.windowCloseAction),
     aiSources: normalizeAiSources(incomingConfig.aiSources ?? baseConfig.aiSources),
     aiAssistant: {
       ...baseConfig.aiAssistant,

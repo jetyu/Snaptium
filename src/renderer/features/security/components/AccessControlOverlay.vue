@@ -14,11 +14,10 @@
 
           <div class="dialog-form-group">
             <label>{{ t('e2ee.accessControl.unlockPassword') }}</label>
-            <input
+            <PasswordInput
               ref="passwordInputRef"
               v-model="password"
-              type="password"
-              class="settings-input"
+              :placeholder="t('e2ee.accessControl.unlockPassword')"
               autocomplete="current-password"
               @keyup.enter="handleUnlock"
             />
@@ -45,6 +44,7 @@ import { computed, nextTick, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { normalizeSecurityError, securityService, type SecurityError } from '../services/security.service';
 import { systemDialog } from '@renderer/features/settings/services/system-dialog.service';
+import PasswordInput from '@renderer/features/settings/components/PasswordInput.vue';
 
 const { t } = useI18n();
 
@@ -52,7 +52,7 @@ const isVisible = ref(false);
 const password = ref('');
 const isSubmitting = ref(false);
 const overlayRef = ref<HTMLElement | null>(null);
-const passwordInputRef = ref<HTMLInputElement | null>(null);
+const passwordInputRef = ref<{ focus: () => void } | null>(null);
 
 let removeListener: (() => void) | null = null;
 

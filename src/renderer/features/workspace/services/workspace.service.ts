@@ -60,7 +60,7 @@ interface SaveNoteContentResult {
     content: string;
 }
 
-interface ToggleNodeLockResult {
+interface SetNoteReadModeResult {
     locked: boolean;
     updatedAt: number;
 }
@@ -489,17 +489,17 @@ export const workspaceService = {
         return await electronApi.vfs.confirmDeleteNode(normalizeDialogName(name));
     },
 
-    async toggleNodeLock(nodeId: string, locked: boolean): Promise<ToggleNodeLockResult> {
+    async setNoteReadMode(noteId: string, enabled: boolean): Promise<SetNoteReadModeResult> {
         ensureVfsAvailable();
 
         const updatedNode = await electronApi.vfs.toggleNodeLock({
-            nodeId: normalizeNodeId(nodeId),
-            locked,
+            nodeId: normalizeNodeId(noteId),
+            locked: enabled,
         });
         notifyVfsChanged();
 
         return {
-            locked: updatedNode.locked ?? locked,
+            locked: updatedNode.locked ?? enabled,
             updatedAt: updatedNode.updatedAt,
         };
     },

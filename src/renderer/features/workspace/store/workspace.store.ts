@@ -587,22 +587,22 @@ export const useWorkspaceStore = defineStore('workspace', {
       return true;
     },
 
-    async toggleNodeLock(id: string, locked: boolean) {
+    async setNoteReadMode(id: string, enabled: boolean) {
       try {
         const note = this.notes.find((candidate) => candidate.id === id);
         if (!note) {
-          logger.warn(`Cannot lock node ${id}: not a note or not found.`);
+          logger.warn(`Cannot set read mode for note ${id}: note not found.`);
           return;
         }
 
-        const result = await workspaceService.toggleNodeLock(id, locked);
+        const result = await workspaceService.setNoteReadMode(id, enabled);
         note.locked = result.locked;
         note.updatedAt = result.updatedAt;
 
-        logger.info(`${locked ? 'Locked' : 'Unlocked'} note: ${id}`);
+        logger.info(`${enabled ? 'Enabled' : 'Disabled'} read mode for note: ${id}`);
       } catch (err: unknown) {
         const message = getErrorMessage(err);
-        logger.error(`Failed to toggle lock for note ${id}: ${message}`);
+        logger.error(`Failed to set read mode for note ${id}: ${message}`);
       }
     },
 

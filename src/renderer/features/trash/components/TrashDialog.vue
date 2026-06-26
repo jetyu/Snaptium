@@ -179,7 +179,7 @@ watch(isOpen, async (newVal) => {
 }
 
 .trash-icon {
-  color: var(--danger);
+  color: var(--accent);
 }
 
 .header-right {

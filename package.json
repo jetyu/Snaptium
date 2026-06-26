@@ -1,6 +1,6 @@
 {
   "name": "snaptium",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "author": "Snaptium Team",
   "private": true,
   "type": "module",
@@ -26,7 +26,7 @@
     "test": "npm run test:unit",
     "dist": "npm run build && electron-builder",
     "dist:win": "npm run build && node src/scripts/build-win.js",
-    "dist:win:store": "npm run build && node src/scripts/build-win-store.js",
+    "dist:winstore": "npm run build && node src/scripts/build-win-store.js",
     "dist:mac": "npm run build && electron-builder --mac",
     "dist:linux": "npm run build && electron-builder --linux"
   },
@@ -123,19 +123,19 @@
     },
     "appx": {
       "languages": [
+        "de-DE",
         "en-US",
-        "zh-CN",
-        "zh-HK",
-        "zh-TW",
+        "es-ES",
+        "fr-FR",
+        "id-ID",
+        "it-IT",
         "ja-JP",
         "ko-KR",
-        "fr-FR",
-        "de-DE",
-        "es-ES",
-        "it-IT",
         "pt-BR",
         "tr-TR",
-        "id-ID"
+        "zh-CN",
+        "zh-HK",
+        "zh-TW"
       ]
     },
     "mac": {

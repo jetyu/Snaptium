@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 const DEFAULT_STORE_CONFIG = {
   STORE_IDENTITY_NAME: 'jetyu.Snaptium',
   STORE_PUBLISHER: 'CN=35204487-FFB3-46AF-923C-85C032C655ED',
-  STORE_PUBLISHER_DISPLAY_NAME: 'Snaptium Team',
+  STORE_PUBLISHER_DISPLAY_NAME: 'jetyu',
   STORE_DISPLAY_NAME: 'Snaptium',
   STORE_APPLICATION_ID: 'jetyu.Snaptium'
 };

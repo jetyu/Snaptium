@@ -16,11 +16,25 @@ export interface SearchViewRequest {
   run: boolean;
 }
 
+export interface QuickSearchRequest {
+  id: number;
+  selectAll: boolean;
+}
+
+export interface RequestQuickSearchOptions {
+  selectAll?: boolean;
+}
+
 const searchViewRequest = ref<SearchViewRequest>({
   id: 0,
   query: '',
   mode: 'semantic',
   run: false,
+});
+
+const quickSearchRequest = ref<QuickSearchRequest>({
+  id: 0,
+  selectAll: true,
 });
 
 export function useSearch() {
@@ -36,8 +50,17 @@ export function useSearch() {
     await useAppShellStore().setActiveMainView('search');
   };
 
+  const requestFocusQuickSearch = (options: RequestQuickSearchOptions = {}): void => {
+    quickSearchRequest.value = {
+      id: quickSearchRequest.value.id + 1,
+      selectAll: options.selectAll ?? true,
+    };
+  };
+
   return {
     searchViewRequest: readonly(searchViewRequest),
+    quickSearchRequest: readonly(quickSearchRequest),
     openSearchView,
+    requestFocusQuickSearch,
   };
 }

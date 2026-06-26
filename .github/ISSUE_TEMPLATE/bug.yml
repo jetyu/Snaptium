@@ -38,10 +38,10 @@ body:
       required: true
 
   - type: input
-    id: notewizard_version
+    id: Snaptium_version
     attributes:
-      label: NoteWizard Version / NoteWizard版本
-      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
+      label: Snaptium Version / Snaptium版本
+      description: The version of Snaptium you are using. Required | 当前使用的Snaptium版本（必填）
       placeholder: e.g. 1.0.1
     validations:
       required: true
@@ -53,12 +53,12 @@ body:
       description: Detailed steps to reliably reproduce the issue. Required | 请提供可复现问题的详细步骤（必填）
       placeholder: |
         e.g.
-        1. Open NoteWizard
+        1. Open Snaptium
         2. Insert a line of text
         3. Observe the cursor position
 
         例：
-        1. 打开 NoteWizard
+        1. 打开 Snaptium
         2. 插入一行文本
         3. 观察光标位置
     validations:

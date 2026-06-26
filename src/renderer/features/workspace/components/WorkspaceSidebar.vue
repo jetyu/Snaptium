@@ -58,7 +58,7 @@
         <span v-else class="workspace-row__chevron workspace-row__chevron--placeholder" />
 
         <div class="workspace-row__icon icon-wrapper">
-          <IconFileCheck v-if="entry.kind === 'note' && entry.item.locked" :size="14" />
+          <IconFileCheck v-if="entry.kind === 'note' && isNoteReadMode(entry.item)" :size="14" />
           <NotebookVisualIcon v-else-if="entry.kind === 'notebook'" class="workspace-row__notebook-icon"
             :icon-color="entry.item.iconColor" />
           <IconFileText v-else :size="14" />
@@ -107,6 +107,7 @@
 import { computed, defineAsyncComponent, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useI18n } from "vue-i18n";
 import { useWorkspace } from "../composables/useWorkspace";
+import { useWorkspaceUiActions } from "../composables/useWorkspaceUiActions";
 import { buildNoteTemplate, type NoteTemplateId } from "../templates";
 import { WORKSPACE_CONSTANTS } from "../constants/workspace.constants";
 import SyncHoverCard from "../../sync/components/SyncHoverCard.vue";
@@ -171,7 +172,7 @@ const {
   deleteNotebook,
   renameNote,
   renameNotebook,
-  toggleNodeLock,
+  setNoteReadMode,
   updateNotebookIconColor,
   toggleNodeStar,
   openHistoryDialog,
@@ -184,6 +185,7 @@ const settingsStore = useSettingsStore();
 const workspaceStore = useWorkspaceStore();
 const appShellStore = useAppShellStore();
 const { statusLabel, statusToneClass, summaryItems, formattedLastSynced } = useSyncPresentation();
+const { workspaceRenameRequest } = useWorkspaceUiActions();
 const sidebarRef = ref<HTMLElement | null>(null);
 const renameTarget = ref<RenameTarget>(null);
 const syncButtonShellRef = ref<HTMLElement | null>(null);
@@ -459,6 +461,10 @@ function hasSelectedAncestor(entry: WorkspaceTreeEntry) {
 
 function getEntryDisplayName(entry: WorkspaceTreeEntry) {
   return entry.kind === "note" ? entry.item.title : entry.item.name;
+}
+
+function isNoteReadMode(note: Note) {
+  return Boolean(note.locked);
 }
 
 function selectEntryRange(entry: WorkspaceTreeEntry) {
@@ -866,6 +872,30 @@ function beginRenamingNotebook(notebook: Notebook) {
   focusRenameInput();
 }
 
+function handleRenameActiveNodeRequest() {
+  if (activeNoteId.value) {
+    const activeNote = notes.value.find((note) => note.id === activeNoteId.value);
+    if (activeNote) {
+      beginRenamingNote(activeNote);
+    }
+    return;
+  }
+
+  if (activeNotebookId.value) {
+    const activeNotebook = notebooks.value.find((notebook) => notebook.id === activeNotebookId.value);
+    if (activeNotebook) {
+      beginRenamingNotebook(activeNotebook);
+    }
+  }
+}
+
+watch(
+  () => workspaceRenameRequest.value.id,
+  () => {
+    handleRenameActiveNodeRequest();
+  },
+);
+
 function isEditing(entry: WorkspaceTreeEntry) {
   return (
     renameTarget.value?.id === entry.id &&
@@ -1113,7 +1143,7 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     selectNotebook,
     beginRenamingNote,
     beginRenamingNotebook,
-    toggleNodeLock,
+    setNoteReadMode,
     openNotebookAppearancePicker,
     toggleNodeStar,
     openHistory: openHistoryDialog,

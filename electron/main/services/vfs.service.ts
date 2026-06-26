@@ -1010,7 +1010,7 @@ export const vfsService = {
       defaultId: 0,
       cancelId: 0,
       noLink: true,
-      title: $t('common.deleteNode'),
+      title: $t('title.confirmDeleteNote'),
       message: interpolateMessage($t('workspace.dialog.confirm'), { name: displayName }),
     });
     // selectedButtonIndex is zero-based and follows the order of buttons[]

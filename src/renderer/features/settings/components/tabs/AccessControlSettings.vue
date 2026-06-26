@@ -99,7 +99,7 @@
             {{ t('button.cancel') }}
           </button>
           <button class="action-button primary" :disabled="!canSubmit" @click="handleSubmit">
-            {{ t('common.confirm') }}
+            {{ t('button.confirm') }}
           </button>
         </div>
       </div>

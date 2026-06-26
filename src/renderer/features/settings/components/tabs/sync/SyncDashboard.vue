@@ -278,19 +278,68 @@ const handleProviderSelect = async (provider: 'webdav' | 'oss-s3') => {
   await settingsStore.updateSyncSetting('provider', provider);
 };
 
-function resolveE2eeErrorMessage(code: string, fallbackMessage: string): string {
+function resolveSyncReadinessMessage(code: string, fallbackMessage: string): string {
   const keyByCode: Record<string, string> = {
+    KEY_SLOTS_RESTORED: 'sync.notice.keySlotsRestored',
     WRONG_PASSWORD: 'e2ee.error.wrongPassword',
     KEY_SLOTS_CORRUPTED: 'e2ee.error.keySlotsCorrupted',
     RECOVERY_KEY_INVALID: 'e2ee.error.recoveryKeyInvalid',
     SETUP_FAILED: 'e2ee.error.setupFailed',
     DEK_NOT_UNLOCKED: 'e2ee.error.dekNotUnlocked',
     MASTER_PASSWORD_REQUIRED: 'e2ee.error.masterPasswordRequired',
-    KEY_SLOTS_RESTORED: 'sync.notice.keySlotsRestored',
   };
 
   const key = keyByCode[code];
   return key ? t(key) : fallbackMessage;
+}
+
+function hasSyncTargetInput(): boolean {
+  const syncConfig = syncService.normalizeSyncConfig(settingsStore.config.sync);
+
+  if (syncConfig.provider === 'webdav') {
+    return Boolean(
+      syncConfig.webdav.url ||
+      syncConfig.webdav.username ||
+      syncConfig.webdav.password
+    );
+  }
+
+  return Boolean(
+    syncConfig.ossS3.endpoint ||
+    syncConfig.ossS3.region ||
+    syncConfig.ossS3.bucket ||
+    syncConfig.ossS3.accessKeyId ||
+    syncConfig.ossS3.secretAccessKey
+  );
+}
+
+async function tryRestoreKeySlotsFromSyncTarget(): Promise<boolean> {
+  if (!isConfigReady.value && !hasSyncTargetInput()) {
+    return false;
+  }
+
+  const restoreResult = await syncService.restoreRemoteKeySlots(settingsStore.config.sync);
+  if (!restoreResult.restored) {
+    return false;
+  }
+
+  await showSyncDialog(t('sync.notice.keySlotsRestored'));
+  return true;
+}
+
+async function ensureMasterPasswordConfiguredForSync(): Promise<boolean> {
+  const restored = await tryRestoreKeySlotsFromSyncTarget();
+  if (restored) {
+    return false;
+  }
+
+  await showSyncDialog(t('e2ee.error.masterPasswordRequired'));
+  return false;
+}
+
+async function ensureMasterPasswordUnlockedForSync(): Promise<boolean> {
+  await showSyncDialog(t('e2ee.error.dekNotUnlocked'));
+  return false;
 }
 
 async function ensureE2eeReadyForSync(): Promise<boolean> {
@@ -302,25 +351,17 @@ async function ensureE2eeReadyForSync(): Promise<boolean> {
     const status = await securityService.getStatus();
 
     if (!status.hasKeySlots) {
-      const restoreResult = await syncService.restoreRemoteKeySlots(settingsStore.config.sync);
-      if (restoreResult.restored) {
-        await showSyncDialog(t('sync.notice.keySlotsRestored'));
-        return false;
-      }
-
-      await showSyncDialog(t('e2ee.error.masterPasswordRequired'));
-      return false;
+      return await ensureMasterPasswordConfiguredForSync();
     }
 
     if (!status.isUnlocked) {
-      await showSyncDialog(t('e2ee.error.dekNotUnlocked'));
-      return false;
+      return await ensureMasterPasswordUnlockedForSync();
     }
 
     return true;
   } catch (error: unknown) {
     const normalized = normalizeSecurityError(error);
-    await showSyncDialog(resolveE2eeErrorMessage(normalized.code, normalized.message));
+    await showSyncDialog(resolveSyncReadinessMessage(normalized.code, normalized.message));
     return false;
   }
 }

@@ -61,6 +61,8 @@
             class="license-key-input"
             :placeholder="t('license.activation.placeholder')"
             autocomplete="off"
+            :disabled="isBusy"
+            @input="handleLicenseKeyInput"
             @keydown.enter="handleActivate"
           />
         </div>
@@ -70,7 +72,7 @@
         <button
           type="button"
           class="action-button activate-btn"
-          :disabled="isSubmitting || licenseKey.trim().length === 0"
+          :disabled="isBusy || licenseKey.trim().length === 0"
           @click="handleActivate"
         >
           <span v-if="isSubmitting" class="spinner small"></span>
@@ -96,7 +98,10 @@ import {
   IconNotebook,
   IconSparkles2,
 } from '@tabler/icons-vue';
-import { licenseService, normalizeLicenseErrorMessage } from '../services/license.service';
+import {
+  licenseService,
+  normalizeLicenseErrorMessage,
+} from '../services/license.service';
 
 interface ComparisonPlan {
   id: 'free' | 'pro' | 'ultimate';
@@ -149,6 +154,7 @@ const licenseKey = ref('');
 const licenseKeyInputRef = ref<HTMLInputElement | null>(null);
 const isSubmitting = ref(false);
 const errorMessage = ref('');
+const isBusy = isSubmitting;
 
 async function focusInput(): Promise<void> {
   await nextTick();
@@ -163,6 +169,10 @@ defineExpose({
 onMounted(() => {
   void focusInput();
 });
+
+function handleLicenseKeyInput(): void {
+  errorMessage.value = '';
+}
 
 async function handleActivate(): Promise<void> {
   if (isSubmitting.value || licenseKey.value.trim().length === 0) {
