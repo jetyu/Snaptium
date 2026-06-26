@@ -187,69 +187,35 @@ const openStorePage = async (): Promise<void> => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.46rem;
-  margin-top: 0.7rem;
-  padding: 0.4rem 0.82rem;
-  min-height: 32px;
-  border: 1px solid color-mix(in srgb, var(--accent) 12%, var(--border-color));
-  border-radius: 10px;
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-soft) 82%, white 18%) 0%,
-    color-mix(in srgb, var(--surface-raised) 96%, var(--accent) 4%) 100%
-  );
-  color: var(--text-primary);
-  font-size: 0.76rem;
+  gap: 0.38rem;
+  margin-top: 0.72rem;
+  padding: 4px 10px;
+  min-height: 28px;
+  border: 1px solid var(--status-info-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--status-info-text);
+  font-size: 0.72rem;
   font-weight: 600;
-  font-family: 'Segoe UI Variable Text', 'Segoe UI', system-ui, sans-serif;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   line-height: 1;
   cursor: pointer;
   appearance: none;
-  box-shadow:
-    var(--shadow-soft),
-    inset 0 1px 0 color-mix(in srgb, white 56%, transparent);
-  transition:
-    border-color 0.18s ease,
-    background 0.18s ease,
-    box-shadow 0.18s ease;
+  outline: none;
 }
 
 .store-badge:hover {
-  border-color: color-mix(in srgb, var(--accent) 20%, var(--border-strong));
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-soft) 78%, white 22%) 0%,
-    color-mix(in srgb, var(--surface-raised) 90%, var(--accent) 10%) 100%
-  );
-  box-shadow:
-    0 2px 10px color-mix(in srgb, var(--accent) 8%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 62%, transparent);
+  color: var(--status-info-text);
 }
 
 .store-badge:focus-visible {
-  outline: none;
-  border-color: color-mix(in srgb, var(--accent) 28%, var(--border-strong));
-  box-shadow:
-    0 0 0 3px var(--focus-ring),
-    inset 0 1px 0 color-mix(in srgb, white 60%, transparent);
-}
-
-.store-badge:active {
-  background: linear-gradient(
-    180deg,
-    color-mix(in srgb, var(--surface-soft) 72%, var(--accent) 28%) 0%,
-    color-mix(in srgb, var(--surface-raised) 86%, var(--accent) 14%) 100%
-  );
-  box-shadow:
-    inset 0 1px 1px color-mix(in srgb, black 10%, transparent),
-    inset 0 1px 0 color-mix(in srgb, white 42%, transparent);
+  box-shadow: 0 0 0 3px var(--focus-ring);
 }
 
 .store-badge__logo {
   display: block;
-  width: 0.96rem;
-  height: 0.96rem;
+  width: 0.9rem;
+  height: 0.9rem;
   flex: 0 0 auto;
 }
 
