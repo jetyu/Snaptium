@@ -1,3 +1,13 @@
+### v2.0.3 - 2026-06-27
+This update optimizes the in-app search experience and other details.
+#### Improvements
+* Optimized the authorization verification process
+* Optimized the local search experience
+* Optimized other details and the user experience
+#### Fixes
+* Fixed an issue where custom keyboard shortcuts would sometimes fail to work
+* Fixed other issues
+
 ### v2.0.2 — 2026-06-30 
 This update primarily optimizes the knowledge base, application distribution channels, and overall user experience.
 #### New
