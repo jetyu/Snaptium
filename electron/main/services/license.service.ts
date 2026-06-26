@@ -238,55 +238,6 @@ function sanitizeMessage(message: string, fallback: string): string {
   return value.length > 0 ? value : fallback;
 }
 
-function inferLicenseErrorCodeFromMessage(message: string): LicenseErrorCode | null {
-  const normalized = message.trim().toLowerCase();
-  if (!normalized) {
-    return null;
-  }
-
-  if (
-    normalized.includes('license key is invalid')
-    || normalized.includes('license is not valid')
-    || normalized.includes('license_invalid')
-    || normalized.includes('invalid license')
-  ) {
-    return LICENSE_ERROR_CODES.LICENSE_INVALID;
-  }
-
-  if (normalized.includes('license expired') || normalized.includes('license_expired')) {
-    return LICENSE_ERROR_CODES.LICENSE_EXPIRED;
-  }
-
-  if (normalized.includes('license inactive') || normalized.includes('license_inactive')) {
-    return LICENSE_ERROR_CODES.LICENSE_INACTIVE;
-  }
-
-  if (normalized.includes('max devices') || normalized.includes('max_devices_reached')) {
-    return LICENSE_ERROR_CODES.MAX_DEVICES_REACHED;
-  }
-
-  if (normalized.includes('device not found') || normalized.includes('device_not_found')) {
-    return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;
-  }
-
-  if (normalized.includes('cannot deactivate current device') || normalized.includes('cannot_deactivate_current_device')) {
-    return LICENSE_ERROR_CODES.CANNOT_DEACTIVATE_CURRENT_DEVICE;
-  }
-
-  if (normalized.includes('too many requests') || normalized.includes('too_many_requests')) {
-    return LICENSE_ERROR_CODES.TOO_MANY_REQUESTS;
-  }
-
-  if (normalized.includes('timed out') || normalized.includes('network_timeout')) {
-    return LICENSE_ERROR_CODES.NETWORK_TIMEOUT;
-  }
-
-  if (normalized.includes('fetch') || normalized.includes('network error') || normalized.includes('network_error')) {
-    return LICENSE_ERROR_CODES.NETWORK_ERROR;
-  }
-
-  return null;
-}
 
 function isDateInFuture(value: string | null): boolean {
   if (!value) return false;
@@ -800,7 +751,6 @@ export class LicenseService {
     route: string,
     status: number,
     serverCode?: string,
-    serverMessage?: string,
   ): LicenseErrorCode | string {
     if (serverCode && serverCode.trim().length > 0 && serverCode.trim() !== LICENSE_ERROR_CODES.UNKNOWN) {
       return serverCode.trim();
