@@ -44,7 +44,6 @@ function resolveLicenseErrorMessage(code: string): string {
     [LICENSE_ERROR_CODES.LICENSE_INACTIVE]: t('license.error.inactive'),
     [LICENSE_ERROR_CODES.MAX_DEVICES_REACHED]: t('license.error.maxDevicesReached'),
     [LICENSE_ERROR_CODES.DEVICE_NOT_FOUND]: t('license.error.deviceNotFound'),
-    [LICENSE_ERROR_CODES.CANNOT_DEACTIVATE_CURRENT_DEVICE]: t('license.error.cannotDeactivateCurrentDevice'),
     [LICENSE_ERROR_CODES.TOO_MANY_REQUESTS]: t('license.error.tooManyRequests'),
     [LICENSE_ERROR_CODES.NETWORK_TIMEOUT]: t('license.error.networkTimeout'),
     [LICENSE_ERROR_CODES.NETWORK_ERROR]: t('license.error.network'),

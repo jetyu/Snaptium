@@ -105,7 +105,7 @@ const licenseDevicesResponseSchema = z.object({
   expires_at: z.string().nullable().optional(),
   grace_expires_at: z.string().nullable().optional(),
   max_devices: z.number().int().nonnegative(),
-  current_device_id: z.string().min(1),
+  current_device_id: z.string().min(1).nullable(),
   devices: z.array(devicePayloadSchema),
 });
 
@@ -116,7 +116,7 @@ const licenseHeartbeatResponseSchema = z.object({
   expires_at: z.string().nullable().optional(),
   grace_expires_at: z.string().nullable().optional(),
   max_devices: z.number().int().nonnegative().optional(),
-  current_device_id: z.string().optional(),
+  current_device_id: z.string().nullable().optional(),
   devices: z.array(devicePayloadSchema).optional(),
 });
 
@@ -849,7 +849,7 @@ export class LicenseService {
     this.state.activated = false;
   }
 
-  private mapDevice(payload: LicenseDevicePayload, currentDeviceId: string): LicenseDevice {
+  private mapDevice(payload: LicenseDevicePayload, currentDeviceId: string | null): LicenseDevice {
     return mapDevicePayload(payload, currentDeviceId);
   }
 
