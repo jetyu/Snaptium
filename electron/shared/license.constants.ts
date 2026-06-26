@@ -145,7 +145,7 @@ export interface LicenseDevicesResponse {
   expires_at?: string | null;
   grace_expires_at?: string | null;
   max_devices: number;
-  current_device_id: string;
+  current_device_id: string | null;
   devices: LicenseDevicePayload[];
 }
 

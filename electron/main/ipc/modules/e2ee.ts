@@ -111,8 +111,9 @@ export function registerE2eeHandlers(): void {
 
   // ── E2EE: Lock ────────────────────────────────────────────────────────
 
-  ipcMain.handle(IPC_CHANNELS.E2EE_LOCK, () => {
+  ipcMain.handle(IPC_CHANNELS.E2EE_LOCK, async () => {
     keyManagerService.lock();
+    await keyManagerService.clearAutoUnlockSession();
     return { success: true };
   });
 

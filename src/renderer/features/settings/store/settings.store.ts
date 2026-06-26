@@ -107,9 +107,12 @@ export interface PreviewAppearanceSettings {
   fontFamily: string;
 }
 
+export type WindowCloseAction = 'minimize' | 'exit';
+
 export interface AppSettings {
   language: string;
   autoStartup: boolean;
+  windowCloseAction: WindowCloseAction;
   themeMode: 'system' | 'light' | 'dark';
   previewAppearance: PreviewAppearanceSettings;
   editorFontSize: number;
@@ -153,6 +156,7 @@ function createDefaultConfig(): AppSettings {
   return {
     language: 'en-US',
     autoStartup: false,
+    windowCloseAction: 'minimize',
     themeMode: 'system',
     previewAppearance: {
       allowHtml: true,

@@ -105,7 +105,7 @@ const licenseDevicesResponseSchema = z.object({
   expires_at: z.string().nullable().optional(),
   grace_expires_at: z.string().nullable().optional(),
   max_devices: z.number().int().nonnegative(),
-  current_device_id: z.string().min(1),
+  current_device_id: z.string().min(1).nullable(),
   devices: z.array(devicePayloadSchema),
 });
 
@@ -116,7 +116,7 @@ const licenseHeartbeatResponseSchema = z.object({
   expires_at: z.string().nullable().optional(),
   grace_expires_at: z.string().nullable().optional(),
   max_devices: z.number().int().nonnegative().optional(),
-  current_device_id: z.string().optional(),
+  current_device_id: z.string().nullable().optional(),
   devices: z.array(devicePayloadSchema).optional(),
 });
 
@@ -163,15 +163,53 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
 
+function getStringField(value: Record<string, unknown>, keys: readonly string[]): string | undefined {
+  for (const key of keys) {
+    const candidate = value[key];
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return candidate;
+    }
+  }
+
+  return undefined;
+}
+
 function parseApiError(value: unknown): LicenseApiErrorResponse {
   if (!isObject(value)) {
     return {};
   }
 
+  const sources: Record<string, unknown>[] = [
+    value,
+    isObject(value.error) ? value.error : null,
+    isObject(value.data) ? value.data : null,
+    isObject(value.details) ? value.details : null,
+  ].filter((candidate): candidate is Record<string, unknown> => candidate !== null);
+
+  for (const source of sources) {
+    const code = getStringField(source, ['code', 'error_code']);
+    const message = getStringField(source, ['message', 'detail', 'msg', 'error_description', 'description', 'reason']);
+    if (code || message) {
+      return { code, message };
+    }
+  }
+
   return {
-    code: typeof value.code === 'string' ? value.code : undefined,
-    message: typeof value.message === 'string' ? value.message : undefined,
+    message: typeof value.error === 'string' ? value.error : undefined,
   };
+}
+
+function parseJsonResponseBody(text: string): unknown {
+  const normalized = text.trim();
+  if (!normalized) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(normalized) as unknown;
+  } catch {
+    return {};
+  }
 }
 
 function normalizePlan(value: string): LicensePlan | null {
@@ -200,6 +238,56 @@ function sanitizeMessage(message: string, fallback: string): string {
   return value.length > 0 ? value : fallback;
 }
 
+function inferLicenseErrorCodeFromMessage(message: string): LicenseErrorCode | null {
+  const normalized = message.trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  if (
+    normalized.includes('license key is invalid')
+    || normalized.includes('license is not valid')
+    || normalized.includes('license_invalid')
+    || normalized.includes('invalid license')
+  ) {
+    return LICENSE_ERROR_CODES.LICENSE_INVALID;
+  }
+
+  if (normalized.includes('license expired') || normalized.includes('license_expired')) {
+    return LICENSE_ERROR_CODES.LICENSE_EXPIRED;
+  }
+
+  if (normalized.includes('license inactive') || normalized.includes('license_inactive')) {
+    return LICENSE_ERROR_CODES.LICENSE_INACTIVE;
+  }
+
+  if (normalized.includes('max devices') || normalized.includes('max_devices_reached')) {
+    return LICENSE_ERROR_CODES.MAX_DEVICES_REACHED;
+  }
+
+  if (normalized.includes('device not found') || normalized.includes('device_not_found')) {
+    return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;
+  }
+
+  if (normalized.includes('cannot deactivate current device') || normalized.includes('cannot_deactivate_current_device')) {
+    return LICENSE_ERROR_CODES.CANNOT_DEACTIVATE_CURRENT_DEVICE;
+  }
+
+  if (normalized.includes('too many requests') || normalized.includes('too_many_requests')) {
+    return LICENSE_ERROR_CODES.TOO_MANY_REQUESTS;
+  }
+
+  if (normalized.includes('timed out') || normalized.includes('network_timeout')) {
+    return LICENSE_ERROR_CODES.NETWORK_TIMEOUT;
+  }
+
+  if (normalized.includes('fetch') || normalized.includes('network error') || normalized.includes('network_error')) {
+    return LICENSE_ERROR_CODES.NETWORK_ERROR;
+  }
+
+  return null;
+}
+
 function isDateInFuture(value: string | null): boolean {
   if (!value) return false;
   const timestamp = Date.parse(value);
@@ -218,6 +306,19 @@ function cloneState(state: LicenseState): LicenseState {
   return {
     ...state,
     devices: state.devices.map((device) => ({ ...device })),
+  };
+}
+
+function mapDevicePayload(payload: LicenseDevicePayload, currentDeviceId: string | null): LicenseDevice {
+  return {
+    id: payload.id,
+    fingerprint: payload.fingerprint,
+    name: payload.name,
+    platform: payload.platform ?? null,
+    status: payload.status ?? 'active',
+    activatedAt: payload.activated_at ?? null,
+    lastSeenAt: payload.last_seen_at ?? null,
+    current: currentDeviceId !== null && payload.id === currentDeviceId,
   };
 }
 
@@ -477,6 +578,14 @@ export class LicenseService {
     if (!normalizedDeviceId) {
       throw createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, 'Device ID is required.');
     }
+    const isCurrentDevice = normalizedDeviceId === this.state.currentDeviceId;
+
+    if (normalizedDeviceId === this.state.currentDeviceId) {
+      throw createLicenseError(
+        LICENSE_ERROR_CODES.CANNOT_DEACTIVATE_CURRENT_DEVICE,
+        'Cannot deactivate current device from remote device management.',
+      );
+    }
 
     try {
       const response = await this.requestJson(
@@ -492,8 +601,8 @@ export class LicenseService {
         licenseDevicesResponseSchema,
       );
 
-      const wasCurrentDevice = normalizedDeviceId === this.state.currentDeviceId;
-      if (wasCurrentDevice) {
+      const data = response as LicenseDevicesResponse;
+      if (isCurrentDevice) {
         await this.clearLicenseInternal(LICENSE_STATUSES.FREE, {
           lastErrorCode: null,
           lastErrorMessage: null,
@@ -502,7 +611,6 @@ export class LicenseService {
         return this.getState();
       }
 
-      const data = response as LicenseDevicesResponse;
       this.applyDevicesSnapshot(data);
       this.applyIssuedToken(data);
       this.state.lastErrorCode = null;
@@ -525,9 +633,6 @@ export class LicenseService {
         return this.getState();
       }
 
-      this.state.lastErrorCode = String(normalizedError.code);
-      this.state.lastErrorMessage = normalizedError.message;
-      this.notifyStateChange();
       throw normalizedError;
     }
   }
@@ -582,12 +687,17 @@ export class LicenseService {
         clearTimeout(timer);
 
         if (!response.ok) {
-          const body = await response.json().catch(() => ({}));
+          const responseText = await response.text();
+          const body = parseJsonResponseBody(responseText);
           const errorPayload = parseApiError(body);
-          const mappedCode = this.mapHttpErrorCode(route, response.status, errorPayload.code);
+          const errorMessage = sanitizeMessage(
+            errorPayload.message ?? '',
+            sanitizeMessage(responseText, `HTTP ${response.status}`),
+          );
+          const mappedCode = this.mapHttpErrorCode(route, response.status, errorPayload.code, errorMessage);
           throw createLicenseError(
             mappedCode,
-            sanitizeMessage(errorPayload.message ?? '', `HTTP ${response.status}`),
+            errorMessage,
             {
               status: response.status,
               retryable: false,
@@ -686,7 +796,17 @@ export class LicenseService {
     return createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, fallbackMessage);
   }
 
-  private mapHttpErrorCode(route: string, status: number, serverCode?: string): LicenseErrorCode | string {
+  private mapHttpErrorCode(
+    route: string,
+    status: number,
+    serverCode?: string,
+    serverMessage?: string,
+  ): LicenseErrorCode | string {
+    if (serverCode && serverCode.trim().length > 0 && serverCode.trim() !== LICENSE_ERROR_CODES.UNKNOWN) {
+      return serverCode.trim();
+    }
+
+
     if (serverCode && serverCode.trim().length > 0) {
       return serverCode.trim();
     }
@@ -786,17 +906,8 @@ export class LicenseService {
     this.state.activated = false;
   }
 
-  private mapDevice(payload: LicenseDevicePayload, currentDeviceId: string): LicenseDevice {
-    return {
-      id: payload.id,
-      fingerprint: payload.fingerprint,
-      name: payload.name,
-      platform: payload.platform ?? null,
-      status: payload.status ?? 'active',
-      activatedAt: payload.activated_at ?? null,
-      lastSeenAt: payload.last_seen_at ?? null,
-      current: payload.id === currentDeviceId,
-    };
+  private mapDevice(payload: LicenseDevicePayload, currentDeviceId: string | null): LicenseDevice {
+    return mapDevicePayload(payload, currentDeviceId);
   }
 
   private async handleValidationError(error: LicenseRequestError): Promise<LicenseState> {

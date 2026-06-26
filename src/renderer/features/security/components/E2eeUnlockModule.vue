@@ -22,15 +22,13 @@
             @input="handleRecoveryKeyInput"
             @keyup.enter="emitSubmit"
           />
-          <input
+          <PasswordInput
             v-else
-            :value="password"
-            type="password"
-            class="settings-input"
+            :model-value="password"
             :placeholder="t('e2ee.enterPassword')"
             autocomplete="current-password"
             :disabled="disabled"
-            @input="handlePasswordInput"
+            @update:model-value="handlePasswordUpdate"
             @keyup.enter="emitSubmit"
           />
         </div>
@@ -51,6 +49,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import PasswordInput from '@renderer/features/settings/components/PasswordInput.vue';
 
 type UnlockMode = 'unlock' | 'recovery';
 
@@ -77,9 +76,8 @@ const { t } = useI18n();
 const isRecoveryMode = computed(() => props.mode === 'recovery');
 const recoveryKeyPlaceholder = 'ABCD-EFGH-IJKL-MNOP-QRST-UVWX-YZ';
 
-function handlePasswordInput(event: Event): void {
-  const target = event.target as HTMLInputElement;
-  emit('update:password', target.value);
+function handlePasswordUpdate(value: string): void {
+  emit('update:password', value);
 }
 
 function handleRecoveryKeyInput(event: Event): void {

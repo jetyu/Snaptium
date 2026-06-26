@@ -28,7 +28,7 @@
               <span class="search-view__history-meta">{{ formatAskedAt(thread.askedAt) }}</span>
             </button>
             <button v-if="!isGeneratingThread(thread)" type="button" class="search-view__history-delete"
-              :title="$t('common.delete')" @click.stop.prevent="deleteQuestionThread(thread)">
+              :title="$t('button.delete')" @click.stop.prevent="deleteQuestionThread(thread)">
               <IconTrash :size="14" />
             </button>
           </div>
@@ -50,6 +50,7 @@
             <p class="search-view__status-text search-view__status-text--error">{{ searchError }}</p>
           </div>
           <div v-else-if="!canUseKnowledgeSearch && !hasChatMessages" class="search-view__status">
+            <IconMessageChatbot :size="72" class="search-view__status-icon" />
             <p class="search-view__status-text">{{ knowledgeUnavailableReason }}</p>
           </div>
           <div v-else-if="!hasChatMessages" class="search-view__status">

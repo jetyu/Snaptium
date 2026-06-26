@@ -11,10 +11,10 @@ body:
         ## Feature Enhancement / 功能改进 
 
         This template is for suggesting **improvements to existing features** only. 
-        If you are requesting a new feature, please use the [Feature Request](https://github.com/jetyu/NoteWizard/issues/new?template=feature.yml) template. 
+        If you are requesting a new feature, please use the [Feature Request](https://github.com/jetyu/Snaptium/issues/new?template=feature.yml) template. 
         
         此模板仅用于提出对 **现有功能的改进建议** 。
-        如果是全新的功能需求，请使用 [Feature Request](https://github.com/jetyu/NoteWizard/issues/new?template=feature.yml) 模板。
+        如果是全新的功能需求，请使用 [Feature Request](https://github.com/jetyu/Snaptium/issues/new?template=feature.yml) 模板。
 
   - type: dropdown
     id: os
@@ -40,10 +40,10 @@ body:
       required: true
 
   - type: input
-    id: notewizard_version
+    id: Snaptium_version
     attributes:
-      label: NoteWizard Version / NoteWizard版本
-      description: The version of NoteWizard you are using. Required | 当前使用的NoteWizard版本（必填）
+      label: Snaptium Version / Snaptium版本
+      description: The version of Snaptium you are using. Required | 当前使用的Snaptium版本（必填）
       placeholder: e.g. 1.0.1
     validations:
       required: true

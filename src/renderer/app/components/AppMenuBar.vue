@@ -13,7 +13,8 @@
           <div v-if="item.type === 'separator'" class="app-menu-bar__separator"></div>
           <button v-else type="button" class="app-menu-bar__dropdown-item" @click="handleAction(item.id)">
             <span class="app-menu-bar__dropdown-label">{{ item.labelKey ? t(item.labelKey) : '' }}</span>
-            <span v-if="item.accelerator" class="app-menu-bar__dropdown-shortcut">{{ formatShortcut(item.accelerator) }}</span>
+            <span v-if="item.accelerator" class="app-menu-bar__dropdown-shortcut">{{ formatShortcut(item.accelerator)
+              }}</span>
           </button>
         </template>
       </div>
@@ -30,6 +31,7 @@ import { useLicenseDialog } from '@renderer/features/license';
 import { useUpdaterStore } from '@renderer/features/updater';
 import { MENU_CONFIG, type MenuAction } from '@shared/menu.config';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
+import { isDev } from '@renderer/config/env';
 
 const { t } = useI18n();
 const { openSettings } = useSettings();
@@ -48,9 +50,17 @@ const filteredMenus = computed(() => MENU_CONFIG
   .filter((menu) => visibleCategoryIds.includes(menu.id))
   .map((menu) => ({
     ...menu,
-    items: updaterStore.isStoreDistribution
-      ? menu.items.filter((item) => item.id !== 'update')
-      : menu.items,
+    items: menu.items.filter((item) => {
+      if (updaterStore.isStoreDistribution && item.id === 'update') {
+        return false;
+      }
+
+      if (!isDev && item.id === 'toggleDevTools') {
+        return false;
+      }
+
+      return true;
+    }),
   }))
 );
 
@@ -164,7 +174,7 @@ function handleAction(action?: MenuAction) {
       }
       break;
     case 'feedback':
-      window.open('https://github.com/jetyu/NoteWizard/issues');
+      window.open('https://github.com/jetyu/Snaptium/issues');
       break;
     case 'activateLicense':
       openLicenseDialog();
