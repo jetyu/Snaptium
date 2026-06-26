@@ -79,66 +79,6 @@
           <span v-else>{{ t('license.activation.button') }}</span>
         </button>
       </div>
-
-      <Transition name="fade-slide">
-        <div v-if="claimDevices.length > 0" class="claim-panel">
-          <div class="claim-panel-header">
-            <h3 class="claim-panel-title">{{ t('license.management.activatedDevicesList') }}</h3>
-            <p class="claim-panel-description">{{ t('license.error.maxDevicesReached') }}</p>
-          </div>
-
-          <div class="claim-device-list">
-            <label
-              v-for="device in claimDevices"
-              :key="device.id"
-              class="claim-device-option"
-              :class="{ selected: selectedClaimDeviceId === device.id }"
-            >
-              <input
-                v-model="selectedClaimDeviceId"
-                class="claim-device-radio"
-                type="radio"
-                name="claim-device"
-                :value="device.id"
-                :disabled="isBusy"
-              />
-              <div class="claim-device-content">
-                <div class="claim-device-title-row">
-                  <span class="claim-device-name">{{ device.name }}</span>
-                  <span v-if="device.current" class="claim-current-badge">
-                    {{ t('license.devices.current') }}
-                  </span>
-                </div>
-                <div class="claim-device-meta">
-                  <span>{{ device.platform || t('common.unknown') }}</span>
-                  <span>{{ t('license.devices.lastSeen') }}: {{ formatDate(device.lastSeenAt) }}</span>
-                </div>
-              </div>
-            </label>
-          </div>
-
-          <div class="claim-action-row">
-            <button
-              type="button"
-              class="action-button claim-confirm-btn"
-              :disabled="isBusy || selectedClaimDeviceId.length === 0"
-              @click="handleClaimDevice"
-            >
-              <span v-if="isClaiming" class="spinner small"></span>
-              <span v-else>{{ t('button.confirm') }}</span>
-            </button>
-
-            <button
-              type="button"
-              class="claim-cancel-btn"
-              :disabled="isBusy"
-              @click="resetClaimState"
-            >
-              {{ t('button.cancel') }}
-            </button>
-          </div>
-        </div>
-      </Transition>
     </div>
 
     <Transition name="fade-slide">
@@ -148,7 +88,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, type Component } from 'vue';
+import { nextTick, onMounted, ref, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
 import {
   IconCircleCheck,
@@ -213,7 +153,6 @@ const comparisonPlans: readonly ComparisonPlan[] = [
 const licenseKey = ref('');
 const licenseKeyInputRef = ref<HTMLInputElement | null>(null);
 const isSubmitting = ref(false);
-const isClaiming = ref(false);
 const errorMessage = ref('');
 const isBusy = isSubmitting;
 
@@ -245,51 +184,11 @@ async function handleActivate(): Promise<void> {
   try {
     await licenseService.activate(licenseKey.value);
     licenseKey.value = '';
-    resetClaimState();
-  } catch (error) {
-    const normalizedError = normalizeLicenseError(error);
-    errorMessage.value = normalizedError.message;
-
-    if (normalizedError.code === LICENSE_ERROR_CODES.MAX_DEVICES_REACHED) {
-      const snapshot = getLicenseClaimSnapshot(error);
-      if (snapshot && snapshot.devices.length > 0) {
-        claimSnapshot.value = snapshot;
-        selectedClaimDeviceId.value = snapshot.devices[0]?.id ?? '';
-      } else {
-        resetClaimState();
-        await focusInput();
-      }
-    } else {
-      resetClaimState();
-      await focusInput();
-    }
-  } finally {
-    isSubmitting.value = false;
-  }
-}
-
-async function handleClaimDevice(): Promise<void> {
-  if (isClaiming.value || selectedClaimDeviceId.value.trim().length === 0) {
-    return;
-  }
-
-  isClaiming.value = true;
-  errorMessage.value = '';
-  try {
-    await licenseService.claimDevice(licenseKey.value, selectedClaimDeviceId.value);
-    licenseKey.value = '';
-    resetClaimState();
   } catch (error) {
     errorMessage.value = normalizeLicenseErrorMessage(error);
-    const snapshot = getLicenseClaimSnapshot(error);
-    if (snapshot && snapshot.devices.length > 0) {
-      claimSnapshot.value = snapshot;
-      if (!snapshot.devices.some((device) => device.id === selectedClaimDeviceId.value)) {
-        selectedClaimDeviceId.value = snapshot.devices[0]?.id ?? '';
-      }
-    }
+    await focusInput();
   } finally {
-    isClaiming.value = false;
+    isSubmitting.value = false;
   }
 }
 </script>
@@ -585,136 +484,6 @@ async function handleClaimDevice(): Promise<void> {
   width: 100%;
 }
 
-.claim-panel {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  border: 1px solid var(--panel-border);
-  border-radius: 10px;
-  background: var(--panel-hover);
-  padding: 14px;
-}
-
-.claim-panel-header {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.claim-panel-title {
-  margin: 0;
-  color: var(--text);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.claim-panel-description {
-  margin: 0;
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  line-height: 1.4;
-}
-
-.claim-device-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.claim-device-option {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  border: 1px solid var(--panel-border);
-  border-radius: 8px;
-  background: var(--panel);
-  padding: 10px 12px;
-  cursor: pointer;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-.claim-device-option.selected {
-  border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
-}
-
-.claim-device-radio {
-  margin-top: 2px;
-  accent-color: var(--accent);
-}
-
-.claim-device-content {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  min-width: 0;
-}
-
-.claim-device-title-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.claim-device-name {
-  color: var(--text);
-  font-size: 0.84rem;
-  font-weight: 600;
-}
-
-.claim-current-badge {
-  display: inline-flex;
-  align-items: center;
-  border-radius: 999px;
-  padding: 2px 8px;
-  font-size: 0.72rem;
-  font-weight: 600;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--panel-border));
-}
-
-.claim-device-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  color: var(--text-muted);
-  font-size: 0.76rem;
-}
-
-.claim-action-row {
-  display: flex;
-  gap: 10px;
-}
-
-.claim-confirm-btn {
-  flex: 1;
-}
-
-.claim-cancel-btn {
-  min-width: 84px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel);
-  color: var(--text-muted);
-  border-radius: 8px;
-  padding: 0 14px;
-  font-size: 0.82rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
-}
-
-.claim-cancel-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-
-.claim-cancel-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 .error-banner {
   margin: 0;
   color: var(--danger);
@@ -751,10 +520,6 @@ async function handleClaimDevice(): Promise<void> {
   .header-purchase-hint {
     max-width: none;
     text-align: left;
-  }
-
-  .claim-action-row {
-    flex-direction: column;
   }
 }
 
