@@ -17,12 +17,9 @@ export interface LicenseErrorInfo {
   message: string;
 }
 
-function createLicenseBridgeError(code: string, message: string, claimSnapshot?: LicenseClaimSnapshot): Error {
+function createLicenseBridgeError(code: string, message: string): Error {
   const error = new Error(message);
-  (error as Error & { code: string; claimSnapshot?: LicenseClaimSnapshot }).code = code;
-  if (claimSnapshot) {
-    (error as Error & { code: string; claimSnapshot?: LicenseClaimSnapshot }).claimSnapshot = claimSnapshot;
-  }
+  (error as Error & { code: string }).code = code;
   return error;
 }
 
@@ -31,7 +28,7 @@ function assertLicenseBridgeSuccess<T>(
   fallbackMessage: string,
 ): asserts result is { success: true; data: T } {
   if (!result.success) {
-    throw createLicenseBridgeError(result.code, result.message, result.claimSnapshot);
+    throw createLicenseBridgeError(result.code, result.message);
   }
 
   if (!result.data) {
@@ -47,6 +44,7 @@ function resolveLicenseErrorMessage(code: string): string {
     [LICENSE_ERROR_CODES.LICENSE_INACTIVE]: t('license.error.inactive'),
     [LICENSE_ERROR_CODES.MAX_DEVICES_REACHED]: t('license.error.maxDevicesReached'),
     [LICENSE_ERROR_CODES.DEVICE_NOT_FOUND]: t('license.error.deviceNotFound'),
+    [LICENSE_ERROR_CODES.CANNOT_DEACTIVATE_CURRENT_DEVICE]: t('license.error.cannotDeactivateCurrentDevice'),
     [LICENSE_ERROR_CODES.TOO_MANY_REQUESTS]: t('license.error.tooManyRequests'),
     [LICENSE_ERROR_CODES.NETWORK_TIMEOUT]: t('license.error.networkTimeout'),
     [LICENSE_ERROR_CODES.NETWORK_ERROR]: t('license.error.network'),
@@ -67,19 +65,6 @@ export function normalizeLicenseError(error: unknown): LicenseErrorInfo {
 
 export function normalizeLicenseErrorMessage(error: unknown): string {
   return normalizeLicenseError(error).message;
-}
-
-export function getLicenseClaimSnapshot(error: unknown): LicenseClaimSnapshot | null {
-  if (
-    typeof error === 'object'
-    && error !== null
-    && 'claimSnapshot' in error
-    && error.claimSnapshot
-  ) {
-    return error.claimSnapshot as LicenseClaimSnapshot;
-  }
-
-  return null;
 }
 
 export function normalizeLicenseStateError(code: string | null, message: string | null): string | null {
@@ -135,19 +120,6 @@ class LicenseService {
     } catch (error) {
       const message = getErrorMessage(error, 'License activation failed.');
       licenseLogger.error('activate failed', { message });
-      throw error;
-    }
-  }
-
-  async claimDevice(licenseKey: string, deviceId: string): Promise<LicenseState> {
-    try {
-      const result = await electronApi.license.claimDevice(licenseKey, deviceId);
-      assertLicenseBridgeSuccess(result, 'Claim device failed.');
-      this.getStore().updateState(result.data);
-      return result.data;
-    } catch (error) {
-      const message = getErrorMessage(error, 'Claim device failed.');
-      licenseLogger.error('claimDevice failed', { message });
       throw error;
     }
   }

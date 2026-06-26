@@ -151,15 +151,6 @@ export interface LicenseDevicesResponse {
 
 export type LicenseHeartbeatResponse = Partial<LicenseDevicesResponse>;
 
-export interface LicenseClaimSnapshot {
-  plan: LicensePlan | null;
-  expiresAt: string | null;
-  graceExpiresAt: string | null;
-  maxDevices: number;
-  currentDeviceId: string | null;
-  devices: LicenseDevice[];
-}
-
 export interface LicenseApiErrorResponse {
   code?: string;
   message?: string;
@@ -171,6 +162,7 @@ export const LICENSE_ERROR_CODES = {
   LICENSE_INACTIVE: 'license_inactive',
   MAX_DEVICES_REACHED: 'max_devices_reached',
   DEVICE_NOT_FOUND: 'device_not_found',
+  CANNOT_DEACTIVATE_CURRENT_DEVICE: 'cannot_deactivate_current_device',
   TOO_MANY_REQUESTS: 'too_many_requests',
   NETWORK_TIMEOUT: 'network_timeout',
   NETWORK_ERROR: 'network_error',

@@ -101,7 +101,6 @@ export interface LicenseErrorResult {
   success: false;
   code: string;
   message: string;
-  claimSnapshot?: import('@shared/license.constants').LicenseClaimSnapshot;
 }
 
 export type LicenseBridgeResult<T> =
@@ -789,12 +788,6 @@ export const electronApi = {
     },
     activate: (licenseKey: string): Promise<LicenseBridgeResult<import('@shared/license.constants').LicenseState>> => {
       return electronApi.license.getApi().activate(licenseKey);
-    },
-    claimDevice: (
-      licenseKey: string,
-      deviceId: string,
-    ): Promise<LicenseBridgeResult<import('@shared/license.constants').LicenseState>> => {
-      return electronApi.license.getApi().claimDevice(licenseKey, deviceId);
     },
     validate: (force?: boolean): Promise<LicenseBridgeResult<import('@shared/license.constants').LicenseState>> => {
       return electronApi.license.getApi().validate(force);
