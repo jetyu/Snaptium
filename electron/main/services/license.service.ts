@@ -13,6 +13,7 @@ import {
   LICENSE_STATUSES,
   type LicenseActivationResponse,
   type LicenseApiErrorResponse,
+  type LicenseClaimSnapshot,
   type LicenseDevice,
   type LicenseDevicePayload,
   type LicenseDevicesResponse,
@@ -50,6 +51,7 @@ interface LicenseRequestError extends Error {
   retryable: boolean;
   network: boolean;
   timeout: boolean;
+  claimSnapshot: LicenseClaimSnapshot | null;
 }
 
 interface RequestOptions {
@@ -156,6 +158,7 @@ function createLicenseError(
   error.retryable = extra?.retryable ?? false;
   error.network = extra?.network ?? false;
   error.timeout = extra?.timeout ?? false;
+  error.claimSnapshot = extra?.claimSnapshot ?? null;
   return error;
 }
 
@@ -236,6 +239,56 @@ function delay(ms: number): Promise<void> {
 function sanitizeMessage(message: string, fallback: string): string {
   const value = message.trim();
   return value.length > 0 ? value : fallback;
+}
+
+function inferLicenseErrorCodeFromMessage(message: string): LicenseErrorCode | null {
+  const normalized = message.trim().toLowerCase();
+  if (!normalized) {
+    return null;
+  }
+
+  if (
+    normalized.includes('license key is invalid')
+    || normalized.includes('license is not valid')
+    || normalized.includes('license_invalid')
+    || normalized.includes('invalid license')
+  ) {
+    return LICENSE_ERROR_CODES.LICENSE_INVALID;
+  }
+
+  if (normalized.includes('license expired') || normalized.includes('license_expired')) {
+    return LICENSE_ERROR_CODES.LICENSE_EXPIRED;
+  }
+
+  if (normalized.includes('license inactive') || normalized.includes('license_inactive')) {
+    return LICENSE_ERROR_CODES.LICENSE_INACTIVE;
+  }
+
+  if (normalized.includes('max devices') || normalized.includes('max_devices_reached')) {
+    return LICENSE_ERROR_CODES.MAX_DEVICES_REACHED;
+  }
+
+  if (normalized.includes('device not found') || normalized.includes('device_not_found')) {
+    return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;
+  }
+
+  if (normalized.includes('cannot deactivate current device') || normalized.includes('cannot_deactivate_current_device')) {
+    return LICENSE_ERROR_CODES.CANNOT_DEACTIVATE_CURRENT_DEVICE;
+  }
+
+  if (normalized.includes('too many requests') || normalized.includes('too_many_requests')) {
+    return LICENSE_ERROR_CODES.TOO_MANY_REQUESTS;
+  }
+
+  if (normalized.includes('timed out') || normalized.includes('network_timeout')) {
+    return LICENSE_ERROR_CODES.NETWORK_TIMEOUT;
+  }
+
+  if (normalized.includes('fetch') || normalized.includes('network error') || normalized.includes('network_error')) {
+    return LICENSE_ERROR_CODES.NETWORK_ERROR;
+  }
+
+  return null;
 }
 
 function isDateInFuture(value: string | null): boolean {
@@ -391,6 +444,77 @@ export class LicenseService {
     }
   }
 
+  async claimDevice(licenseKey: string, deviceId: string): Promise<LicenseState> {
+    const normalizedKey = normalizeLicenseKey(licenseKey);
+    if (!normalizedKey) {
+      throw createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, 'License key is required.');
+    }
+
+    const normalizedDeviceId = deviceId.trim();
+    if (!normalizedDeviceId) {
+      throw createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, 'Device ID is required.');
+    }
+
+    const deviceFingerprint = this.requireDeviceFingerprint();
+    try {
+      const payload = {
+        license_key: normalizedKey,
+        device_id: normalizedDeviceId,
+        device_fingerprint: deviceFingerprint,
+        device_name: sanitizeMessage(os.hostname(), `${appEnvInfoService.getAppName()} Device`),
+        ...this.getDeviceInfoPayload(),
+      };
+
+      const response = await this.requestJson(
+        '/license/claim-device',
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        },
+        licenseActivationResponseSchema,
+      );
+
+      const data = response as LicenseActivationResponse;
+      const plan = this.resolvePlanOrThrow(data.type);
+      if (!isPaidPlan(plan)) {
+        throw createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, 'Claim response does not contain a paid license type.');
+      }
+      if (!data.valid) {
+        throw createLicenseError(LICENSE_ERROR_CODES.LICENSE_INVALID, 'License is not valid.');
+      }
+
+      this.token = data.token;
+      this.applyLicenseResponse(data);
+      const now = Date.now();
+      this.state.status = LICENSE_STATUSES.ACTIVE;
+      this.state.activated = true;
+      this.state.valid = true;
+      this.state.lastValidatedAt = now;
+      this.state.lastServerSyncAt = now;
+      this.state.lastDeviceRefreshAt = now;
+      this.state.lastErrorCode = null;
+      this.state.lastErrorMessage = null;
+      await this.savePersistedState();
+      this.startHeartbeatIfNeeded();
+      this.notifyStateChange();
+      return this.getState();
+    } catch (error) {
+      const normalizedError = this.normalizeRequestError(error, 'Claim device failed');
+      this.state.lastErrorCode = String(normalizedError.code);
+      this.state.lastErrorMessage = normalizedError.message;
+      if (normalizedError.code === LICENSE_ERROR_CODES.MAX_DEVICES_REACHED) {
+        this.state.status = LICENSE_STATUSES.MAX_DEVICES_REACHED;
+      } else if (normalizedError.code === LICENSE_ERROR_CODES.LICENSE_EXPIRED) {
+        this.state.status = LICENSE_STATUSES.EXPIRED;
+      } else {
+        this.state.status = LICENSE_STATUSES.INVALID;
+      }
+      this.notifyStateChange();
+      throw normalizedError;
+    }
+  }
+
   async validateLicense(options?: RequestOptions): Promise<LicenseState> {
     if (!this.token) {
       return this.getState();
@@ -530,6 +654,13 @@ export class LicenseService {
     }
     const isCurrentDevice = normalizedDeviceId === this.state.currentDeviceId;
 
+    if (normalizedDeviceId === this.state.currentDeviceId) {
+      throw createLicenseError(
+        LICENSE_ERROR_CODES.CANNOT_DEACTIVATE_CURRENT_DEVICE,
+        'Cannot deactivate current device from remote device management.',
+      );
+    }
+
     try {
       const response = await this.requestJson(
         '/license/deactivate-device',
@@ -646,6 +777,7 @@ export class LicenseService {
               retryable: false,
               network: false,
               timeout: false,
+              claimSnapshot: this.extractClaimSnapshot(route, response.status, body),
             },
           );
         }
@@ -668,6 +800,103 @@ export class LicenseService {
     throw createLicenseError(LICENSE_ERROR_CODES.UNKNOWN, 'License API request failed after retries.');
   }
 
+  private extractClaimSnapshot(route: string, status: number, body: unknown): LicenseClaimSnapshot | null {
+    if (
+      (route !== '/license/activate' && route !== '/license/claim-device')
+      || status < 400
+      || !isObject(body)
+    ) {
+      return null;
+    }
+
+    const candidates: unknown[] = [
+      body,
+      body.claim_snapshot,
+      body.snapshot,
+      body.data,
+      body.details,
+      body.error,
+    ];
+
+    for (const candidate of candidates) {
+      const snapshot = this.parseClaimSnapshotCandidate(candidate);
+      if (snapshot) {
+        return snapshot;
+      }
+    }
+
+    return null;
+  }
+
+  private parseClaimSnapshotCandidate(value: unknown): LicenseClaimSnapshot | null {
+    if (!isObject(value)) {
+      return null;
+    }
+
+    const devicesSource = Array.isArray(value.devices) ? value.devices : null;
+    const maxDevices = typeof value.max_devices === 'number'
+      ? value.max_devices
+      : typeof value.maxDevices === 'number'
+        ? value.maxDevices
+        : null;
+
+    if (!devicesSource || maxDevices === null) {
+      return null;
+    }
+
+    const devicesResult = z.array(devicePayloadSchema).safeParse(devicesSource);
+    if (!devicesResult.success) {
+      return null;
+    }
+
+    const currentDeviceId = typeof value.current_device_id === 'string'
+      ? value.current_device_id
+      : typeof value.currentDeviceId === 'string'
+        ? value.currentDeviceId
+        : null;
+
+    const plan = typeof value.type === 'string'
+      ? normalizePlan(value.type)
+      : typeof value.plan === 'string'
+        ? normalizePlan(value.plan)
+        : null;
+
+    const expiresAt = (
+      typeof value.expires_at === 'string'
+      || value.expires_at === null
+    )
+      ? value.expires_at
+      : (
+        typeof value.expiresAt === 'string'
+        || value.expiresAt === null
+      )
+        ? value.expiresAt
+        : null;
+
+    const graceExpiresAt = (
+      typeof value.grace_expires_at === 'string'
+      || value.grace_expires_at === null
+    )
+      ? value.grace_expires_at
+      : (
+        typeof value.graceExpiresAt === 'string'
+        || value.graceExpiresAt === null
+      )
+        ? value.graceExpiresAt
+        : null;
+
+    return {
+      plan,
+      expiresAt,
+      graceExpiresAt,
+      maxDevices,
+      currentDeviceId,
+      devices: devicesResult.data
+        .map((item) => mapDevicePayload(item, currentDeviceId))
+        .filter((device) => device.status === 'active'),
+    };
+  }
+
   private normalizeRequestError(error: unknown, fallbackMessage: string): LicenseRequestError {
     if (isObject(error) && typeof error.code === 'string' && typeof error.message === 'string' && 'retryable' in error) {
       const candidate = error as Partial<LicenseRequestError>;
@@ -679,6 +908,7 @@ export class LicenseService {
           retryable: candidate.retryable === true,
           network: candidate.network === true,
           timeout: candidate.timeout === true,
+          claimSnapshot: candidate.claimSnapshot ?? null,
         },
       );
     }
@@ -755,10 +985,12 @@ export class LicenseService {
     }
 
     if ((status === 400 || status === 422) && route === '/license/activate') return LICENSE_ERROR_CODES.LICENSE_INVALID;
+    if ((status === 400 || status === 422) && route === '/license/claim-device') return LICENSE_ERROR_CODES.LICENSE_INVALID;
     if ((status === 400 || status === 422) && route === '/license/validate') return LICENSE_ERROR_CODES.LICENSE_INVALID;
     if (status === 401) return LICENSE_ERROR_CODES.LICENSE_INVALID;
     if (status === 403) return LICENSE_ERROR_CODES.LICENSE_INVALID;
     if (status === 404 && route === '/license/deactivate-device') return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;
+    if (status === 404 && route === '/license/claim-device') return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;
     if (status === 409) return LICENSE_ERROR_CODES.MAX_DEVICES_REACHED;
     if (status === 429) return LICENSE_ERROR_CODES.TOO_MANY_REQUESTS;
     return LICENSE_ERROR_CODES.UNKNOWN;

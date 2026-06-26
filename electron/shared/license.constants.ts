@@ -151,6 +151,15 @@ export interface LicenseDevicesResponse {
 
 export type LicenseHeartbeatResponse = Partial<LicenseDevicesResponse>;
 
+export interface LicenseClaimSnapshot {
+  plan: LicensePlan | null;
+  expiresAt: string | null;
+  graceExpiresAt: string | null;
+  maxDevices: number;
+  currentDeviceId: string | null;
+  devices: LicenseDevice[];
+}
+
 export interface LicenseApiErrorResponse {
   code?: string;
   message?: string;

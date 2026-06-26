@@ -17,9 +17,12 @@ export interface LicenseErrorInfo {
   message: string;
 }
 
-function createLicenseBridgeError(code: string, message: string): Error {
+function createLicenseBridgeError(code: string, message: string, claimSnapshot?: LicenseClaimSnapshot): Error {
   const error = new Error(message);
-  (error as Error & { code: string }).code = code;
+  (error as Error & { code: string; claimSnapshot?: LicenseClaimSnapshot }).code = code;
+  if (claimSnapshot) {
+    (error as Error & { code: string; claimSnapshot?: LicenseClaimSnapshot }).claimSnapshot = claimSnapshot;
+  }
   return error;
 }
 
@@ -28,7 +31,7 @@ function assertLicenseBridgeSuccess<T>(
   fallbackMessage: string,
 ): asserts result is { success: true; data: T } {
   if (!result.success) {
-    throw createLicenseBridgeError(result.code, result.message);
+    throw createLicenseBridgeError(result.code, result.message, result.claimSnapshot);
   }
 
   if (!result.data) {
@@ -64,6 +67,19 @@ export function normalizeLicenseError(error: unknown): LicenseErrorInfo {
 
 export function normalizeLicenseErrorMessage(error: unknown): string {
   return normalizeLicenseError(error).message;
+}
+
+export function getLicenseClaimSnapshot(error: unknown): LicenseClaimSnapshot | null {
+  if (
+    typeof error === 'object'
+    && error !== null
+    && 'claimSnapshot' in error
+    && error.claimSnapshot
+  ) {
+    return error.claimSnapshot as LicenseClaimSnapshot;
+  }
+
+  return null;
 }
 
 export function normalizeLicenseStateError(code: string | null, message: string | null): string | null {
@@ -119,6 +135,19 @@ class LicenseService {
     } catch (error) {
       const message = getErrorMessage(error, 'License activation failed.');
       licenseLogger.error('activate failed', { message });
+      throw error;
+    }
+  }
+
+  async claimDevice(licenseKey: string, deviceId: string): Promise<LicenseState> {
+    try {
+      const result = await electronApi.license.claimDevice(licenseKey, deviceId);
+      assertLicenseBridgeSuccess(result, 'Claim device failed.');
+      this.getStore().updateState(result.data);
+      return result.data;
+    } catch (error) {
+      const message = getErrorMessage(error, 'Claim device failed.');
+      licenseLogger.error('claimDevice failed', { message });
       throw error;
     }
   }

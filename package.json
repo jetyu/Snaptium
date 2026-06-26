@@ -124,7 +124,6 @@
     "appx": {
       "languages": [
         "de-DE",
-        "en-GB",
         "en-US",
         "es-ES",
         "fr-FR",
@@ -136,7 +135,6 @@
         "tr-TR",
         "zh-CN",
         "zh-HK",
-        "zh-Hans",
         "zh-TW"
       ]
     },
