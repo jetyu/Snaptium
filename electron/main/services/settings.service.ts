@@ -21,7 +21,7 @@ import type { KeySlots } from './crypto.service.js';
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type RemoteImageMode = 'blocked' | 'trusted' | 'all';
 type WindowCloseAction = 'minimize' | 'exit';
-type AccentMode = 'blue' | 'black' | 'azureBlue' | 'indigo' | 'cyan' | 'teal';
+type AccentMode = 'black' | 'azureBlue' | 'indigo' | 'cyan' | 'teal';
 
 interface SyncWebDavConfig {
   url: string;
@@ -164,7 +164,7 @@ function normalizeWindowCloseAction(value: unknown): WindowCloseAction {
 function normalizeAccentMode(value: unknown): AccentMode {
   return value === 'black' || value === 'azureBlue' || value === 'indigo' || value === 'cyan' || value === 'teal'
     ? value
-    : 'blue';
+    : 'azureBlue';
 }
 
 function normalizeLogLevel(logLevel: unknown): LogLevel {
@@ -341,7 +341,7 @@ export const settingsService = {
       autoStartup: false,
       windowCloseAction: DEFAULT_WINDOW_CLOSE_ACTION,
       themeMode: 'system',
-      accentMode: 'blue',
+      accentMode: 'azureBlue',
       previewAppearance: {
         allowHtml: true,
         allowInlineSvg: true,

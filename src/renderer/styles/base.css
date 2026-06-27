@@ -94,9 +94,9 @@
   --panel-border: #2d333d;
   --text: #e1e3e8;
   --text-muted: #9ba3b3;
-  --accent: #0a84ff;
-  --accent-hover: #409cff;
-  --accent-solid: #0a84ff;
+  --accent: #4fc3ff;
+  --accent-hover: #a6e1ff;
+  --accent-solid: #0078d4;
   --accent-solid-text: #ffffff;
   --danger: #f85a5e;
   --surface-base: var(--bg);

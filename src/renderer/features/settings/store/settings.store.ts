@@ -109,7 +109,7 @@ export interface PreviewAppearanceSettings {
 
 export type WindowCloseAction = 'minimize' | 'exit';
 export type ThemeMode = 'system' | 'light' | 'dark';
-export type AccentMode = 'blue' | 'black' | 'azureBlue' | 'indigo' | 'cyan' | 'teal';
+export type AccentMode = 'black' | 'azureBlue' | 'indigo' | 'cyan' | 'teal';
 
 export interface AppSettings {
   language: string;
@@ -161,7 +161,7 @@ function createDefaultConfig(): AppSettings {
     autoStartup: false,
     windowCloseAction: 'minimize',
     themeMode: 'system',
-    accentMode: 'blue',
+    accentMode: 'azureBlue',
     previewAppearance: {
       allowHtml: true,
       allowInlineSvg: true,
