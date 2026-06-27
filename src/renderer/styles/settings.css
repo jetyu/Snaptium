@@ -358,7 +358,7 @@
 }
 
 .startup-switch.enabled .startup-switch-track {
-  background: var(--accent);
+  background: var(--accent-solid);
 }
 
 .startup-switch-thumb {

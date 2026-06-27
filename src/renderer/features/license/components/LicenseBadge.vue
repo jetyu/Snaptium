@@ -93,28 +93,28 @@ const toneClass = computed(() => {
 
 /* Pro Plan */
 .license-badge.pro {
-  background: var(--status-info-bg);
-  border-color: var(--status-info-border);
-  color: var(--status-info-text);
+  background: var(--license-plan-pro-bg);
+  border-color: var(--license-plan-pro-border);
+  color: var(--license-plan-pro-text);
 }
 
 .license-badge.pro:hover {
-  border-color: color-mix(in srgb, var(--status-info-border) 100%, var(--border-strong));
-  background: color-mix(in srgb, var(--status-info-bg) 88%, var(--surface-raised));
-  color: var(--status-info-text);
+  border-color: color-mix(in srgb, var(--license-plan-pro-border) 100%, var(--border-strong));
+  background: color-mix(in srgb, var(--license-plan-pro-bg) 88%, var(--surface-raised));
+  color: var(--license-plan-pro-text);
 }
 
 /* Trial Plan */
 .license-badge.trial {
-  background: var(--status-info-bg);
-  border-color: var(--status-info-border);
-  color: var(--status-info-text);
+  background: var(--license-plan-pro-bg);
+  border-color: var(--license-plan-pro-border);
+  color: var(--license-plan-pro-text);
 }
 
 .license-badge.trial:hover {
-  border-color: color-mix(in srgb, var(--status-info-border) 100%, var(--border-strong));
-  background: color-mix(in srgb, var(--status-info-bg) 88%, var(--surface-raised));
-  color: var(--status-info-text);
+  border-color: color-mix(in srgb, var(--license-plan-pro-border) 100%, var(--border-strong));
+  background: color-mix(in srgb, var(--license-plan-pro-bg) 88%, var(--surface-raised));
+  color: var(--license-plan-pro-text);
 }
 
 /* Ultimate Plan */

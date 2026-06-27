@@ -558,8 +558,8 @@ const handleClearBtnClick = async (provider: 'webdav' | 'oss-s3') => {
   right: -1px;
   font-size: 0.65rem;
   font-weight: 700;
-  background: var(--accent);
-  color: var(--notebook-icon-white);
+  background: var(--accent-solid);
+  color: var(--accent-solid-text);
   padding: 3px 10px 4px;
   border-radius: 0 10px 0 10px;
   line-height: 1;

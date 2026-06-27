@@ -128,42 +128,6 @@ watch(
   flex: 1;
 }
 
-
-
-:deep(.license-btn) {
-  min-width: 120px;
-  min-height: 36px;
-  height: 36px;
-  border-radius: 8px;
-  padding: 0 16px;
-  font-size: 0.88rem;
-  font-weight: 500;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  border: 1px solid var(--input-border);
-  background: var(--button-bg);
-  color: var(--text-primary);
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-:deep(.license-btn:hover:not(:disabled)) {
-  background: var(--button-bg-hover);
-  border-color: var(--input-border-focus);
-  color: var(--accent);
-}
-
-:deep(.license-btn:active:not(:disabled)) {
-  transform: scale(0.98);
-}
-
-:deep(.license-btn:disabled) {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 @media (max-width: 640px) {
   .license-modal {
     width: calc(100vw - 16px);

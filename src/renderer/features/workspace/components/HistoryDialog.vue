@@ -35,6 +35,7 @@
               </div>
               <PreviewPane v-else-if="selectedContentHtml" :html="selectedContentHtml" />
               <div v-else class="empty-preview">
+                <IconTextRecognition :size="72" class="empty-preview__icon" aria-hidden="true" />
                 <p>{{ $t('history.previewPlaceholder') }}</p>
               </div>
             </div>
@@ -60,7 +61,7 @@ import { workspaceService } from '../services/workspace.service';
 import { useSettingsStore } from '@renderer/features/settings';
 import { PreviewPane } from '@renderer/features/preview';
 import { useI18n } from 'vue-i18n';
-import { IconX } from '@tabler/icons-vue';
+import { IconTextRecognition, IconX } from '@tabler/icons-vue';
 
 const { t } = useI18n();
 const workspaceStore = useWorkspaceStore();
@@ -252,6 +253,30 @@ watch(() => workspaceStore.isHistoryDialogOpen, async (newVal) => {
   color: var(--text-muted, #9ca3af);
 }
 
+.empty-preview {
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 28px;
+  text-align: center;
+}
+
+.empty-preview__icon {
+  color: color-mix(in srgb, var(--accent) 35%, var(--text-muted, #9ca3af));
+  margin-bottom: 4px;
+}
+
+.empty-preview p {
+  margin: 0;
+  max-width: 320px;
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
 .loading-state {
   height: 100%;
   display: flex;
@@ -304,9 +329,9 @@ watch(() => workspaceStore.isHistoryDialogOpen, async (newVal) => {
 }
 
 .btn-restore {
-  background: var(--accent);
-  border: 1px solid var(--accent);
-  color: white;
+  background: var(--accent-solid);
+  border: 1px solid var(--accent-solid);
+  color: var(--accent-solid-text);
 }
 
 .btn-restore:hover:not(:disabled) {

@@ -1,6 +1,4 @@
-import os from 'node:os';
 import path from 'node:path';
-import crypto from 'node:crypto';
 import { promises as fs } from 'node:fs';
 import { BrowserWindow, dialog, type OpenDialogOptions } from 'electron';
 import { OutputFormat } from 'yarle-evernote-to-md/dist/output-format.js';
@@ -8,6 +6,7 @@ import type { YarleOptions } from 'yarle-evernote-to-md/dist/YarleOptions.js';
 import { $t } from '../../utils/i18n.js';
 import { loggerService } from '../logger.service.js';
 import { markdownImportService } from './markdown-import.service.js';
+import { createSecureTempDirectory } from './temp-directory.utils.js';
 import { getErrorMessage } from '../../services/error.service.js';
 
 const logger = loggerService.createLogger('Main:ENEX Import Service');
@@ -47,11 +46,9 @@ export const enexImportService = {
     }
 
     const enexFilePath = openDialogResult.filePaths[0];
-    const tempDir = path.join(os.tmpdir(), `notewizard-enex-import-${crypto.randomBytes(4).toString('hex')}`);
+    const tempDir = await createSecureTempDirectory('notewizard-enex-import');
 
     try {
-      await fs.mkdir(tempDir, { recursive: true });
-
       // Configure Yarle
       const options: YarleOptions = {
         enexSources: [enexFilePath],

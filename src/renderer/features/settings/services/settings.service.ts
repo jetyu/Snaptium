@@ -20,9 +20,16 @@ import type { AppSettings, AISource } from '../store/settings.store';
 
 type SettingsChangeReason = 'save' | 'language' | 'import' | 'reset';
 type WindowCloseAction = AppSettings['windowCloseAction'];
+type AccentMode = AppSettings['accentMode'];
 
 function normalizeWindowCloseAction(value: unknown): WindowCloseAction {
   return value === 'exit' ? 'exit' : 'minimize';
+}
+
+function normalizeAccentMode(value: unknown): AccentMode {
+  return value === 'black' || value === 'deepBlue' || value === 'indigo' || value === 'cyan' || value === 'teal'
+    ? value
+    : 'blue';
 }
 
 export interface AiConnectionPayload {
@@ -85,6 +92,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
     ...baseConfig,
     ...incomingConfig,
     windowCloseAction: normalizeWindowCloseAction(incomingConfig.windowCloseAction ?? baseConfig.windowCloseAction),
+    accentMode: normalizeAccentMode(incomingConfig.accentMode ?? baseConfig.accentMode),
     aiSources: normalizeAiSources(incomingConfig.aiSources ?? baseConfig.aiSources),
     aiAssistant: {
       ...baseConfig.aiAssistant,

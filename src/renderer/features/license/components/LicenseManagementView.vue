@@ -236,11 +236,11 @@ async function handleClear(): Promise<void> {
 }
 
 .license-summary-card.plan-pro {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--status-info-bg) 80%, var(--surface-raised)), var(--panel));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--license-plan-pro-bg) 80%, var(--surface-raised)), var(--panel));
 }
 
 .license-summary-card.plan-trial {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--status-info-bg) 80%, var(--surface-raised)), var(--panel));
+  background: linear-gradient(180deg, color-mix(in srgb, var(--license-plan-pro-bg) 80%, var(--surface-raised)), var(--panel));
 }
 
 .license-summary-card.plan-ultimate {
@@ -291,15 +291,15 @@ async function handleClear(): Promise<void> {
 }
 
 .plan-icon.pro {
-  color: var(--status-info-text);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--status-info-bg) 70%, var(--surface-raised)), var(--surface-soft));
-  border-color: var(--status-info-border);
+  color: var(--license-plan-pro-text);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--license-plan-pro-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  border-color: var(--license-plan-pro-border);
 }
 
 .plan-icon.trial {
-  color: var(--status-info-text);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--status-info-bg) 70%, var(--surface-raised)), var(--surface-soft));
-  border-color: var(--status-info-border);
+  color: var(--license-plan-pro-text);
+  background: linear-gradient(180deg, color-mix(in srgb, var(--license-plan-pro-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  border-color: var(--license-plan-pro-border);
 }
 
 .plan-icon.ultimate {
@@ -343,12 +343,12 @@ async function handleClear(): Promise<void> {
 
 .summary-plan.plan-pro .plan-kicker,
 .summary-plan.plan-pro .plan-title {
-  color: var(--status-info-text);
+  color: var(--license-plan-pro-text);
 }
 
 .summary-plan.plan-trial .plan-kicker,
 .summary-plan.plan-trial .plan-title {
-  color: var(--status-info-text);
+  color: var(--license-plan-pro-text);
 }
 
 .summary-plan.plan-ultimate .plan-kicker,
@@ -388,15 +388,15 @@ async function handleClear(): Promise<void> {
 }
 
 .summary-status.plan-pro {
-  background: var(--status-info-bg);
-  border-color: var(--status-info-border);
-  color: var(--status-info-text);
+  background: var(--license-plan-pro-bg);
+  border-color: var(--license-plan-pro-border);
+  color: var(--license-plan-pro-text);
 }
 
 .summary-status.plan-trial {
-  background: var(--status-info-bg);
-  border-color: var(--status-info-border);
-  color: var(--status-info-text);
+  background: var(--license-plan-pro-bg);
+  border-color: var(--license-plan-pro-border);
+  color: var(--license-plan-pro-text);
 }
 
 .summary-status.plan-ultimate {
@@ -423,11 +423,11 @@ async function handleClear(): Promise<void> {
 }
 
 .summary-status.plan-pro .status-dot {
-  background: var(--status-info-text);
+  background: var(--license-plan-pro-text);
 }
 
 .summary-status.plan-trial .status-dot {
-  background: var(--status-info-text);
+  background: var(--license-plan-pro-text);
 }
 
 .summary-status.plan-ultimate .status-dot {
@@ -469,9 +469,9 @@ async function handleClear(): Promise<void> {
 }
 
 .summary-action-btn:hover:not(:disabled) {
-  border-color: var(--accent);
+  border-color: var(--border-strong);
   background: var(--panel);
-  color: var(--accent);
+  color: var(--text);
 }
 
 .summary-action-btn:disabled {
@@ -519,7 +519,7 @@ async function handleClear(): Promise<void> {
 }
 
 .metric-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--border-strong) 72%, var(--panel-border));
 }
 
 .metric-card.plan-free:hover {
@@ -527,11 +527,11 @@ async function handleClear(): Promise<void> {
 }
 
 .metric-card.plan-pro:hover {
-  border-color: var(--status-info-border);
+  border-color: var(--license-plan-pro-border);
 }
 
 .metric-card.plan-trial:hover {
-  border-color: var(--status-info-border);
+  border-color: var(--license-plan-pro-border);
 }
 
 .metric-card.plan-ultimate:hover {
@@ -573,13 +573,13 @@ async function handleClear(): Promise<void> {
 }
 
 .metric-icon.plan-pro {
-  background: var(--status-info-bg);
-  color: var(--status-info-text);
+  background: var(--license-plan-pro-bg);
+  color: var(--license-plan-pro-text);
 }
 
 .metric-icon.plan-trial {
-  background: var(--status-info-bg);
-  color: var(--status-info-text);
+  background: var(--license-plan-pro-bg);
+  color: var(--license-plan-pro-text);
 }
 
 .metric-icon.plan-ultimate {
@@ -629,7 +629,7 @@ async function handleClear(): Promise<void> {
 
 .device-progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, color-mix(in srgb, var(--status-info-text) 82%, white), var(--accent));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--license-plan-pro-text) 82%, white), var(--license-plan-pro-fill));
   border-radius: 999px;
 }
 
@@ -640,12 +640,12 @@ async function handleClear(): Promise<void> {
 
 .device-progress.plan-pro .device-progress-bar,
 .device-progress-bar.plan-pro {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--status-info-text) 72%, white), var(--accent));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--license-plan-pro-text) 72%, white), var(--license-plan-pro-fill));
 }
 
 .device-progress.plan-trial .device-progress-bar,
 .device-progress-bar.plan-trial {
-  background: linear-gradient(90deg, color-mix(in srgb, var(--status-info-text) 72%, white), var(--accent));
+  background: linear-gradient(90deg, color-mix(in srgb, var(--license-plan-pro-text) 72%, white), var(--license-plan-pro-fill));
 }
 
 .device-progress.plan-ultimate .device-progress-bar,

@@ -1757,7 +1757,7 @@ onBeforeUnmount(() => {
 .search-view__pane-divider:hover::after,
 .search-view__content.is-resizing-pane .search-view__pane-divider::after {
   width: 3px;
-  background: var(--accent);
+  background: var(--accent-solid);
 }
 
 .search-view__answer-pane {
@@ -2179,7 +2179,7 @@ onBeforeUnmount(() => {
   height: 7px;
   margin-top: 6px;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--accent-solid);
 }
 
 .search-view__agent-steps li.is-failed::before,

@@ -1,4 +1,3 @@
-import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { promises as fs } from 'node:fs';
@@ -10,6 +9,7 @@ import { vfsService } from '../vfs.service.js';
 import { ragService } from '../rag.service.js';
 import { syncStateService } from '../sync/state.service.js';
 import { extractZipArchiveToDirectory } from './zip.utils.js';
+import { createSecureTempDirectory } from './temp-directory.utils.js';
 import { getErrorCode, getErrorMessage } from '../../services/error.service.js';
 
 const logger = loggerService.createLogger('Main:SPPX Import Service');
@@ -39,10 +39,6 @@ async function ensureDirectory(targetPath: string): Promise<void> {
   if (!targetStat.isDirectory()) {
     throw new Error(`Expected directory but got file: ${targetPath}`);
   }
-}
-
-function buildTempDirectoryPath() {
-  return path.join(os.tmpdir(), `notewizard-sppx-import-${Date.now()}-${crypto.randomUUID()}`);
 }
 
 function buildDatabaseBackupPath(workspaceRoot: string): string {
@@ -180,9 +176,8 @@ export const sppxImportService = {
       };
     }
 
-    const tempDirectoryPath = buildTempDirectoryPath();
+    const tempDirectoryPath = await createSecureTempDirectory('notewizard-sppx-import');
     try {
-      await fs.mkdir(tempDirectoryPath, { recursive: true });
       await extractZipArchiveToDirectory({
         archivePath: packagePath,
         targetDirectoryPath: tempDirectoryPath,
