@@ -27,7 +27,7 @@ function normalizeWindowCloseAction(value: unknown): WindowCloseAction {
 }
 
 function normalizeAccentMode(value: unknown): AccentMode {
-  return value === 'black' || value === 'deepBlue' || value === 'indigo' || value === 'cyan' || value === 'teal'
+  return value === 'black' || value === 'azureBlue' || value === 'indigo' || value === 'cyan' || value === 'teal'
     ? value
     : 'blue';
 }

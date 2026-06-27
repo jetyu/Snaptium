@@ -66,7 +66,7 @@
         <label class="select-shell">
           <select class="settings-select" :value="themeAccentValue" @change="handleAccentChange">
             <option value="blue">{{ t('option.themeAccent.blue') }}</option>
-            <option value="deepBlue">{{ t('option.themeAccent.deepBlue') }}</option>
+            <option value="azureBlue">{{ t('option.themeAccent.azureBlue') }}</option>
             <option value="black">{{ t('option.themeAccent.black') }}</option>
             <option value="indigo">{{ t('option.themeAccent.indigo') }}</option>
             <option value="cyan">{{ t('option.themeAccent.cyan') }}</option>

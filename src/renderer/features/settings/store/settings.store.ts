@@ -109,7 +109,7 @@ export interface PreviewAppearanceSettings {
 
 export type WindowCloseAction = 'minimize' | 'exit';
 export type ThemeMode = 'system' | 'light' | 'dark';
-export type AccentMode = 'blue' | 'black' | 'deepBlue' | 'indigo' | 'cyan' | 'teal';
+export type AccentMode = 'blue' | 'black' | 'azureBlue' | 'indigo' | 'cyan' | 'teal';
 
 export interface AppSettings {
   language: string;
