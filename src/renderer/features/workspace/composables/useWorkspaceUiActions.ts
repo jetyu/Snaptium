@@ -41,7 +41,7 @@ export function useWorkspaceUiActions() {
     }
 
     try {
-      await workspaceStore.setNoteReadMode(activeNote.id, !Boolean(activeNote.locked));
+      await workspaceStore.setNoteReadMode(activeNote.id, !activeNote.locked);
       return true;
     } catch (error) {
       workspaceUiActionsLogger.error(`Failed to toggle read mode: ${getErrorMessage(error)}`);
@@ -53,7 +53,7 @@ export function useWorkspaceUiActions() {
     const activeNote = workspaceStore.activeNote;
     if (activeNote) {
       try {
-        await workspaceStore.toggleNodeStar(activeNote.id, 'note', !Boolean(activeNote.starred));
+        await workspaceStore.toggleNodeStar(activeNote.id, 'note', !activeNote.starred);
         return true;
       } catch (error) {
         workspaceUiActionsLogger.error(`Failed to toggle note star: ${getErrorMessage(error)}`);
@@ -74,7 +74,7 @@ export function useWorkspaceUiActions() {
     }
 
     try {
-      await workspaceStore.toggleNodeStar(activeNotebook.id, 'notebook', !Boolean(activeNotebook.starred));
+      await workspaceStore.toggleNodeStar(activeNotebook.id, 'notebook', !activeNotebook.starred);
       return true;
     } catch (error) {
       workspaceUiActionsLogger.error(`Failed to toggle notebook star: ${getErrorMessage(error)}`);
