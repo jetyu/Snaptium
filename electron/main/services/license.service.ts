@@ -752,13 +752,18 @@ export class LicenseService {
     status: number,
     serverCode?: string,
   ): LicenseErrorCode | string {
-    if (serverCode && serverCode.trim().length > 0 && serverCode.trim() !== LICENSE_ERROR_CODES.UNKNOWN) {
-      return serverCode.trim();
+    const normalizedServerCode = serverCode?.trim();
+    if (normalizedServerCode && normalizedServerCode !== LICENSE_ERROR_CODES.UNKNOWN) {
+      return normalizedServerCode;
     }
 
+    const inferredCode = serverMessage ? inferLicenseErrorCodeFromMessage(serverMessage) : null;
+    if (inferredCode) {
+      return inferredCode;
+    }
 
-    if (serverCode && serverCode.trim().length > 0) {
-      return serverCode.trim();
+    if (normalizedServerCode) {
+      return normalizedServerCode;
     }
 
     if ((status === 400 || status === 422) && route === '/license/activate') return LICENSE_ERROR_CODES.LICENSE_INVALID;
