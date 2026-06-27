@@ -238,6 +238,36 @@ function sanitizeMessage(message: string, fallback: string): string {
   return value.length > 0 ? value : fallback;
 }
 
+function inferLicenseErrorCodeFromMessage(message: string): LicenseErrorCode | null {
+  const normalized = message.trim().toLowerCase();
+  if (!normalized) return null;
+
+  if (normalized.includes('too many request') || normalized.includes('rate limit')) {
+    return LICENSE_ERROR_CODES.TOO_MANY_REQUESTS;
+  }
+
+  if (normalized.includes('max device') || normalized.includes('device limit') || normalized.includes('too many device')) {
+    return LICENSE_ERROR_CODES.MAX_DEVICES_REACHED;
+  }
+
+  if (normalized.includes('device not found')) {
+    return LICENSE_ERROR_CODES.DEVICE_NOT_FOUND;
+  }
+
+  if (normalized.includes('expired')) {
+    return LICENSE_ERROR_CODES.LICENSE_EXPIRED;
+  }
+
+  if (normalized.includes('inactive') || normalized.includes('revoked') || normalized.includes('disabled')) {
+    return LICENSE_ERROR_CODES.LICENSE_INACTIVE;
+  }
+
+  if (normalized.includes('invalid') || normalized.includes('not valid')) {
+    return LICENSE_ERROR_CODES.LICENSE_INVALID;
+  }
+
+  return null;
+}
 
 function isDateInFuture(value: string | null): boolean {
   if (!value) return false;
@@ -751,6 +781,7 @@ export class LicenseService {
     route: string,
     status: number,
     serverCode?: string,
+    serverMessage?: string,
   ): LicenseErrorCode | string {
     const normalizedServerCode = serverCode?.trim();
     if (normalizedServerCode && normalizedServerCode !== LICENSE_ERROR_CODES.UNKNOWN) {
