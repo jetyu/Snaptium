@@ -3,8 +3,8 @@
     <Transition name="fade">
       <div v-if="isSidebarManagerOpen" ref="overlayRef" class="sidebar-manager-overlay" tabindex="0"
         @click.self="closeSidebarManager" @keydown.esc="closeSidebarManager">
-        <section class="sidebar-manager-dialog" @click.stop>
-          <header class="sidebar-manager-dialog__header">
+        <section ref="dialogRef" class="sidebar-manager-dialog" :style="dialogStyle" @click.stop>
+          <header ref="dragHandleRef" class="sidebar-manager-dialog__header dialog-drag-handle" @pointerdown="onDragHandlePointerDown">
             <div>
               <h2>{{ t('label.sidebarConfig') }}</h2>
               <p class="sidebar-manager-dialog__intro">{{ t('appShell.sidebarManager.intro') }}</p>
@@ -124,11 +124,14 @@ import {
   IconTag,
 } from '@tabler/icons-vue';
 import { useI18n } from 'vue-i18n';
+import { useDraggableDialog } from '@renderer/core/composables/useDraggableDialog';
 import type { AppShellMainViewId, AppShellModuleId } from '../constants/appShell.constants';
 import { useSidebarManager } from '../composables/useSidebarManager';
 import { useAppShellStore } from '../store/appShell.store';
 
 const overlayRef = ref<HTMLElement | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const dragHandleRef = ref<HTMLElement | null>(null);
 const { t } = useI18n();
 const { isSidebarManagerOpen, closeSidebarManager } = useSidebarManager();
 const appShellStore = useAppShellStore();
@@ -140,6 +143,12 @@ const {
   maxCustomModules,
   hasReachedCustomModuleLimit,
 } = storeToRefs(appShellStore);
+const { dialogStyle, onDragHandlePointerDown } = useDraggableDialog({
+  isOpen: isSidebarManagerOpen,
+  overlayRef,
+  dialogRef,
+  handleRef: dragHandleRef,
+});
 
 const { enableCustomModule, disableCustomModule } = appShellStore;
 const previewPlaceholderCount = computed(() => {

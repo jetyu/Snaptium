@@ -1,24 +1,30 @@
 import { watch, onMounted, onUnmounted } from 'vue';
-import { useSettingsStore } from '../store/settings.store';
+import { useSettingsStore, type AccentMode, type ThemeMode } from '../store/settings.store';
 
 export function useGeneralSettings() {
   const settingsStore = useSettingsStore();
   let mediaQuery: MediaQueryList | null = null;
   let removeSystemThemeListener: (() => void) | null = null;
 
-  const applyThemeMode = (mode: 'system' | 'light' | 'dark') => {
-    let activeTheme = mode;
+  const resolveThemeMode = (mode: ThemeMode): 'light' | 'dark' => {
     if (mode === 'system') {
-      activeTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
+
+    return mode;
+  };
+
+  const applyThemeAppearance = (themeMode: ThemeMode, accentMode: AccentMode) => {
+    const activeTheme = resolveThemeMode(themeMode);
     document.documentElement.setAttribute('data-theme', activeTheme);
+    document.documentElement.setAttribute('data-accent', accentMode);
     document.documentElement.style.colorScheme = activeTheme;
   };
 
   watch(
-    () => settingsStore.config.themeMode,
-    (newMode) => {
-      applyThemeMode(newMode);
+    () => [settingsStore.config.themeMode, settingsStore.config.accentMode] as const,
+    ([newThemeMode, newAccentMode]) => {
+      applyThemeAppearance(newThemeMode, newAccentMode);
     },
     { immediate: true },
   );
@@ -27,7 +33,7 @@ export function useGeneralSettings() {
     mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleSystemThemeChange = () => {
       if (settingsStore.config.themeMode === 'system') {
-        applyThemeMode('system');
+        applyThemeAppearance('system', settingsStore.config.accentMode);
       }
     };
 

@@ -9,12 +9,7 @@
         <p class="description">{{ t('license.activation.description') }}</p>
       </div>
       <div class="header-purchase">
-        <a
-          class="header-purchase-link"
-          :href="LICENSE_PURCHASE_URL"
-          target="_blank"
-          rel="noopener noreferrer nofollow"
-        >
+        <a class="header-purchase-link" :href="LICENSE_PURCHASE_URL" target="_blank" rel="noopener noreferrer nofollow">
           <span>{{ t('license.activation.purchase') }}</span>
           <IconLink :size="14" />
         </a>
@@ -26,12 +21,7 @@
       <p class="comparison-section-title">{{ t('license.activation.compareTitle') }}</p>
 
       <div class="comparison-grid">
-        <article
-          v-for="plan in comparisonPlans"
-          :key="plan.id"
-          class="comparison-card"
-          :class="`plan-${plan.id}`"
-        >
+        <article v-for="plan in comparisonPlans" :key="plan.id" class="comparison-card" :class="`plan-${plan.id}`">
           <div class="comparison-heading">
             <span class="comparison-icon-wrapper" aria-hidden="true">
               <component :is="plan.icon" :size="18" :stroke="1.8" />
@@ -54,27 +44,15 @@
         <span class="field-label">{{ t('license.activation.inputLabel') }}</span>
         <div class="input-container">
           <IconKey :size="16" class="input-key-icon" />
-          <input
-            ref="licenseKeyInputRef"
-            v-model="licenseKey"
-            type="text"
-            class="license-key-input"
-            :placeholder="t('license.activation.placeholder')"
-            autocomplete="off"
-            :disabled="isBusy"
-            @input="handleLicenseKeyInput"
-            @keydown.enter="handleActivate"
-          />
+          <input ref="licenseKeyInputRef" v-model="licenseKey" type="text" class="license-key-input"
+            :placeholder="t('license.activation.placeholder')" autocomplete="off" :disabled="isBusy"
+            @input="handleLicenseKeyInput" @keydown.enter="handleActivate" />
         </div>
       </div>
 
       <div class="action-row">
-        <button
-          type="button"
-          class="action-button activate-btn"
-          :disabled="isBusy || licenseKey.trim().length === 0"
-          @click="handleActivate"
-        >
+        <button type="button" class="action-button activate-btn" :disabled="isBusy || licenseKey.trim().length === 0"
+          @click="handleActivate">
           <span v-if="isSubmitting" class="spinner small"></span>
           <span v-else>{{ t('license.activation.button') }}</span>
         </button>
@@ -324,8 +302,8 @@ async function handleActivate(): Promise<void> {
 }
 
 .comparison-card.plan-pro {
-  border-color: var(--status-info-border);
-  background: var(--status-info-bg);
+  border-color: var(--license-plan-pro-border);
+  background: var(--license-plan-pro-bg);
 }
 
 .comparison-card.plan-ultimate {
@@ -334,7 +312,7 @@ async function handleActivate(): Promise<void> {
 }
 
 .comparison-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 22%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--border-strong) 72%, var(--panel-border));
 }
 
 .comparison-heading {
@@ -361,8 +339,8 @@ async function handleActivate(): Promise<void> {
 }
 
 .plan-pro .comparison-icon-wrapper {
-  background: var(--status-info-bg);
-  color: var(--status-info-text);
+  background: var(--license-plan-pro-bg);
+  color: var(--license-plan-pro-text);
 }
 
 .plan-ultimate .comparison-icon-wrapper {
@@ -405,7 +383,7 @@ async function handleActivate(): Promise<void> {
 }
 
 .plan-pro .comparison-check {
-  color: var(--status-info-text);
+  color: var(--license-plan-pro-text);
 }
 
 .plan-ultimate .comparison-check {
@@ -466,12 +444,12 @@ async function handleActivate(): Promise<void> {
 }
 
 .input-container:focus-within .input-key-icon {
-  color: var(--accent);
+  color: var(--license-plan-pro-text);
 }
 
 .license-key-input:focus {
-  border-color: var(--input-border-focus);
-  box-shadow: 0 0 0 3px var(--focus-ring);
+  border-color: var(--license-plan-pro-border);
+  box-shadow: 0 0 0 3px var(--license-plan-pro-ring);
   background: var(--panel);
 }
 

@@ -21,6 +21,7 @@ import type { KeySlots } from './crypto.service.js';
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 type RemoteImageMode = 'blocked' | 'trusted' | 'all';
 type WindowCloseAction = 'minimize' | 'exit';
+type AccentMode = 'black' | 'azureBlue' | 'indigo' | 'cyan' | 'teal';
 
 interface SyncWebDavConfig {
   url: string;
@@ -77,6 +78,7 @@ interface AppSettings {
   autoStartup: boolean;
   windowCloseAction: WindowCloseAction;
   themeMode: 'system' | 'light' | 'dark';
+  accentMode: AccentMode;
   previewAppearance: PreviewAppearanceConfig;
   editorFontSize: number;
   editorFont: string;
@@ -157,6 +159,12 @@ function interpolateMessage(template: string, replacements: Record<string, strin
 
 function normalizeWindowCloseAction(value: unknown): WindowCloseAction {
   return value === 'exit' ? 'exit' : DEFAULT_WINDOW_CLOSE_ACTION;
+}
+
+function normalizeAccentMode(value: unknown): AccentMode {
+  return value === 'black' || value === 'azureBlue' || value === 'indigo' || value === 'cyan' || value === 'teal'
+    ? value
+    : 'azureBlue';
 }
 
 function normalizeLogLevel(logLevel: unknown): LogLevel {
@@ -276,6 +284,7 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
     ...defaultConfig,
     ...incomingConfig,
     windowCloseAction: normalizeWindowCloseAction(incomingConfig.windowCloseAction ?? defaultConfig.windowCloseAction),
+    accentMode: normalizeAccentMode(incomingConfig.accentMode ?? defaultConfig.accentMode),
     aiAssistant: {
       ...defaultConfig.aiAssistant,
       ...(incomingConfig.aiAssistant || {}),
@@ -332,6 +341,7 @@ export const settingsService = {
       autoStartup: false,
       windowCloseAction: DEFAULT_WINDOW_CLOSE_ACTION,
       themeMode: 'system',
+      accentMode: 'azureBlue',
       previewAppearance: {
         allowHtml: true,
         allowInlineSvg: true,

@@ -9,6 +9,7 @@ import {
   SYNC_REMOTE_METADATA,
   SYNC_RUNTIME,
 } from '../../../shared/sync.constants.js';
+import { E2EE_ERROR_CODES } from '../../../shared/e2ee.constants.js';
 import { VFS_CONSTANTS } from '../../constants/vfs.constants.js';
 import { settingsService } from '../settings.service.js';
 import { vfsService } from '../vfs.service.js';
@@ -803,17 +804,32 @@ export const syncService = {
         recoveredPendingSession,
       };
     } catch (error) {
+      let errorToThrow = error;
+      if (getErrorCode(error) === E2EE_ERROR_CODES.DECRYPTION_FAILED) {
+        try {
+          const restored = await restoreKeySlotsFromRemote(provider);
+          if (restored) {
+            errorToThrow = createSyncError(
+              SYNC_ERROR_CODES.KEY_SLOTS_RESTORED,
+              $t('sync.notice.keySlotsRestored'),
+            );
+          }
+        } catch (restoreError: unknown) {
+          errorToThrow = restoreError;
+        }
+      }
+
       await syncStateService.finishSession(workspaceRoot, {
         lastError: {
-          code: getErrorCode(error) ?? SYNC_ERROR_CODES.UNKNOWN,
-          message: getErrorMessage(error, $t('sync.error.unknown')),
+          code: getErrorCode(errorToThrow) ?? SYNC_ERROR_CODES.UNKNOWN,
+          message: getErrorMessage(errorToThrow, $t('sync.error.unknown')),
           at: Date.now(),
         },
       });
       if (remoteLockAcquired) {
         await releaseRemoteLock(provider);
       }
-      throw error;
+      throw errorToThrow;
     }
   },
 };
