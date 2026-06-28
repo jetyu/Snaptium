@@ -3,8 +3,8 @@
     <Transition name="fade">
       <div v-if="workspaceStore.isHistoryDialogOpen" class="history-overlay" @keydown.esc="closeDialog" tabindex="0"
         ref="overlayRef">
-        <div class="history-modal" @click.stop>
-          <div class="history-header">
+        <div ref="dialogRef" class="history-modal" :style="dialogStyle" @click.stop>
+          <div ref="dragHandleRef" class="history-header dialog-drag-handle" @pointerdown="onDragHandlePointerDown">
             <h2>{{ $t('history.title') }}</h2>
             <button @click="closeDialog" class="btn-close dialog-close-button">
               <IconX :size="18" />
@@ -62,15 +62,24 @@ import { useSettingsStore } from '@renderer/features/settings';
 import { PreviewPane } from '@renderer/features/preview';
 import { useI18n } from 'vue-i18n';
 import { IconTextRecognition, IconX } from '@tabler/icons-vue';
+import { useDraggableDialog } from '@renderer/core/composables/useDraggableDialog';
 
 const { t } = useI18n();
 const workspaceStore = useWorkspaceStore();
 const settingsStore = useSettingsStore();
 const overlayRef = ref<HTMLElement | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const dragHandleRef = ref<HTMLElement | null>(null);
 const selectedVersion = ref<string | null>(null);
 const selectedContentMarkdown = ref<string>('');
 const isLoadingContent = ref(false);
 const isRestoring = ref(false);
+const { dialogStyle, onDragHandlePointerDown } = useDraggableDialog({
+  isOpen: computed(() => workspaceStore.isHistoryDialogOpen),
+  overlayRef,
+  dialogRef,
+  handleRef: dragHandleRef,
+});
 
 const sortedVersions = computed(() => {
   return [...workspaceStore.historyVersions].sort((a, b) => b.timestamp - a.timestamp);

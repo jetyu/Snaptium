@@ -9,8 +9,8 @@
         @click="closeDialog"
         @keydown.esc="closeDialog"
       >
-        <div class="note-properties-modal" @click.stop>
-          <div class="note-properties-header">
+        <div ref="dialogRef" class="note-properties-modal" :style="dialogStyle" @click.stop>
+          <div ref="dragHandleRef" class="note-properties-header dialog-drag-handle" @pointerdown="onDragHandlePointerDown">
             <div class="note-properties-heading">
               <p class="note-properties-kicker">{{ $t('contextMenu.properties') }}</p>
               <h2 :title="note.title">{{ note.title || $t('common.untitledNote') }}</h2>
@@ -100,14 +100,23 @@ import { useI18n } from 'vue-i18n';
 import { IconCheck, IconCopy, IconX } from '@tabler/icons-vue';
 import { electronApi } from '@renderer/core/bridge/electronApi';
 import { EDITOR_CONSTANTS } from '@renderer/features/editor/constants/editor.constants';
+import { useDraggableDialog } from '@renderer/core/composables/useDraggableDialog';
 import { workspaceService } from '../services/workspace.service';
 import { useWorkspaceStore } from '../store/workspace.store';
 
 const workspaceStore = useWorkspaceStore();
 const { t } = useI18n();
 const overlayRef = ref<HTMLElement | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const dragHandleRef = ref<HTMLElement | null>(null);
 const isCopied = ref(false);
 let copyFeedbackTimer: ReturnType<typeof setTimeout> | null = null;
+const { dialogStyle, onDragHandlePointerDown } = useDraggableDialog({
+  isOpen: computed(() => workspaceStore.isNotePropertiesDialogOpen),
+  overlayRef,
+  dialogRef,
+  handleRef: dragHandleRef,
+});
 
 const note = computed(() => workspaceStore.notePropertiesTarget);
 

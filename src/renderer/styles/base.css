@@ -402,3 +402,13 @@ button.icon-text svg,
 .dialog-close-button svg {
   display: block;
 }
+
+.dialog-drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.dialog-drag-handle:active {
+  cursor: grabbing;
+}
