@@ -1,6 +1,6 @@
 import DOMPurify from 'dompurify';
+import { katex as markdownItKatex } from '@mdit/plugin-katex';
 import MarkdownIt from 'markdown-it';
-import markdownItKatex from 'markdown-it-katex';
 import markdownItTaskLists from 'markdown-it-task-lists';
 import {
   DEFAULT_TRUSTED_REMOTE_IMAGE_HOSTS,
@@ -234,7 +234,7 @@ function getHtmlWhitelistOptions(allowInlineSvg: boolean) {
     ALLOWED_TAGS: allowedTags,
     ALLOWED_ATTR: allowedAttrs,
     ALLOW_DATA_ATTR: true,
-    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.\-]+(?:[^a-z+.\-:]|$))/i,
+    ALLOWED_URI_REGEXP: /^(?:(?:https?|mailto):|[^a-z]|[a-z+.-]+(?:[^a-z+.-:]|$))/i,
   };
 }
 
