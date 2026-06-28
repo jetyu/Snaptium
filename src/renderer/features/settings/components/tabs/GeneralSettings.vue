@@ -60,6 +60,22 @@
 
       <section class="setting-card">
         <div class="setting-copy">
+          <p class="setting-label">{{ t('label.themeAccent') }}</p>
+          <p class="setting-description">{{ t('text.themeAccent') }}</p>
+        </div>
+        <label class="select-shell">
+          <select class="settings-select" :value="themeAccentValue" @change="handleAccentChange">
+            <option value="azureBlue">{{ t('option.themeAccent.azureBlue') }}</option>
+            <option value="black">{{ t('option.themeAccent.black') }}</option>
+            <option value="indigo">{{ t('option.themeAccent.indigo') }}</option>
+            <option value="cyan">{{ t('option.themeAccent.cyan') }}</option>
+            <option value="teal">{{ t('option.themeAccent.teal') }}</option>
+          </select>
+        </label>
+      </section>
+
+      <section class="setting-card">
+        <div class="setting-copy">
           <p class="setting-label">{{ t('label.windowCloseAction') }}</p>
           <p class="setting-description">{{ windowCloseActionDescription }}</p>
         </div>
@@ -97,13 +113,17 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { languageOptions } from '@renderer/features/i18n';
 import { type AppShellMainViewId } from '@renderer/app/constants/appShell.constants';
-import { useSettingsStore, type WindowCloseAction } from '../../store/settings.store';
+import { useSettingsStore, type AppSettings, type WindowCloseAction } from '../../store/settings.store';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
 
 const startupViewValue = computed<AppShellMainViewId>(() => {
   return settingsStore.config.appShell.activeMainView === 'workspace' ? 'workspace' : 'workbench';
+});
+
+const themeAccentValue = computed<AppSettings['accentMode']>(() => {
+  return settingsStore.config.accentMode;
 });
 
 const windowCloseActionDescription = computed<string>(() => {
@@ -145,6 +165,11 @@ const handleStartupViewChange = async (event: Event) => {
 const handleThemeChange = async (event: Event) => {
   const target = event.target as HTMLSelectElement;
   await settingsStore.updateSetting('themeMode', target.value as 'system' | 'light' | 'dark');
+};
+
+const handleAccentChange = async (event: Event) => {
+  const target = event.target as HTMLSelectElement;
+  await settingsStore.updateSetting('accentMode', target.value as AppSettings['accentMode']);
 };
 
 const handleWindowCloseActionChange = async (event: Event) => {

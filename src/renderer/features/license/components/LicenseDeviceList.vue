@@ -178,13 +178,13 @@ async function handleDeactivate(device: LicenseDevice): Promise<void> {
 }
 
 .device-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--panel-border));
+  border-color: color-mix(in srgb, var(--border-strong) 72%, var(--panel-border));
   box-shadow: var(--shadow-soft);
 }
 
 .device-card.is-current {
-  border-color: color-mix(in srgb, var(--accent) 50%, var(--panel-border));
-  background: linear-gradient(90deg, color-mix(in srgb, var(--accent) 4%, var(--panel)), var(--panel));
+  border-color: var(--license-plan-pro-border);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--license-plan-pro-bg) 88%, var(--panel)), var(--panel));
 }
 
 .device-main {
@@ -215,9 +215,9 @@ async function handleDeactivate(device: LicenseDevice): Promise<void> {
 }
 
 .device-hardware-icon.is-current-icon {
-  background: color-mix(in srgb, var(--accent) 12%, var(--panel));
-  color: var(--accent);
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--panel-border));
+  background: color-mix(in srgb, var(--license-plan-pro-bg) 92%, var(--panel));
+  color: var(--license-plan-pro-text);
+  border-color: var(--license-plan-pro-border);
 }
 
 .device-details {
@@ -250,9 +250,9 @@ async function handleDeactivate(device: LicenseDevice): Promise<void> {
   padding: 2px 8px;
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 10%, var(--panel));
-  border: 1px solid color-mix(in srgb, var(--accent) 25%, var(--panel-border));
+  color: var(--license-plan-pro-text);
+  background: color-mix(in srgb, var(--license-plan-pro-bg) 92%, var(--panel));
+  border: 1px solid var(--license-plan-pro-border);
 }
 
 .device-sub-row {
