@@ -2,8 +2,8 @@
   <Teleport to="body">
     <Transition name="fade">
       <div v-if="isOpen" class="trash-overlay" @keydown.esc="closeTrash" tabindex="0" ref="overlayRef">
-        <div class="trash-dialog" @click.stop>
-          <div class="trash-header">
+        <div ref="dialogRef" class="trash-dialog" :style="dialogStyle" @click.stop>
+          <div ref="dragHandleRef" class="trash-header dialog-drag-handle" @pointerdown="onDragHandlePointerDown">
             <div class="header-left">
               <IconTrash :size="20" class="trash-icon" />
               <h2>{{ $t('label.trash') }}</h2>
@@ -85,11 +85,20 @@ import { nextTick, ref, watch } from 'vue';
 import { useTrash } from '../composables/useTrash';
 import { IconTrash, IconX, IconEraser, IconRefresh, IconFileText } from '@tabler/icons-vue';
 import NotebookVisualIcon from '@renderer/features/workspace/components/NotebookVisualIcon.vue';
+import { useDraggableDialog } from '@renderer/core/composables/useDraggableDialog';
 
 const { isOpen, trashedNodes, isLoading, error, clearError, closeTrash, restoreNode, permanentlyDeleteNode, emptyTrash } = useTrash();
 const overlayRef = ref<HTMLElement | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const dragHandleRef = ref<HTMLElement | null>(null);
 const activeNodeId = ref<string | null>(null);
 const isEmptying = ref(false);
+const { dialogStyle, onDragHandlePointerDown } = useDraggableDialog({
+  isOpen,
+  overlayRef,
+  dialogRef,
+  handleRef: dragHandleRef,
+});
 
 const formatTime = (timestamp: number) => {
   return new Date(timestamp).toLocaleString();

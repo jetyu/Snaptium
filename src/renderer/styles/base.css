@@ -17,8 +17,10 @@
   --panel-border: #dde1e9;
   --text: #1e2330;
   --text-muted: #8792a8;
-  --accent: #007aff;
-  --accent-hover: #0066d6;
+  --accent: #0071e3;
+  --accent-hover: #005ecb;
+  --accent-solid: #0071e3;
+  --accent-solid-text: #ffffff;
   --danger: #e5484d;
   --surface-base: var(--bg);
   --surface-raised: var(--panel);
@@ -55,7 +57,12 @@
   --status-success-text: #03865d;
   --status-info-bg: color-mix(in srgb, var(--accent) 8%, transparent);
   --status-info-border: color-mix(in srgb, var(--accent) 20%, transparent);
-  --status-info-text: #0066d6;
+  --status-info-text: var(--accent-hover);
+  --license-plan-pro-bg: rgba(37, 99, 235, 0.08);
+  --license-plan-pro-border: rgba(37, 99, 235, 0.22);
+  --license-plan-pro-text: #1d4ed8;
+  --license-plan-pro-fill: #2563eb;
+  --license-plan-pro-ring: rgba(37, 99, 235, 0.18);
   --status-warning-bg: rgba(245, 158, 11, 0.08);
   --status-warning-border: rgba(245, 158, 11, 0.2);
   --status-warning-text: #b45309;
@@ -87,8 +94,10 @@
   --panel-border: #2d333d;
   --text: #e1e3e8;
   --text-muted: #9ba3b3;
-  --accent: #0a84ff;
-  --accent-hover: #409cff;
+  --accent: #4fc3ff;
+  --accent-hover: #a6e1ff;
+  --accent-solid: #0078d4;
+  --accent-solid-text: #ffffff;
   --danger: #f85a5e;
   --surface-base: var(--bg);
   --surface-raised: var(--panel);
@@ -125,7 +134,12 @@
   --status-success-text: #56d7a8;
   --status-info-bg: color-mix(in srgb, var(--accent) 16%, transparent);
   --status-info-border: color-mix(in srgb, var(--accent) 32%, transparent);
-  --status-info-text: #409cff;
+  --status-info-text: var(--accent-hover);
+  --license-plan-pro-bg: rgba(96, 165, 250, 0.16);
+  --license-plan-pro-border: rgba(96, 165, 250, 0.3);
+  --license-plan-pro-text: #93c5fd;
+  --license-plan-pro-fill: #60a5fa;
+  --license-plan-pro-ring: rgba(96, 165, 250, 0.24);
   --status-warning-bg: rgba(239, 138, 37, 0.18);
   --status-warning-border: rgba(239, 138, 37, 0.32);
   --status-warning-text: #ffbf75;
@@ -146,6 +160,81 @@
   --notebook-icon-lime: #a3e635;
   --notebook-icon-red: #f87171;
   --notebook-icon-white: #ffffff;
+}
+
+:root[data-accent='black'],
+[data-theme='light'][data-accent='black'] {
+  --accent: #1f2937;
+  --accent-hover: #111827;
+  --accent-solid: #111827;
+  --accent-solid-text: #ffffff;
+}
+
+[data-theme='dark'][data-accent='black'] {
+  --accent: #d4d4d8;
+  --accent-hover: #f4f4f5;
+  --accent-solid: #52525b;
+  --accent-solid-text: #fafafa;
+}
+
+:root[data-accent='azureBlue'],
+[data-theme='light'][data-accent='azureBlue'] {
+  --accent: #0078d4;
+  --accent-hover: #106ebe;
+  --accent-solid: #0078d4;
+  --accent-solid-text: #ffffff;
+}
+
+[data-theme='dark'][data-accent='azureBlue'] {
+  --accent: #4fc3ff;
+  --accent-hover: #a6e1ff;
+  --accent-solid: #0078d4;
+  --accent-solid-text: #ffffff;
+}
+
+:root[data-accent='indigo'],
+[data-theme='light'][data-accent='indigo'] {
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-solid: #4f46e5;
+  --accent-solid-text: #ffffff;
+}
+
+[data-theme='dark'][data-accent='indigo'] {
+  --accent: #a5b4fc;
+  --accent-hover: #c7d2fe;
+  --accent-solid: #6366f1;
+  --accent-solid-text: #ffffff;
+}
+
+:root[data-accent='cyan'],
+[data-theme='light'][data-accent='cyan'] {
+  --accent: #0891b2;
+  --accent-hover: #0e7490;
+  --accent-solid: #0891b2;
+  --accent-solid-text: #ffffff;
+}
+
+[data-theme='dark'][data-accent='cyan'] {
+  --accent: #67e8f9;
+  --accent-hover: #a5f3fc;
+  --accent-solid: #06b6d4;
+  --accent-solid-text: #083344;
+}
+
+:root[data-accent='teal'],
+[data-theme='light'][data-accent='teal'] {
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-solid: #0f766e;
+  --accent-solid-text: #ffffff;
+}
+
+[data-theme='dark'][data-accent='teal'] {
+  --accent: #5eead4;
+  --accent-hover: #99f6e4;
+  --accent-solid: #0f766e;
+  --accent-solid-text: #f0fdfa;
 }
 
 /* ===== VS Code Style Scrollbars ===== */
@@ -312,4 +401,14 @@ button.icon-text svg,
 
 .dialog-close-button svg {
   display: block;
+}
+
+.dialog-drag-handle {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.dialog-drag-handle:active {
+  cursor: grabbing;
 }

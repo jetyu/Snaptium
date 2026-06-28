@@ -244,8 +244,8 @@ const handleDeleteHost = async (index: number) => {
 .add-btn {
   padding: 0 16px;
   height: 36px;
-  background: var(--accent);
-  color: var(--notebook-icon-white);
+  background: var(--accent-solid);
+  color: var(--accent-solid-text);
   border: none;
   border-radius: 8px;
   font-weight: 500;

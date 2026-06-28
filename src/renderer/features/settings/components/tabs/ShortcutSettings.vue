@@ -33,9 +33,9 @@
     </div>
 
     <!-- 添加快捷键对话框 -->
-    <div v-if="showAddDialog" class="dialog-overlay" @click="closeAddDialog">
-      <div class="dialog" @click.stop>
-        <div class="dialog-header">
+    <div v-if="showAddDialog" ref="overlayRef" class="dialog-overlay" @click="closeAddDialog">
+      <div ref="dialogRef" class="dialog" :style="dialogStyle" @click.stop>
+        <div ref="dragHandleRef" class="dialog-header dialog-drag-handle" @pointerdown="onDragHandlePointerDown">
           <h3>{{ t('shortcuts.addShortcut') }}</h3>
           <button class="close-button dialog-close-button" @click="closeAddDialog">×</button>
         </div>
@@ -77,6 +77,7 @@ import { useI18n } from 'vue-i18n';
 import { useShortcutsStore } from '@renderer/features/shortcuts';
 import type { KeybindingConflict } from '@renderer/features/shortcuts/store/shortcuts.store';
 import { createLogger } from '@renderer/features/logger';
+import { useDraggableDialog } from '@renderer/core/composables/useDraggableDialog';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import ShortcutInput from '@renderer/features/shortcuts/components/ShortcutInput.vue';
 import { formatKeybinding } from '@renderer/core/utils/formatKeybinding.utils';
@@ -86,9 +87,18 @@ const shortcutsStore = useShortcutsStore();
 const shortcutSettingsLogger = createLogger('ShortcutSettings');
 
 const showAddDialog = ref(false);
+const overlayRef = ref<HTMLElement | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const dragHandleRef = ref<HTMLElement | null>(null);
 const selectedCommandId = ref('');
 const newShortcutKey = ref('');
 const conflicts = ref<KeybindingConflict[]>([]);
+const { dialogStyle, onDragHandlePointerDown } = useDraggableDialog({
+  isOpen: showAddDialog,
+  overlayRef,
+  dialogRef,
+  handleRef: dragHandleRef,
+});
 
 onMounted(async () => {
   await shortcutsStore.initialize();

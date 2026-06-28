@@ -1,4 +1,3 @@
-import os from 'node:os';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { promises as fs } from 'node:fs';
@@ -8,6 +7,7 @@ import { VFS_CONSTANTS } from '../../constants/vfs.constants.js';
 import { loggerService } from '../logger.service.js';
 import { vfsService } from '../vfs.service.js';
 import { extractZipArchiveToDirectory } from './zip.utils.js';
+import { createSecureTempDirectory } from './temp-directory.utils.js';
 import { getErrorMessage } from '../../services/error.service.js';
 
 const logger = loggerService.createLogger('Main:NWP Import Service');
@@ -33,10 +33,6 @@ async function pathExists(targetPath: string): Promise<boolean> {
   } catch {
     return false;
   }
-}
-
-function buildTempDirectoryPath() {
-  return path.join(os.tmpdir(), `notewizard-nwp-import-${Date.now()}-${crypto.randomUUID()}`);
 }
 
 async function findNodesFile(dirPath: string): Promise<string | null> {
@@ -138,10 +134,9 @@ export const nwpImportService = {
     }
 
     const packagePath = openDialogResult.filePaths[0];
-    const tempDirectoryPath = buildTempDirectoryPath();
+    const tempDirectoryPath = await createSecureTempDirectory('notewizard-nwp-import');
 
     try {
-      await fs.mkdir(tempDirectoryPath, { recursive: true });
       await extractZipArchiveToDirectory({
         archivePath: packagePath,
         targetDirectoryPath: tempDirectoryPath,

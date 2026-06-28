@@ -1,4 +1,4 @@
-import { app } from 'electron';
+import { app, nativeImage } from 'electron';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { loggerService } from './logger.service.js';
@@ -70,6 +70,14 @@ const BING_UHD_HEIGHT = 2160;
 const BING_BASE_URL = 'https://www.bing.com';
 const BING_ARCHIVE_LIMIT = 10;
 const DEFAULT_DESCRIPTION = 'Daily wallpaper';
+const MAX_WALLPAPER_TEXT_LENGTH = 512;
+const ALLOWED_WALLPAPER_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/webp',
+]);
+const WALLPAPER_IMAGE_FILE_PATTERN = /^\d{4}-\d{2}-\d{2}-bing-\d+\.(?:jpg|png|webp)$/;
 
 function getCacheDirectory(): string {
   return path.join(app.getPath('userData'), CACHE_DIR_NAME);
@@ -109,6 +117,66 @@ function createDataUrl(buffer: Buffer, mimeType: string): string {
 
 function normalizeText(value: unknown, fallback = ''): string {
   return typeof value === 'string' && value.trim().length > 0 ? value.trim() : fallback;
+}
+
+function stripDisallowedControlChars(text: string): string {
+  let output = '';
+
+  for (const char of text) {
+    const code = char.charCodeAt(0);
+    const isAllowedWhitespace = code === 9 || code === 10 || code === 13;
+    const isPrintable = code >= 32 && code !== 127;
+
+    if (isAllowedWhitespace || isPrintable) {
+      output += char;
+    }
+  }
+
+  return output;
+}
+
+function sanitizeWallpaperText(value: unknown, fallback: string): string {
+  const normalized = stripDisallowedControlChars(normalizeText(value, fallback)).trim();
+  if (!normalized) {
+    return fallback;
+  }
+
+  return normalized.slice(0, MAX_WALLPAPER_TEXT_LENGTH).trim() || fallback;
+}
+
+function isAllowedWallpaperMimeType(mimeType: string): boolean {
+  return ALLOWED_WALLPAPER_MIME_TYPES.has(mimeType);
+}
+
+function isTrustedBingHost(hostname: string): boolean {
+  return hostname === 'www.bing.com' || hostname === 'bing.com';
+}
+
+function isTrustedBingImageUrl(value: string): boolean {
+  try {
+    const parsedUrl = new URL(value);
+    return parsedUrl.protocol === 'https:'
+      && isTrustedBingHost(parsedUrl.hostname)
+      && parsedUrl.pathname === '/th'
+      && (parsedUrl.searchParams.get('id') ?? '').length > 0
+      && !parsedUrl.username
+      && !parsedUrl.password;
+  } catch {
+    return false;
+  }
+}
+
+function normalizeAndValidateBingOriginUrl(value: string): string {
+  const normalizedUrl = normalizeBingOriginUrl(value);
+  if (!isTrustedBingOriginUrl(normalizedUrl)) {
+    throw new Error(`Untrusted Bing wallpaper origin URL: ${value}`);
+  }
+
+  return normalizedUrl;
+}
+
+function isWallpaperImageFileName(fileName: string): boolean {
+  return WALLPAPER_IMAGE_FILE_PATTERN.test(fileName);
 }
 
 function normalizeArchiveIndex(value: unknown): number {
@@ -183,7 +251,7 @@ async function readImage(url: string): Promise<{ buffer: Buffer; mimeType: strin
       redirect: 'follow',
       signal: controller.signal,
       headers: {
-        accept: 'image/avif,image/webp,image/png,image/jpeg,image/*;q=0.8',
+        accept: 'image/webp,image/png,image/jpeg,image/jpg,image/*;q=0.8',
         'user-agent': `${app.getName()}/${app.getVersion()}`,
       },
     });
@@ -193,7 +261,7 @@ async function readImage(url: string): Promise<{ buffer: Buffer; mimeType: strin
     }
 
     const mimeType = response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() ?? '';
-    if (!mimeType.startsWith('image/')) {
+    if (!isAllowedWallpaperMimeType(mimeType)) {
       throw new Error(`Expected image response but received ${mimeType || 'unknown content type'}`);
     }
 
@@ -286,6 +354,64 @@ function normalizeBingOriginUrl(imageUrl: string): string {
   }
 }
 
+function sanitizeWallpaperCandidate(candidate: WallpaperCandidate): WallpaperCandidate {
+  const originUrl = normalizeAndValidateBingOriginUrl(candidate.originUrl);
+  if (!isTrustedBingImageUrl(candidate.imageUrl)) {
+    throw new Error(`Untrusted Bing wallpaper image URL: ${candidate.imageUrl}`);
+  }
+
+  if (normalizeAndValidateBingOriginUrl(candidate.imageUrl) !== originUrl) {
+    throw new Error('Bing wallpaper image URL does not match the expected origin URL.');
+  }
+
+  return {
+    ...candidate,
+    title: sanitizeWallpaperText(candidate.title, 'Bing Daily Wallpaper'),
+    description: sanitizeWallpaperText(candidate.description, DEFAULT_DESCRIPTION),
+    author: sanitizeWallpaperText(candidate.author, 'Bing'),
+    originUrl,
+  };
+}
+
+function sanitizeDownloadedWallpaper(
+  image: { buffer: Buffer; mimeType: string; finalUrl: string },
+): { buffer: Buffer; mimeType: string; finalUrl: string } {
+  const finalUrl = normalizeAndValidateBingOriginUrl(image.finalUrl);
+  if (!isAllowedWallpaperMimeType(image.mimeType)) {
+    throw new Error(`Unsupported Bing wallpaper MIME type: ${image.mimeType}`);
+  }
+
+  // Re-encode the downloaded image so cached files are derived from a decoded image,
+  // not raw network bytes.
+  const decodedImage = nativeImage.createFromBuffer(image.buffer);
+  if (decodedImage.isEmpty()) {
+    throw new Error('Downloaded Bing wallpaper image is invalid.');
+  }
+
+  const sanitizedImage = image.mimeType === 'image/png'
+    ? {
+      buffer: decodedImage.toPNG(),
+      mimeType: 'image/png',
+    }
+    : {
+      buffer: decodedImage.toJPEG(90),
+      mimeType: 'image/jpeg',
+    };
+
+  if (sanitizedImage.buffer.length === 0) {
+    throw new Error('Downloaded Bing wallpaper image could not be normalized.');
+  }
+
+  if (sanitizedImage.buffer.length > MAX_IMAGE_BYTES) {
+    throw new Error(`Normalized Bing wallpaper image is too large: ${sanitizedImage.buffer.length} bytes`);
+  }
+
+  return {
+    ...sanitizedImage,
+    finalUrl,
+  };
+}
+
 async function getBingCandidate(archiveIndex: number): Promise<WallpaperCandidate> {
   const normalizedArchiveIndex = normalizeArchiveIndex(archiveIndex);
   const data = await readJson(getBingArchiveUrl(normalizedArchiveIndex));
@@ -321,13 +447,13 @@ async function readCachedWallpaper(metadataPath: string): Promise<WallpaperResul
       return null;
     }
 
-    const imagePath = path.join(getCacheDirectory(), parsedMetadata.fileName);
-    const buffer = await fs.readFile(imagePath);
-    const originUrl = parsedMetadata.originUrl;
-
-    if (!isTrustedBingOriginUrl(originUrl)) {
+    if (!isAllowedWallpaperMimeType(parsedMetadata.mimeType) || !isWallpaperImageFileName(parsedMetadata.fileName)) {
       return null;
     }
+
+    const imagePath = path.join(getCacheDirectory(), parsedMetadata.fileName);
+    const buffer = await fs.readFile(imagePath);
+    const originUrl = normalizeAndValidateBingOriginUrl(parsedMetadata.originUrl);
 
     return {
       success: true,
@@ -384,38 +510,40 @@ async function writeWallpaperCache(
   image: { buffer: Buffer; mimeType: string; finalUrl: string },
 ): Promise<WallpaperResult> {
   await fs.mkdir(getCacheDirectory(), { recursive: true });
-  const fileName = createImageFileName(dateKey, candidate.archiveIndex, image.mimeType);
+  const sanitizedCandidate = sanitizeWallpaperCandidate(candidate);
+  const sanitizedImage = sanitizeDownloadedWallpaper(image);
+  const fileName = createImageFileName(dateKey, sanitizedCandidate.archiveIndex, sanitizedImage.mimeType);
   const imagePath = path.join(getCacheDirectory(), fileName);
   const refreshedAt = Date.now();
   const metadata: WallpaperCacheMetadata = {
-    source: candidate.source,
-    archiveIndex: candidate.archiveIndex,
-    title: candidate.title,
-    description: candidate.description,
-    author: candidate.author,
-    originUrl: candidate.originUrl || image.finalUrl,
+    source: sanitizedCandidate.source,
+    archiveIndex: sanitizedCandidate.archiveIndex,
+    title: sanitizedCandidate.title,
+    description: sanitizedCandidate.description,
+    author: sanitizedCandidate.author,
+    originUrl: sanitizedCandidate.originUrl || sanitizedImage.finalUrl,
     date: dateKey,
-    mimeType: image.mimeType,
+    mimeType: sanitizedImage.mimeType,
     fileName,
     width: WALLPAPER_WIDTH,
     height: WALLPAPER_HEIGHT,
     refreshedAt,
   };
 
-  await fs.writeFile(imagePath, image.buffer);
-  await fs.writeFile(getMetadataPath(dateKey, candidate.archiveIndex), JSON.stringify(metadata, null, 2), 'utf-8');
-  if (candidate.archiveIndex === 0) {
+  await fs.writeFile(imagePath, sanitizedImage.buffer);
+  await fs.writeFile(getMetadataPath(dateKey, sanitizedCandidate.archiveIndex), JSON.stringify(metadata, null, 2), 'utf-8');
+  if (sanitizedCandidate.archiveIndex === 0) {
     await fs.writeFile(getLegacyMetadataPath(dateKey), JSON.stringify(metadata, null, 2), 'utf-8');
   }
 
   return {
     success: true,
-    dataUrl: createDataUrl(image.buffer, image.mimeType),
-    source: candidate.source,
-    archiveIndex: candidate.archiveIndex,
-    title: candidate.title,
-    description: candidate.description,
-    author: candidate.author,
+    dataUrl: createDataUrl(sanitizedImage.buffer, sanitizedImage.mimeType),
+    source: sanitizedCandidate.source,
+    archiveIndex: sanitizedCandidate.archiveIndex,
+    title: sanitizedCandidate.title,
+    description: sanitizedCandidate.description,
+    author: sanitizedCandidate.author,
     originUrl: metadata.originUrl,
     date: dateKey,
     cached: false,
