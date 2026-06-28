@@ -2,13 +2,14 @@
   <Teleport to="body">
     <div ref="overlayRef" class="workbench-onboarding" role="dialog" aria-modal="true"
       aria-labelledby="workbench-onboarding-title" tabindex="0" @keydown.esc="emit('dismiss')">
-      <section class="workbench-onboarding__dialog" @click.stop>
+      <section ref="dialogRef" class="workbench-onboarding__dialog" :style="dialogStyle" @click.stop>
         <button type="button" class="workbench-onboarding__close dialog-close-button" :aria-label="t('button.close')"
           @click="emit('dismiss')">
           <IconX :size="16" />
         </button>
 
-        <aside class="workbench-onboarding__rail">
+        <aside ref="dragHandleRef" class="workbench-onboarding__rail dialog-drag-handle"
+          @pointerdown="onDragHandlePointerDown">
           <span class="workbench-onboarding__kicker">{{ t('workbench.onboarding.kicker') }}</span>
           <h2 id="workbench-onboarding-title">{{ t('workbench.onboarding.title') }}</h2>
           <p>{{ t('workbench.onboarding.description') }}</p>
@@ -158,6 +159,7 @@ import {
   IconTag,
 } from '@tabler/icons-vue';
 import { type NoteTemplateId } from '@renderer/features/workspace';
+import { useDraggableDialog } from '@renderer/core/composables/useDraggableDialog';
 import NoteTemplatePicker from './NoteTemplatePicker.vue';
 
 type OnboardingStepId = 'goal' | 'content' | 'structure' | 'finish';
@@ -188,10 +190,19 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const isOpen = ref(false);
 const overlayRef = ref<HTMLElement | null>(null);
+const dialogRef = ref<HTMLElement | null>(null);
+const dragHandleRef = ref<HTMLElement | null>(null);
 const currentStep = ref(0);
 const selectedIntent = ref<OnboardingIntentId>('write');
 const selectedTemplate = ref<NoteTemplateId>('blank');
+const { dialogStyle, onDragHandlePointerDown } = useDraggableDialog({
+  isOpen,
+  overlayRef,
+  dialogRef,
+  handleRef: dragHandleRef,
+});
 
 const intentTemplateMap: Record<OnboardingIntentId, NoteTemplateId> = {
   write: 'blank',
@@ -328,6 +339,7 @@ function goNext(): void {
 }
 
 onMounted(async () => {
+  isOpen.value = true;
   await nextTick();
   overlayRef.value?.focus();
 });
