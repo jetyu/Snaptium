@@ -68,7 +68,7 @@
       <div class="provider-grid">
         <div
           class="setting-card provider-card"
-          :class="{ active: settingsStore.config.sync.provider === 'webdav', disabled: isSyncDisabled }"
+          :class="{ active: settingsStore.config.sync.provider === 'webdav', disabled: isProviderConfigDisabled }"
           @click="handleProviderSelect('webdav')"
         >
           <span v-if="settingsStore.config.sync.provider === 'webdav'" class="active-tag">{{ t('checkbox.status.enabled') }}</span>
@@ -86,7 +86,7 @@
               class="action-icon-btn edit"
               @click.stop="handleEditBtnClick('webdav')"
               :title="t('common.edit')"
-              :disabled="isSyncDisabled"
+              :disabled="isProviderConfigDisabled"
             >
               <IconPencil :size="16" />
             </button>
@@ -94,7 +94,7 @@
               class="action-icon-btn clear"
               @click.stop="handleClearBtnClick('webdav')"
               :title="t('common.reset')"
-              :disabled="isSyncDisabled"
+              :disabled="isProviderConfigDisabled"
             >
               <IconTrash :size="16" />
             </button>
@@ -103,7 +103,7 @@
 
         <div
           class="setting-card provider-card"
-          :class="{ active: settingsStore.config.sync.provider === 'oss-s3', disabled: isSyncDisabled }"
+          :class="{ active: settingsStore.config.sync.provider === 'oss-s3', disabled: isProviderConfigDisabled }"
           @click="handleProviderSelect('oss-s3')"
         >
           <span v-if="settingsStore.config.sync.provider === 'oss-s3'" class="active-tag">{{ t('checkbox.status.enabled') }}</span>
@@ -121,7 +121,7 @@
               class="action-icon-btn edit"
               @click.stop="handleEditBtnClick('oss-s3')"
               :title="t('common.edit')"
-              :disabled="isSyncDisabled"
+              :disabled="isProviderConfigDisabled"
             >
               <IconPencil :size="16" />
             </button>
@@ -129,7 +129,7 @@
               class="action-icon-btn clear"
               @click.stop="handleClearBtnClick('oss-s3')"
               :title="t('common.reset')"
-              :disabled="isSyncDisabled"
+              :disabled="isProviderConfigDisabled"
             >
               <IconTrash :size="16" />
             </button>
@@ -151,7 +151,7 @@
           <button
             type="button"
             class="action-button primary"
-            :disabled="isLicenseLocked || syncStore.isSyncing || !settingsStore.config.sync.enabled || !isConfigReady"
+            :disabled="isLicenseLocked || syncStore.isSyncing || !settingsStore.config.sync.enabled"
             @click="handleSyncNow"
           >
             <span v-if="syncStore.isSyncing" class="spinner small"></span>
@@ -200,6 +200,7 @@ const { statusLabel, statusToneClass, summaryItems, formattedLastSynced } = useS
 const syncStatusToneClass = computed(() => statusToneClass.value);
 
 const isSyncDisabled = computed(() => isLicenseLocked.value || !settingsStore.config.sync.enabled);
+const isProviderConfigDisabled = computed(() => isLicenseLocked.value);
 
 const requestLicenseAccessIfNeeded = (): boolean => {
   if (!isLicenseLocked.value) {
@@ -235,10 +236,6 @@ const toggleSyncEnabled = async () => {
     return;
   }
 
-  if (!(await ensureE2eeReadyForSync())) {
-    return;
-  }
-
   await settingsStore.updateSyncSetting('enabled', true);
 };
 
@@ -271,7 +268,7 @@ const handleProviderSelect = async (provider: 'webdav' | 'oss-s3') => {
     return;
   }
 
-  if (isSyncDisabled.value) {
+  if (isProviderConfigDisabled.value) {
     return;
   }
 
@@ -368,6 +365,11 @@ async function ensureE2eeReadyForSync(): Promise<boolean> {
 
 const handleSyncNow = async () => {
   if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
+  if (!isConfigReady.value) {
+    await showSyncDialog(t('sync.error.notConfigured'));
     return;
   }
 
