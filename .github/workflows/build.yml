@@ -185,7 +185,7 @@ jobs:
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
       - name: Upload Release Notes Template File
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: release-notes
           path: .github/RELEASE_TEMPLATE/release_note.md
@@ -200,7 +200,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-latest, macos-latest]
+        os: [windows-2022, ubuntu-latest, macos-15]
         arch: [x64]
         include:
           - os: windows-2022
@@ -216,7 +216,7 @@ jobs:
               dist/*.deb
               dist/*.rpm
               dist/*.yml
-          - os: macos-latest
+          - os: macos-15
             platform: mac
             artifact_pattern: |
               dist/*.dmg
@@ -301,7 +301,7 @@ jobs:
           USE_HARD_LINKS: false
 
       - name: Upload Package Artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Snaptium-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
           path: ${{ matrix.artifact_pattern }}
