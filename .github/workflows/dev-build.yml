@@ -22,7 +22,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-latest, macos-latest]
+        os: [windows-2022, ubuntu-latest, macos-15]
         arch: [x64]
         include:
           - os: windows-2022
@@ -38,7 +38,7 @@ jobs:
               dist/*.deb
               dist/*.rpm
               dist/*.yml
-          - os: macos-latest
+          - os: macos-15
             platform: mac
             artifact_pattern: |
               dist/*.dmg
@@ -53,9 +53,12 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
           cache: npm
           check-latest: true
+
+      - name: Use npm 11
+        run: npm install -g npm@11.4.2
 
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit --no-fund
@@ -71,7 +74,7 @@ jobs:
           USE_HARD_LINKS: false
 
       - name: Upload development package artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: Snaptium-dev-${{ matrix.platform }}-${{ matrix.arch }}-${{ github.sha }}
           path: ${{ matrix.artifact_pattern }}
