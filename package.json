@@ -99,8 +99,7 @@
     },
     "compression": "maximum",
     "electronLanguages": [
-      "en-US",
-      "zh-CN"
+      "en-US"
     ],
     "publish": [
       {
