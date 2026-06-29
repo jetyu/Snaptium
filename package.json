@@ -241,6 +241,7 @@
     "dmg-license": "^1.0.11"
   },
   "overrides": {
+    "@mapbox/node-pre-gyp": "^2.0.3",
     "yarle-evernote-to-md": {
       "fast-xml-parser": "^5.9.3",
       "lodash": "^4.18.1",
