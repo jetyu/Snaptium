@@ -34,7 +34,7 @@
 [![Open Issues](https://img.shields.io/github/issues/jetyu/Snaptium?style=flat&color=orange)]()
 [![Closed Issues](https://img.shields.io/github/issues-closed/jetyu/Snaptium?style=flat&color=brightgreen)]()
 [![License](https://img.shields.io/github/license/jetyu/Snaptium?style=flat)]()
-
+![认可linux.do](https://ld.xh.do/ld-badge.svg)
 </div>
 
 # ✨ 项目定位
