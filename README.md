@@ -33,7 +33,7 @@ Focused on deep writing, knowledge management, and a local-first experience, sup
 [![Open Issues](https://img.shields.io/github/issues/jetyu/Snaptium?style=flat&color=orange)]()
 [![Closed Issues](https://img.shields.io/github/issues-closed/jetyu/Snaptium?style=flat&color=brightgreen)]()
 [![License](https://img.shields.io/github/license/jetyu/Snaptium?style=flat)](https://github.com/jetyu/Snaptium/blob/main/LICENSE)
-
+ 
 </div>
 # ✨ Project Positioning
 
@@ -335,8 +335,11 @@ Thanks to the following excellent open-source projects:
 
 And to all developers and users who have submitted Issues, PRs, and suggestions for Snaptium.
 
+Special thanks to the [Linux.do Community](https://linux.do/)  for providing an open and welcoming space for developers, and to its members for their support, feedback, and encouragement for Snaptium.
+
 ---
 
 # ⭐ Star History
 
 [![Star History Chart](https://api.star-history.com/svg?repos=jetyu/Snaptium&type=Date)](https://star-history.com/#jetyu/Snaptium&Date)
+
