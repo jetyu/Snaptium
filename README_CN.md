@@ -172,13 +172,13 @@ Snaptium 采用 Local First 架构设计：
 
 ![Snaptium Preview](./docs/Screenshots/v2/en-US/PreviewOnly.png)
 
-## 智能写作
+## 智能写作 （点击播放）
 
-![Snaptium Smart Writing](./docs/Screenshots/v2/en-US/SmartWriting.mp4)
+[![Snaptium Smart Writing](./docs/Screenshots/v2/en-US/SmartWriting.png)](./docs/Screenshots/v2/en-US/SmartWriting.mp4)
 
-## 知识库
+## 知识库 （点击播放）
 
-![Snaptium Knowledge Base](./docs/Screenshots/v2/en-US/KnowledgeBase.mp4)
+[![Snaptium Knowledge Base](./docs/Screenshots/v2/en-US/KnowledgeBase.png)](./docs/Screenshots/v2/en-US/KnowledgeBase.mp4)
 
 ---
 
