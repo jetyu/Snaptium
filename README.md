@@ -171,12 +171,11 @@ Currently supported:
 ![Snaptium Preview](./docs/Screenshots/v2/en-US/PreviewOnly.png)
 
 ## Smart Writing （Click to play）
-
-[![Snaptium Smart Writing](./docs/Screenshots/v2/en-US/SmartWriting.png)](./docs/Screenshots/v2/en-US/SmartWriting.mp4)
+<video src="https://github.com/user-attachments/assets/9dd6fa86-5c0c-4a3e-93ed-f11acaa73ae2"></video>
 
 ## Knowledge Base （Click to play）
+<video src="https://github.com/user-attachments/assets/62be0260-8d7f-438c-a8d1-1d3101b3ae4d.mp4"></video>
 
-[![Snaptium Knowledge Base](./docs/Screenshots/v2/en-US/KnowledgeBase.png)](./docs/Screenshots/v2/en-US/KnowledgeBase.mp4)
 
 # 🧩 Tech Stack
 
