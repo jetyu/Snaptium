@@ -327,6 +327,8 @@ LICENSE
 
 以及所有为 Snaptium 提交 Issue、PR 与建议的开发者与用户。
 
+特别感谢 [Linux.do 社区](https://linux.do/) 为开发者提供了一个开放、友好的交流空间，也感谢社区成员对 Snaptium 的支持、反馈与鼓励。
+
 ---
 
 # ⭐ Star History
