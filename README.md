@@ -214,7 +214,7 @@ Currently supported:
 | OS | Supported Version | Architecture | Installation Format |
 |------|------|------|------|
 | Windows | Windows 10 and above | x64 | `.exe` |
-| macOS | macOS 11+ | x64 / arm64 | `.dmg` `.zip` |
+| macOS | macOS 11+ | arm64 | `.dmg` |
 | Linux | Ubuntu / Debian / Fedora, etc. | x64 | `.deb` `.rpm` `.AppImage` |
 
 > Please download the appropriate installer for your platform.
@@ -231,17 +231,9 @@ Currently supported:
 
 ## macOS
 
-### Intel Chip
-
-[![Snaptium-macOS-x64.dmg](https://img.shields.io/badge/Snaptium--macOS--x64.dmg-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/Snaptium/releases/latest/download/Snaptium-macOS-x64.dmg)
-
-[![Snaptium-macOS-x64.zip](https://img.shields.io/badge/Snaptium--macOS--x64.zip-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/Snaptium/releases/latest/download/Snaptium-macOS-x64.zip)
-
 ### Apple Silicon
 
 [![Snaptium-macOS-arm64.dmg](https://img.shields.io/badge/Snaptium--macOS--arm64.dmg-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/Snaptium/releases/latest/download/Snaptium-macOS-arm64.dmg)
-
-[![Snaptium-macOS-arm64.zip](https://img.shields.io/badge/Snaptium--macOS--arm64.zip-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/Snaptium/releases/latest/download/Snaptium-macOS-arm64.zip)
 
 ---
 
@@ -333,8 +325,6 @@ Thanks to the following excellent open-source projects:
 - Apache Arrow
 
 And to all developers and users who have submitted Issues, PRs, and suggestions for Snaptium.
-
-Special thanks to the [Linux.do Community](https://linux.do/)  for providing an open and welcoming space for developers, and to its members for their support, feedback, and encouragement for Snaptium.
 
 ---
 

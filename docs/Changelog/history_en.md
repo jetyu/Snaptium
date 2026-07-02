@@ -1,4 +1,4 @@
-### v2.0.4 - 2026-07-05
+### v2.0.4 - 2026-07-01
 This update optimizes details and the user experience.
 #### New
 * Option to select the app interface theme color

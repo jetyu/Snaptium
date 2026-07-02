@@ -159,7 +159,7 @@ app.whenReady().then(async () => {
         }
 
         if (!mainWindow.isDestroyed()) {
-          mainWindow.minimize();
+          mainWindow.hide();
         }
       });
     }

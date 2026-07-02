@@ -79,6 +79,20 @@ export const MENU_CONFIG: MenuCategoryConfig[] = [
     ],
   },
   {
+    id: 'edit',
+    labelKey: 'menu.edit',
+    items: [
+      { labelKey: 'menu.edit.undo', role: 'undo' },
+      { labelKey: 'menu.edit.redo', role: 'redo' },
+      { type: 'separator' },
+      { labelKey: 'menu.edit.cut', role: 'cut' },
+      { labelKey: 'menu.edit.copy', role: 'copy' },
+      { labelKey: 'menu.edit.paste', role: 'paste' },
+      { type: 'separator' },
+      { labelKey: 'menu.edit.selectAll', role: 'selectAll' },
+    ],
+  },
+  {
     id: 'help',
     labelKey: 'menu.help',
     items: [

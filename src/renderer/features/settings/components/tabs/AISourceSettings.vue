@@ -10,23 +10,36 @@
     <div class="source-list">
       <template v-if="!showAddForm">
         <div v-for="source in settingsStore.config.aiSources" :key="source.id"
-          class="source-card setting-card vertical-layout">
+          class="source-card setting-card vertical-layout"
+          :class="{ 'official-source-card': isOfficialSource(source) }">
           <div class="source-info">
             <div class="source-header">
-              <h4 class="source-title">{{ source.name }}</h4>
+              <div class="source-identity">
+                <span v-if="isOfficialSource(source)" class="official-source-mark"
+                  :title="t('text.officialInnerAiSource')">
+                  <IconTextScanAi :size="16" />
+                </span>
+                <h4 class="source-title">{{ source.name }}</h4>
+              </div>
               <div class="settings-card-actions">
-                <button class="action-btn" :disabled="isLicenseLocked" @click="handleEditSource(source)"
-                  :title="t('common.editor')">
-                  <IconPencil :size="14" />
-                </button>
-                <button class="action-btn delete" :disabled="isLicenseLocked" @click="removeSource(source)"
-                  :title="t('title.clearConfiguration')">
-                  <IconTrash :size="14" />
-                </button>
+                <span v-if="isLockedSource(source)" class="source-lock-badge" :title="t('text.officialInnerAiSource')">
+                  <IconSettingsAi :size="13" />
+                  {{ t('label.officialAiSource') }}
+                </span>
+                <template v-else>
+                  <button class="action-btn" :disabled="isLicenseLocked" @click="handleEditSource(source)"
+                    :title="t('common.editor')">
+                    <IconPencil :size="14" />
+                  </button>
+                  <button class="action-btn delete" :disabled="isLicenseLocked" @click="removeSource(source)"
+                    :title="t('title.clearConfiguration')">
+                    <IconTrash :size="14" />
+                  </button>
+                </template>
               </div>
             </div>
-            <div class="source-details">
-              <div class="detail-item">
+            <div class="source-details" :class="{ 'official-source-details': isOfficialSource(source) }">
+              <div v-if="!isOfficialSource(source)" class="detail-item">
                 <span class="label">{{ t('label.aiBaseUrl') }}</span>
                 <span class="value" :title="source.baseUrl">{{ source.baseUrl }}</span>
               </div>
@@ -34,7 +47,7 @@
                 <span class="label">{{ t('label.aiModel') }}</span>
                 <span class="value" :title="source.aiModel">{{ source.aiModel }}</span>
               </div>
-              <div class="detail-item">
+              <div v-if="!isOfficialSource(source)" class="detail-item">
                 <span class="label">{{ t('label.aiApiKey') }}</span>
                 <span class="value">••••••••••••••••••••••••••</span>
               </div>
@@ -42,6 +55,12 @@
                 <span class="label">{{ t('label.aiCapabilities') }}</span>
                 <span class="value" :title="formatCapabilities(source.capabilities)">{{
                   formatCapabilities(source.capabilities) }}</span>
+              </div>
+              <div v-if="isOfficialSource(source)" class="detail-item model-description-item">
+                <span class="label">{{ t('label.aiModelDescription') }}</span>
+                <span class="value" :title="t(getOfficialModelDescriptionKey(source))">
+                  {{ t(getOfficialModelDescriptionKey(source)) }}
+                </span>
               </div>
             </div>
           </div>
@@ -142,7 +161,8 @@ import { settingsService } from '../../services/settings.service';
 import { systemDialog } from '../../services/system-dialog.service';
 import { createLogger } from '../../../logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
-import { IconPlus, IconBulb, IconTrash, IconPencil } from '@tabler/icons-vue';
+import { isOfficialAiSourceId } from '@shared/official-ai.constants';
+import { IconPlus, IconBulb, IconTrash, IconPencil, IconSettingsAi, IconTextScanAi } from '@tabler/icons-vue';
 import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 import PasswordInput from '../PasswordInput.vue';
 
@@ -158,6 +178,26 @@ const editingSourceId = ref<string | null>(null);
 const isLicenseLocked = computed(() => !aiSourceLicenseGate.allowed.value);
 
 const isEditMode = computed(() => !!editingSourceId.value);
+
+const isOfficialSource = (source: AISource): boolean => {
+  return source.official === true || isOfficialAiSourceId(source.id);
+};
+
+const isLockedSource = (source: AISource): boolean => {
+  return source.locked === true || isOfficialSource(source);
+};
+
+const getOfficialModelDescriptionKey = (source: AISource): string => {
+  if (source.capabilities.includes('embedding')) {
+    return 'text.officialAiEmbeddingDescription';
+  }
+
+  if (source.capabilities.includes('reranker')) {
+    return 'text.officialAiRerankerDescription';
+  }
+
+  return 'text.officialAiChatDescription';
+};
 
 const newSource = reactive({
   name: '',
@@ -249,6 +289,10 @@ const handleEditSource = (source: AISource) => {
     return;
   }
 
+  if (isLockedSource(source)) {
+    return;
+  }
+
   editingSourceId.value = source.id;
   newSource.name = source.name;
   newSource.baseUrl = source.baseUrl;
@@ -318,6 +362,10 @@ const handleTestNewSource = async () => {
 
 const removeSource = async (source: AISource) => {
   if (requestLicenseAccessIfNeeded()) {
+    return;
+  }
+
+  if (isLockedSource(source)) {
     return;
   }
 
@@ -452,7 +500,23 @@ const formatCapabilities = (capabilities: string[]): string => {
   color: var(--text-primary);
 }
 
+.source-card {
+  box-sizing: border-box;
+  min-height: 156px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+}
+
+.official-source-card {
+  position: relative;
+  border-color: var(--status-info-border);
+  background: color-mix(in srgb, var(--accent) 5%, var(--bg-primary, #ffffff));
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 8%, transparent);
+}
+
 .source-info {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   width: 100%;
 }
 
@@ -462,6 +526,42 @@ const formatCapabilities = (capabilities: string[]): string => {
   align-items: center;
   width: 100%;
   margin-bottom: 8px;
+}
+
+.source-identity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.official-source-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--status-info-border);
+  border-radius: 8px;
+  color: var(--status-info-text);
+  background: var(--status-info-bg);
+}
+
+.source-lock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 24px;
+  padding: 2px 8px;
+  border: 1px solid var(--status-info-border);
+  border-radius: 999px;
+  color: var(--status-info-text);
+  background: var(--status-info-bg);
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: default;
 }
 
 .action-btn {
@@ -493,6 +593,49 @@ const formatCapabilities = (capabilities: string[]): string => {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.official-source-details {
+  gap: 0;
+  padding-top: 2px;
+}
+
+.official-source-details .detail-item {
+  padding: 7px 0;
+  border-top: 1px solid var(--border-color);
+}
+
+.official-source-details .detail-item:first-child {
+  border-top: 0;
+}
+
+.official-source-details .detail-item .label {
+  min-width: 72px;
+  justify-content: flex-start;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.official-source-details .detail-item .value {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.model-description-item {
+  align-items: flex-start;
+}
+
+.model-description-item .value {
+  display: -webkit-box;
+  max-width: 100%;
+  overflow: hidden;
+  line-height: 1.4;
+  white-space: normal;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .capability-list {
@@ -531,7 +674,7 @@ const formatCapabilities = (capabilities: string[]): string => {
 }
 
 .detail-item .value {
-  color: #111827;
+  color: var(--text-primary);
   font-weight: 400;
   overflow: hidden;
   text-overflow: ellipsis;
