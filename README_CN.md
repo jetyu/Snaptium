@@ -207,7 +207,7 @@ Snaptium 采用 Local First 架构设计：
 | 操作系统 | 支持版本 | 架构 | 安装包格式 |
 |------|------|------|------|
 | Windows | Windows 10 及以上 | x64 | `.exe` |
-| macOS | macOS 11+ | x64 / arm64 | `.dmg` `.zip` |
+| macOS | macOS 11+ | arm64 | `.dmg` |
 | Linux | Ubuntu / Debian / Fedora 等主流发行版 | x64 | `.deb` `.rpm` `.AppImage` |
 
 > 请根据对应平台下载适合的安装包。
@@ -224,17 +224,9 @@ Snaptium 采用 Local First 架构设计：
 
 ## macOS
 
-### Intel Chip
-
-[![Snaptium-macOS-x64.dmg](https://img.shields.io/badge/Snaptium--macOS--x64.dmg-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/Snaptium/releases/latest/download/Snaptium-macOS-x64.dmg)
-
-[![Snaptium-macOS-x64.zip](https://img.shields.io/badge/Snaptium--macOS--x64.zip-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/Snaptium/releases/latest/download/Snaptium-macOS-x64.zip)
-
 ### Apple Silicon
 
 [![Snaptium-macOS-arm64.dmg](https://img.shields.io/badge/Snaptium--macOS--arm64.dmg-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/Snaptium/releases/latest/download/Snaptium-macOS-arm64.dmg)
-
-[![Snaptium-macOS-arm64.zip](https://img.shields.io/badge/Snaptium--macOS--arm64.zip-000000?style=flat-square&logo=apple&logoColor=white)](https://github.com/jetyu/Snaptium/releases/latest/download/Snaptium-macOS-arm64.zip)
 
 ---
 
@@ -326,8 +318,6 @@ LICENSE
 - Apache Arrow
 
 以及所有为 Snaptium 提交 Issue、PR 与建议的开发者与用户。
-
-特别感谢 [Linux.do 社区](https://linux.do/) 为开发者提供了一个开放、友好的交流空间，也感谢社区成员对 Snaptium 的支持、反馈与鼓励。
 
 ---
 

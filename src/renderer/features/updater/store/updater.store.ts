@@ -88,6 +88,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   const showInstallActions = computed(() =>
     isUpdateDownloaded.value &&
     Boolean(updateInfo.value) &&
+    updateInfo.value?.manualInstall !== true &&
     !isChecking.value &&
     !isSilentChecking.value &&
     !isDownloadRequestPending.value &&
@@ -122,6 +123,8 @@ export const useUpdaterStore = defineStore('updater', () => {
 
     return 'idle';
   });
+
+  const isManualInstallUpdate = computed(() => updateInfo.value?.manualInstall === true);
 
   function resetDownloadState(): void {
     isChecking.value = false;
@@ -286,6 +289,19 @@ export const useUpdaterStore = defineStore('updater', () => {
     if (isStoreDistribution.value) return;
     if (isDownloading.value || isDownloadRequestPending.value) return;
 
+    if (isManualInstallUpdate.value) {
+      error.value = null;
+      try {
+        await updaterService.download();
+      } catch (err) {
+        error.value = {
+          message: getErrorMessage(err as Error | { message?: string }, translate('updater.downloadFailed')),
+          code: 'DOWNLOAD_FAILED',
+        };
+      }
+      return;
+    }
+
     isDownloadRequestPending.value = true;
     isDownloading.value = true;
     isUpdateDownloaded.value = false;
@@ -388,6 +404,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     error,
     showNoUpdateResult,
     isStoreDistribution,
+    isManualInstallUpdate,
     updatePanelState,
     isDownloadRequestPending,
     showAvailableUpdateActions,

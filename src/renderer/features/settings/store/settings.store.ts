@@ -8,6 +8,12 @@ import {
   type AiWritingStyle,
   type AiWritingMode,
 } from '@shared/ai.constants';
+import {
+  OFFICIAL_AI_MODELS,
+  OFFICIAL_AI_SOURCE_IDS,
+  getOfficialAiSources,
+  isOfficialAiSourceId,
+} from '@shared/official-ai.constants';
 
 import { DEFAULT_RAG_CONFIG } from '@renderer/features/rag/constants/rag.constants';
 import { DEFAULT_SYNC_SETTINGS, type SyncProvider } from '@shared/sync.constants';
@@ -34,6 +40,8 @@ export interface AISource {
   apiKey: string;
   aiModel: string;
   capabilities: string[];
+  official?: boolean;
+  locked?: boolean;
 }
 
 export interface AIAssistantSettings {
@@ -180,18 +188,25 @@ function createDefaultConfig(): AppSettings {
     autoCloseBrackets: true,
     autoIndent: true,
     showStatusBar: true,
-    aiSources: [],
+    aiSources: getOfficialAiSources(),
     aiAssistant: {
       enabled: false,
-      sourceId: '',
-      model: '',
+      sourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+      model: OFFICIAL_AI_MODELS.CHAT,
       triggerMode: AI_WRITING_DEFAULTS.MODE,
       autoContinue: AI_WRITING_DEFAULTS.AUTO_CONTINUE,
       writingStyle: AI_WRITING_DEFAULTS.STYLE,
       writingScenario: AI_WRITING_DEFAULTS.SCENARIO,
       systemPrompt: '',
     },
-    rag: { ...DEFAULT_RAG_CONFIG },
+    rag: {
+      ...DEFAULT_RAG_CONFIG,
+      embeddingSourceId: OFFICIAL_AI_SOURCE_IDS.EMBEDDING,
+      embeddingModel: OFFICIAL_AI_MODELS.EMBEDDING,
+      ragChatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+      ragChatModel: OFFICIAL_AI_MODELS.CHAT,
+      rerankerSourceId: OFFICIAL_AI_SOURCE_IDS.RERANKER,
+    },
     sync: createDefaultSyncConfig(),
     loggingEnabled: false,
     logLevel: 'error',
@@ -220,6 +235,10 @@ export const useSettingsStore = defineStore('settings', () => {
 
   const sourceSupportsCapability = (source: AISource, capability: string): boolean => {
     return source.capabilities.length === 0 || source.capabilities.includes(capability);
+  };
+
+  const isLockedAiSource = (source: AISource): boolean => {
+    return source.locked === true || source.official === true || isOfficialAiSourceId(source.id);
   };
 
   /**
@@ -441,7 +460,7 @@ export const useSettingsStore = defineStore('settings', () => {
    * Add a new AI source
    */
   const addAiSource = async (source: Omit<AISource, 'id'>) => {
-    const newSource = { ...source, id: Date.now().toString() };
+    const newSource = { ...source, id: Date.now().toString(), official: false, locked: false };
     config.value.aiSources.push(newSource);
     await saveSettings({});
     return newSource;
@@ -451,6 +470,11 @@ export const useSettingsStore = defineStore('settings', () => {
    * Remove an AI source by ID
    */
   const removeAiSource = async (id: string) => {
+    const source = config.value.aiSources.find((item) => item.id === id);
+    if (source && isLockedAiSource(source)) {
+      return;
+    }
+
     config.value.aiSources = config.value.aiSources.filter((s) => s.id !== id);
     if (config.value.aiAssistant.sourceId === id) {
       config.value.aiAssistant.sourceId = '';
@@ -475,6 +499,10 @@ export const useSettingsStore = defineStore('settings', () => {
   const updateAiSource = async (id: string, updates: Partial<AISource>) => {
     const source = config.value.aiSources.find((s) => s.id === id);
     if (source) {
+      if (isLockedAiSource(source)) {
+        return;
+      }
+
       Object.assign(source, updates);
       if (config.value.aiAssistant.sourceId === id && !sourceSupportsCapability(source, 'chat')) {
         config.value.aiAssistant.sourceId = '';

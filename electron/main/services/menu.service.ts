@@ -132,7 +132,9 @@ export function setupAppMenu(mainWindow: BrowserWindow, locale?: string): void {
     template.push(getAppMenu());
   }
 
-  MENU_CONFIG.forEach((category) => {
+  MENU_CONFIG
+    .filter((category) => isMacPlatform() || category.id !== 'edit')
+    .forEach((category) => {
     const items = category.items.filter((item) => {
       if (isMicrosoftStoreDistribution() && item.id === 'update') {
         return false;

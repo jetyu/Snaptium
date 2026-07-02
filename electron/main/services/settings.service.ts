@@ -4,6 +4,12 @@ import fs from 'node:fs/promises';
 import { $t } from '../utils/i18n.js';
 import { AI_WRITING_DEFAULTS } from '../../shared/ai.constants.js';
 import {
+  OFFICIAL_AI_MODELS,
+  OFFICIAL_AI_SOURCE_IDS,
+  getOfficialAiSources,
+  isOfficialAiSourceId,
+} from '../../shared/official-ai.constants.js';
+import {
   DEFAULT_TRUSTED_REMOTE_IMAGE_HOSTS,
   normalizeTrustedRemoteImageHosts,
 } from '../../shared/preview-security.constants.js';
@@ -90,7 +96,7 @@ interface AppSettings {
   autoCloseBrackets: boolean;
   autoIndent: boolean;
   showStatusBar: boolean;
-  aiSources: Array<Record<string, unknown>>;
+  aiSources: AiSourceSettings[];
   aiAssistant: Record<string, unknown>;
   rag: Record<string, unknown>;
   sync: SyncConfig;
@@ -150,6 +156,17 @@ const SNAPTIUM_CONFIG_PACKAGE_TYPE = 'sppcfg' as const;
 const SNAPTIUM_CONFIG_PACKAGE_VERSION = 1;
 const SNAPTIUM_CONFIG_EXTENSION = 'sppcfg' as const;
 const DEFAULT_WINDOW_CLOSE_ACTION: WindowCloseAction = 'minimize';
+
+interface AiSourceSettings {
+  id: string;
+  name: string;
+  baseUrl: string;
+  apiKey: string;
+  aiModel: string;
+  capabilities: string[];
+  official?: boolean;
+  locked?: boolean;
+}
 
 function interpolateMessage(template: string, replacements: Record<string, string> = {}): string {
   return Object.entries(replacements).reduce((message, [key, value]) => {
@@ -272,6 +289,96 @@ function normalizePreviewAppearanceConfig(config: Partial<PreviewAppearanceConfi
   };
 }
 
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value
+    .filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+    .map((item) => item.trim());
+}
+
+function normalizeCustomAiSource(value: unknown): AiSourceSettings | null {
+  if (!isRecord(value)) {
+    return null;
+  }
+
+  const id = String(value.id ?? '').trim();
+  if (!id || isOfficialAiSourceId(id)) {
+    return null;
+  }
+
+  return {
+    id,
+    name: String(value.name ?? '').trim(),
+    baseUrl: String(value.baseUrl ?? '').trim(),
+    apiKey: String(value.apiKey ?? ''),
+    aiModel: String(value.aiModel ?? '').trim(),
+    capabilities: normalizeStringArray(value.capabilities),
+    official: false,
+    locked: false,
+  };
+}
+
+function normalizeAiSources(value: unknown): AiSourceSettings[] {
+  const customSources = Array.isArray(value)
+    ? value
+      .map((source) => normalizeCustomAiSource(source))
+      .filter((source): source is AiSourceSettings => source !== null)
+    : [];
+
+  return [
+    ...getOfficialAiSources(),
+    ...customSources,
+  ];
+}
+
+function normalizeAiAssistantConfig(
+  defaultConfig: AppSettings['aiAssistant'],
+  incomingConfig: SettingsInput['aiAssistant'],
+): Record<string, unknown> {
+  const mergedConfig: Record<string, unknown> = {
+    ...defaultConfig,
+    ...(incomingConfig || {}),
+  };
+  const sourceId = String(mergedConfig.sourceId ?? '').trim();
+
+  if (!sourceId || sourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    return {
+      ...mergedConfig,
+      sourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+      model: OFFICIAL_AI_MODELS.CHAT,
+    };
+  }
+
+  return mergedConfig;
+}
+
+function normalizeRagConfig(
+  defaultConfig: AppSettings['rag'],
+  incomingConfig: SettingsInput['rag'],
+): Record<string, unknown> {
+  const mergedConfig: Record<string, unknown> = {
+    ...defaultConfig,
+    ...(incomingConfig || {}),
+  };
+  const embeddingSourceId = String(mergedConfig.embeddingSourceId ?? '').trim();
+  const ragChatSourceId = String(mergedConfig.ragChatSourceId ?? '').trim();
+  const nextConfig: Record<string, unknown> = { ...mergedConfig };
+
+  if (!embeddingSourceId || embeddingSourceId === OFFICIAL_AI_SOURCE_IDS.EMBEDDING) {
+    nextConfig.embeddingSourceId = OFFICIAL_AI_SOURCE_IDS.EMBEDDING;
+    nextConfig.embeddingModel = OFFICIAL_AI_MODELS.EMBEDDING;
+  }
+
+  if (ragChatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    nextConfig.ragChatModel = OFFICIAL_AI_MODELS.CHAT;
+  }
+
+  return nextConfig;
+}
+
 function normalizeUpdateCheckInterval(value: unknown): number {
   const normalizedValue = Math.trunc(Number(value));
   return Number.isFinite(normalizedValue) && normalizedValue >= 60 * 60 * 1000
@@ -285,14 +392,9 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
     ...incomingConfig,
     windowCloseAction: normalizeWindowCloseAction(incomingConfig.windowCloseAction ?? defaultConfig.windowCloseAction),
     accentMode: normalizeAccentMode(incomingConfig.accentMode ?? defaultConfig.accentMode),
-    aiAssistant: {
-      ...defaultConfig.aiAssistant,
-      ...(incomingConfig.aiAssistant || {}),
-    },
-    rag: {
-      ...defaultConfig.rag,
-      ...(incomingConfig.rag || {}),
-    },
+    aiSources: normalizeAiSources(incomingConfig.aiSources ?? defaultConfig.aiSources),
+    aiAssistant: normalizeAiAssistantConfig(defaultConfig.aiAssistant, incomingConfig.aiAssistant),
+    rag: normalizeRagConfig(defaultConfig.rag, incomingConfig.rag),
     previewAppearance: normalizePreviewAppearanceConfig(incomingConfig.previewAppearance),
     sync: normalizeSyncConfig(incomingConfig.sync),
     autoCheckUpdates: incomingConfig.autoCheckUpdates ?? defaultConfig.autoCheckUpdates,
@@ -360,11 +462,11 @@ export const settingsService = {
       autoCloseBrackets: true,
       autoIndent: true,
       showStatusBar: true,
-      aiSources: [],
+      aiSources: getOfficialAiSources(),
       aiAssistant: {
         enabled: false,
-        sourceId: '',
-        model: '',
+        sourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+        model: OFFICIAL_AI_MODELS.CHAT,
         typingDelay: 2000,
         minInputLength: 10,
         writingStyle: AI_WRITING_DEFAULTS.STYLE,
@@ -373,11 +475,11 @@ export const settingsService = {
       },
       rag: {
         enabled: false,
-        embeddingSourceId: '',
-        embeddingModel: '',
-        ragChatSourceId: '',
-        ragChatModel: '',
-        rerankerSourceId: '',
+        embeddingSourceId: OFFICIAL_AI_SOURCE_IDS.EMBEDDING,
+        embeddingModel: OFFICIAL_AI_MODELS.EMBEDDING,
+        ragChatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+        ragChatModel: OFFICIAL_AI_MODELS.CHAT,
+        rerankerSourceId: OFFICIAL_AI_SOURCE_IDS.RERANKER,
         chunkSize: 500,
         chunkOverlap: 50,
         topK: 5,

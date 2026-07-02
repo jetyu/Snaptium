@@ -19,45 +19,45 @@
             <span class="status-dot"></span>
             <span>{{ t(store.getStatusTextKey(store.displayStatus)) }}</span>
           </div>
-
-          <div class="summary-actions">
-            <button
-              type="button"
-              class="summary-action-btn"
-              :disabled="isRefreshing || !store.canManage"
-              :title="t('license.management.refresh')"
-              :aria-label="t('license.management.refresh')"
-              @click="handleRefresh"
-            >
-              <IconRefresh :size="15" :class="{ 'animate-spin': isRefreshing }" />
-              <span>{{ t('license.management.refresh') }}</span>
-            </button>
-
-            <button
-              type="button"
-              class="summary-action-btn"
-              :disabled="isRefreshing || !store.canManage"
-              :title="t('license.management.validate')"
-              :aria-label="t('license.management.validate')"
-              @click="handleValidate"
-            >
-              <IconDeviceDesktopCheck :size="15" />
-              <span>{{ t('license.management.validate') }}</span>
-            </button>
-
-            <button
-              type="button"
-              class="summary-action-btn danger-btn"
-              :disabled="isClearing || !store.canManage"
-              :title="t('license.management.clear')"
-              :aria-label="t('license.management.clear')"
-              @click="handleClear"
-            >
-              <IconTrash :size="15" />
-              <span>{{ t('license.management.clear') }}</span>
-            </button>
-          </div>
         </div>
+      </div>
+
+      <div class="summary-actions">
+        <button
+          type="button"
+          class="summary-action-btn"
+          :disabled="isRefreshing || !store.canManage"
+          :title="t('license.management.refresh')"
+          :aria-label="t('license.management.refresh')"
+          @click="handleRefresh"
+        >
+          <IconRefresh :size="15" :class="{ 'animate-spin': isRefreshing }" />
+          <span>{{ t('license.management.refresh') }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="summary-action-btn"
+          :disabled="isRefreshing || !store.canManage"
+          :title="t('license.management.validate')"
+          :aria-label="t('license.management.validate')"
+          @click="handleValidate"
+        >
+          <IconDeviceDesktopCheck :size="15" />
+          <span>{{ t('license.management.validate') }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="summary-action-btn danger-btn"
+          :disabled="isClearing || !store.canManage"
+          :title="t('license.management.clear')"
+          :aria-label="t('license.management.clear')"
+          @click="handleClear"
+        >
+          <IconTrash :size="15" />
+          <span>{{ t('license.management.clear') }}</span>
+        </button>
       </div>
 
       <span v-if="localizedErrorMessage" class="summary-error-msg">
@@ -258,6 +258,7 @@ async function handleClear(): Promise<void> {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -326,6 +327,7 @@ async function handleClear(): Promise<void> {
   color: var(--text-muted);
   font-weight: 600;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .plan-title {
@@ -365,6 +367,7 @@ async function handleClear(): Promise<void> {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  flex: 0 0 auto;
   gap: 10px;
 }
 
@@ -445,14 +448,15 @@ async function handleClear(): Promise<void> {
 
 .summary-actions {
   display: flex;
+  align-self: flex-end;
   justify-content: flex-end;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
 }
 
 .summary-action-btn {
   min-height: 32px;
-  padding: 0 12px;
+  padding: 0 10px;
   border: 1px solid var(--panel-border);
   border-radius: 8px;
   background: var(--panel-hover);
@@ -709,6 +713,8 @@ async function handleClear(): Promise<void> {
 
   .summary-actions {
     width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .metrics-grid {

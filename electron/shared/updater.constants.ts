@@ -10,6 +10,7 @@ export type UpdateChannel = keyof typeof UPDATE_CHANNEL_TARGETS;
 export type UpdateTargetChannel = (typeof UPDATE_CHANNEL_TARGETS)[UpdateChannel];
 
 export const UPDATE_FEED_BASE_URL = 'https://update.snaptium.com/download' as const;
+export const MACOS_ARM64_DMG_ARTIFACT_NAME = 'Snaptium-macOS-arm64.dmg' as const;
 
 export function normalizeUpdateChannel(value: unknown): UpdateChannel {
   return typeof value === 'string' && value in UPDATE_CHANNEL_TARGETS
@@ -23,6 +24,10 @@ export function resolveUpdateTargetChannel(channel: UpdateChannel): UpdateTarget
 
 export function buildUpdateFeedUrl(channel: UpdateChannel): string {
   return `${UPDATE_FEED_BASE_URL}/${resolveUpdateTargetChannel(channel)}`;
+}
+
+export function buildMacArm64DmgDownloadUrl(channel: UpdateChannel): string {
+  return `${buildUpdateFeedUrl(channel)}/${MACOS_ARM64_DMG_ARTIFACT_NAME}`;
 }
 export const APP_DISTRIBUTIONS = {
   DIRECT: 'direct',
