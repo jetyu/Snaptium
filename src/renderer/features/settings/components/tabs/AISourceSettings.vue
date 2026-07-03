@@ -9,7 +9,7 @@
 
     <div class="source-list">
       <template v-if="!showAddForm">
-        <div v-for="source in settingsStore.config.aiSources" :key="source.id"
+        <div v-for="source in visibleAiSources" :key="source.id"
           class="source-card setting-card vertical-layout"
           :class="{ 'official-source-card': isOfficialSource(source) }">
           <div class="source-info">
@@ -151,7 +151,7 @@
       </template>
 
       <!-- Add Source Card (Placeholder) -->
-      <div v-else-if="settingsStore.config.aiSources.length > 0" class="add-source-card"
+      <div v-else-if="visibleAiSources.length > 0" class="add-source-card"
         @click="handleAddSourceTrigger">
         <div class="add-icon">
           <IconPlus :size="24" />
@@ -159,7 +159,7 @@
         <span>{{ t('button.addAISource') }}</span>
       </div>
 
-      <div v-if="settingsStore.config.aiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card"
+      <div v-if="visibleAiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card"
         @click="handleAddSourceTrigger">
         <div class="empty-icon">
           <IconBulb :size="48" />
@@ -205,6 +205,10 @@ const isEditMode = computed(() => !!editingSourceId.value);
 const isOfficialSource = (source: AISource): boolean => {
   return source.official === true || isOfficialAiSourceId(source.id);
 };
+
+const visibleAiSources = computed<AISource[]>(() => {
+  return settingsStore.config.aiSources.filter((source) => !isOfficialSource(source) || !isLicenseLocked.value);
+});
 
 const isLockedSource = (source: AISource): boolean => {
   return source.locked === true || isOfficialSource(source);
