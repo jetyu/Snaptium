@@ -12,8 +12,13 @@
             <li v-else>
               <button type="button" class="settings-panel__tab" :class="{ 'is-active': activeTab === tab.id }"
                 @click="setActiveTab(tab.id)">
-                <span v-if="tab.label">{{ tab.label }}</span>
-                <span v-else>{{ t(tab.labelKey ?? '') }}</span>
+                <span class="settings-panel__tab-icon" aria-hidden="true">
+                  <component :is="tab.icon" :size="17" />
+                </span>
+                <span class="settings-panel__tab-label">
+                  <span v-if="tab.label">{{ tab.label }}</span>
+                  <span v-else>{{ t(tab.labelKey ?? '') }}</span>
+                </span>
               </button>
             </li>
           </template>
@@ -32,8 +37,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed, watchEffect } from 'vue';
+import { computed, type Component, watchEffect } from 'vue';
 import { useI18n } from 'vue-i18n';
+import {
+  IconAdjustments,
+  IconBrowser,
+  IconPencilCog,
+  IconShieldLock,
+  IconLockAccess,
+  IconRefresh,
+  IconSettingsAi,
+  IconTextRecognition,
+  IconSubtitlesAi,
+  IconFolderCog,
+  IconKeyboard,
+  IconFileAnalytics,
+  IconRefreshDot,
+} from '@tabler/icons-vue';
 import { useUpdaterStore } from '@renderer/features/updater';
 import { useSettings } from '../composables/useSettings';
 import GeneralSettings from './tabs/GeneralSettings.vue';
@@ -56,27 +76,27 @@ const { activeTab, setActiveTab } = useSettings();
 
 type TabItem =
   | { id: string; type: 'separator' }
-  | { id: string; type?: never; labelKey?: string; label?: string; component: unknown };
+  | { id: string; type?: never; labelKey?: string; label?: string; icon: Component; component: unknown };
 
 const baseTabs: TabItem[] = [
-  { id: 'general', labelKey: 'pref.pane.general', component: GeneralSettings },
+  { id: 'general', labelKey: 'pref.pane.general', icon: IconAdjustments, component: GeneralSettings },
 
-  { id: 'preview', labelKey: 'pref.pane.preview', component: PreviewSettings },
-  { id: 'editor', labelKey: 'pref.pane.editor', component: EditorSettings },
+  { id: 'preview', labelKey: 'pref.pane.preview', icon: IconBrowser, component: PreviewSettings },
+  { id: 'editor', labelKey: 'pref.pane.editor', icon: IconPencilCog, component: EditorSettings },
   { id: 'sep-1', type: 'separator' },
-  { id: 'security', labelKey: 'pref.pane.security', component: SecuritySettings },
-  { id: 'access-control', labelKey: 'pref.pane.accessControl', component: AccessControlSettings },
-  { id: 'sync', labelKey: 'pref.pane.sync', component: SyncSettings },
+  { id: 'security', labelKey: 'pref.pane.security', icon: IconShieldLock, component: SecuritySettings },
+  { id: 'access-control', labelKey: 'pref.pane.accessControl', icon: IconLockAccess, component: AccessControlSettings },
+  { id: 'sync', labelKey: 'pref.pane.sync', icon: IconRefresh, component: SyncSettings },
   { id: 'sep-2', type: 'separator' },
-  { id: 'ai-sources', labelKey: 'pref.pane.aiSources', component: AISourceSettings },
-  { id: 'ai-assistant', labelKey: 'pref.pane.aiAssistant', component: AIAssistantSettings },
-  { id: 'rag', labelKey: 'pref.pane.aiRAG', component: RAGSettings },
+  { id: 'ai-sources', labelKey: 'pref.pane.aiSources', icon: IconSettingsAi, component: AISourceSettings },
+  { id: 'ai-assistant', labelKey: 'pref.pane.aiAssistant', icon: IconTextRecognition, component: AIAssistantSettings },
+  { id: 'rag', labelKey: 'pref.pane.aiRAG', icon: IconSubtitlesAi, component: RAGSettings },
   { id: 'sep-3', type: 'separator' },
-  { id: 'noteStorage', labelKey: 'pref.pane.noteStorage', component: NoteStorageSettings },
+  { id: 'noteStorage', labelKey: 'pref.pane.noteStorage', icon: IconFolderCog, component: NoteStorageSettings },
   { id: 'sep-4', type: 'separator' },
-  { id: 'shortcuts', labelKey: 'pref.pane.shortcuts', component: ShortcutSettings },
-  { id: 'log', labelKey: 'pref.pane.log', component: LogSettings },
-  { id: 'software-update', labelKey: 'label.softwareAutoUpdate', component: SoftwareUpdateSettings }
+  { id: 'shortcuts', labelKey: 'pref.pane.shortcuts', icon: IconKeyboard, component: ShortcutSettings },
+  { id: 'log', labelKey: 'pref.pane.log', icon: IconFileAnalytics, component: LogSettings },
+  { id: 'software-update', labelKey: 'label.softwareAutoUpdate', icon: IconRefreshDot, component: SoftwareUpdateSettings }
 ];
 
 const tabs = computed(() => baseTabs.filter((tab) =>
@@ -154,10 +174,13 @@ const currentComponent = computed(() => {
 
 .settings-panel__tab {
   width: 100%;
-  min-height: 34px;
-  padding: 8px 14px;
+  min-height: 40px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: 12px;
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
@@ -167,6 +190,23 @@ const currentComponent = computed(() => {
   transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
+.settings-panel__tab-icon {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.settings-panel__tab-label {
+  min-width: 0;
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
 .settings-panel__tab:hover {
   background-color: var(--surface-hover);
   border-color: color-mix(in srgb, var(--accent) 14%, var(--border-color));
@@ -174,10 +214,11 @@ const currentComponent = computed(() => {
 }
 
 .settings-panel__tab.is-active {
-  background-color: var(--surface-selected);
-  border-color: color-mix(in srgb, var(--accent) 26%, var(--border-color));
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-raised));
+  border-color: color-mix(in srgb, var(--accent) 24%, var(--border-color));
   color: var(--accent-hover);
   font-weight: 650;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
 }
 
 .settings-panel__content {
