@@ -68,67 +68,87 @@
       </template>
 
       <!-- Add Source Form (Inside Grid) -->
-      <div v-if="showAddForm" class="add-form-card">
-        <div class="source-form-group">
-          <label class="setting-label">
-            {{ t('label.sourceName') }} <span class="required-mark">{{ t('label.starSign') }}</span>
-            <span class="char-counter">{{ newSource.name.length }}/20</span>
-          </label>
-          <input v-model="newSource.name" type="text" class="settings-input" maxlength="20"
-            :placeholder="t('placeholder.sourceName')" :disabled="isLicenseLocked" />
-        </div>
-
-        <div class="source-form-group">
-          <label class="setting-label">{{ t('label.aiBaseUrl') }} <span class="required-mark">{{ t('label.starSign')
-              }}</span></label>
-          <input v-model="newSource.baseUrl" type="text" class="settings-input"
-            :placeholder="t('placeholder.aiAPIEndpoint')" :disabled="isLicenseLocked" />
-        </div>
-        <div class="source-form-group">
-          <label class="setting-label">{{ t('label.aiModel') }} <span class="required-mark">{{ t('label.starSign')
-          }}</span></label>
-          <input v-model="newSource.aiModel" type="text" class="settings-input" :placeholder="t('placeholder.aiModel')"
-            :disabled="isLicenseLocked" />
-        </div>
-        <div class="source-form-group">
-          <label class="setting-label">{{ t('label.aiApiKey') }} <span class="required-mark">{{ t('label.starSign')
-          }}</span></label>
-          <PasswordInput v-model="newSource.apiKey" :placeholder="t('placeholder.aiAPIKey')" autocomplete="off"
-            :disabled="isLicenseLocked" />
-        </div>
-        <div class="source-form-group">
-          <label class="setting-label">{{ t('label.aiCapabilities') }}</label>
-          <div class="capability-list">
-            <label v-for="option in capabilityOptions" :key="option.value" class="capability-option">
-              <input :checked="newSource.capabilities.includes(option.value)" type="checkbox"
-                :disabled="isLicenseLocked"
-                @change="toggleCapability(option.value, ($event.target as HTMLInputElement).checked)" />
-              <span>{{ t(option.labelKey) }}</span>
+      <template v-if="showAddForm">
+        <div class="add-form-card">
+          <div class="source-form-group">
+            <label class="setting-label">
+              {{ t('label.sourceName') }} <span class="required-mark">{{ t('label.starSign') }}</span>
+              <span class="char-counter">{{ newSource.name.length }}/20</span>
             </label>
+            <input v-model="newSource.name" type="text" class="settings-input" maxlength="20"
+              :placeholder="t('placeholder.sourceName')" :disabled="isLicenseLocked" />
+          </div>
+
+          <div class="source-form-group">
+            <label class="setting-label">{{ t('label.aiBaseUrl') }} <span class="required-mark">{{ t('label.starSign')
+                }}</span></label>
+            <input v-model="newSource.baseUrl" type="text" class="settings-input"
+              :placeholder="t('placeholder.aiAPIEndpoint')" :disabled="isLicenseLocked" />
+          </div>
+          <div class="source-form-group">
+            <label class="setting-label">{{ t('label.aiModel') }} <span class="required-mark">{{ t('label.starSign')
+            }}</span></label>
+            <input v-model="newSource.aiModel" type="text" class="settings-input" :placeholder="t('placeholder.aiModel')"
+              :disabled="isLicenseLocked" />
+          </div>
+          <div class="source-form-group">
+            <label class="setting-label">{{ t('label.aiApiKey') }} <span class="required-mark">{{ t('label.starSign')
+            }}</span></label>
+            <PasswordInput v-model="newSource.apiKey" :placeholder="t('placeholder.aiAPIKey')" autocomplete="off"
+              :disabled="isLicenseLocked" />
+          </div>
+          <div class="source-form-group">
+            <label class="setting-label">{{ t('label.aiCapabilities') }}</label>
+            <div class="capability-list">
+              <label v-for="option in capabilityOptions" :key="option.value" class="capability-option">
+                <input :checked="newSource.capabilities.includes(option.value)" type="checkbox"
+                  :disabled="isLicenseLocked"
+                  @change="toggleCapability(option.value, ($event.target as HTMLInputElement).checked)" />
+                <span>{{ t(option.labelKey) }}</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-actions-row">
+            <a class="partner-docs-link" :href="AI_CONFIG_DOCS_URL" target="_blank" rel="noopener noreferrer nofollow">
+              {{ t('text.aiSourcePartnerDocsLink') }}
+            </a>
+            <div class="buttons">
+              <button class="action-button secondary" @click="handleTestNewSource"
+                :disabled="isLicenseLocked || !canTest || isTesting">
+                <span v-if="isTesting" class="spinner small"></span>
+                {{ isTesting ? t('button.testing') : t('button.testConnection') }}
+              </button>
+              <button class="action-button secondary" @click="handleCancelAdd">
+                {{ t('button.cancel') }}
+              </button>
+              <button class="action-button primary" @click="handleAddSource"
+                :disabled="isLicenseLocked || !isFormValid || isAdding">
+                <template v-if="isAdding">
+                  <span class="spinner small"></span>
+                </template>
+                <template v-else>
+                  {{ t('button.confirm') }}
+                </template>
+              </button>
+            </div>
           </div>
         </div>
-        <div class="form-actions-row">
-          <div class="buttons">
-            <button class="action-button secondary" @click="handleTestNewSource"
-              :disabled="isLicenseLocked || !canTest || isTesting">
-              <span v-if="isTesting" class="spinner small"></span>
-              {{ isTesting ? t('button.testing') : t('button.testConnection') }}
-            </button>
-            <button class="action-button secondary" @click="handleCancelAdd">
-              {{ t('button.cancel') }}
-            </button>
-            <button class="action-button primary" @click="handleAddSource"
-              :disabled="isLicenseLocked || !isFormValid || isAdding">
-              <template v-if="isAdding">
-                <span class="spinner small"></span>
-              </template>
-              <template v-else>
-                {{ t('button.confirm') }}
-              </template>
-            </button>
+        <div class="partner-footer">
+          <div class="partner-footer-brand">
+            <img :src="siliconFlowLogoUrl" alt="SiliconFlow" class="partner-footer-logo" />
+            <div class="partner-footer-copy">
+              <span class="partner-footer-eyebrow">{{ t('text.aiSourcePartnerEyebrow') }}</span>
+              <span class="partner-footer-text">
+                {{ t('text.aiSourcePartnerDescription') }}
+                <a class="partner-entry-link" :href="SILICONFLOW_URL" target="_blank"
+                  rel="noopener noreferrer nofollow">
+                  {{ t('text.aiSourcePartnerEntryLink') }}
+                </a>
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+      </template>
 
       <!-- Add Source Card (Placeholder) -->
       <div v-else-if="settingsStore.config.aiSources.length > 0" class="add-source-card"
@@ -164,12 +184,15 @@ import { getErrorMessage } from '@shared/utils/error.utils';
 import { isOfficialAiSourceId } from '@shared/official-ai.constants';
 import { IconPlus, IconBulb, IconTrash, IconPencil, IconSettingsAi, IconTextScanAi } from '@tabler/icons-vue';
 import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
+import siliconFlowLogoUrl from '@assets/images/siliconflow.png';
 import PasswordInput from '../PasswordInput.vue';
 
 const { t } = useI18n();
 const settingsStore = useSettingsStore();
 const aisLogger = createLogger('AISettings');
 const aiSourceLicenseGate = useLicenseGate('aiSources');
+const SILICONFLOW_URL = 'https://cloud.siliconflow.cn/i/9OJVYJiY';
+const AI_CONFIG_DOCS_URL = 'https://snaptium.com/docs/ai-config';
 
 const showAddForm = ref(false);
 const isAdding = ref(false);
@@ -427,6 +450,73 @@ const formatCapabilities = (capabilities: string[]): string => {
   margin-bottom: 20px;
 }
 
+.partner-footer {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 2px 0 0;
+}
+
+.partner-footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.partner-footer-logo {
+  display: block;
+  flex: 0 0 auto;
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+}
+
+.partner-footer-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.partner-footer-eyebrow {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.partner-footer-text {
+  font-size: 0.8rem;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.partner-entry-link {
+  margin-left: 6px;
+  color: var(--accent);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.partner-entry-link:hover {
+  color: var(--accent-hover);
+}
+
+.partner-docs-link {
+  flex: 0 0 auto;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.partner-docs-link:hover {
+  color: var(--accent-hover);
+}
+
 .add-source-card {
   display: flex;
   flex-direction: column;
@@ -477,14 +567,17 @@ const formatCapabilities = (capabilities: string[]): string => {
 
 .form-actions-row {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
   margin-top: 10px;
 }
 
 .buttons {
   display: flex;
   gap: 10px;
+  margin-left: auto;
 }
 
 .source-list {
@@ -704,5 +797,12 @@ const formatCapabilities = (capabilities: string[]): string => {
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+@media (max-width: 720px) {
+  .partner-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
 }
 </style>

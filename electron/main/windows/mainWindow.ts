@@ -14,6 +14,8 @@ export function secureWebContents(win: BrowserWindow, isDev: boolean): void {
     const allowedHosts = new Set([
       'github.com',
       'snaptium.com',
+      'siliconflow.cn',
+      'cloud.siliconflow.cn',
       'www.bing.com',
       'bing.com'
     ]);
