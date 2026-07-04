@@ -2,7 +2,10 @@
   font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --sidebar-width: 260px;
   --col-header-h: 40px;
-  --radius: 0.6rem;
+  --radius: 8px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
   --dialog-overlay-bg: rgba(29, 29, 29, 0.5);
   --dialog-overlay-backdrop-filter: none;
 }
@@ -11,12 +14,12 @@
 :root,
 [data-theme='light'] {
   color-scheme: light;
-  --bg: #f0f2f5;
+  --bg: #f3f5f8;
   --panel: #ffffff;
-  --panel-hover: #f5f7fa;
-  --panel-border: #dde1e9;
+  --panel-hover: #f6f8fb;
+  --panel-border: #dfe4ec;
   --text: #1e2330;
-  --text-muted: #8792a8;
+  --text-muted: #7c8798;
   --accent: #0071e3;
   --accent-hover: #005ecb;
   --accent-solid: #0071e3;
@@ -24,15 +27,15 @@
   --danger: #e5484d;
   --surface-base: var(--bg);
   --surface-raised: var(--panel);
-  --surface-subtle: #fbfbfc;
-  --surface-soft: #f3f6fb;
+  --surface-subtle: #f8fafc;
+  --surface-soft: #f2f5f9;
   --surface-hover: var(--panel-hover);
   --surface-selected: color-mix(in srgb, var(--accent) 12%, var(--panel));
   --surface-overlay: rgba(255, 255, 255, 0.92);
   --surface-scrim: rgba(248, 250, 252, 0.92);
   --border-color: var(--panel-border);
-  --border-muted: #e7eaf0;
-  --border-strong: #c9d1dc;
+  --border-muted: #e8edf3;
+  --border-strong: #cbd4e0;
   --text-primary: var(--text);
   --text-secondary: #5f6b7a;
   --text-tertiary: #6b7280;
@@ -43,15 +46,15 @@
   --input-border-focus: var(--accent);
   --focus-ring: color-mix(in srgb, var(--accent) 20%, transparent);
   --button-bg: #ffffff;
-  --button-bg-hover: #f3f4f6;
-  --button-bg-active: #e5e7eb;
-  --button-secondary-bg: #edf2f7;
-  --button-secondary-bg-hover: #e2e8f0;
+  --button-bg-hover: #f4f6f9;
+  --button-bg-active: #e9edf3;
+  --button-secondary-bg: #eef3f8;
+  --button-secondary-bg-hover: #e5ebf2;
   --button-danger-soft: rgba(244, 63, 94, 0.08);
   --button-danger-soft-hover: rgba(244, 63, 94, 0.14);
-  --shadow-soft: 0 1px 2px rgba(15, 23, 42, 0.06);
-  --shadow-md: 0 14px 32px rgba(15, 23, 42, 0.16);
-  --shadow-lg: 0 20px 40px rgba(15, 23, 42, 0.2);
+  --shadow-soft: 0 1px 1px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 10px 24px rgba(15, 23, 42, 0.12);
+  --shadow-lg: 0 18px 36px rgba(15, 23, 42, 0.16);
   --status-success-bg: rgba(16, 185, 129, 0.08);
   --status-success-border: rgba(16, 185, 129, 0.2);
   --status-success-text: #03865d;
@@ -88,10 +91,10 @@
 /* ===== Dark Theme ===== */
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg: #12141a;
-  --panel: #1c1f26;
-  --panel-hover: #252932;
-  --panel-border: #2d333d;
+  --bg: #11141a;
+  --panel: #1b1f27;
+  --panel-hover: #242a34;
+  --panel-border: #303746;
   --text: #e1e3e8;
   --text-muted: #9ba3b3;
   --accent: #4fc3ff;
@@ -101,8 +104,8 @@
   --danger: #f85a5e;
   --surface-base: var(--bg);
   --surface-raised: var(--panel);
-  --surface-subtle: #20242d;
-  --surface-soft: #232836;
+  --surface-subtle: #1f242d;
+  --surface-soft: #242a35;
   --surface-hover: var(--panel-hover);
   --surface-selected: color-mix(in srgb, var(--accent) 14%, var(--panel));
   --surface-overlay: rgba(28, 32, 44, 0.94);
@@ -126,9 +129,9 @@
   --button-secondary-bg-hover: #313a4b;
   --button-danger-soft: rgba(244, 63, 94, 0.14);
   --button-danger-soft-hover: rgba(244, 63, 94, 0.2);
-  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.22);
-  --shadow-md: 0 14px 32px rgba(0, 0, 0, 0.28);
-  --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.36);
+  --shadow-soft: 0 1px 1px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 10px 24px rgba(0, 0, 0, 0.26);
+  --shadow-lg: 0 18px 36px rgba(0, 0, 0, 0.32);
   --status-success-bg: rgba(46, 184, 137, 0.16);
   --status-success-border: rgba(46, 184, 137, 0.3);
   --status-success-text: #56d7a8;
@@ -385,12 +388,12 @@ button.icon-text svg,
 }
 
 .dialog-close-button:hover {
-  background: color-mix(in srgb, var(--button-bg-hover) 92%, var(--panel));
+  background: color-mix(in srgb, var(--button-bg-active) 78%, var(--button-bg-hover));
   color: var(--text-primary);
 }
 
 .dialog-close-button:active {
-  background: color-mix(in srgb, var(--button-bg-active) 94%, var(--panel));
+  background: var(--button-bg-active);
   color: var(--text-primary);
   transform: scale(0.97);
 }
