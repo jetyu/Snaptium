@@ -434,7 +434,11 @@ const formatCapabilities = (capabilities: string[]): string => {
   justify-content: space-between;
   align-items: center;
   margin-top: 0;
-  margin-bottom: 1.25rem;
+  margin-bottom: 14px;
+}
+
+.header-actions .panel-title {
+  margin-bottom: 0;
 }
 
 .license-gate {
