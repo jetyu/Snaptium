@@ -166,17 +166,16 @@ Currently supported:
 
 ![Snaptium Edit Mode](./docs/Screenshots/v2/en-US/EditorDemo.png)
 
-## Preferences
-
-![Snaptium Preferences](./docs/Screenshots/v2/en-US/Preferences.png)
-
 ## Preview Only
 
 ![Snaptium Preview](./docs/Screenshots/v2/en-US/PreviewOnly.png)
 
-## Knowledge Copilot
+## Smart Writing （Click to play）
+<video src="https://github.com/user-attachments/assets/9dd6fa86-5c0c-4a3e-93ed-f11acaa73ae2"></video>
 
-![Snaptium Knowledge Copilot](./docs/Screenshots/v2/en-US/KnowledgeCopilot.png)
+## Knowledge Base （Click to play）
+<video src="https://github.com/user-attachments/assets/62be0260-8d7f-438c-a8d1-1d3101b3ae4d.mp4"></video>
+
 
 # 🧩 Tech Stack
 
