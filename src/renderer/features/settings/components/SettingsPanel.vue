@@ -129,6 +129,12 @@ const currentComponent = computed(() => {
 }
 
 .settings-panel__sidebar {
+  --settings-tab-bg-hover: color-mix(in srgb, var(--surface-soft) 76%, var(--surface-subtle));
+  --settings-tab-border-hover: color-mix(in srgb, var(--border-color) 64%, transparent);
+  --settings-tab-bg-active: color-mix(in srgb, var(--accent) 10%, var(--surface-raised));
+  --settings-tab-bg-active-hover: color-mix(in srgb, var(--accent) 12%, var(--surface-soft));
+  --settings-tab-border-active: color-mix(in srgb, var(--accent) 18%, var(--border-color));
+
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -185,7 +191,7 @@ const currentComponent = computed(() => {
   font: inherit;
   font-size: 0.86rem;
   text-align: left;
-  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 
 .settings-panel__tab-icon {
@@ -206,17 +212,22 @@ const currentComponent = computed(() => {
 }
 
 .settings-panel__tab:hover {
-  background-color: var(--surface-hover);
-  border-color: var(--border-muted);
+  background-color: var(--settings-tab-bg-hover);
+  border-color: var(--settings-tab-border-hover);
   color: var(--text-primary);
+  box-shadow: var(--shadow-soft);
 }
 
 .settings-panel__tab.is-active {
-  background: var(--surface-selected);
-  border-color: color-mix(in srgb, var(--accent) 22%, var(--border-color));
+  background: var(--settings-tab-bg-active);
+  border-color: var(--settings-tab-border-active);
   color: var(--accent-hover);
   font-weight: 650;
-  box-shadow: none;
+  box-shadow: var(--shadow-soft);
+}
+
+.settings-panel__tab.is-active:hover {
+  background-color: var(--settings-tab-bg-active-hover);
 }
 
 .settings-panel__content {
