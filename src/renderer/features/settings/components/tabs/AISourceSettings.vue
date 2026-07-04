@@ -152,7 +152,9 @@
 
       <!-- Add Source Card (Placeholder) -->
       <div v-else-if="visibleAiSources.length > 0" class="add-source-card"
-        @click="handleAddSourceTrigger">
+        :class="{ 'is-disabled': isLicenseLocked }"
+        :aria-disabled="isLicenseLocked"
+        @click="handleAddSourceCardClick">
         <div class="add-icon">
           <IconPlus :size="24" />
         </div>
@@ -160,7 +162,9 @@
       </div>
 
       <div v-if="visibleAiSources.length === 0 && !showAddForm" class="add-source-card empty-trigger-card"
-        @click="handleAddSourceTrigger">
+        :class="{ 'is-disabled': isLicenseLocked }"
+        :aria-disabled="isLicenseLocked"
+        @click="handleAddSourceCardClick">
         <div class="empty-icon">
           <IconBulb :size="48" />
         </div>
@@ -268,6 +272,14 @@ const handleAddSourceTrigger = (): void => {
   }
 
   showAddForm.value = true;
+};
+
+const handleAddSourceCardClick = (): void => {
+  if (isLicenseLocked.value) {
+    return;
+  }
+
+  handleAddSourceTrigger();
 };
 
 const handleAddSource = async () => {
@@ -548,9 +560,25 @@ const formatCapabilities = (capabilities: string[]): string => {
   transform: translateY(-2px);
 }
 
+.add-source-card.is-disabled,
+.add-source-card.is-disabled:hover {
+  cursor: not-allowed;
+  color: var(--text-tertiary);
+  border-color: var(--settings-card-border, var(--border-muted));
+  background: var(--surface-subtle);
+  opacity: 0.62;
+  transform: none;
+}
+
 .add-icon {
   color: inherit;
   opacity: 0.6;
+}
+
+.add-source-card.is-disabled .add-icon,
+.add-source-card.is-disabled .empty-icon,
+.add-source-card.is-disabled .empty-action-text {
+  color: var(--text-tertiary);
 }
 
 .source-form-group {

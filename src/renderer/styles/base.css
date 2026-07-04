@@ -388,12 +388,12 @@ button.icon-text svg,
 }
 
 .dialog-close-button:hover {
-  background: color-mix(in srgb, var(--button-bg-hover) 92%, var(--panel));
+  background: color-mix(in srgb, var(--button-bg-active) 78%, var(--button-bg-hover));
   color: var(--text-primary);
 }
 
 .dialog-close-button:active {
-  background: color-mix(in srgb, var(--button-bg-active) 94%, var(--panel));
+  background: var(--button-bg-active);
   color: var(--text-primary);
   transform: scale(0.97);
 }
