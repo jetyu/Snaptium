@@ -122,7 +122,7 @@ const currentComponent = computed(() => {
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr);
+  grid-template-columns: 240px minmax(0, 1fr);
   overflow: hidden;
   color: var(--text-primary);
   background: var(--surface-raised);
