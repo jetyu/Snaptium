@@ -353,6 +353,8 @@
   "license.deviceStatus.inactive": "未激活",
   "license.deviceStatus.revoked": "已撤销",
   "license.deviceStatus.unbound": "已解绑",
+  "license.status.active": "许可证已启用",
+  "license.status.expired": "许可证已过期",
   "license.error.cannotDeactivateCurrentDevice": "当前设备无法在这里解绑，请在本机清除授权。",
   "license.error.deviceNotFound": "未找到该设备。设备列表可能已更新，请刷新后重试。",
   "license.error.expired": "授权已过期，请续期后继续使用。",
