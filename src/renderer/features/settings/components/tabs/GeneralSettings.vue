@@ -87,23 +87,6 @@
         </label>
       </section>
 
-      <section class="setting-card">
-        <div class="setting-copy">
-          <p class="setting-label">{{ t('label.importExportSettings') }}</p>
-          <p class="setting-description">{{ t('text.importExportSettings') }}</p>
-        </div>
-        <div class="settings-row">
-          <button type="button" class="action-button" @click="handleExportSettings">
-            {{ t('button.export') }}
-          </button>
-          <button type="button" class="action-button" @click="handleImportSettings">
-            {{ t('button.import') }}
-          </button>
-          <button type="button" class="action-button" @click="handleResetSettings">
-            {{ t('button.reset') }}
-          </button>
-        </div>
-      </section>
     </div>
   </div>
 </template>
@@ -135,18 +118,6 @@ const windowCloseActionDescription = computed<string>(() => {
 const handleLanguageChange = async (event: Event) => {
   const target = event.target as HTMLSelectElement;
   await settingsStore.setLanguage(target.value);
-};
-
-const handleExportSettings = async () => {
-  await settingsStore.exportSettings();
-};
-
-const handleImportSettings = async () => {
-  await settingsStore.importSettings();
-};
-
-const handleResetSettings = async () => {
-  await settingsStore.resetSettings();
 };
 
 const handleStartupToggle = async () => {

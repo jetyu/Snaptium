@@ -65,7 +65,7 @@ import AIAssistantSettings from './tabs/AIAssistantSettings.vue';
 import RAGSettings from './tabs/RAGSettings.vue';
 import LogSettings from './tabs/LogSettings.vue';
 import ShortcutSettings from './tabs/ShortcutSettings.vue';
-import NoteStorageSettings from './tabs/NoteStorageSettings.vue';
+import AdvancedOptionsSettings from './tabs/AdvancedOptionsSettings.vue';
 import SyncSettings from './tabs/SyncSettings.vue';
 import SecuritySettings from './tabs/SecuritySettings.vue';
 import AccessControlSettings from './tabs/AccessControlSettings.vue';
@@ -92,7 +92,7 @@ const baseTabs: TabItem[] = [
   { id: 'ai-assistant', labelKey: 'pref.pane.aiAssistant', icon: IconImageGeneration, component: AIAssistantSettings },
   { id: 'rag', labelKey: 'pref.pane.aiRAG', icon: IconSubtitlesAi, component: RAGSettings },
   { id: 'sep-3', type: 'separator' },
-  { id: 'noteStorage', labelKey: 'pref.pane.noteStorage', icon: IconSettings2, component: NoteStorageSettings },
+  { id: 'noteStorage', labelKey: 'pref.pane.noteStorage', icon: IconSettings2, component: AdvancedOptionsSettings },
   { id: 'sep-4', type: 'separator' },
   { id: 'shortcuts', labelKey: 'pref.pane.shortcuts', icon: IconKeyboard, component: ShortcutSettings },
   { id: 'log', labelKey: 'pref.pane.log', icon: IconFileAnalytics, component: LogSettings },

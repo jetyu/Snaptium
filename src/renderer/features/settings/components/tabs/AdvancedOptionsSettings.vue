@@ -1,5 +1,5 @@
 <template>
-  <div class="note-settings">
+  <div class="advanced-options-settings">
     <h3 class="panel-title">{{ t('pref.pane.noteStorage') }}</h3>
 
     <div class="settings-grid">
@@ -58,6 +58,24 @@
             <option :value="30">{{ t('option.trashAutoClear.days30') }}</option>
           </select>
         </label>
+      </section>
+
+      <section class="setting-card">
+        <div class="setting-copy">
+          <p class="setting-label">{{ t('label.importExportSettings') }}</p>
+          <p class="setting-description">{{ t('text.importExportSettings') }}</p>
+        </div>
+        <div class="settings-row">
+          <button type="button" class="action-button" @click="handleExportSettings">
+            {{ t('button.export') }}
+          </button>
+          <button type="button" class="action-button" @click="handleImportSettings">
+            {{ t('button.import') }}
+          </button>
+          <button type="button" class="action-button" @click="handleResetSettings">
+            {{ t('button.reset') }}
+          </button>
+        </div>
       </section>
 
       <section class="setting-card data-transfer-card">
@@ -194,6 +212,18 @@ const handleTrashAutoClearChange = (event: Event) => {
   if (!isNaN(val)) {
     settingsStore.updateSetting('trashAutoClearDays', val);
   }
+};
+
+const handleExportSettings = async () => {
+  await settingsStore.exportSettings();
+};
+
+const handleImportSettings = async () => {
+  await settingsStore.importSettings();
+};
+
+const handleResetSettings = async () => {
+  await settingsStore.resetSettings();
 };
 
 const handleExportSppx = async () => {
