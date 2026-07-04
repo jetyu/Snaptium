@@ -28,6 +28,7 @@ import {
 } from '../../shared/license.constants.js';
 import { loggerService } from './logger.service.js';
 import { appEnvInfoService } from './appEnvInfo.service.js';
+import { mainProcessFetch } from './network.service.js';
 
 const logger = loggerService.createLogger('Electron:LicenseService');
 
@@ -357,6 +358,29 @@ export class LicenseService {
     );
   }
 
+  async getAccessTokenForFeature(feature: LicensedFeature): Promise<string> {
+    if (!this.token) {
+      throw createLicenseError(
+        LICENSE_ERROR_CODES.LICENSE_INACTIVE,
+        `Feature "${feature}" requires an active paid license.`,
+      );
+    }
+
+    const state = await this.validateLicense({
+      maxRetries: 0,
+      timeoutMs: STARTUP_VALIDATE_TIMEOUT_MS,
+    });
+
+    if (!this.token || !canUseLicensedFeature(state, feature)) {
+      throw createLicenseError(
+        LICENSE_ERROR_CODES.LICENSE_INACTIVE,
+        `Feature "${feature}" requires an active paid license.`,
+      );
+    }
+
+    return this.token;
+  }
+
   async activate(licenseKey: string): Promise<LicenseState> {
     const normalizedKey = normalizeLicenseKey(licenseKey);
     if (!normalizedKey) {
@@ -661,7 +685,7 @@ export class LicenseService {
       const controller = new AbortController();
       const timer = setTimeout(() => controller.abort(), timeoutMs);
       try {
-        const response = await fetch(`${API_BASE_URL}${route}`, {
+        const response = await mainProcessFetch(`${API_BASE_URL}${route}`, {
           ...init,
           signal: controller.signal,
         });

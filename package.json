@@ -1,6 +1,6 @@
 {
   "name": "Snaptium",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "author": "Snaptium Team",
   "private": true,
   "type": "module",
@@ -142,14 +142,6 @@
         {
           "target": "dmg",
           "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "zip",
-          "arch": [
-            "x64",
             "arm64"
           ]
         }

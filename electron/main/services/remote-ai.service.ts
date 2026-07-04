@@ -1,5 +1,6 @@
 import { loggerService } from './logger.service.js';
 import { getErrorMessage } from '../services/error.service.js';
+import { isElectronNetworkRequestError, mainProcessFetch } from './network.service.js';
 
 const logger = loggerService.createLogger('Electron:Remote AI Service');
 
@@ -114,10 +115,69 @@ interface RerankResponse extends JsonObject {
 }
 
 interface RequestErrorBody {
+  code?: string;
   error?: {
+    code?: string;
     message?: string;
   };
   message?: string;
+  details?: Record<string, unknown>;
+}
+
+function valueToDetailText(value: unknown): string | null {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value.trim();
+  }
+
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return String(value);
+  }
+
+  return null;
+}
+
+function formatRequestErrorDetails(details: Record<string, unknown> | undefined): string[] {
+  if (!details) {
+    return [];
+  }
+
+  const detailKeys = [
+    ['plan', 'plan'],
+    ['capability', 'capability'],
+    ['provider', 'provider'],
+    ['secret_name', 'secret'],
+    ['upstream_status', 'upstream status'],
+    ['upstream_content_type', 'content-type'],
+    ['response_preview', 'preview'],
+  ] as const;
+
+  return detailKeys
+    .map(([key, label]) => {
+      const value = valueToDetailText(details[key]);
+      return value ? `${label}: ${value}` : null;
+    })
+    .filter((item): item is string => item !== null);
+}
+
+function formatErrorCause(cause: unknown): string | null {
+  if (typeof cause !== 'object' || cause === null) {
+    return null;
+  }
+
+  const record = cause as Record<string, unknown>;
+  const parts = [
+    valueToDetailText(record.message),
+    valueToDetailText(record.code),
+    valueToDetailText(record.hostname),
+    valueToDetailText(record.address),
+    valueToDetailText(record.port),
+  ].filter((item): item is string => item !== null);
+
+  return parts.length > 0 ? parts.join(' / ') : null;
+}
+
+function isFetchNetworkError(error: unknown): error is Error {
+  return isElectronNetworkRequestError(error) || (error instanceof TypeError && error.message === 'fetch failed');
 }
 
 function extractRequestErrorMessage(body: unknown, fallback: string): string {
@@ -126,15 +186,27 @@ function extractRequestErrorMessage(body: unknown, fallback: string): string {
   }
 
   const record = body as RequestErrorBody;
+  const code = typeof record.code === 'string' && record.code.trim().length > 0
+    ? record.code.trim()
+    : typeof record.error?.code === 'string' && record.error.code.trim().length > 0
+      ? record.error.code.trim()
+      : null;
+  const detailParts = formatRequestErrorDetails(record.details);
   if (typeof record.error?.message === 'string' && record.error.message.trim().length > 0) {
-    return record.error.message;
+    return [record.error.message.trim(), code ? `code: ${code}` : null, ...detailParts]
+      .filter((item): item is string => item !== null)
+      .join(' | ');
   }
 
   if (typeof record.message === 'string' && record.message.trim().length > 0) {
-    return record.message;
+    return [record.message.trim(), code ? `code: ${code}` : null, ...detailParts]
+      .filter((item): item is string => item !== null)
+      .join(' | ');
   }
 
-  return fallback;
+  return [fallback, code ? `code: ${code}` : null, ...detailParts]
+    .filter((item): item is string => item !== null)
+    .join(' | ');
 }
 
 /**
@@ -181,7 +253,7 @@ export const remoteAiService = {
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     try {
-      const response = await fetch(endpoint, {
+      const response = await mainProcessFetch(endpoint, {
         method: 'POST',
         headers: this.getHeaders(apiKey),
         body: JSON.stringify(payload),
@@ -221,6 +293,16 @@ export const remoteAiService = {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === 'AbortError') {
         throw new Error('Request timeout', { cause: error });
+      }
+
+      if (isFetchNetworkError(error)) {
+        const cause = isElectronNetworkRequestError(error)
+          ? getErrorMessage(error)
+          : formatErrorCause(error.cause);
+        throw new Error(
+          cause ? `AI service network request failed: ${cause}` : 'AI service network request failed.',
+          { cause: error },
+        );
       }
 
       throw error;

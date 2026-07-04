@@ -16,6 +16,12 @@ import {
 import { switchLanguage } from '@renderer/features/i18n';
 import { sanitizeWorkbenchSettings } from '@renderer/features/workbench/constants/workbench.constants';
 import { normalizeTrustedRemoteImageHosts } from '@shared/preview-security.constants';
+import {
+  OFFICIAL_AI_MODELS,
+  OFFICIAL_AI_SOURCE_IDS,
+  getOfficialAiSources,
+  isOfficialAiSourceId,
+} from '@shared/official-ai.constants';
 import type { AppSettings, AISource } from '../store/settings.store';
 
 type SettingsChangeReason = 'save' | 'language' | 'import' | 'reset';
@@ -40,25 +46,74 @@ export interface AiConnectionPayload {
 }
 
 function normalizeAiSources(value: unknown): AISource[] {
-  if (!Array.isArray(value)) {
-    return [];
-  }
-
-  return value.map((source) => {
+  const customSources = Array.isArray(value) ? value.map((source): AISource | null => {
     const normalized = (source ?? {}) as Partial<AISource>;
+    const id = String(normalized.id ?? '');
+    if (!id || isOfficialAiSourceId(id)) {
+      return null;
+    }
+
     const capabilities = Array.isArray(normalized.capabilities)
       ? normalized.capabilities.filter((capability): capability is string => typeof capability === 'string')
       : [];
 
     return {
-      id: String(normalized.id ?? ''),
+      id,
       name: String(normalized.name ?? ''),
       baseUrl: String(normalized.baseUrl ?? ''),
       apiKey: String(normalized.apiKey ?? ''),
       aiModel: String(normalized.aiModel ?? ''),
       capabilities,
+      official: false,
+      locked: false,
     };
-  });
+  }).filter((source): source is AISource => source !== null) : [];
+
+  return [
+    ...getOfficialAiSources(),
+    ...customSources,
+  ];
+}
+
+function normalizeAiAssistantSettings(
+  baseConfig: AppSettings['aiAssistant'],
+  incomingConfig?: Partial<AppSettings['aiAssistant']>,
+): AppSettings['aiAssistant'] {
+  const mergedConfig = {
+    ...baseConfig,
+    ...(incomingConfig ?? {}),
+  };
+
+  if (!mergedConfig.sourceId || mergedConfig.sourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    return {
+      ...mergedConfig,
+      sourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+      model: OFFICIAL_AI_MODELS.CHAT,
+    };
+  }
+
+  return mergedConfig;
+}
+
+function normalizeRagSettings(
+  baseConfig: AppSettings['rag'],
+  incomingConfig?: Partial<AppSettings['rag']>,
+): AppSettings['rag'] {
+  const mergedConfig = {
+    ...baseConfig,
+    ...(incomingConfig ?? {}),
+  };
+
+  if (!mergedConfig.embeddingSourceId || mergedConfig.embeddingSourceId === OFFICIAL_AI_SOURCE_IDS.EMBEDDING) {
+    mergedConfig.embeddingSourceId = OFFICIAL_AI_SOURCE_IDS.EMBEDDING;
+    mergedConfig.embeddingModel = OFFICIAL_AI_MODELS.EMBEDDING;
+  }
+
+  if (mergedConfig.ragChatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    mergedConfig.ragChatModel = OFFICIAL_AI_MODELS.CHAT;
+  }
+
+  return mergedConfig;
 }
 
 function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettings> | null): AppSettings {
@@ -66,9 +121,9 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
     return {
       ...baseConfig,
       aiSources: normalizeAiSources(baseConfig.aiSources),
-      aiAssistant: { ...baseConfig.aiAssistant },
+      aiAssistant: normalizeAiAssistantSettings(baseConfig.aiAssistant),
       previewAppearance: { ...baseConfig.previewAppearance },
-      rag: { ...baseConfig.rag },
+      rag: normalizeRagSettings(baseConfig.rag),
       sync: {
         ...baseConfig.sync,
         webdav: { ...baseConfig.sync.webdav },
@@ -94,10 +149,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
     windowCloseAction: normalizeWindowCloseAction(incomingConfig.windowCloseAction ?? baseConfig.windowCloseAction),
     accentMode: normalizeAccentMode(incomingConfig.accentMode ?? baseConfig.accentMode),
     aiSources: normalizeAiSources(incomingConfig.aiSources ?? baseConfig.aiSources),
-    aiAssistant: {
-      ...baseConfig.aiAssistant,
-      ...(incomingConfig.aiAssistant ?? {}),
-    },
+    aiAssistant: normalizeAiAssistantSettings(baseConfig.aiAssistant, incomingConfig.aiAssistant),
     previewAppearance: {
       ...baseConfig.previewAppearance,
       ...(incomingConfig.previewAppearance ?? {}),
@@ -105,10 +157,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
         incomingConfig.previewAppearance?.trustedRemoteImageHosts ?? baseConfig.previewAppearance.trustedRemoteImageHosts,
       ),
     },
-    rag: {
-      ...baseConfig.rag,
-      ...(incomingConfig.rag ?? {}),
-    },
+    rag: normalizeRagSettings(baseConfig.rag, incomingConfig.rag),
     sync: {
       ...baseConfig.sync,
       ...(incomingConfig.sync ?? {}),

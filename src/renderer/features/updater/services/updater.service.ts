@@ -8,6 +8,8 @@ export interface UpdateInfo {
   releaseDate?: string;
   releaseNotes?: string;
   files?: unknown[];
+  manualInstall: boolean;
+  manualDownloadUrl?: string;
 }
 
 export interface ProgressInfo {
@@ -50,6 +52,10 @@ function normalizeUpdateInfo(payload: unknown): UpdateInfo {
     releaseDate: typeof info.releaseDate === 'string' ? info.releaseDate : undefined,
     releaseNotes: typeof info.releaseNotes === 'string' ? info.releaseNotes : undefined,
     files: Array.isArray(info.files) ? info.files : undefined,
+    manualInstall: info.manualInstall === true,
+    manualDownloadUrl: typeof info.manualDownloadUrl === 'string' && info.manualDownloadUrl.trim().length > 0
+      ? info.manualDownloadUrl.trim()
+      : undefined,
   };
 }
 

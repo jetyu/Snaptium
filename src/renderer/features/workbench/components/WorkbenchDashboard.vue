@@ -1037,7 +1037,6 @@ watch(
   --workbench-rose: var(--status-danger-text);
   --workbench-shadow: var(--shadow-md);
   --workbench-shadow-soft: var(--shadow-soft);
-  --workbench-layout-max-width: 1920px;
   --workbench-page-padding: var(--workbench-gap);
   --workbench-gap: 10px;
   --workbench-card-radius: 16px;
@@ -1081,8 +1080,7 @@ watch(
 }
 
 .workbench-layout {
-  width: min(100%, var(--workbench-layout-max-width));
-  margin: 0 auto;
+  width: 100%;
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(var(--workbench-sidebar-min), 1fr);
   grid-template-areas:

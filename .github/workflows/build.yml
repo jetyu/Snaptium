@@ -200,17 +200,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [windows-2022, ubuntu-latest, macos-15]
-        arch: [x64]
         include:
           - os: windows-2022
             platform: win
+            arch: x64
             artifact_pattern: |
               dist/*.exe
               dist/*.blockmap
               dist/*.yml
           - os: ubuntu-latest
             platform: linux
+            arch: x64
             artifact_pattern: |
               dist/*.AppImage
               dist/*.deb
@@ -218,9 +218,9 @@ jobs:
               dist/*.yml
           - os: macos-15
             platform: mac
+            arch: arm64
             artifact_pattern: |
               dist/*.dmg
-              dist/*.zip
               dist/*.blockmap
               dist/*.yml
 

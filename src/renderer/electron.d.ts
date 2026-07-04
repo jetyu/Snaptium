@@ -214,6 +214,8 @@ interface UpdaterUpdateInfoPayload {
   releaseNotes?: string;
   files?: Array<Record<string, JsonValue>>;
   silent?: boolean;
+  manualInstall?: boolean;
+  manualDownloadUrl?: string;
 }
 
 interface UpdaterProgressPayload {
