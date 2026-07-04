@@ -23,7 +23,7 @@
               </div>
               <div class="settings-card-actions">
                 <span v-if="isLockedSource(source)" class="source-lock-badge" :title="t('text.officialInnerAiSource')">
-                  <IconSparkles  :size="13" />
+                  <IconSparkles :size="13" />
                   {{ t('label.officialAiSource') }}
                 </span>
                 <template v-else>
@@ -534,7 +534,7 @@ const formatCapabilities = (capabilities: string[]): string => {
   cursor: pointer;
   color: #5f6b7a;
   transition: all 0.2s ease;
-  min-height: 140px;
+  min-height: 156px;
 }
 
 .add-source-card:hover {
@@ -605,10 +605,8 @@ const formatCapabilities = (capabilities: string[]): string => {
 
 .official-source-card {
   position: relative;
-  border-color: var(--status-info-border);
-  background: color-mix(in srgb, var(--accent) 5%, var(--bg-primary, #ffffff));
-  box-shadow: 0 6px 18px color-mix(in srgb, var(--accent) 8%, transparent);
 }
+
 
 .source-info {
   display: flex;
