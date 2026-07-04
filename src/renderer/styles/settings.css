@@ -24,9 +24,9 @@
 }
 
 .panel-title {
-  margin: 0 0 1rem 0;
-  font-size: 1.25rem;
-  font-weight: 600;
+  margin: 0 0 14px;
+  font-size: 1.1rem;
+  font-weight: 700;
   color: var(--text-primary);
 }
 
@@ -129,7 +129,7 @@
   border-radius: 8px;
   color: var(--status-info-text);
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
 }
 
 .settings-nav-btn:hover:not(:disabled) {
@@ -157,31 +157,36 @@
 
 .settings-grid {
   display: grid;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .settings-row {
   display: flex;
-  gap: 0.5rem;
+  gap: 6px;
 }
 
 .settings-card-actions {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 8px;
 }
 
 .setting-card {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
-  min-height: 64px;
-  padding: 0.75rem 1rem;
+  gap: 16px;
+  min-height: 54px;
+  padding: 10px 14px;
   border: 1px solid var(--border-muted);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--surface-subtle) 72%, var(--surface-raised));
+  transition: border-color 0.16s ease, background-color 0.16s ease;
+}
+
+.setting-card:hover {
+  border-color: var(--border-color);
   background: var(--surface-subtle);
-  transition: border-color 0.2s ease;
 }
 
 .setting-card.vertical-layout {
@@ -199,8 +204,8 @@
 }
 
 .setting-label {
-  margin: 0 0 0.2rem;
-  font-size: 0.9rem;
+  margin: 0 0 2px;
+  font-size: 0.86rem;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -208,7 +213,7 @@
 .setting-description {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   line-height: 1.4;
 }
 
@@ -220,14 +225,14 @@
 .settings-select,
 .settings-textarea {
   width: 100%;
-  min-height: 32px;
-  padding: 0.4rem 0.75rem;
+  min-height: 30px;
+  padding: 0.35rem 0.7rem;
   border: 1px solid var(--input-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--input-bg);
   color: var(--text-primary);
-  font-size: 0.9rem;
-  transition: all 0.15s ease;
+  font-size: 0.86rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
 }
 
 .number-input {
@@ -283,16 +288,16 @@
 /* Buttons */
 .action-button {
   min-width: 80px;
-  min-height: 32px;
-  padding: 0.4rem 1rem;
+  min-height: 30px;
+  padding: 0.35rem 0.85rem;
   border: 1px solid var(--input-border);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: var(--button-bg);
   color: var(--text-primary);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -334,13 +339,14 @@
 .startup-switch {
   display: inline-flex;
   align-items: center;
-  padding: 0.2rem 0.45rem 0.2rem 0.25rem;
+  min-height: 30px;
+  padding: 0.15rem 0.4rem 0.15rem 0.2rem;
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   background: var(--surface-raised);
   color: var(--text-primary);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
 }
 
 .startup-switch.enabled {
@@ -350,8 +356,8 @@
 
 .startup-switch-track {
   position: relative;
-  width: 2.8rem;
-  height: 1.55rem;
+  width: 2.45rem;
+  height: 1.35rem;
   border-radius: 999px;
   background: color-mix(in srgb, var(--text-muted) 42%, var(--surface-soft));
   transition: background-color 0.15s ease;
@@ -365,8 +371,8 @@
   position: absolute;
   top: 0.1rem;
   left: 0.1rem;
-  width: 1.35rem;
-  height: 1.35rem;
+  width: 1.15rem;
+  height: 1.15rem;
   border-radius: 50%;
   background: var(--surface-raised);
   box-shadow: var(--shadow-soft);
@@ -374,7 +380,7 @@
 }
 
 .startup-switch.enabled .startup-switch-thumb {
-  transform: translateX(1.25rem);
+  transform: translateX(1.1rem);
 }
 
 /* Select Shell Arrow */

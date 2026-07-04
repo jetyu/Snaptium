@@ -129,10 +129,7 @@ onBeforeUnmount(() => {
   padding-left: 10px;
   padding-right: 6px;
   border-bottom: 1px solid color-mix(in srgb, var(--panel-border) 90%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, white), color-mix(in srgb, var(--panel) 98%, transparent)),
-    radial-gradient(140% 180% at 16% -30%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 58%);
-  backdrop-filter: blur(20px) saturate(130%);
+  background: color-mix(in srgb, var(--panel) 96%, var(--surface-subtle));
   transition: padding 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
 }
 
@@ -141,9 +138,7 @@ onBeforeUnmount(() => {
   --window-control-hover-border: color-mix(in srgb, #ffffff 20%, transparent);
   --window-control-active-bg: color-mix(in srgb, #ffffff 16%, transparent);
   --window-control-active-border: color-mix(in srgb, #ffffff 24%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, black), color-mix(in srgb, var(--panel) 98%, transparent)),
-    radial-gradient(140% 180% at 16% -30%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 58%);
+  background: color-mix(in srgb, var(--panel) 96%, var(--surface-subtle));
 }
 
 .app-window-frame__drag-region {
@@ -158,9 +153,9 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   min-width: 0;
-  gap: 12px;
-  padding-right: 16px;
-  margin-right: 8px;
+  gap: 10px;
+  padding-right: 14px;
+  margin-right: 6px;
   border-right: 1px solid color-mix(in srgb, var(--panel-border) 40%, transparent);
 }
 
@@ -168,7 +163,6 @@ onBeforeUnmount(() => {
   width: 22px;
   height: 22px;
   object-fit: contain;
-  filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.12));
 }
 
 .app-window-frame__title {
@@ -177,11 +171,11 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text);
-  font-size: 0.94rem;
-  font-weight: 800;
-  letter-spacing: -0.025em;
+  font-size: 0.9rem;
+  font-weight: 720;
+  letter-spacing: 0;
   opacity: 0.95;
-  transition: all 0.25s ease;
+  transition: opacity 0.18s ease;
 }
 
 .app-window-frame__title:hover {
@@ -224,7 +218,7 @@ onBeforeUnmount(() => {
   height: 32px;
   margin-top: 4px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: color-mix(in srgb, var(--text-muted) 90%, var(--text));
   display: inline-flex;
@@ -245,14 +239,13 @@ onBeforeUnmount(() => {
   background: var(--window-control-hover-bg);
   border-color: var(--window-control-hover-border);
   color: var(--text);
-  box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 44%, transparent);
 }
 
 .app-window-frame__control-btn:active {
   background: var(--window-control-active-bg);
   border-color: var(--window-control-active-border);
   transform: scale(0.96);
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.16);
+  box-shadow: none;
 }
 
 .app-window-frame__control-btn:focus-visible {
@@ -277,25 +270,21 @@ onBeforeUnmount(() => {
 }
 
 [data-theme='dark'] .app-window-frame__control-btn:hover {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  box-shadow: none;
 }
 
 [data-theme='dark'] .app-window-frame__control-btn:active {
-  box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.34);
+  box-shadow: none;
 }
 
 .app-window-frame.is-maximized {
   padding-left: 6px;
   padding-right: 2px;
   border-bottom-color: color-mix(in srgb, var(--panel-border) 76%, transparent);
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 92%, white), color-mix(in srgb, var(--panel) 98%, transparent)),
-    radial-gradient(140% 180% at 16% -30%, color-mix(in srgb, var(--accent) 22%, transparent), transparent 58%);
+  background: color-mix(in srgb, var(--panel) 96%, var(--surface-subtle));
 }
 
 [data-theme='dark'] .app-window-frame.is-maximized {
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 96%, black), color-mix(in srgb, var(--panel) 98%, transparent)),
-    radial-gradient(140% 180% at 16% -30%, color-mix(in srgb, var(--accent) 26%, transparent), transparent 58%);
+  background: color-mix(in srgb, var(--panel) 96%, var(--surface-subtle));
 }
 </style>

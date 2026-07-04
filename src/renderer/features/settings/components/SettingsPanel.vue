@@ -122,7 +122,7 @@ const currentComponent = computed(() => {
   min-width: 0;
   min-height: 0;
   display: grid;
-  grid-template-columns: 240px minmax(0, 1fr);
+  grid-template-columns: 232px minmax(0, 1fr);
   overflow: hidden;
   color: var(--text-primary);
   background: var(--surface-raised);
@@ -132,21 +132,19 @@ const currentComponent = computed(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background:
-    linear-gradient(180deg, color-mix(in srgb, var(--panel) 94%, var(--surface-raised)), var(--panel)),
-    var(--surface-subtle);
+  background: var(--surface-subtle);
   border-right: 1px solid var(--border-color);
 }
 
 .settings-panel__sidebar-header {
-  padding: 18px 20px 16px;
+  padding: 16px 18px 14px;
   border-bottom: 1px solid var(--border-color);
 }
 
 .settings-panel__sidebar-header h2 {
   margin: 0;
   color: var(--text-primary);
-  font-size: 1.15rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -154,13 +152,13 @@ const currentComponent = computed(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 12px;
+  padding: 10px;
 }
 
 .settings-panel__nav ul {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -168,31 +166,31 @@ const currentComponent = computed(() => {
 
 .settings-panel__separator {
   height: 1px;
-  margin: 6px 4px;
+  margin: 6px 6px;
   background-color: var(--border-color);
 }
 
 .settings-panel__tab {
   width: 100%;
-  min-height: 40px;
-  padding: 8px 12px;
+  min-height: 36px;
+  padding: 7px 10px;
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 9px;
   border: 1px solid transparent;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
   font: inherit;
-  font-size: 0.9rem;
+  font-size: 0.86rem;
   text-align: left;
   transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
 }
 
 .settings-panel__tab-icon {
-  width: 22px;
-  height: 22px;
+  width: 20px;
+  height: 20px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -209,16 +207,16 @@ const currentComponent = computed(() => {
 
 .settings-panel__tab:hover {
   background-color: var(--surface-hover);
-  border-color: color-mix(in srgb, var(--accent) 14%, var(--border-color));
+  border-color: var(--border-muted);
   color: var(--text-primary);
 }
 
 .settings-panel__tab.is-active {
-  background: color-mix(in srgb, var(--accent) 10%, var(--surface-raised));
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--border-color));
+  background: var(--surface-selected);
+  border-color: color-mix(in srgb, var(--accent) 22%, var(--border-color));
   color: var(--accent-hover);
   font-weight: 650;
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--accent) 10%, transparent);
+  box-shadow: none;
 }
 
 .settings-panel__content {
@@ -229,10 +227,11 @@ const currentComponent = computed(() => {
 }
 
 .settings-panel__content-inner {
+  width: 100%;
   height: 100%;
   min-height: 0;
   overflow-y: auto;
-  padding: 30px;
+  padding: 24px 28px;
 }
 
 .settings-panel-slide-enter-active,
