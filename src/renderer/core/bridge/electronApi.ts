@@ -212,6 +212,8 @@ export interface UpdaterUpdateInfoPayload {
   releaseNotes?: string;
   files?: JsonObject[];
   silent?: boolean;
+  manualInstall?: boolean;
+  manualDownloadUrl?: string;
 }
 
 export interface UpdaterProgressPayload {

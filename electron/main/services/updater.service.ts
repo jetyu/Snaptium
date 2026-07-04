@@ -1,9 +1,10 @@
 import updaterPkg from 'electron-updater';
 const { autoUpdater } = updaterPkg;
 import { CancellationToken } from 'builder-util-runtime';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, shell } from 'electron';
 import { isMicrosoftStoreDistribution } from '../../shared/updater.constants.js';
 import {
+  buildMacArm64DmgDownloadUrl,
   buildUpdateFeedUrl,
   resolveUpdateTargetChannel,
   type UpdateChannel,
@@ -23,6 +24,7 @@ class UpdaterService {
   private downloadCancellationToken: CancellationToken | null;
   private isChecking: boolean;
   private currentCheckSilent: boolean;
+  private currentUpdateChannel: UpdateChannel;
 
   constructor() {
     this.mainWindow = null;
@@ -31,6 +33,7 @@ class UpdaterService {
     this.downloadCancellationToken = null;
     this.isChecking = false;
     this.currentCheckSilent = false;
+    this.currentUpdateChannel = 'stable';
 
     autoUpdater.autoDownload = false;
     autoUpdater.autoInstallOnAppQuit = true;
@@ -73,6 +76,7 @@ class UpdaterService {
 
     const targetChannel = resolveUpdateTargetChannel(channel);
     const feedUrl = buildUpdateFeedUrl(channel);
+    this.currentUpdateChannel = channel;
 
     autoUpdater.channel = targetChannel;
     autoUpdater.setFeedURL({
@@ -104,10 +108,12 @@ class UpdaterService {
         releaseDate: info.releaseDate,
         releaseNotes: info.releaseNotes,
         files: info.files,
+        manualInstall: this.isMacOsDirectDistribution(),
+        manualDownloadUrl: this.getMacOsManualDownloadUrl(),
       });
 
       trayService.showUpdateNotification(info.version);
-      if (silent && !this.downloadCancellationToken) {
+      if (silent && !this.downloadCancellationToken && !this.isMacOsDirectDistribution()) {
         void this.downloadUpdate();
       }
       this.currentCheckSilent = false;
@@ -219,6 +225,11 @@ class UpdaterService {
       return;
     }
 
+    if (this.isMacOsDirectDistribution()) {
+      await this.openMacOsManualDownload();
+      return;
+    }
+
     if (this.downloadCancellationToken) {
       logger.warn('Update download already in progress');
       return;
@@ -259,6 +270,11 @@ class UpdaterService {
   quitAndInstall(): void {
     if (this.isStoreManagedUpdates()) {
       logger.debug('Skipping update install for Microsoft Store distribution');
+      return;
+    }
+
+    if (this.isMacOsDirectDistribution()) {
+      void this.openMacOsManualDownload();
       return;
     }
 
@@ -333,6 +349,22 @@ class UpdaterService {
 
   private isDownloadCancelled(error: unknown): boolean {
     return getErrorMessage(error, '') === 'cancelled';
+  }
+
+  private isMacOsDirectDistribution(): boolean {
+    return process.platform === 'darwin' && !this.isStoreManagedUpdates();
+  }
+
+  private getMacOsManualDownloadUrl(): string | undefined {
+    return this.isMacOsDirectDistribution()
+      ? buildMacArm64DmgDownloadUrl(this.currentUpdateChannel)
+      : undefined;
+  }
+
+  private async openMacOsManualDownload(): Promise<void> {
+    const downloadUrl = buildMacArm64DmgDownloadUrl(this.currentUpdateChannel);
+    logger.debug('Opening macOS manual update download', { downloadUrl });
+    await shell.openExternal(downloadUrl);
   }
 }
 

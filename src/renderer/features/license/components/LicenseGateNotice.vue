@@ -1,12 +1,12 @@
 <template>
-  <div class="license-gate-notice">
+  <div class="license-gate-notice setting-card">
     <div class="notice-main">
       <div class="notice-icon-wrapper">
         <IconLock :size="18" />
       </div>
       <div class="notice-copy">
-        <h4 class="notice-title">{{ t(titleKey) }}</h4>
-        <p class="notice-description">{{ t(descriptionKey) }}</p>
+        <h4 class="notice-title" :title="t(titleKey)">{{ t(titleKey) }}</h4>
+        <p class="notice-description" :title="t(descriptionKey)">{{ t(descriptionKey) }}</p>
       </div>
     </div>
     
@@ -41,15 +41,14 @@ const { openLicenseDialog } = useLicenseDialog();
 
 <style scoped>
 .license-gate-notice {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 14px 16px;
+  height: var(--settings-card-min-height, 76px);
   border: 1px solid color-mix(in srgb, var(--status-warning-text) 25%, var(--panel-border));
-  border-radius: 12px;
   background: linear-gradient(135deg, color-mix(in srgb, var(--status-warning-text) 6%, var(--panel)), var(--panel));
-  box-shadow: var(--shadow-soft);
+}
+
+.license-gate-notice:hover {
+  border-color: color-mix(in srgb, var(--status-warning-text) 34%, var(--panel-border));
+  background: linear-gradient(135deg, color-mix(in srgb, var(--status-warning-text) 7%, var(--panel)), var(--panel));
 }
 
 .notice-main {
@@ -83,7 +82,7 @@ const { openLicenseDialog } = useLicenseDialog();
   margin: 0;
   font-size: 0.88rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -92,8 +91,11 @@ const { openLicenseDialog } = useLicenseDialog();
 .notice-description {
   margin: 0;
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .notice-action-btn {
@@ -101,8 +103,9 @@ const { openLicenseDialog } = useLicenseDialog();
   flex-shrink: 0;
 }
 
-@media (max-width: 960px) {
+@media (max-width: 560px) {
   .license-gate-notice {
+    height: auto;
     flex-direction: column;
     align-items: stretch;
     gap: 12px;

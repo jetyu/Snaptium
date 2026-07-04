@@ -1439,11 +1439,10 @@ onBeforeUnmount(() => {
 
 <style scoped>
 .search-view {
-  --search-chat-max-width: 960px;
-  --search-chat-surface: color-mix(in srgb, var(--panel) 94%, var(--bg));
-  --search-chat-border: color-mix(in srgb, var(--panel-border) 84%, var(--panel));
+  --search-chat-surface: var(--panel);
+  --search-chat-border: var(--border-muted);
   --search-chat-accent-border: color-mix(in srgb, var(--accent) 18%, var(--panel-border));
-  --search-chat-accent-fill: color-mix(in srgb, var(--accent) 5%, var(--panel));
+  --search-chat-accent-fill: color-mix(in srgb, var(--accent) 6%, var(--panel));
   flex: 1;
   min-width: 0;
   height: 100%;
@@ -1451,7 +1450,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--bg);
+  background: var(--surface-base);
 }
 
 .search-view__header {
@@ -1460,7 +1459,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 14px 20px;
+  padding: 12px 18px;
   border-bottom: 1px solid var(--panel-border);
   background: var(--panel);
 }
@@ -1478,7 +1477,7 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--accent);
   background: color-mix(in srgb, var(--accent) 12%, transparent);
 }
@@ -1486,16 +1485,16 @@ onBeforeUnmount(() => {
 .search-view__title {
   margin: 0;
   color: var(--text);
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 700;
 }
 
 
 .search-view__query {
   flex: 0 0 auto;
-  padding: 12px 20px 14px;
+  padding: 12px 18px 14px;
   border-top: 1px solid var(--panel-border);
-  background: var(--bg);
+  background: var(--surface-base);
 }
 
 .search-view__input-shell {
@@ -1505,8 +1504,8 @@ onBeforeUnmount(() => {
   flex-direction: column;
   align-items: stretch;
   border: 1px solid var(--search-chat-border);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--panel) 96%, var(--bg));
+  border-radius: var(--radius-md);
+  background: var(--panel);
   transition: border-color 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
@@ -1577,8 +1576,8 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 6px 8px;
-  background: color-mix(in srgb, var(--panel) 92%, var(--bg));
+  padding: 5px 8px;
+  background: var(--surface-subtle);
   border-top: 1px solid color-mix(in srgb, var(--search-chat-border) 60%, transparent);
   border-bottom-left-radius: 7px;
   border-bottom-right-radius: 7px;
@@ -1609,7 +1608,7 @@ onBeforeUnmount(() => {
   gap: 6px;
   padding: 0 10px;
   border: 1px solid var(--search-chat-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--panel);
   color: var(--text-muted);
   font-size: 0.76rem;
@@ -1637,7 +1636,7 @@ onBeforeUnmount(() => {
   width: 228px;
   padding: 6px;
   border: 1px solid var(--search-chat-border);
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: var(--panel);
   box-shadow: 0 10px 25px color-mix(in srgb, #000 12%, transparent);
 }
@@ -1650,7 +1649,7 @@ onBeforeUnmount(() => {
   gap: 2px;
   padding: 8px 10px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text);
   text-align: left;
@@ -1680,7 +1679,7 @@ onBeforeUnmount(() => {
   height: 28px;
   padding: 0 10px;
   border: 1px solid var(--search-chat-border);
-  border-radius: 6px;
+  border-radius: var(--radius-sm);
   background: var(--panel);
   color: var(--text-muted);
   font-size: 0.76rem;
@@ -1728,7 +1727,8 @@ onBeforeUnmount(() => {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: color-mix(in srgb, var(--panel) 76%, var(--bg));
+  background: var(--surface-subtle);
+  border-right: 1px solid var(--panel-border);
 }
 
 .search-view__pane-divider {
@@ -1776,7 +1776,7 @@ onBeforeUnmount(() => {
   justify-content: space-between;
   gap: 10px;
   min-height: 44px;
-  padding: 0 20px;
+  padding: 0 18px;
   border-bottom: 1px solid var(--panel-border);
 }
 
@@ -1787,7 +1787,7 @@ onBeforeUnmount(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   color: var(--text);
-  font-size: 0.84rem;
+  font-size: 0.82rem;
   font-weight: 700;
 }
 
@@ -1804,14 +1804,14 @@ onBeforeUnmount(() => {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 18px 20px;
+  padding: 18px;
 }
 
 .search-view__chat-inner {
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
 .search-view__chat-turn {
@@ -1823,7 +1823,7 @@ onBeforeUnmount(() => {
 
 .search-view__chat-turn.is-active .search-view__assistant-card {
   border-color: color-mix(in srgb, var(--accent) 24%, var(--search-chat-border));
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 6%, transparent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent) 8%, transparent);
 }
 
 .search-view__message {
@@ -1850,9 +1850,9 @@ onBeforeUnmount(() => {
 
 .search-view__user-bubble {
   max-width: 100%;
-  padding: 9px 12px;
+  padding: 8px 11px;
   border: 1px solid color-mix(in srgb, var(--accent) 14%, var(--panel-border));
-  border-radius: 12px 12px 4px 12px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--accent) 5%, var(--panel));
   color: var(--text);
   font-size: 0.9rem;
@@ -1875,9 +1875,9 @@ onBeforeUnmount(() => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   color: var(--accent);
-  background: color-mix(in srgb, var(--panel-hover) 78%, var(--panel));
+  background: var(--surface-subtle);
   border: 1px solid var(--search-chat-border);
 }
 
@@ -1887,9 +1887,9 @@ onBeforeUnmount(() => {
   max-width: 100%;
   padding: 12px 14px;
   border: 1px solid var(--search-chat-border);
-  border-radius: 12px 12px 12px 4px;
+  border-radius: var(--radius-md);
   background: var(--search-chat-surface);
-  box-shadow: 0 1px 0 color-mix(in srgb, var(--panel-border) 22%, transparent);
+  box-shadow: none;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -1916,34 +1916,24 @@ onBeforeUnmount(() => {
 .search-view__history-item {
   position: relative;
   width: 100%;
-  min-height: 82px;
+  min-height: 72px;
   display: block;
   padding: 0;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   background: transparent;
   color: var(--text);
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .search-view__history-item+.search-view__history-item {
-  margin-top: 8px;
-}
-
-.search-view__history-item+.search-view__history-item::before {
-  content: '';
-  position: absolute;
-  top: -5px;
-  left: 10px;
-  right: 10px;
-  height: 1px;
-  background: var(--panel-border);
+  margin-top: 4px;
 }
 
 .search-view__history-item:hover,
 .search-view__history-item.is-active {
-  border-color: color-mix(in srgb, var(--accent) 24%, var(--panel-border));
-  background: color-mix(in srgb, var(--accent) 7%, transparent);
+  border-color: color-mix(in srgb, var(--accent) 18%, var(--panel-border));
+  background: color-mix(in srgb, var(--accent) 6%, var(--panel));
 }
 
 
@@ -1958,8 +1948,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  gap: 5px;
-  padding: 9px 44px 9px 10px;
+  gap: 4px;
+  padding: 8px 40px 8px 10px;
   border: none;
   background: transparent;
   color: inherit;
@@ -1978,7 +1968,7 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: center;
   border: none;
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
@@ -2088,7 +2078,7 @@ onBeforeUnmount(() => {
 .search-view__fallback-notice {
   margin-bottom: 10px;
   padding: 10px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-md);
   border: 1px solid var(--search-chat-accent-border);
   border-left-width: 3px;
   background: var(--search-chat-surface);
@@ -2208,7 +2198,7 @@ onBeforeUnmount(() => {
   gap: 12px;
   padding: 10px;
   border: 1px solid var(--search-chat-accent-border);
-  border-radius: 10px;
+  border-radius: var(--radius-md);
   background: color-mix(in srgb, var(--accent) 5%, var(--search-chat-surface));
 }
 
@@ -2285,12 +2275,12 @@ onBeforeUnmount(() => {
 .search-view__source-card {
   flex: 0 1 auto;
   max-width: min(300px, 100%);
-  min-height: 34px;
+  min-height: 32px;
   display: inline-flex;
   align-items: center;
   padding: 0 10px;
   border: 1px solid var(--search-chat-border);
-  border-radius: 7px;
+  border-radius: var(--radius-sm);
   background: var(--search-chat-surface);
   color: var(--text);
   cursor: pointer;

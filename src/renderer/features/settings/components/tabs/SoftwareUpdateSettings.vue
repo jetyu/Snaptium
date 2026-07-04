@@ -71,7 +71,7 @@
         <div v-if="showAvailableUpdateActions || isDownloadingState || showInstallActions || showRetryAction"
           class="update-actions" :class="{ 'is-downloading': isDownloadingState }">
           <button v-if="showAvailableUpdateActions" type="button" class="action-button" @click="handleDownloadUpdate">
-            {{ t('updater.download') }}
+            {{ manualDownloadButtonLabel }}
           </button>
           <button v-if="showAvailableUpdateActions" type="button" class="action-button secondary"
             @click="handleDismissAvailableUpdate">
@@ -104,7 +104,7 @@ import { normalizeUpdateChannel, type UpdateChannel } from '@shared/updater.cons
 import { useUpdaterStore } from '@renderer/features/updater';
 import { useSettingsStore } from '../../store/settings.store';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const settingsStore = useSettingsStore();
 const updaterStore = useUpdaterStore();
 const {
@@ -119,6 +119,7 @@ const {
   updatePanelState,
   showAvailableUpdateActions,
   showInstallActions,
+  isManualInstallUpdate,
 } = storeToRefs(updaterStore);
 
 const channelOptions = computed(() => [
@@ -157,6 +158,11 @@ function formatFileSize(sizeInBytes: number): string {
 const downloadProgressSummary = computed(() =>
   `${formatFileSize(downloadProgress.value.transferred)} / ${formatFileSize(downloadProgress.value.total)} ${progressPercent.value}%`
 );
+const manualDownloadButtonLabel = computed(() =>
+  isManualInstallUpdate.value && te('updater.downloadMacDmg')
+    ? t('updater.downloadMacDmg')
+    : t('updater.download')
+);
 
 const updateStateTitle = computed(() => {
   switch (updatePanelState.value) {
@@ -182,6 +188,10 @@ const updateStateMessage = computed(() => {
     case 'checking':
       return t('updater.checkingMessage');
     case 'available':
+      if (isManualInstallUpdate.value && updateInfo.value && te('updater.macManualInstallMessage')) {
+        return t('updater.macManualInstallMessage', { version: updateInfo.value.version });
+      }
+
       return updateInfo.value
         ? t('updater.newVersionMessage', { version: updateInfo.value.version })
         : t('updater.newVersionAvailable');

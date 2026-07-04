@@ -19,45 +19,45 @@
             <span class="status-dot"></span>
             <span>{{ t(store.getStatusTextKey(store.displayStatus)) }}</span>
           </div>
-
-          <div class="summary-actions">
-            <button
-              type="button"
-              class="summary-action-btn"
-              :disabled="isRefreshing || !store.canManage"
-              :title="t('license.management.refresh')"
-              :aria-label="t('license.management.refresh')"
-              @click="handleRefresh"
-            >
-              <IconRefresh :size="15" :class="{ 'animate-spin': isRefreshing }" />
-              <span>{{ t('license.management.refresh') }}</span>
-            </button>
-
-            <button
-              type="button"
-              class="summary-action-btn"
-              :disabled="isRefreshing || !store.canManage"
-              :title="t('license.management.validate')"
-              :aria-label="t('license.management.validate')"
-              @click="handleValidate"
-            >
-              <IconDeviceDesktopCheck :size="15" />
-              <span>{{ t('license.management.validate') }}</span>
-            </button>
-
-            <button
-              type="button"
-              class="summary-action-btn danger-btn"
-              :disabled="isClearing || !store.canManage"
-              :title="t('license.management.clear')"
-              :aria-label="t('license.management.clear')"
-              @click="handleClear"
-            >
-              <IconTrash :size="15" />
-              <span>{{ t('license.management.clear') }}</span>
-            </button>
-          </div>
         </div>
+      </div>
+
+      <div class="summary-actions">
+        <button
+          type="button"
+          class="summary-action-btn"
+          :disabled="isRefreshing || !store.canManage"
+          :title="t('license.management.refresh')"
+          :aria-label="t('license.management.refresh')"
+          @click="handleRefresh"
+        >
+          <IconRefresh :size="15" :class="{ 'animate-spin': isRefreshing }" />
+          <span>{{ t('license.management.refresh') }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="summary-action-btn"
+          :disabled="isRefreshing || !store.canManage"
+          :title="t('license.management.validate')"
+          :aria-label="t('license.management.validate')"
+          @click="handleValidate"
+        >
+          <IconDeviceDesktopCheck :size="15" />
+          <span>{{ t('license.management.validate') }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="summary-action-btn danger-btn"
+          :disabled="isClearing || !store.canManage"
+          :title="t('license.management.clear')"
+          :aria-label="t('license.management.clear')"
+          @click="handleClear"
+        >
+          <IconTrash :size="15" />
+          <span>{{ t('license.management.clear') }}</span>
+        </button>
       </div>
 
       <span v-if="localizedErrorMessage" class="summary-error-msg">
@@ -210,20 +210,68 @@ async function handleClear(): Promise<void> {
 .management-view {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .license-summary-card {
   position: relative;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface-raised);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 86%, transparent);
+  border-radius: 14px;
   padding: 18px 20px;
-  color: var(--text);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   gap: 16px;
   box-shadow: var(--shadow-soft);
+}
+
+.license-summary-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--border-muted);
+}
+
+.license-summary-card.plan-free {
+  border-color: color-mix(in srgb, var(--status-neutral-border) 62%, var(--panel-border));
+}
+
+.license-summary-card.plan-pro {
+  border-color: color-mix(in srgb, var(--license-plan-pro-border) 76%, var(--panel-border));
+}
+
+.license-summary-card.plan-trial {
+  border-color: color-mix(in srgb, var(--license-plan-pro-border) 76%, var(--panel-border));
+}
+
+.license-summary-card.plan-ultimate {
+  border-color: color-mix(in srgb, var(--status-warning-border) 76%, var(--panel-border));
+}
+
+.license-summary-card.plan-insider,
+.license-summary-card.plan-enterprise {
+  border-color: color-mix(in srgb, var(--status-success-border) 70%, var(--panel-border));
+}
+
+.license-summary-card.plan-free::before {
+  background: var(--status-neutral-text);
+}
+
+.license-summary-card.plan-pro::before,
+.license-summary-card.plan-trial::before {
+  background: var(--license-plan-pro-fill);
+}
+
+.license-summary-card.plan-ultimate::before {
+  background: var(--status-warning-text);
+}
+
+.license-summary-card.plan-insider::before,
+.license-summary-card.plan-enterprise::before {
+  background: var(--status-success-text);
 }
 
 .license-summary-card.expired,
@@ -231,20 +279,9 @@ async function handleClear(): Promise<void> {
   border-color: color-mix(in srgb, var(--danger) 22%, var(--panel-border));
 }
 
-.license-summary-card.plan-free {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--surface-soft) 72%, white), var(--panel));
-}
-
-.license-summary-card.plan-pro {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--license-plan-pro-bg) 80%, var(--surface-raised)), var(--panel));
-}
-
-.license-summary-card.plan-trial {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--license-plan-pro-bg) 80%, var(--surface-raised)), var(--panel));
-}
-
-.license-summary-card.plan-ultimate {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--status-warning-bg) 88%, var(--surface-raised)), var(--panel));
+.license-summary-card.expired::before,
+.license-summary-card.invalid::before {
+  background: var(--danger);
 }
 
 .summary-top {
@@ -258,59 +295,59 @@ async function handleClear(): Promise<void> {
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1 1 auto;
   min-width: 0;
 }
 
 .plan-icon {
-  width: 50px;
-  height: 50px;
+  width: 48px;
+  height: 48px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex: 0 0 auto;
-  border-radius: 14px;
-  border: 1px solid color-mix(in srgb, var(--panel-border) 88%, white);
-  background:
-    linear-gradient(180deg, var(--surface-overlay), var(--surface-scrim));
-  color: var(--text-muted);
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, transparent);
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
   box-shadow:
-    inset 0 1px 0 color-mix(in srgb, white 78%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 54%, transparent),
     var(--shadow-soft);
 }
 
 .plan-icon.free {
   color: var(--status-neutral-text);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--status-neutral-bg) 60%, var(--surface-raised)), var(--surface-soft));
+  background: var(--status-neutral-bg);
   border-color: var(--status-neutral-border);
 }
 
 .plan-icon.insider {
   color: var(--status-success-text);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--status-success-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  background: var(--status-success-bg);
   border-color: var(--status-success-border);
 }
 
 .plan-icon.pro {
   color: var(--license-plan-pro-text);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--license-plan-pro-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  background: var(--license-plan-pro-bg);
   border-color: var(--license-plan-pro-border);
 }
 
 .plan-icon.trial {
   color: var(--license-plan-pro-text);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--license-plan-pro-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  background: var(--license-plan-pro-bg);
   border-color: var(--license-plan-pro-border);
 }
 
 .plan-icon.ultimate {
   color: var(--status-warning-text);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--status-warning-bg) 72%, var(--surface-raised)), var(--surface-soft));
+  background: var(--status-warning-bg);
   border-color: var(--status-warning-border);
 }
 
 .plan-icon.enterprise {
   color: var(--status-success-text);
-  background: linear-gradient(180deg, color-mix(in srgb, var(--status-success-bg) 70%, var(--surface-raised)), var(--surface-soft));
+  background: var(--status-success-bg);
   border-color: var(--status-success-border);
 }
 
@@ -323,17 +360,18 @@ async function handleClear(): Promise<void> {
 
 .plan-kicker {
   font-size: 0.78rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-weight: 600;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .plan-title {
   margin: 0;
   font-size: 1.34rem;
   font-weight: 720;
-  color: var(--text);
-  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  letter-spacing: 0;
 }
 
 .summary-plan.plan-free .plan-kicker,
@@ -365,6 +403,7 @@ async function handleClear(): Promise<void> {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  flex: 0 0 auto;
   gap: 10px;
 }
 
@@ -372,13 +411,13 @@ async function handleClear(): Promise<void> {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: var(--panel-hover);
-  border: 1px solid var(--panel-border);
+  background: var(--surface-subtle);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, transparent);
   border-radius: 999px;
   padding: 4px 12px;
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--text);
+  color: var(--text-secondary);
 }
 
 .summary-status.plan-free {
@@ -445,18 +484,21 @@ async function handleClear(): Promise<void> {
 
 .summary-actions {
   display: flex;
+  align-self: stretch;
   justify-content: flex-end;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-muted);
 }
 
 .summary-action-btn {
-  min-height: 32px;
+  min-height: 34px;
   padding: 0 12px;
-  border: 1px solid var(--panel-border);
+  border: 1px solid var(--input-border);
   border-radius: 8px;
-  background: var(--panel-hover);
-  color: var(--text-muted);
+  background: var(--button-bg);
+  color: var(--text-secondary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -469,9 +511,9 @@ async function handleClear(): Promise<void> {
 }
 
 .summary-action-btn:hover:not(:disabled) {
-  border-color: var(--border-strong);
-  background: var(--panel);
-  color: var(--text);
+  border-color: color-mix(in srgb, var(--accent) 34%, var(--input-border));
+  background: var(--button-bg-hover);
+  color: var(--accent-hover);
 }
 
 .summary-action-btn:disabled {
@@ -494,7 +536,7 @@ async function handleClear(): Promise<void> {
   font-size: 0.8rem;
   color: var(--danger);
   font-weight: 500;
-  background: color-mix(in srgb, var(--danger) 8%, var(--panel));
+  background: color-mix(in srgb, var(--danger) 8%, var(--surface-raised));
   border: 1px solid color-mix(in srgb, var(--danger) 15%, var(--panel-border));
   padding: 4px 10px;
   border-radius: 6px;
@@ -508,18 +550,26 @@ async function handleClear(): Promise<void> {
 }
 
 .metric-card {
-  border: 1px solid var(--panel-border);
-  background: var(--panel);
-  border-radius: 12px;
+  min-height: 94px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 86%, transparent);
+  background: var(--surface-raised);
+  border-radius: 10px;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  transition: border-color 0.15s ease;
+  justify-content: space-between;
+  box-shadow: var(--shadow-soft);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .metric-card:hover {
   border-color: color-mix(in srgb, var(--border-strong) 72%, var(--panel-border));
+  background: color-mix(in srgb, var(--surface-soft) 72%, var(--surface-raised));
+  box-shadow: var(--shadow-md);
 }
 
 .metric-card.plan-free:hover {
@@ -552,9 +602,10 @@ async function handleClear(): Promise<void> {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 80%, transparent);
 }
 
 .metric-icon.time {
@@ -594,7 +645,7 @@ async function handleClear(): Promise<void> {
 
 .metric-label {
   font-size: 0.8rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-weight: 600;
 }
 
@@ -607,11 +658,12 @@ async function handleClear(): Promise<void> {
 .metric-value {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
 }
 
 .metric-divider {
-  color: var(--text-muted);
+  color: var(--text-tertiary);
   font-weight: 400;
   font-size: 0.95rem;
   margin: 0 2px;
@@ -621,8 +673,8 @@ async function handleClear(): Promise<void> {
 .device-progress {
   width: 100%;
   height: 6px;
-  background: var(--panel-hover);
-  border: 1px solid var(--panel-border);
+  background: var(--surface-subtle);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 82%, transparent);
   border-radius: 999px;
   overflow: hidden;
 }
@@ -662,20 +714,19 @@ async function handleClear(): Promise<void> {
 .devices-section {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .devices-section-header {
-  border-bottom: 1px solid var(--panel-border);
+  border-bottom: 1px solid var(--border-muted);
   padding-bottom: 8px;
-  margin-bottom: 4px;
 }
 
 .devices-section-header h3 {
   margin: 0;
   font-size: 0.94rem;
   font-weight: 700;
-  color: var(--text);
+  color: var(--text-primary);
 }
 
 /* Animations */
@@ -709,6 +760,8 @@ async function handleClear(): Promise<void> {
 
   .summary-actions {
     width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 
   .metrics-grid {
