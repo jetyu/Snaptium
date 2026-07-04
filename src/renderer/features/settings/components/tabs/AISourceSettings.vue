@@ -23,7 +23,7 @@
               </div>
               <div class="settings-card-actions">
                 <span v-if="isLockedSource(source)" class="source-lock-badge" :title="t('text.officialInnerAiSource')">
-                  <IconSettingsAi :size="13" />
+                  <IconSparkles  :size="13" />
                   {{ t('label.officialAiSource') }}
                 </span>
                 <template v-else>
@@ -182,7 +182,7 @@ import { systemDialog } from '../../services/system-dialog.service';
 import { createLogger } from '../../../logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { isOfficialAiSourceId } from '@shared/official-ai.constants';
-import { IconPlus, IconBulb, IconTrash, IconPencil, IconSettingsAi, IconTextScanAi } from '@tabler/icons-vue';
+import { IconPlus, IconBulb, IconTrash, IconPencil, IconSparkles , IconTextScanAi } from '@tabler/icons-vue';
 import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 import siliconFlowLogoUrl from '@assets/images/siliconflow.png';
 import PasswordInput from '../PasswordInput.vue';
