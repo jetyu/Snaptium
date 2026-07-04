@@ -106,25 +106,32 @@ watch(
 }
 
 .license-modal {
-  width: min(680px, calc(100vw - 32px));
+  width: min(760px, calc(100vw - 32px));
   max-height: calc(100vh - 40px);
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 16px;
+  background: var(--surface-subtle);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 86%, transparent);
+  border-radius: 18px;
   box-shadow:
     var(--shadow-lg),
-    inset 0 1px 0 color-mix(in srgb, white 10%, transparent);
+    inset 0 1px 0 color-mix(in srgb, #fff 44%, transparent);
   position: relative;
 }
 
 .license-modal-header {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  padding: 14px 14px 0 14px;
+  min-height: 42px;
+  padding: 10px 10px 0;
   z-index: 15;
+  cursor: move;
+}
+
+.license-close-btn {
+  color: var(--text-tertiary);
 }
 
 .license-close-btn :deep(svg) {
@@ -132,7 +139,7 @@ watch(
 }
 
 .license-content {
-  padding: 8px 24px 24px 24px;
+  padding: 0 26px 26px;
   overflow-y: auto;
   flex: 1;
 }
@@ -145,7 +152,7 @@ watch(
   }
 
   .license-content {
-    padding: 8px 16px 16px 16px;
+    padding: 0 16px 16px;
   }
 }
 

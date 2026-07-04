@@ -2,7 +2,7 @@
   <div class="activation-view">
     <div class="activation-header">
       <div class="header-icon-container">
-        <IconKey size="28" class="header-icon" />
+        <IconShieldCheck size="28" class="header-icon" />
       </div>
       <div class="title-group">
         <h2 class="title">{{ t('license.activation.title') }}</h2>
@@ -74,6 +74,7 @@ import {
   IconKey,
   IconLink,
   IconNotebook,
+  IconShieldCheck,
   IconSparkles2,
 } from '@tabler/icons-vue';
 import {
@@ -89,7 +90,7 @@ interface ComparisonPlan {
 }
 
 const { t } = useI18n();
-const LICENSE_PURCHASE_URL = 'https://snaptium.com';
+const LICENSE_PURCHASE_URL = 'https://snaptium.com/#pricing';
 const comparisonPlans: readonly ComparisonPlan[] = [
   {
     id: 'free',
@@ -175,30 +176,32 @@ async function handleActivate(): Promise<void> {
 .activation-view {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .activation-header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
-  padding: 16px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--surface-raised) 94%, var(--surface-soft)), var(--surface-raised));
+  border: 1px solid color-mix(in srgb, var(--panel-border) 86%, transparent);
+  border-radius: 14px;
+  padding: 18px;
+  box-shadow: var(--shadow-soft);
 }
 
 .header-icon-container {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 46px;
+  height: 46px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: var(--panel-hover);
-  border: 1px solid var(--panel-border);
+  background: var(--status-info-bg);
+  border: 1px solid var(--status-info-border);
   border-radius: 12px;
-  color: var(--text-muted);
+  color: var(--status-info-text);
   flex-shrink: 0;
 }
 
@@ -216,16 +219,16 @@ async function handleActivate(): Promise<void> {
 
 .title {
   margin: 0;
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--text);
+  font-size: 1.22rem;
+  font-weight: 720;
+  color: var(--text-primary);
 }
 
 .description {
   margin: 0;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-size: 0.88rem;
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
 .header-purchase {
@@ -240,34 +243,39 @@ async function handleActivate(): Promise<void> {
   min-width: 80px;
   min-height: 32px;
   padding: 0.4rem 1rem;
-  border: 1px solid var(--status-warning-border);
+  border: 1px solid color-mix(in srgb, var(--accent-solid) 88%, var(--border-strong));
   border-radius: 8px;
-  background: var(--status-warning-bg);
-  color: var(--status-warning-text);
+  background: var(--accent-solid);
+  color: var(--accent-solid-text);
   font-size: 0.88rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    transform 0.15s ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   text-decoration: none;
+  box-shadow: var(--shadow-soft);
 }
 
 .header-purchase-hint {
   margin: 0;
   max-width: 210px;
-  color: var(--text-muted);
+  color: var(--text-tertiary);
   font-size: 0.78rem;
   line-height: 1.35;
   text-align: right;
 }
 
 .header-purchase-link:hover {
-  background: color-mix(in srgb, var(--status-warning-bg) 88%, var(--surface-raised));
-  border-color: color-mix(in srgb, var(--status-warning-border) 100%, var(--border-strong));
-  color: var(--status-warning-text);
+  background: color-mix(in srgb, var(--accent-solid) 88%, var(--accent-hover));
+  border-color: color-mix(in srgb, var(--accent-solid) 78%, var(--accent-hover));
+  color: var(--accent-solid-text);
+  transform: translateY(-1px);
 }
 
 .comparison-section {
@@ -279,7 +287,7 @@ async function handleActivate(): Promise<void> {
 .comparison-section-title {
   margin: 0;
   font-weight: 650;
-  color: var(--text);
+  color: var(--text-secondary);
   font-size: 0.88rem;
   padding-left: 2px;
 }
@@ -287,32 +295,55 @@ async function handleActivate(): Promise<void> {
 .comparison-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
 }
 
 .comparison-card {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   gap: 10px;
-  padding: 12px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel-hover);
-  border-radius: 8px;
-  transition: border-color 0.15s ease, background-color 0.15s ease;
+  min-height: 188px;
+  padding: 14px;
+  border: 1px solid color-mix(in srgb, var(--panel-border) 86%, transparent);
+  background: var(--surface-raised);
+  border-radius: 10px;
+  box-shadow: var(--shadow-soft);
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.comparison-card::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 3px;
+  background: var(--border-muted);
 }
 
 .comparison-card.plan-pro {
-  border-color: var(--license-plan-pro-border);
-  background: var(--license-plan-pro-bg);
+  border-color: color-mix(in srgb, var(--license-plan-pro-border) 76%, var(--panel-border));
 }
 
 .comparison-card.plan-ultimate {
-  border-color: var(--status-warning-border);
-  background: var(--status-warning-bg);
+  border-color: color-mix(in srgb, var(--status-warning-border) 76%, var(--panel-border));
+}
+
+.comparison-card.plan-pro::before {
+  background: var(--license-plan-pro-fill);
+}
+
+.comparison-card.plan-ultimate::before {
+  background: var(--status-warning-text);
 }
 
 .comparison-card:hover {
   border-color: color-mix(in srgb, var(--border-strong) 72%, var(--panel-border));
+  background: color-mix(in srgb, var(--surface-soft) 72%, var(--surface-raised));
+  box-shadow: var(--shadow-md);
 }
 
 .comparison-heading {
@@ -322,15 +353,16 @@ async function handleActivate(): Promise<void> {
 }
 
 .comparison-icon-wrapper {
-  width: 30px;
-  height: 30px;
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: var(--panel);
-  color: var(--text-muted);
+  background: var(--surface-subtle);
+  color: var(--text-secondary);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 80%, transparent);
 }
 
 .plan-free .comparison-icon-wrapper {
@@ -351,7 +383,7 @@ async function handleActivate(): Promise<void> {
 .comparison-title {
   margin: 0;
   min-width: 0;
-  color: var(--text);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -370,7 +402,7 @@ async function handleActivate(): Promise<void> {
   align-items: flex-start;
   gap: 6px;
   min-width: 0;
-  color: var(--text);
+  color: var(--text-secondary);
   font-size: 0.78rem;
   font-weight: 500;
   line-height: 1.35;
@@ -393,11 +425,12 @@ async function handleActivate(): Promise<void> {
 .activation-form {
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 12px;
+  gap: 12px;
+  background: var(--surface-raised);
+  border: 1px solid color-mix(in srgb, var(--panel-border) 86%, transparent);
+  border-radius: 14px;
   padding: 16px;
+  box-shadow: var(--shadow-soft);
 }
 
 .field {
@@ -408,10 +441,10 @@ async function handleActivate(): Promise<void> {
 
 .field-label {
   font-size: 0.82rem;
-  color: var(--text-muted);
+  color: var(--text-secondary);
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0;
 }
 
 .input-container {
@@ -423,34 +456,37 @@ async function handleActivate(): Promise<void> {
 .input-key-icon {
   position: absolute;
   left: 12px;
-  color: var(--text-muted);
+  color: var(--text-tertiary);
   pointer-events: none;
   transition: color 0.2s ease;
 }
 
 .license-key-input {
   width: 100%;
-  height: 38px;
+  height: 40px;
   padding: 0 12px 0 36px;
   border-radius: 8px;
-  border: 1px solid var(--panel-border);
-  background: var(--panel);
-  color: var(--text);
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text-primary);
   font-size: 0.9rem;
   font-family: ui-monospace, SFMono-Regular, SF Mono, Menlo, Consolas, Liberation Mono, monospace;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
   outline: none;
-  transition: all 0.2s ease;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
 }
 
 .input-container:focus-within .input-key-icon {
-  color: var(--license-plan-pro-text);
+  color: var(--accent);
 }
 
 .license-key-input:focus {
-  border-color: var(--license-plan-pro-border);
-  box-shadow: 0 0 0 3px var(--license-plan-pro-ring);
-  background: var(--panel);
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  background: var(--input-bg);
 }
 
 .action-row {
@@ -460,6 +496,16 @@ async function handleActivate(): Promise<void> {
 
 .activate-btn {
   width: 100%;
+  min-height: 40px;
+  background: var(--accent-solid);
+  border-color: color-mix(in srgb, var(--accent-solid) 88%, var(--border-strong));
+  color: var(--accent-solid-text);
+}
+
+.activate-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--accent-solid) 88%, var(--accent-hover));
+  border-color: color-mix(in srgb, var(--accent-solid) 78%, var(--accent-hover));
+  color: var(--accent-solid-text);
 }
 
 .error-banner {
@@ -474,6 +520,24 @@ async function handleActivate(): Promise<void> {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+@media (min-width: 641px) {
+  .activation-form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 12px;
+  }
+
+  .action-row {
+    align-items: flex-end;
+  }
+
+  .activate-btn {
+    width: auto;
+    min-width: 128px;
+  }
 }
 
 @media (max-width: 640px) {
