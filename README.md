@@ -35,6 +35,7 @@ Focused on deep writing, knowledge management, and a local-first experience, sup
 [![License](https://img.shields.io/github/license/jetyu/Snaptium?style=flat)](https://github.com/jetyu/Snaptium/blob/main/LICENSE)
  
 </div>
+
 # ✨ Project Positioning
 
 Snaptium is not just another Markdown note-taking tool.  
@@ -325,6 +326,8 @@ Thanks to the following excellent open-source projects:
 - Apache Arrow
 
 And to all developers and users who have submitted Issues, PRs, and suggestions for Snaptium.
+
+Special thanks to [SiliconFlow](https://siliconFlow.com) for providing AI model service support for Snaptium.
 
 ---
 
