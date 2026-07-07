@@ -331,6 +331,8 @@ LICENSE
 
 以及所有为 Snaptium 提交 Issue、PR 与建议的开发者与用户。
 
+特别感谢 [硅基流动 SiliconFlow](https://siliconFlow.com) 对 Snaptium 的支持，为产品提供 AI 模型服务能力。
+
 ---
 
 # ⭐ Star History
