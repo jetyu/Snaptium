@@ -122,6 +122,7 @@ export type ConstantType =
 * 可使用 `as const` 保持字面量约束
 * 不得将无关常量混入同一个文件
 
+不允许在代码中直接使用 `.types.ts` 文件
 ---
 
 ## 3. 架构与复用（Architecture & Reuse）

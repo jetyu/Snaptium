@@ -65,17 +65,38 @@ After changes, run the smallest relevant verification command:
 If verification cannot be run, say why and state what should be run manually.
 
 ## Skills
+
 User-level skills may be available from `~/.codex/skills`.
 
-Use relevant skills only:
+Use relevant skills only. Do not load or apply every skill automatically.
 
-Vue / frontend: vue3, vue-router, vue-router-v4, pinia, vant-vue3
-UI / design: design, design-system, ui-styling, ui-ux-pro-max, banner-design, brand
-Electron: electron
-Cloudflare / Workers / R2: cloudflare, workers-best-practices, wrangler, durable-objects, cloudflare-email-service
-Performance: web-perf
-Release / update links: upgradelink
-SDK / agent work: agents-sdk, sandbox-sdk
-Unsure which skill to use: find-skills
+### OpenSpec
+
+Use the `openspec` skill for medium or large feature changes, architecture changes, workflow changes, or changes that need a proposal, design, task list, or acceptance criteria.
+
+Do not use OpenSpec for small fixes such as copy changes, simple UI tweaks, i18n text edits, dependency bumps, or trivial bug fixes unless explicitly requested.
+
+When using the `openspec` skill:
+
+* First create an OpenSpec change only.
+* Do not modify business code during the proposal phase.
+* Generate proposal, design, tasks, and spec delta as needed.
+* Keep the change scoped.
+* Avoid unrelated refactoring.
+* Wait for confirmation before implementation unless the user explicitly asks to implement immediately.
+* After implementation, validate the OpenSpec change and run the smallest relevant project verification command.
+
+### Skill hints
+
+Use these skills only when they clearly match the current task:
+
+* Vue / frontend: `vue3`, `vue-router`, `vue-router-v4`, `pinia`, `vant-vue3`
+* UI / design: `design`, `design-system`, `ui-styling`, `ui-ux-pro-max`, `banner-design`, `brand`
+* Electron: `electron`
+* Cloudflare / Workers / R2: `cloudflare`, `workers-best-practices`, `wrangler`, `durable-objects`, `cloudflare-email-service`
+* Performance: `web-perf`
+* Release / update links: `upgradelink`
+* SDK / agent work: `agents-sdk`, `sandbox-sdk`
+* Unsure which skill to use: `find-skills`
 
 Do not use every skill automatically. Only read and apply skills that are clearly relevant to the task.
