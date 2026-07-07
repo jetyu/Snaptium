@@ -327,8 +327,10 @@ Thanks to the following excellent open-source projects:
 
 And to all developers and users who have submitted Issues, PRs, and suggestions for Snaptium.
 
+<img width="120" src="https://s2.loli.net/2025/09/10/KWPOA5XhIGmYTV9.png" />
+
 Special thanks to [SiliconFlow](https://siliconFlow.com) for providing AI model service support for Snaptium.
-<img width="240" src="https://s2.loli.net/2025/09/10/KWPOA5XhIGmYTV9.png" />
+
 ---
 
 # ⭐ Star History
