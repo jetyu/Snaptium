@@ -233,7 +233,6 @@
   "label.aiCapabilityEmbedding": "Einbettung",
   "label.aiCapabilityReranker": "Neubewertung",
   "label.aiKnowledgeAgentSearch": "Wissensdatenbank Q&A",
-  "label.aiKnowledgeAgentThinking": "Denken...",
   "label.aiModel": "Modellname",
   "label.aiModelDescription": "模型用途",
   "label.aiWritingMode": "Zusammenarbeitsstrategie",

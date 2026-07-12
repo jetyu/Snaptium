@@ -324,10 +324,17 @@ export interface KnowledgeAnswerResult {
   insufficientEvidence?: boolean;
 }
 
+export type KnowledgeAnswerStage = 'preparing' | 'searching' | 'assessing' | 'sourcing' | 'generating';
+
 export type KnowledgeAnswerStreamEvent =
   | {
     requestId: string;
     type: 'start';
+  }
+  | {
+    requestId: string;
+    type: 'stage';
+    stage: KnowledgeAnswerStage;
   }
   | {
     requestId: string;

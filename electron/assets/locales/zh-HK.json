@@ -233,7 +233,6 @@
   "label.aiCapabilityEmbedding": "嵌入",
   "label.aiCapabilityReranker": "重排",
   "label.aiKnowledgeAgentSearch": "回答",
-  "label.aiKnowledgeAgentThinking": "正在思考",
   "label.aiModel": "AI 模型",
   "label.aiModelDescription": "模型用途",
   "label.aiWritingMode": "協作策略",

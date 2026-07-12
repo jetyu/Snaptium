@@ -233,7 +233,6 @@
   "label.aiCapabilityEmbedding": "嵌入",
   "label.aiCapabilityReranker": "重排",
   "label.aiKnowledgeAgentSearch": "ナレッジベース Q&A",
-  "label.aiKnowledgeAgentThinking": "思考中",
   "label.aiModel": "AIモデル",
   "label.aiModelDescription": "模型用途",
   "label.aiWritingMode": "コラボレーション戦略",

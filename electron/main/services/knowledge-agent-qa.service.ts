@@ -20,7 +20,13 @@ export interface KnowledgeAnswerResult {
   error?: string;
 }
 
+export type KnowledgeAnswerStage = 'preparing' | 'searching' | 'assessing' | 'sourcing' | 'generating';
+
 export type KnowledgeAnswerStreamEvent =
+  | {
+    type: 'stage';
+    stage: KnowledgeAnswerStage;
+  }
   | {
     type: 'sources';
     sources: KnowledgeSearchResults;
@@ -55,7 +61,9 @@ export async function answerKnowledgeQuestionStream(
   query: string,
   onEvent: (event: KnowledgeAnswerStreamEvent) => void,
 ): Promise<KnowledgeAnswerResult> {
+  onEvent({ type: 'stage', stage: 'preparing' });
   const config = await ensureKnowledgeAgentReady();
+  onEvent({ type: 'stage', stage: 'searching' });
   const results = await knowledgeAgentIndexService.searchKnowledgeBase({
     query,
     topK: Number(config.knowledgeAgent.topK),
@@ -73,6 +81,7 @@ export async function answerKnowledgeQuestionStream(
     };
   }
 
+  onEvent({ type: 'stage', stage: 'assessing' });
   const evidence = assessKnowledgeEvidence(results);
   if (!evidence.sufficient) {
     logger.info('Knowledge stream answer rejected due to insufficient evidence', {
@@ -89,6 +98,7 @@ export async function answerKnowledgeQuestionStream(
     };
   }
 
+  onEvent({ type: 'stage', stage: 'sourcing' });
   if (!config.chatConfig) {
     const summary = results
       .map((res, idx) => `[${idx + 1}] ${res.noteTitle || 'Untitled'}:\n${res.chunk.content}`)
@@ -108,6 +118,7 @@ export async function answerKnowledgeQuestionStream(
     usedSearchFallback: false,
   });
 
+  onEvent({ type: 'stage', stage: 'generating' });
   const contextText = results.map((res) => res.chunk.content).join('\n---\n');
   const systemPrompt = buildKnowledgeAnswerPrompt(config.uiLanguage, query, contextText);
   const streamResult = await remoteAiService.chatStream({

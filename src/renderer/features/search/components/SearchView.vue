@@ -251,6 +251,7 @@ import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useSettingsStore } from '@renderer/features/settings';
 import type {
   KnowledgeAgentExecutedWrite,
+  KnowledgeAnswerStage,
   KnowledgeAgentStep,
   KnowledgeAgentTraceEvent,
   KnowledgeAgentWriteMode,
@@ -336,6 +337,7 @@ const activeErrorMessage = ref('');
 const questionModes = ref<Record<string, KnowledgeInputMode>>({});
 const agentTaskMetadata = ref<Record<string, AgentTaskMetadata>>({});
 const streamingAnswers = ref<Record<string, string>>({});
+const questionAnswerStages = ref<Record<string, KnowledgeAnswerStage>>({});
 const applyingWriteProposalId = ref('');
 const savingSummaryActionId = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -576,6 +578,7 @@ function resetAnswer(): void {
   activeErrorQuestionId.value = '';
   activeErrorMessage.value = '';
   streamingAnswers.value = {};
+  questionAnswerStages.value = {};
 }
 
 function startNewThread(): void {
@@ -675,6 +678,10 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
         ...questionModes.value,
         [draftQuestion.id]: 'qa',
       };
+      questionAnswerStages.value = {
+        ...questionAnswerStages.value,
+        [draftQuestion.id]: 'preparing',
+      };
     }
     if (draftQuestion) {
       scrollQuestionIntoView(draftQuestion.id);
@@ -686,6 +693,14 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
     try {
       const result = await askQuestionStream(query, {
         onEvent: (event) => {
+          if (event.type === 'stage' && draftQuestion) {
+            questionAnswerStages.value = {
+              ...questionAnswerStages.value,
+              [draftQuestion.id]: event.stage,
+            };
+            return;
+          }
+
           if (event.type === 'sources') {
             semanticResults.value = event.sources;
             usedSearchFallback.value = event.usedSearchFallback;
@@ -737,6 +752,9 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
         const nextStreamingAnswers = { ...streamingAnswers.value };
         delete nextStreamingAnswers[draftQuestion.id];
         streamingAnswers.value = nextStreamingAnswers;
+        const nextQuestionAnswerStages = { ...questionAnswerStages.value };
+        delete nextQuestionAnswerStages[draftQuestion.id];
+        questionAnswerStages.value = nextQuestionAnswerStages;
       }
       questionModes.value = {
         ...questionModes.value,
@@ -982,7 +1000,8 @@ function getQuestionThinkingLabel(question: WorkbenchQuestionEntry): string {
     return t('search.agentTaskThinking');
   }
 
-  return t('label.aiKnowledgeAgentThinking');
+  const stage = questionAnswerStages.value[question.id] ?? 'preparing';
+  return t(`search.knowledgeAnswerStage.${stage}`);
 }
 
 function getQuestionAnswer(question: WorkbenchQuestionEntry): string {

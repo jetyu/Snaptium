@@ -233,7 +233,6 @@
   "label.aiCapabilityEmbedding": "Embedding",
   "label.aiCapabilityReranker": "Reranker",
   "label.aiKnowledgeAgentSearch": "Ask Knowledge Copilot",
-  "label.aiKnowledgeAgentThinking": "Thinking",
   "label.aiModel": "Model Name",
   "label.aiModelDescription": "Model Desc.",
   "label.aiWritingMode": "Collaboration Strategy",

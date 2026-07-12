@@ -233,7 +233,6 @@
   "label.aiCapabilityEmbedding": "嵌入",
   "label.aiCapabilityReranker": "重排",
   "label.aiKnowledgeAgentSearch": "Preguntas y respuestas de la base de conocimientos",
-  "label.aiKnowledgeAgentThinking": "Pensando...",
   "label.aiModel": "Modelo de IA",
   "label.aiModelDescription": "模型用途",
   "label.aiWritingMode": "Estrategia de colaboración",

@@ -233,7 +233,6 @@
   "label.aiCapabilityEmbedding": "Plongement lexical (Embedding)",
   "label.aiCapabilityReranker": "Réordonnancement (Reranker)",
   "label.aiKnowledgeAgentSearch": "Questions-réponses sur la base de connaissances",
-  "label.aiKnowledgeAgentThinking": "Réflexion en cours...",
   "label.aiModel": "Modèle IA",
   "label.aiModelDescription": "模型用途",
   "label.aiWritingMode": "Stratégie de collaboration",

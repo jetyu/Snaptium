@@ -233,7 +233,6 @@
   "label.aiCapabilityEmbedding": "嵌入",
   "label.aiCapabilityReranker": "重排",
   "label.aiKnowledgeAgentSearch": "지식 베이스 Q&A",
-  "label.aiKnowledgeAgentThinking": "생각 중",
   "label.aiModel": "AI 모델",
   "label.aiModelDescription": "模型用途",
   "label.aiWritingMode": "협업 전략",
