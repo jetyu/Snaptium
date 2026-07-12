@@ -55,7 +55,7 @@ class VectorStoreService {
   constructor() {
     this.db = null;
     this.table = null;
-    this.tableName = 'note_chunks';
+    this.tableName = 'knowledge_agent_chunks';
     this.isInitialized = false;
   }
 

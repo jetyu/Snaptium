@@ -2,8 +2,8 @@ import type { AiPromptPreset, AiWritingScenario, AiWritingStyle } from '../../sh
 import type { PromptLanguageContext, PromptTemplateLanguage } from './language.js';
 import { buildAgentPromptEnUs } from './agent/en-US.js';
 import { buildAgentPromptZhCn } from './agent/zh-CN.js';
-import { buildRagPromptEnUs } from './rag/en-US.js';
-import { buildRagPromptZhCn } from './rag/zh-CN.js';
+import { buildKnowledgeAnswerPromptEnUs } from './knowledge-agent/en-US.js';
+import { buildKnowledgeAnswerPromptZhCn } from './knowledge-agent/zh-CN.js';
 import { buildAssistantPromptEnUs } from './assistant/en-US.js';
 import { buildAssistantPromptZhCn } from './assistant/zh-CN.js';
 import { buildEditorPromptEnUs } from './editor/en-US.js';
@@ -14,7 +14,7 @@ export interface AgentPromptContext extends PromptLanguageContext {
   writeMode: 'confirm' | 'auto';
 }
 
-export interface RagPromptContext extends PromptLanguageContext {
+export interface KnowledgeAnswerPromptContext extends PromptLanguageContext {
   contextText: string;
 }
 
@@ -48,10 +48,10 @@ export function buildAgentSystemPrompt(writeMode: 'confirm' | 'auto', uiLanguage
   return builder(context);
 }
 
-export function buildRagAnswerPrompt(uiLanguage: string, inputText: string, contextText: string): string {
+export function buildKnowledgeAnswerPrompt(uiLanguage: string, inputText: string, contextText: string): string {
   const language = resolvePromptLanguage(uiLanguage, inputText);
-  const builder = chooseBuilder(language.effectiveLanguage, buildRagPromptZhCn, buildRagPromptEnUs);
-  const context: RagPromptContext = {
+  const builder = chooseBuilder(language.effectiveLanguage, buildKnowledgeAnswerPromptZhCn, buildKnowledgeAnswerPromptEnUs);
+  const context: KnowledgeAnswerPromptContext = {
     uiLanguage: language.uiLanguage,
     inputLanguage: language.inputLanguage,
     fallbackLanguage: language.fallbackLanguage,

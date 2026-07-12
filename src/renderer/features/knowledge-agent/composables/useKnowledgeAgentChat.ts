@@ -1,33 +1,33 @@
-import { ref } from 'vue';
+﻿import { ref } from 'vue';
 import { createLogger } from '@renderer/features/logger';
 import type { KnowledgeAnswerResult } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
-import { ragService } from '../services/rag.service';
+import { knowledgeAgentService } from '../services/knowledge-agent.service';
 
-const ragChatLogger = createLogger('RAGChat');
+const knowledgeAgentChatLogger = createLogger('KnowledgeAgentChat');
 
-export function useRAGChat() {
+export function useKnowledgeAgentChat() {
   const isGenerating = ref(false);
   const answer = ref('');
   const error = ref<string | null>(null);
   const usedSearchFallback = ref(false);
 
   /**
-   * Ask a question using the RAG orchestration service
+   * Ask a question using the KnowledgeAgent orchestration service
    */
   const askQuestion = async (question: string): Promise<KnowledgeAnswerResult> => {
     if (!question.trim()) {
       throw new Error('Question cannot be empty');
     }
 
-    ragChatLogger.debug(`Starting question flow (length=${question.length})`);
+    knowledgeAgentChatLogger.debug(`Starting question flow (length=${question.length})`);
     isGenerating.value = true;
     error.value = null;
     answer.value = '';
     usedSearchFallback.value = false;
 
     try {
-      const result = await ragService.answerQuestion(question);
+      const result = await knowledgeAgentService.answerQuestion(question);
 
       if (result.success) {
         const generatedAnswer = result.answer || 'No answer generated';
@@ -39,12 +39,12 @@ export function useRAGChat() {
       }
     } catch (err) {
       const message = getErrorMessage(err);
-      ragChatLogger.error(`Error generating answer: ${message}`);
+      knowledgeAgentChatLogger.error(`Error generating answer: ${message}`);
       error.value = message;
       throw err;
     } finally {
       isGenerating.value = false;
-      ragChatLogger.debug('Question flow finished');
+      knowledgeAgentChatLogger.debug('Question flow finished');
     }
   };
 
@@ -56,3 +56,4 @@ export function useRAGChat() {
     usedSearchFallback,
   };
 }
+

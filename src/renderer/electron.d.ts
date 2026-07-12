@@ -356,7 +356,8 @@ declare global {
         setStartup: (enabled: boolean) => Promise<{ enabled: boolean; supported: boolean }>;
         pickDirectory: () => Promise<string | null>;
         confirmEmbeddingSourceChange: () => Promise<boolean>;
-        confirmRagRebuildMode: () => Promise<'incremental' | 'full' | 'cancel'>;
+        confirmKnowledgeAgentChunkRebuild: () => Promise<boolean>;
+        confirmKnowledgeAgentRebuildMode: () => Promise<'incremental' | 'full' | 'cancel'>;
         confirmDeleteAiSource: (name: string) => Promise<boolean>;
         confirmResetSyncProvider: (name: string) => Promise<boolean>;
         showMessage: (options: {
@@ -505,7 +506,7 @@ declare global {
         importKeybindings: (config: ShortcutsKeybindingsConfigPayload) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
       };
 
-      rag?: {
+      knowledgeAgent?: {
         initialize: () => Promise<{ success: boolean; error?: string }>;
         indexNote: (payload: {
           noteId: string;

@@ -36,12 +36,12 @@ interface AiAssistantSettings {
   writingScenario: unknown;
 }
 
-interface RagSettings {
+interface KnowledgeAgentSettings {
   enabled: boolean;
   embeddingSourceId: string;
   embeddingModel: string;
-  ragChatSourceId: string;
-  ragChatModel: string;
+  chatSourceId: string;
+  chatModel: string;
   rerankerSourceId: string;
   topK: number;
   similarityThreshold: number;
@@ -52,7 +52,7 @@ interface NormalizedAppConfig {
   noteSavePath: string;
   aiSources: AiSourceConfig[];
   aiAssistant: AiAssistantSettings;
-  rag: RagSettings;
+  knowledgeAgent: KnowledgeAgentSettings;
 }
 
 interface ResolvedEmbeddingConfig {
@@ -84,10 +84,10 @@ interface ResolvedAssistantConfig {
   writingScenario: AiWritingScenario;
 }
 
-interface ResolvedRagConfig {
+interface ResolvedKnowledgeAgentConfig {
   uiLanguage: string;
   workspaceRoot: string;
-  rag: Pick<RagSettings, 'topK' | 'similarityThreshold'>;
+  knowledgeAgent: Pick<KnowledgeAgentSettings, 'topK' | 'similarityThreshold'>;
   embeddingConfig: ResolvedEmbeddingConfig;
   chatConfig: ResolvedChatConfig | null;
   rerankerConfig: ResolvedRerankerConfig | null;
@@ -122,7 +122,7 @@ function normalizeSimilarityThreshold(value: unknown): number {
 
 function normalizeTopK(value: unknown): number {
   const topK = Math.floor(toFiniteNumber(value, 5));
-  return topK > 0 ? topK : 5;
+  return Math.min(10, Math.max(1, topK));
 }
 
 function normalizeAiSource(item: unknown): AiSourceConfig {
@@ -168,14 +168,14 @@ function normalizeAiAssistant(aiAssistant: unknown): AiAssistantSettings {
   };
 }
 
-function normalizeRagSettings(rag: unknown): RagSettings {
-  const record = toRecord(rag);
+function normalizeKnowledgeAgentSettings(knowledgeAgent: unknown): KnowledgeAgentSettings {
+  const record = toRecord(knowledgeAgent);
   return {
     enabled: toBoolean(record.enabled),
     embeddingSourceId: toText(record.embeddingSourceId),
     embeddingModel: toText(record.embeddingModel),
-    ragChatSourceId: toText(record.ragChatSourceId),
-    ragChatModel: toText(record.ragChatModel),
+    chatSourceId: toText(record.chatSourceId),
+    chatModel: toText(record.chatModel),
     rerankerSourceId: toText(record.rerankerSourceId),
     topK: normalizeTopK(record.topK),
     similarityThreshold: normalizeSimilarityThreshold(record.similarityThreshold),
@@ -188,7 +188,7 @@ function normalizeAppConfig(config: LoadedAppConfig): NormalizedAppConfig {
     noteSavePath: toText(config.noteSavePath),
     aiSources: normalizeAiSources(config.aiSources),
     aiAssistant: normalizeAiAssistant(config.aiAssistant),
-    rag: normalizeRagSettings(config.rag),
+    knowledgeAgent: normalizeKnowledgeAgentSettings(config.knowledgeAgent),
   };
 }
 
@@ -344,12 +344,12 @@ export const aiConfigService = {
     };
   },
 
-  async resolveRagConfig(): Promise<ResolvedRagConfig> {
+  async resolveKnowledgeAgentConfig(): Promise<ResolvedKnowledgeAgentConfig> {
     const config = await this.loadAppConfig();
-    const rag = config.rag;
+    const knowledgeAgent = config.knowledgeAgent;
 
-    if (!rag.enabled) {
-      throw new Error('RAG is disabled in settings');
+    if (!knowledgeAgent.enabled) {
+      throw new Error('Knowledge agent is disabled in settings');
     }
 
     if (!config.noteSavePath) {
@@ -358,45 +358,45 @@ export const aiConfigService = {
 
     const embeddingSource = requireConfiguredSourceWithCapability(
       config.aiSources,
-      rag.embeddingSourceId,
+      knowledgeAgent.embeddingSourceId,
       'embedding',
       'Embedding source not found',
     );
 
-    const ragChatSource = rag.ragChatSourceId
-      ? config.aiSources.find((item) => item.id === rag.ragChatSourceId && supportsCapability(item, 'chat')) ?? null
+    const chatSource = knowledgeAgent.chatSourceId
+      ? config.aiSources.find((item) => item.id === knowledgeAgent.chatSourceId && supportsCapability(item, 'chat')) ?? null
       : null;
 
-    const rerankerSource = rag.rerankerSourceId
-      ? config.aiSources.find((item) => item.id === rag.rerankerSourceId && supportsCapability(item, 'reranker')) ?? null
+    const rerankerSource = knowledgeAgent.rerankerSourceId
+      ? config.aiSources.find((item) => item.id === knowledgeAgent.rerankerSourceId && supportsCapability(item, 'reranker')) ?? null
       : null;
-    const embeddingApiKey = await resolveSourceApiKey(embeddingSource, LICENSE_FEATURES.RAG);
-    const ragChatApiKey = ragChatSource
-      ? await resolveSourceApiKey(ragChatSource, LICENSE_FEATURES.RAG)
+    const embeddingApiKey = await resolveSourceApiKey(embeddingSource, LICENSE_FEATURES.KNOWLEDGE_AGENT);
+    const chatApiKey = chatSource
+      ? await resolveSourceApiKey(chatSource, LICENSE_FEATURES.KNOWLEDGE_AGENT)
       : null;
     const rerankerApiKey = rerankerSource
-      ? await resolveSourceApiKey(rerankerSource, LICENSE_FEATURES.RAG)
+      ? await resolveSourceApiKey(rerankerSource, LICENSE_FEATURES.KNOWLEDGE_AGENT)
       : null;
 
     return {
       uiLanguage: config.language,
       workspaceRoot: config.noteSavePath,
-      rag: {
-        topK: rag.topK,
-        similarityThreshold: rag.similarityThreshold,
+      knowledgeAgent: {
+        topK: knowledgeAgent.topK,
+        similarityThreshold: knowledgeAgent.similarityThreshold,
       },
       embeddingConfig: {
         endpoint: resolveSourceEndpoint(embeddingSource, 'embedding'),
         apiKey: embeddingApiKey,
         model: resolveOfficialModel(embeddingSource, 'embedding')
-          ?? resolveModel(rag.embeddingModel, embeddingSource.aiModel, 'Embedding model not specified'),
+          ?? resolveModel(knowledgeAgent.embeddingModel, embeddingSource.aiModel, 'Embedding model not specified'),
       },
-      chatConfig: ragChatSource
+      chatConfig: chatSource
         ? {
-            endpoint: resolveSourceEndpoint(ragChatSource, 'chat'),
-            apiKey: ragChatApiKey ?? '',
-            model: resolveOfficialModel(ragChatSource, 'chat')
-              ?? resolveModel(rag.ragChatModel, ragChatSource.aiModel, 'No chat model configured'),
+            endpoint: resolveSourceEndpoint(chatSource, 'chat'),
+            apiKey: chatApiKey ?? '',
+            model: resolveOfficialModel(chatSource, 'chat')
+              ?? resolveModel(knowledgeAgent.chatModel, chatSource.aiModel, 'No chat model configured'),
           }
         : null,
       rerankerConfig: rerankerSource
