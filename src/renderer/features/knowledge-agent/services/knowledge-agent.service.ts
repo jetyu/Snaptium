@@ -1,23 +1,24 @@
-import {
+﻿import {
   electronApi,
   type KnowledgeAgentWriteMode,
   type KnowledgeAgentTaskResult,
   type KnowledgeAnswerResult,
-  type RagStatusResult,
+  type KnowledgeAnswerStreamEvent,
+  type KnowledgeAgentStatusResult,
 } from '@renderer/core/bridge/electronApi';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
-import { RAG_ERROR_MESSAGES } from '../constants/rag.constants';
+import { KNOWLEDGE_AGENT_ERROR_MESSAGES } from '../constants/knowledge-agent.constants';
 
-const ragLogger = createLogger('Renderer:RAG Service');
+const knowledgeAgentLogger = createLogger('Renderer:KnowledgeAgent Service');
 
-interface RagConfig {
+interface KnowledgeAgentConfig {
   enabled?: boolean;
   embeddingSourceId?: string;
 }
 
 interface AppConfig {
-  rag?: RagConfig;
+  knowledgeAgent?: KnowledgeAgentConfig;
   noteSavePath?: string;
 }
 
@@ -37,12 +38,12 @@ export interface RebuildIndexProgress {
 }
 
 /**
- * RAG Service - Orchestration Layer
+ * KnowledgeAgent Service - Orchestration Layer
  * Handles complex business logic, initialization, and cross-service coordination.
  */
-export const ragService = {
+export const knowledgeAgentService = {
   isAvailable(): boolean {
-    return electronApi.rag.isAvailable();
+    return electronApi.knowledgeAgent.isAvailable();
   },
 
   /**
@@ -51,21 +52,21 @@ export const ragService = {
   async initialize(): Promise<{ success: boolean; error?: string }> {
     try {
       const config = await electronApi.settings.getConfig() as unknown as AppConfig;
-      if (!config.rag?.enabled) {
-        return { success: false, error: RAG_ERROR_MESSAGES.DISABLED };
+      if (!config.knowledgeAgent?.enabled) {
+        return { success: false, error: KNOWLEDGE_AGENT_ERROR_MESSAGES.DISABLED };
       }
 
       const workspaceRoot = config.noteSavePath;
       if (!workspaceRoot) {
-        return { success: false, error: RAG_ERROR_MESSAGES.NO_WORKSPACE };
+        return { success: false, error: KNOWLEDGE_AGENT_ERROR_MESSAGES.NO_WORKSPACE };
       }
 
-      const result = await electronApi.rag.initialize();
+      const result = await electronApi.knowledgeAgent.initialize();
 
       return result;
     } catch (error: unknown) {
       const message = getErrorMessage(error);
-      ragLogger.error('RAG initialization failed', { error: message });
+      knowledgeAgentLogger.error('KnowledgeAgent initialization failed', { error: message });
       return { success: false, error: message };
     }
   },
@@ -74,7 +75,7 @@ export const ragService = {
    * Index a single note (Batch-Atomic call to Main)
    */
   async indexNote(request: IndexNoteRequest): Promise<{ success: boolean; chunksIndexed?: number; error?: string }> {
-    return await electronApi.rag.indexNote({
+    return await electronApi.knowledgeAgent.indexNote({
       ...request,
       chunkSize: request.chunkSize || 500,
       chunkOverlap: request.chunkOverlap || 50,
@@ -88,7 +89,7 @@ export const ragService = {
     notes: Array<{ id: string; title: string; content: string }>,
     options: { chunkSize: number; chunkOverlap: number; onProgress?: (p: RebuildIndexProgress) => void }
   ) {
-    const clearResult = await electronApi.rag.clearIndex();
+    const clearResult = await electronApi.knowledgeAgent.clearIndex();
     if (!clearResult.success) {
       throw new Error(clearResult.error || 'Failed to clear vector index');
     }
@@ -128,12 +129,32 @@ export const ragService = {
     return { total, successCount, failCount };
   },
 
-  async answerQuestion(query: string): Promise<KnowledgeAnswerResult> {
+  async answerQuestionStream(
+    query: string,
+    callbacks: {
+      onEvent?: (event: KnowledgeAnswerStreamEvent) => void;
+      onDelta?: (text: string) => void;
+    } = {},
+  ): Promise<KnowledgeAnswerResult> {
+    const requestId = `${Date.now()}:${Math.random().toString(36).slice(2)}`;
+    let unsubscribe: (() => void) | null = null;
+
     try {
-      return await electronApi.rag.answerQuestion({ query });
+      unsubscribe = electronApi.knowledgeAgent.onAnswerQuestionStreamEvent((event) => {
+        if (event.requestId !== requestId) {
+          return;
+        }
+
+        callbacks.onEvent?.(event);
+        if (event.type === 'delta') {
+          callbacks.onDelta?.(event.text);
+        }
+      });
+
+      return await electronApi.knowledgeAgent.answerQuestionStream({ query, requestId });
     } catch (error: unknown) {
       const message = getErrorMessage(error);
-      ragLogger.error('RAG question failed', { error: message });
+      knowledgeAgentLogger.error('KnowledgeAgent streaming question failed', { error: message });
       return {
         success: false,
         error: message,
@@ -142,15 +163,17 @@ export const ragService = {
         usedSearchFallback: false,
         insufficientEvidence: false,
       };
+    } finally {
+      unsubscribe?.();
     }
   },
 
   async runTask(task: string, writeMode: KnowledgeAgentWriteMode = 'confirm'): Promise<KnowledgeAgentTaskResult> {
     try {
-      return await electronApi.rag.runTask({ task, writeMode });
+      return await electronApi.knowledgeAgent.runTask({ task, writeMode });
     } catch (error: unknown) {
       const message = getErrorMessage(error);
-      ragLogger.error('RAG agent task failed', { error: message });
+      knowledgeAgentLogger.error('KnowledgeAgent agent task failed', { error: message });
       return {
         success: false,
         error: message,
@@ -166,18 +189,19 @@ export const ragService = {
     }
   },
 
-  async getStatus(): Promise<RagStatusResult> {
-    return await electronApi.rag.getStatus();
+  async getStatus(): Promise<KnowledgeAgentStatusResult> {
+    return await electronApi.knowledgeAgent.getStatus();
   },
 
   async deleteNoteIndex(noteId: string): Promise<{ success: boolean; error?: string }> {
-    return await electronApi.rag.deleteNoteIndex(noteId);
+    return await electronApi.knowledgeAgent.deleteNoteIndex(noteId);
   },
 
   /**
    * Clear all index data from the vector store
    */
   async clearIndex(): Promise<{ success: boolean; error?: string }> {
-    return await electronApi.rag.clearIndex();
+    return await electronApi.knowledgeAgent.clearIndex();
   },
 };
+

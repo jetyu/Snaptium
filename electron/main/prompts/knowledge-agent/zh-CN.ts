@@ -1,6 +1,6 @@
-import type { RagPromptContext } from '../index.js';
+import type { KnowledgeAnswerPromptContext } from '../index.js';
 
-export function buildRagPromptZhCn(context: RagPromptContext): string {
+export function buildKnowledgeAnswerPromptZhCn(context: KnowledgeAnswerPromptContext): string {
   return [
     '你是一个专业的笔记问答助手。',
     `当前界面语言：${context.uiLanguage}。`,

@@ -1,4 +1,4 @@
-import { app, dialog, BrowserWindow } from 'electron';
+﻿import { app, dialog, BrowserWindow } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { $t } from '../utils/i18n.js';
@@ -71,7 +71,17 @@ interface SettingsMessageOptions {
   detail?: string;
 }
 
-type RagRebuildMode = 'incremental' | 'full' | 'cancel';
+type KnowledgeAgentRebuildMode = 'incremental' | 'full' | 'cancel';
+
+function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const numericValue = Number(value);
+  const finiteValue = Number.isFinite(numericValue) ? numericValue : fallback;
+  return Math.min(max, Math.max(min, finiteValue));
+}
+
+function clampInteger(value: unknown, fallback: number, min: number, max: number): number {
+  return Math.trunc(clampNumber(value, fallback, min, max));
+}
 
 export interface AccessControlConfig {
   enabled: boolean;
@@ -98,7 +108,7 @@ interface AppSettings {
   showStatusBar: boolean;
   aiSources: AiSourceSettings[];
   aiAssistant: Record<string, unknown>;
-  rag: Record<string, unknown>;
+  knowledgeAgent: Record<string, unknown>;
   sync: SyncConfig;
   loggingEnabled: boolean;
   logLevel: LogLevel;
@@ -143,7 +153,7 @@ type SyncConfigInput = Partial<SyncConfig> & {
 
 type SettingsInput = Partial<AppSettings> & {
   aiAssistant?: Partial<Record<string, unknown>>;
-  rag?: Partial<Record<string, unknown>>;
+  knowledgeAgent?: Partial<Record<string, unknown>>;
   previewAppearance?: Partial<PreviewAppearanceConfig>;
   sync?: SyncConfigInput;
   accessControl?: Partial<AccessControlConfig>;
@@ -355,16 +365,16 @@ function normalizeAiAssistantConfig(
   return mergedConfig;
 }
 
-function normalizeRagConfig(
-  defaultConfig: AppSettings['rag'],
-  incomingConfig: SettingsInput['rag'],
+function normalizeKnowledgeAgentConfig(
+  defaultConfig: AppSettings['knowledgeAgent'],
+  incomingConfig: SettingsInput['knowledgeAgent'],
 ): Record<string, unknown> {
   const mergedConfig: Record<string, unknown> = {
     ...defaultConfig,
     ...(incomingConfig || {}),
   };
   const embeddingSourceId = String(mergedConfig.embeddingSourceId ?? '').trim();
-  const ragChatSourceId = String(mergedConfig.ragChatSourceId ?? '').trim();
+  const chatSourceId = String(mergedConfig.chatSourceId ?? '').trim();
   const nextConfig: Record<string, unknown> = { ...mergedConfig };
 
   if (!embeddingSourceId || embeddingSourceId === OFFICIAL_AI_SOURCE_IDS.EMBEDDING) {
@@ -372,9 +382,14 @@ function normalizeRagConfig(
     nextConfig.embeddingModel = OFFICIAL_AI_MODELS.EMBEDDING;
   }
 
-  if (ragChatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
-    nextConfig.ragChatModel = OFFICIAL_AI_MODELS.CHAT;
+  if (chatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    nextConfig.chatModel = OFFICIAL_AI_MODELS.CHAT;
   }
+
+  nextConfig.chunkSize = clampInteger(nextConfig.chunkSize, 500, 500, 800);
+  nextConfig.chunkOverlap = clampInteger(nextConfig.chunkOverlap, 50, 50, 100);
+  nextConfig.topK = clampInteger(nextConfig.topK, 5, 1, 10);
+  nextConfig.similarityThreshold = clampNumber(nextConfig.similarityThreshold, 0.45, 0, 1);
 
   return nextConfig;
 }
@@ -394,7 +409,7 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
     accentMode: normalizeAccentMode(incomingConfig.accentMode ?? defaultConfig.accentMode),
     aiSources: normalizeAiSources(incomingConfig.aiSources ?? defaultConfig.aiSources),
     aiAssistant: normalizeAiAssistantConfig(defaultConfig.aiAssistant, incomingConfig.aiAssistant),
-    rag: normalizeRagConfig(defaultConfig.rag, incomingConfig.rag),
+    knowledgeAgent: normalizeKnowledgeAgentConfig(defaultConfig.knowledgeAgent, incomingConfig.knowledgeAgent),
     previewAppearance: normalizePreviewAppearanceConfig(incomingConfig.previewAppearance),
     sync: normalizeSyncConfig(incomingConfig.sync),
     autoCheckUpdates: incomingConfig.autoCheckUpdates ?? defaultConfig.autoCheckUpdates,
@@ -473,12 +488,12 @@ export const settingsService = {
         writingScenario: AI_WRITING_DEFAULTS.SCENARIO,
         systemPrompt: '',
       },
-      rag: {
+      knowledgeAgent: {
         enabled: false,
         embeddingSourceId: OFFICIAL_AI_SOURCE_IDS.EMBEDDING,
         embeddingModel: OFFICIAL_AI_MODELS.EMBEDDING,
-        ragChatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
-        ragChatModel: OFFICIAL_AI_MODELS.CHAT,
+        chatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+        chatModel: OFFICIAL_AI_MODELS.CHAT,
         rerankerSourceId: OFFICIAL_AI_SOURCE_IDS.RERANKER,
         chunkSize: 500,
         chunkOverlap: 50,
@@ -643,7 +658,7 @@ export const settingsService = {
     return selectedButtonIndex === 1;
   },
 
-  async confirmRagRebuildMode(): Promise<RagRebuildMode> {
+  async confirmKnowledgeAgentRebuildMode(): Promise<KnowledgeAgentRebuildMode> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 
     const dialogResult = await dialog.showMessageBox(focusedWindow, {
@@ -652,8 +667,8 @@ export const settingsService = {
       defaultId: 1,
       cancelId: 0,
       noLink: true,
-      title: $t('label.ragIndexStatus'),
-      message: $t('message.confirm.ragRebuildMode'),
+      title: $t('label.knowledgeAgentIndexStatus'),
+      message: $t('message.confirm.knowledgeAgentRebuildMode'),
     });
     // selectedButtonIndex is zero-based and follows the order of buttons[]
     const selectedButtonIndex = dialogResult.response;
@@ -667,6 +682,25 @@ export const settingsService = {
     }
 
     return 'cancel';
+  },
+
+  async confirmKnowledgeAgentChunkRebuild(): Promise<boolean> {
+    const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
+
+    const dialogResult = await dialog.showMessageBox(focusedWindow, {
+      type: 'question',
+      buttons: [$t('button.cancel'), $t('button.fullRebuildIndex')],
+      defaultId: 1,
+      cancelId: 0,
+      noLink: true,
+      title: $t('label.knowledgeAgentIndexStatus'),
+      message: $t(
+        'message.confirm.knowledgeAgentChunkRebuild',
+        'Changing chunk size or overlap only affects newly built indexes. Rebuild the knowledge base index now?',
+      ),
+    });
+
+    return dialogResult.response === 1;
   },
 
   async confirmDeleteAiSource(name: string): Promise<boolean> {
@@ -819,3 +853,4 @@ export const settingsService = {
     }
   }
 };
+
