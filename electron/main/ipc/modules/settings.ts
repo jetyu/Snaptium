@@ -51,11 +51,16 @@ export function registerSettingsIpcHandlers() {
   });
 
   /**
-   * Confirm RAG rebuild mode using the native Electron dialog
+   * Confirm knowledge-agent rebuild mode using the native Electron dialog
    */
-  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_RAG_REBUILD_MODE, async () => {
-    logger.debug('Settings confirm RAG rebuild mode');
-    return await settingsService.confirmRagRebuildMode();
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_KNOWLEDGE_AGENT_REBUILD_MODE, async () => {
+    logger.debug('Settings confirm knowledge-agent rebuild mode');
+    return await settingsService.confirmKnowledgeAgentRebuildMode();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_KNOWLEDGE_AGENT_CHUNK_REBUILD, async () => {
+    logger.debug('Settings confirm knowledge-agent chunk rebuild');
+    return await settingsService.confirmKnowledgeAgentChunkRebuild();
   });
 
   /**

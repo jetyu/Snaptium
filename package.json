@@ -1,6 +1,6 @@
 {
   "name": "Snaptium",
-  "version": "2.0.5",
+  "version": "2.1.0",
   "author": "Snaptium Team",
   "private": true,
   "type": "module",
@@ -34,10 +34,13 @@
     "@aws-sdk/client-s3": "^3.1068.0",
     "@aws-sdk/lib-storage": "^3.1068.0",
     "@lancedb/lancedb": "^0.27.2",
+    "@langchain/core": "^1.2.2",
+    "@langchain/openai": "^1.5.5",
     "@mdit/plugin-katex": "^0.25.2",
     "apache-arrow": "^18.1.0",
     "argon2": "^0.44.0",
     "electron-updater": "^6.8.9",
+    "langchain": "^1.5.3",
     "webdav": "^5.10.0",
     "yarle-evernote-to-md": "^6.17.0",
     "zod": "^4.4.3"

@@ -6,7 +6,7 @@ import { $t } from '../../utils/i18n.js';
 import { VFS_CONSTANTS } from '../../constants/vfs.constants.js';
 import { loggerService } from '../logger.service.js';
 import { vfsService } from '../vfs.service.js';
-import { ragService } from '../rag.service.js';
+import { knowledgeAgentIndexService } from '../knowledge-agent-index.service.js';
 import { syncStateService } from '../sync/state.service.js';
 import { extractZipArchiveToDirectory } from './zip.utils.js';
 import { createSecureTempDirectory } from './temp-directory.utils.js';
@@ -115,8 +115,8 @@ async function replaceDatabaseAtomically(
 async function resetWorkspaceSideEffects(workspaceRoot: string): Promise<void> {
   const lancedbPath = path.join(workspaceRoot, '.lancedb');
 
-  await ragService.shutdown().catch((error) => {
-    logger.warn(`Failed to shutdown RAG service before lancedb cleanup: ${getErrorMessage(error)}`);
+  await knowledgeAgentIndexService.shutdown().catch((error) => {
+    logger.warn(`Failed to shutdown knowledge-agent index service before lancedb cleanup: ${getErrorMessage(error)}`);
   });
 
   await fs.rm(lancedbPath, { recursive: true, force: true }).catch((error) => {

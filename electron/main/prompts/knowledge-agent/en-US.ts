@@ -1,6 +1,6 @@
-import type { RagPromptContext } from '../index.js';
+import type { KnowledgeAnswerPromptContext } from '../index.js';
 
-export function buildRagPromptEnUs(context: RagPromptContext): string {
+export function buildKnowledgeAnswerPromptEnUs(context: KnowledgeAnswerPromptContext): string {
   return [
     'You are a professional note assistant.',
     `Current UI language: ${context.uiLanguage}.`,

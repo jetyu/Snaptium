@@ -1,3 +1,10 @@
+### v2.1.0 - 2026-07-12
+This update improves details and the user experience.
+#### Improvements
+* Improved the interaction experience of the Knowledge Base question-and-answer feature.
+#### Fixes
+* Fixed known issues.
+
 ### v2.0.5 - 2026-07-05
 This update improves details and the overall user experience.
 #### New
@@ -9,7 +16,6 @@ This update improves details and the overall user experience.
 * Fixed an issue on macOS arm64 where shortcuts and software updates could stop working.
 #### Removed
 * Removed support for macOS x86_64. Snaptium now supports **macOS arm64 only**.
-
 
 ### v2.0.4 - 2026-07-01
 This update optimizes details and the user experience.

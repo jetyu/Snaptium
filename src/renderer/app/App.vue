@@ -22,7 +22,7 @@ import { useEditorSettings } from '@renderer/features/settings/composables/useEd
 import { useGeneralSettings } from '@renderer/features/settings/composables/useGeneralSettings';
 import { useShortcutsStore } from '@renderer/features/shortcuts';
 import { useCommandRegistration } from '@renderer/features/shortcuts/composables/useCommandRegistration';
-import { useRAGInitialization } from '@renderer/features/rag';
+import { useKnowledgeAgentInitialization } from '@renderer/features/knowledge-agent';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { HistoryDialog, NotePropertiesDialog } from '@renderer/features/workspace';
 import { useSyncLifecycle } from '@renderer/features/sync';
@@ -41,7 +41,7 @@ const workspaceStore = useWorkspaceStore();
 const favoritesStore = useFavoritesStore();
 const updaterStore = useUpdaterStore();
 const { initMainProcessListeners } = useLicenseDialog();
-const { initializeRAG, setupAutoIndexOnSave } = useRAGInitialization();
+const { initializeKnowledgeAgent, setupAutoIndexOnSave } = useKnowledgeAgentInitialization();
 const { initializeSync, setupAutoSync } = useSyncLifecycle();
 
 useEditorSettings();
@@ -68,8 +68,8 @@ onMounted(async () => {
 
   await initializeSync();
   
-  // 初始化 RAG 服务
-  await initializeRAG();
+  // Initialize knowledge-agent service.
+  await initializeKnowledgeAgent();
   
   // 设置保存时自动索引
   setupAutoIndexOnSave();

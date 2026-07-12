@@ -356,7 +356,8 @@ declare global {
         setStartup: (enabled: boolean) => Promise<{ enabled: boolean; supported: boolean }>;
         pickDirectory: () => Promise<string | null>;
         confirmEmbeddingSourceChange: () => Promise<boolean>;
-        confirmRagRebuildMode: () => Promise<'incremental' | 'full' | 'cancel'>;
+        confirmKnowledgeAgentChunkRebuild: () => Promise<boolean>;
+        confirmKnowledgeAgentRebuildMode: () => Promise<'incremental' | 'full' | 'cancel'>;
         confirmDeleteAiSource: (name: string) => Promise<boolean>;
         confirmResetSyncProvider: (name: string) => Promise<boolean>;
         showMessage: (options: {
@@ -505,7 +506,7 @@ declare global {
         importKeybindings: (config: ShortcutsKeybindingsConfigPayload) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
       };
 
-      rag?: {
+      knowledgeAgent?: {
         initialize: () => Promise<{ success: boolean; error?: string }>;
         indexNote: (payload: {
           noteId: string;
@@ -514,7 +515,7 @@ declare global {
           chunkSize?: number;
           chunkOverlap?: number;
         }) => Promise<{ success: boolean; chunksIndexed?: number; error?: string }>;
-        answerQuestion: (payload: { query: string }) => Promise<{
+        answerQuestionStream: (payload: { query: string; requestId: string }) => Promise<{
           success: boolean;
           answer?: string;
           sources: Array<{
@@ -532,6 +533,7 @@ declare global {
           usedSearchFallback: boolean;
           insufficientEvidence?: boolean;
         }>;
+        onAnswerQuestionStreamEvent: (callback: (event: import('@renderer/core/bridge/electronApi').KnowledgeAnswerStreamEvent) => void) => () => void;
         runTask: (payload: { task: string; writeMode?: 'confirm' | 'auto' }) => Promise<{
           success: boolean;
           finalAnswer?: string;
