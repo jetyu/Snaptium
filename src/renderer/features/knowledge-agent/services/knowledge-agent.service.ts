@@ -3,6 +3,7 @@
   type KnowledgeAgentWriteMode,
   type KnowledgeAgentTaskResult,
   type KnowledgeAnswerResult,
+  type KnowledgeAnswerStreamEvent,
   type KnowledgeAgentStatusResult,
 } from '@renderer/core/bridge/electronApi';
 import { createLogger } from '@renderer/features/logger';
@@ -128,12 +129,32 @@ export const knowledgeAgentService = {
     return { total, successCount, failCount };
   },
 
-  async answerQuestion(query: string): Promise<KnowledgeAnswerResult> {
+  async answerQuestionStream(
+    query: string,
+    callbacks: {
+      onEvent?: (event: KnowledgeAnswerStreamEvent) => void;
+      onDelta?: (text: string) => void;
+    } = {},
+  ): Promise<KnowledgeAnswerResult> {
+    const requestId = `${Date.now()}:${Math.random().toString(36).slice(2)}`;
+    let unsubscribe: (() => void) | null = null;
+
     try {
-      return await electronApi.knowledgeAgent.answerQuestion({ query });
+      unsubscribe = electronApi.knowledgeAgent.onAnswerQuestionStreamEvent((event) => {
+        if (event.requestId !== requestId) {
+          return;
+        }
+
+        callbacks.onEvent?.(event);
+        if (event.type === 'delta') {
+          callbacks.onDelta?.(event.text);
+        }
+      });
+
+      return await electronApi.knowledgeAgent.answerQuestionStream({ query, requestId });
     } catch (error: unknown) {
       const message = getErrorMessage(error);
-      knowledgeAgentLogger.error('KnowledgeAgent question failed', { error: message });
+      knowledgeAgentLogger.error('KnowledgeAgent streaming question failed', { error: message });
       return {
         success: false,
         error: message,
@@ -142,6 +163,8 @@ export const knowledgeAgentService = {
         usedSearchFallback: false,
         insufficientEvidence: false,
       };
+    } finally {
+      unsubscribe?.();
     }
   },
 

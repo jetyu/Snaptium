@@ -515,7 +515,7 @@ declare global {
           chunkSize?: number;
           chunkOverlap?: number;
         }) => Promise<{ success: boolean; chunksIndexed?: number; error?: string }>;
-        answerQuestion: (payload: { query: string }) => Promise<{
+        answerQuestionStream: (payload: { query: string; requestId: string }) => Promise<{
           success: boolean;
           answer?: string;
           sources: Array<{
@@ -533,6 +533,7 @@ declare global {
           usedSearchFallback: boolean;
           insufficientEvidence?: boolean;
         }>;
+        onAnswerQuestionStreamEvent: (callback: (event: import('@renderer/core/bridge/electronApi').KnowledgeAnswerStreamEvent) => void) => () => void;
         runTask: (payload: { task: string; writeMode?: 'confirm' | 'auto' }) => Promise<{
           success: boolean;
           finalAnswer?: string;

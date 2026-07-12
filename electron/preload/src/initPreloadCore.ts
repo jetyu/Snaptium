@@ -235,7 +235,12 @@ const electronAPI = Object.freeze({
     initialize: () => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_INITIALIZE),
     indexNote: (request: KnowledgeAgentQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_INDEX_NOTE, request),
     rebuildIndex: (request: KnowledgeAgentQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_REBUILD_INDEX, request),
-    answerQuestion: (payload: KnowledgeAgentQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_ANSWER_QUESTION, payload),
+    answerQuestionStream: (payload: KnowledgeAgentQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_ANSWER_QUESTION_STREAM, payload),
+    onAnswerQuestionStreamEvent: (callback: (payload: JsonObject) => void) => {
+      const subscription = (_event: Electron.IpcRendererEvent, payload: JsonObject) => callback(payload);
+      ipcRenderer.on(IPC_CHANNELS.KNOWLEDGE_AGENT_ANSWER_QUESTION_STREAM_EVENT, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.KNOWLEDGE_AGENT_ANSWER_QUESTION_STREAM_EVENT, subscription);
+    },
     runTask: (payload: KnowledgeAgentQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_RUN_TASK, payload),
     deleteNoteIndex: (noteId: string) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_DELETE_NOTE_INDEX, noteId),
     getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_GET_STATUS),

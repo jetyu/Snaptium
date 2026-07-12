@@ -20,6 +20,18 @@ export interface KnowledgeAnswerResult {
   error?: string;
 }
 
+export type KnowledgeAnswerStreamEvent =
+  | {
+    type: 'sources';
+    sources: KnowledgeSearchResults;
+    usedSearchFallback: boolean;
+    insufficientEvidence?: boolean;
+  }
+  | {
+    type: 'delta';
+    text: string;
+  };
+
 function createInsufficientEvidenceMessage(): string {
   return $t(
     'search.knowledgeAgentInsufficientEvidence',
@@ -39,7 +51,10 @@ export async function ensureKnowledgeAgentReady(): Promise<KnowledgeAgentConfig>
   return config;
 }
 
-export async function answerKnowledgeQuestion(query: string): Promise<KnowledgeAnswerResult> {
+export async function answerKnowledgeQuestionStream(
+  query: string,
+  onEvent: (event: KnowledgeAnswerStreamEvent) => void,
+): Promise<KnowledgeAnswerResult> {
   const config = await ensureKnowledgeAgentReady();
   const results = await knowledgeAgentIndexService.searchKnowledgeBase({
     query,
@@ -60,7 +75,7 @@ export async function answerKnowledgeQuestion(query: string): Promise<KnowledgeA
 
   const evidence = assessKnowledgeEvidence(results);
   if (!evidence.sufficient) {
-    logger.info('Knowledge answer rejected due to insufficient evidence', {
+    logger.info('Knowledge stream answer rejected due to insufficient evidence', {
       highestScore: evidence.highestScore,
       averageScore: evidence.averageScore,
       consideredCount: evidence.consideredCount,
@@ -87,10 +102,15 @@ export async function answerKnowledgeQuestion(query: string): Promise<KnowledgeA
     };
   }
 
+  onEvent({
+    type: 'sources',
+    sources: results,
+    usedSearchFallback: false,
+  });
+
   const contextText = results.map((res) => res.chunk.content).join('\n---\n');
   const systemPrompt = buildKnowledgeAnswerPrompt(config.uiLanguage, query, contextText);
-
-  const response = await remoteAiService.chat({
+  const streamResult = await remoteAiService.chatStream({
     endpoint: config.chatConfig.endpoint,
     apiKey: config.chatConfig.apiKey,
     model: config.chatConfig.model,
@@ -100,11 +120,13 @@ export async function answerKnowledgeQuestion(query: string): Promise<KnowledgeA
     ],
     temperature: 0.7,
     max_tokens: 1000,
+  }, (chunk) => {
+    onEvent({ type: 'delta', text: chunk.content });
   });
 
   return {
     success: true,
-    answer: response.choices?.[0]?.message?.content ?? undefined,
+    answer: streamResult.content,
     sources: results,
     usedSearchFallback: false,
   };

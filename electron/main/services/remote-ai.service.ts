@@ -95,6 +95,14 @@ interface ChatResponse extends JsonObject {
   choices?: ChatChoice[];
 }
 
+export interface AiChatStreamChunk {
+  content: string;
+}
+
+export interface AiChatStreamResult {
+  content: string;
+}
+
 interface EmbeddingItem {
   embedding?: unknown;
 }
@@ -209,6 +217,42 @@ function extractRequestErrorMessage(body: unknown, fallback: string): string {
     .join(' | ');
 }
 
+function extractStreamDeltaContent(value: unknown): string {
+  if (typeof value !== 'object' || value === null) {
+    return '';
+  }
+
+  const record = value as Record<string, unknown>;
+  const choices = Array.isArray(record.choices) ? record.choices : [];
+  return choices
+    .map((choice) => {
+      if (typeof choice !== 'object' || choice === null) {
+        return '';
+      }
+
+      const choiceRecord = choice as Record<string, unknown>;
+      const delta = choiceRecord.delta;
+      if (typeof delta !== 'object' || delta === null) {
+        return '';
+      }
+
+      const content = (delta as Record<string, unknown>).content;
+      return typeof content === 'string' ? content : '';
+    })
+    .join('');
+}
+
+async function readStreamErrorBody(response: Response, fallback: string): Promise<string> {
+  const contentType = response.headers.get('Content-Type') || '';
+  if (contentType.includes('application/json')) {
+    const errorData = await response.json().catch(() => null);
+    return extractRequestErrorMessage(errorData, fallback);
+  }
+
+  const text = await response.text().catch(() => '');
+  return text.trim() || fallback;
+}
+
 /**
  * Remote AI Service (Main Process)
  * Centralized service for OpenAI-compatible API communications.
@@ -321,6 +365,101 @@ export const remoteAiService = {
       ...(tools?.length ? { tools } : {}),
       ...(tool_choice ? { tool_choice } : {}),
     });
+  },
+
+  async chatStream(
+    config: ChatConfig,
+    onChunk: (chunk: AiChatStreamChunk) => void,
+  ): Promise<AiChatStreamResult> {
+    const { endpoint, apiKey, model, messages, max_tokens, temperature, tools, tool_choice } = config;
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 120000);
+    let accumulated = '';
+
+    try {
+      const response = await mainProcessFetch(endpoint, {
+        method: 'POST',
+        headers: this.getHeaders(apiKey),
+        body: JSON.stringify({
+          model,
+          messages,
+          max_tokens: max_tokens ?? 512,
+          temperature: temperature ?? 0.7,
+          stream: true,
+          ...(tools?.length ? { tools } : {}),
+          ...(tool_choice ? { tool_choice } : {}),
+        }),
+        signal: controller.signal,
+      });
+
+      if (!response.ok) {
+        const fallback = `HTTP ${response.status}: ${response.statusText}`;
+        throw new Error(await readStreamErrorBody(response, fallback));
+      }
+
+      const contentType = response.headers.get('Content-Type') || '';
+      if (!contentType.includes('text/event-stream')) {
+        throw new Error(`Streaming response is not supported by this AI service (got ${contentType || 'unknown content type'})`);
+      }
+
+      if (!response.body) {
+        throw new Error('AI service returned an empty streaming response');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let done = false;
+
+      while (!done) {
+        const result = await reader.read();
+        done = result.done;
+        buffer += decoder.decode(result.value ?? new Uint8Array(), { stream: !done });
+
+        const eventBuffer = done && buffer.trim().length > 0 ? `${buffer}\n\n` : buffer;
+        const events = eventBuffer.split('\n\n');
+        buffer = done ? '' : events.pop() ?? '';
+
+        for (const event of events) {
+          const dataLines = event
+            .split(/\r?\n/)
+            .filter((line) => line.startsWith('data:'))
+            .map((line) => line.slice(5).trim());
+          for (const data of dataLines) {
+            if (!data || data === '[DONE]') {
+              continue;
+            }
+
+            const parsed = JSON.parse(data) as unknown;
+            const content = extractStreamDeltaContent(parsed);
+            if (content) {
+              accumulated += content;
+              onChunk({ content });
+            }
+          }
+        }
+      }
+
+      return { content: accumulated };
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw new Error('Request timeout', { cause: error });
+      }
+
+      if (isFetchNetworkError(error)) {
+        const cause = isElectronNetworkRequestError(error)
+          ? getErrorMessage(error)
+          : formatErrorCause(error.cause);
+        throw new Error(
+          cause ? `AI service network request failed: ${cause}` : 'AI service network request failed.',
+          { cause: error },
+        );
+      }
+
+      throw error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
   },
 
   async embed(config: EmbedConfig): Promise<EmbeddingResponse> {

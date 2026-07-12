@@ -78,7 +78,7 @@
                   <span v-if="formatQuestionAnsweredAt(question)" class="search-view__message-timestamp">
                     {{ formatQuestionAnsweredAt(question) }}
                   </span>
-                  <div v-if="isGeneratingQuestion(question)" class="search-view__thinking">
+                  <div v-if="isGeneratingQuestion(question) && !getQuestionAnswer(question)" class="search-view__thinking">
                     <div class="search-view__spinner"></div>
                     <span>{{ getQuestionThinkingLabel(question) }}</span>
                   </div>
@@ -298,7 +298,7 @@ const { config } = storeToRefs(settingsStore);
 const { selectNote, createNote, initializeWorkspace, applyNoteContentUpdate } = useWorkspace();
 const { searchViewRequest } = useSearch();
 const { isEnabled: knowledgeAgentEnabled, isConfigured: knowledgeAgentConfigured } = useKnowledgeAgentConfig();
-const { askQuestion, isGenerating: isAIGenerating, usedSearchFallback } = useKnowledgeAgentChat();
+const { askQuestionStream, isGenerating: isAIGenerating, usedSearchFallback } = useKnowledgeAgentChat();
 const { runTask, isRunning: isAgentRunning } = useKnowledgeAgentTask();
 const knowledgeAgentLicenseGate = useLicenseGate(LICENSE_FEATURES.KNOWLEDGE_AGENT);
 
@@ -335,6 +335,7 @@ const activeErrorQuestionId = ref('');
 const activeErrorMessage = ref('');
 const questionModes = ref<Record<string, KnowledgeInputMode>>({});
 const agentTaskMetadata = ref<Record<string, AgentTaskMetadata>>({});
+const streamingAnswers = ref<Record<string, string>>({});
 const applyingWriteProposalId = ref('');
 const savingSummaryActionId = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -574,6 +575,7 @@ function resetAnswer(): void {
   activeFallbackQuestionId.value = '';
   activeErrorQuestionId.value = '';
   activeErrorMessage.value = '';
+  streamingAnswers.value = {};
 }
 
 function startNewThread(): void {
@@ -682,9 +684,27 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
 
     let generatedAnswer = '';
     try {
-      const result = await askQuestion(query);
+      const result = await askQuestionStream(query, {
+        onEvent: (event) => {
+          if (event.type === 'sources') {
+            semanticResults.value = event.sources;
+            usedSearchFallback.value = event.usedSearchFallback;
+          }
+        },
+        onDelta: (text) => {
+          if (!draftQuestion) {
+            return;
+          }
+
+          streamingAnswers.value = {
+            ...streamingAnswers.value,
+            [draftQuestion.id]: `${streamingAnswers.value[draftQuestion.id] || ''}${text}`,
+          };
+          scrollChatToBottom();
+        },
+      });
       semanticResults.value = result.sources;
-      generatedAnswer = result.answer || '';
+      generatedAnswer = result.answer || (draftQuestion ? streamingAnswers.value[draftQuestion.id] || '' : '');
     } catch (error) {
       const message = getErrorMessage(error);
       semanticResults.value = [];
@@ -713,6 +733,11 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
     });
     selectedQuestion.value = recordedQuestion;
     if (recordedQuestion) {
+      if (draftQuestion) {
+        const nextStreamingAnswers = { ...streamingAnswers.value };
+        delete nextStreamingAnswers[draftQuestion.id];
+        streamingAnswers.value = nextStreamingAnswers;
+      }
       questionModes.value = {
         ...questionModes.value,
         [recordedQuestion.id]: 'qa',
@@ -961,6 +986,11 @@ function getQuestionThinkingLabel(question: WorkbenchQuestionEntry): string {
 }
 
 function getQuestionAnswer(question: WorkbenchQuestionEntry): string {
+  const streamingAnswer = streamingAnswers.value[question.id];
+  if (streamingAnswer) {
+    return streamingAnswer;
+  }
+
   return question.fullAnswer || question.answer;
 }
 
@@ -969,6 +999,10 @@ function canSaveQuestionAsNote(question: WorkbenchQuestionEntry): boolean {
 }
 
 function getQuestionSources(question: WorkbenchQuestionEntry): WorkbenchQuestionSource[] {
+  if (generatingQuestionId.value === question.id && currentSources.value.length > 0) {
+    return currentSources.value;
+  }
+
   if (question.sources?.length) {
     return question.sources;
   }

@@ -305,8 +305,9 @@ export interface KnowledgeAgentIndexNotePayload {
   chunkOverlap?: number;
 }
 
-export interface KnowledgeAgentAskQuestionPayload {
+export interface KnowledgeAgentAskQuestionStreamPayload {
   query: string;
+  requestId: string;
 }
 
 export interface KnowledgeAgentRunTaskPayload {
@@ -322,6 +323,39 @@ export interface KnowledgeAnswerResult {
   usedSearchFallback: boolean;
   insufficientEvidence?: boolean;
 }
+
+export type KnowledgeAnswerStreamEvent =
+  | {
+    requestId: string;
+    type: 'start';
+  }
+  | {
+    requestId: string;
+    type: 'sources';
+    sources: KnowledgeSearchResult[];
+    usedSearchFallback: boolean;
+    insufficientEvidence?: boolean;
+  }
+  | {
+    requestId: string;
+    type: 'delta';
+    text: string;
+  }
+  | {
+    requestId: string;
+    type: 'done';
+    answer: string;
+    sources: KnowledgeSearchResult[];
+    usedSearchFallback: boolean;
+  }
+  | {
+    requestId: string;
+    type: 'error';
+    error: string;
+    sources?: KnowledgeSearchResult[];
+    usedSearchFallback?: boolean;
+    insufficientEvidence?: boolean;
+  };
 
 export interface KnowledgeAgentStep {
   title: string;
@@ -837,8 +871,11 @@ export const electronApi = {
     indexNote: (payload: KnowledgeAgentIndexNotePayload) => {
       return electronApi.knowledgeAgent.getApi().indexNote(payload);
     },
-    answerQuestion: (payload: KnowledgeAgentAskQuestionPayload): Promise<KnowledgeAnswerResult> => {
-      return electronApi.knowledgeAgent.getApi().answerQuestion(payload);
+    answerQuestionStream: (payload: KnowledgeAgentAskQuestionStreamPayload): Promise<KnowledgeAnswerResult> => {
+      return electronApi.knowledgeAgent.getApi().answerQuestionStream(payload);
+    },
+    onAnswerQuestionStreamEvent: (callback: (event: KnowledgeAnswerStreamEvent) => void): (() => void) => {
+      return electronApi.knowledgeAgent.getApi().onAnswerQuestionStreamEvent(callback);
     },
     runTask: (payload: KnowledgeAgentRunTaskPayload): Promise<KnowledgeAgentTaskResult> => {
       return electronApi.knowledgeAgent.getApi().runTask(payload);
