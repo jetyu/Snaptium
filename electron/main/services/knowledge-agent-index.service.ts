@@ -5,7 +5,7 @@ import { loggerService } from './logger.service.js';
 import { getErrorMessage } from '../services/error.service.js';
 import { remoteAiService } from './remote-ai.service.js';
 
-const logger = loggerService.createLogger('Main:RAG Service');
+const logger = loggerService.createLogger('Main:KnowledgeAgentIndexService');
 
 interface EmbeddingConfig {
   endpoint: string;
@@ -57,10 +57,10 @@ const RERANK_CANDIDATE_MULTIPLIER = 3;
 const RERANK_CANDIDATE_MAX = 20;
 
 /**
- * RAG Service - Execution Layer
+ * Knowledge-agent index service - execution layer.
  * Provides atomic and batch-atomic capabilities for vector storage and retrieval.
  */
-class RAGService {
+class KnowledgeAgentIndexService {
   private isInitialized: boolean;
   private workspaceRoot: string | null;
   private embeddingConfig: EmbeddingConfig | null;
@@ -76,7 +76,7 @@ class RAGService {
   }
 
   /**
-   * Initialize RAG service (Atomic)
+   * Initialize knowledge-agent index service (Atomic)
    * @param {string} workspaceRoot - Workspace root directory
    * @param {Object} embeddingConfig - Embedding API configuration
    */
@@ -110,7 +110,7 @@ class RAGService {
    */
   async indexNote(params: IndexNoteParams): Promise<{ success: boolean; chunksIndexed: number }> {
     if (!this.isInitialized) {
-      throw new Error('RAG service not initialized');
+      throw new Error('Knowledge agent index service not initialized');
     }
 
     const { noteId, noteTitle, content, chunkSize, chunkOverlap } = params;
@@ -170,7 +170,7 @@ class RAGService {
    */
   async searchByVector(params: SearchByVectorParams): Promise<SearchResultItem[]> {
     if (!this.isInitialized) {
-      throw new Error('RAG service not initialized');
+      throw new Error('Knowledge agent index service not initialized');
     }
 
     const { queryEmbedding, topK, similarityThreshold } = params;
@@ -215,7 +215,7 @@ class RAGService {
 
   async searchKnowledgeBase(params: SearchKnowledgeBaseParams): Promise<SearchResultItem[]> {
     if (!this.isInitialized) {
-      throw new Error('RAG service not initialized');
+      throw new Error('Knowledge agent index service not initialized');
     }
 
     if (!this.embeddingConfig) {
@@ -287,7 +287,7 @@ class RAGService {
    */
   async deleteNoteIndex(noteId: string): Promise<{ success: boolean }> {
     if (!this.isInitialized) {
-      throw new Error('RAG service not initialized');
+      throw new Error('Knowledge agent index service not initialized');
     }
 
     try {
@@ -300,14 +300,14 @@ class RAGService {
   }
 
   /**
-   * Get RAG service status (Atomic)
+   * Get knowledge-agent index service status (Atomic)
    * @returns {Promise<Object>} Status object
    */
   async getStatus(): Promise<Record<string, unknown>> {
     if (!this.isInitialized) {
       return {
         isInitialized: false,
-        message: 'RAG service not initialized',
+        message: 'Knowledge agent index service not initialized',
       };
     }
 
@@ -345,7 +345,7 @@ class RAGService {
   }
 
   /**
-   * Shutdown RAG service (Atomic)
+   * Shutdown knowledge-agent index service (Atomic)
    */
   async shutdown(): Promise<void> {
     if (this.isInitialized) {
@@ -356,4 +356,4 @@ class RAGService {
   }
 }
 
-export const ragService = new RAGService();
+export const knowledgeAgentIndexService = new KnowledgeAgentIndexService();

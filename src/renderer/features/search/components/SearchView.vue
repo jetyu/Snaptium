@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="search-view panel">
     <header class="search-view__header">
       <div class="search-view__title-wrap">
@@ -42,7 +42,7 @@
 
       <section class="search-view__answer-pane">
         <header class="search-view__pane-header">
-          <h2>{{ $t('label.aiRAGSearch') }}</h2>
+          <h2>{{ $t('label.aiKnowledgeAgentSearch') }}</h2>
         </header>
 
         <div ref="messageListRef" class="search-view__chat-scroll">
@@ -78,7 +78,7 @@
                   <span v-if="formatQuestionAnsweredAt(question)" class="search-view__message-timestamp">
                     {{ formatQuestionAnsweredAt(question) }}
                   </span>
-                  <div v-if="isGeneratingQuestion(question)" class="search-view__thinking">
+                  <div v-if="isGeneratingQuestion(question) && !getQuestionAnswer(question)" class="search-view__thinking">
                     <div class="search-view__spinner"></div>
                     <span>{{ getQuestionThinkingLabel(question) }}</span>
                   </div>
@@ -88,7 +88,7 @@
                   </p>
                   <template v-else>
                     <div v-if="shouldDisplayFallbackNotice(question)" class="search-view__fallback-notice">
-                      {{ $t('message.rag.noChatModel') }}
+                      {{ $t('message.knowledgeAgent.noChatModel') }}
                     </div>
                     <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
                       v-html="renderQuestionAnswer(question)"></div>
@@ -240,21 +240,23 @@ import { storeToRefs } from 'pinia';
 import { IconX, IconMessage2Bolt, IconSubtitlesAi, IconTrash, IconFileText, IconPlus, IconTextScanAi, IconChevronDown, IconCheck, IconSend, IconMessageChatbot } from '@tabler/icons-vue';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { renderMarkdownEnhancements } from '@renderer/core/markdown/markdownEnhancements';
-import { useRAGConfig, useRAGChat, useRAGAgentTask } from '@renderer/features/rag';
+import { useKnowledgeAgentConfig, useKnowledgeAgentChat, useKnowledgeAgentTask } from '@renderer/features/knowledge-agent';
 import { useLicenseGate } from '@renderer/features/license';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
+import { LICENSE_FEATURES } from '@shared/license.constants';
 import { useWorkbenchStore } from '@renderer/features/workbench';
 import { useWorkspace } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useSettingsStore } from '@renderer/features/settings';
 import type {
   KnowledgeAgentExecutedWrite,
+  KnowledgeAnswerStage,
   KnowledgeAgentStep,
   KnowledgeAgentTraceEvent,
   KnowledgeAgentWriteMode,
   KnowledgeAgentWriteProposal,
-  RagSearchResult,
+  KnowledgeSearchResult,
 } from '@renderer/core/bridge/electronApi';
 import type { WorkbenchQuestionEntry, WorkbenchQuestionSource } from '@renderer/features/workbench/constants/workbench.constants';
 import { useSearch } from '../composables/useSearch';
@@ -296,10 +298,10 @@ const settingsStore = useSettingsStore();
 const { config } = storeToRefs(settingsStore);
 const { selectNote, createNote, initializeWorkspace, applyNoteContentUpdate } = useWorkspace();
 const { searchViewRequest } = useSearch();
-const { isEnabled: ragEnabled, isConfigured: ragConfigured } = useRAGConfig();
-const { askQuestion, isGenerating: isAIGenerating, usedSearchFallback } = useRAGChat();
-const { runTask, isRunning: isAgentRunning } = useRAGAgentTask();
-const ragLicenseGate = useLicenseGate('rag');
+const { isEnabled: knowledgeAgentEnabled, isConfigured: knowledgeAgentConfigured } = useKnowledgeAgentConfig();
+const { askQuestionStream, isGenerating: isAIGenerating, usedSearchFallback } = useKnowledgeAgentChat();
+const { runTask, isRunning: isAgentRunning } = useKnowledgeAgentTask();
+const knowledgeAgentLicenseGate = useLicenseGate(LICENSE_FEATURES.KNOWLEDGE_AGENT);
 
 const inputModes: InputModeOption[] = [
   {
@@ -317,7 +319,7 @@ const inputModes: InputModeOption[] = [
 const inputMode = ref<KnowledgeInputMode>('qa');
 const isModeMenuOpen = ref(false);
 const searchQuery = ref('');
-const semanticResults = ref<RagSearchResult[]>([]);
+const semanticResults = ref<KnowledgeSearchResult[]>([]);
 const isSearching = ref(false);
 const searchError = ref('');
 const searchInput = ref<HTMLTextAreaElement | null>(null);
@@ -334,6 +336,8 @@ const activeErrorQuestionId = ref('');
 const activeErrorMessage = ref('');
 const questionModes = ref<Record<string, KnowledgeInputMode>>({});
 const agentTaskMetadata = ref<Record<string, AgentTaskMetadata>>({});
+const streamingAnswers = ref<Record<string, string>>({});
+const questionAnswerStages = ref<Record<string, KnowledgeAnswerStage>>({});
 const applyingWriteProposalId = ref('');
 const savingSummaryActionId = ref('');
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -391,7 +395,7 @@ function handleDividerPointerDown(event: PointerEvent): void {
   window.addEventListener('pointercancel', handlePaneResizeEnd);
 }
 
-const canUseKnowledgeSearch = computed(() => ragLicenseGate.allowed.value && ragEnabled.value && ragConfigured.value);
+const canUseKnowledgeSearch = computed(() => knowledgeAgentLicenseGate.allowed.value && knowledgeAgentEnabled.value && knowledgeAgentConfigured.value);
 const isBusy = computed(() => isSearching.value || isAIGenerating.value || isAgentRunning.value);
 const canAsk = computed(() => canUseKnowledgeSearch.value && Boolean(searchQuery.value.trim()) && !isBusy.value);
 const activeInputMode = computed(() => inputModes.find((mode) => mode.id === inputMode.value) ?? inputModes[0]);
@@ -402,14 +406,14 @@ const composerPlaceholder = computed(() => (
     : t('search.semanticPlaceholder')
 ));
 const knowledgeUnavailableReason = computed(() => {
-  if (!ragLicenseGate.allowed.value) {
-    return t('license.gate.rag.title');
+  if (!knowledgeAgentLicenseGate.allowed.value) {
+    return t('license.gate.knowledgeAgent.title');
   }
-  if (!ragEnabled.value) {
+  if (!knowledgeAgentEnabled.value) {
     return t('search.knowledgeUnavailableDisabled');
   }
-  if (!ragConfigured.value) {
-    return t('message.error.ragNotConfigured');
+  if (!knowledgeAgentConfigured.value) {
+    return t('message.error.knowledgeAgentNotConfigured');
   }
   return '';
 });
@@ -573,6 +577,8 @@ function resetAnswer(): void {
   activeFallbackQuestionId.value = '';
   activeErrorQuestionId.value = '';
   activeErrorMessage.value = '';
+  streamingAnswers.value = {};
+  questionAnswerStages.value = {};
 }
 
 function startNewThread(): void {
@@ -672,6 +678,10 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
         ...questionModes.value,
         [draftQuestion.id]: 'qa',
       };
+      questionAnswerStages.value = {
+        ...questionAnswerStages.value,
+        [draftQuestion.id]: 'preparing',
+      };
     }
     if (draftQuestion) {
       scrollQuestionIntoView(draftQuestion.id);
@@ -681,9 +691,35 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
 
     let generatedAnswer = '';
     try {
-      const result = await askQuestion(query);
+      const result = await askQuestionStream(query, {
+        onEvent: (event) => {
+          if (event.type === 'stage' && draftQuestion) {
+            questionAnswerStages.value = {
+              ...questionAnswerStages.value,
+              [draftQuestion.id]: event.stage,
+            };
+            return;
+          }
+
+          if (event.type === 'sources') {
+            semanticResults.value = event.sources;
+            usedSearchFallback.value = event.usedSearchFallback;
+          }
+        },
+        onDelta: (text) => {
+          if (!draftQuestion) {
+            return;
+          }
+
+          streamingAnswers.value = {
+            ...streamingAnswers.value,
+            [draftQuestion.id]: `${streamingAnswers.value[draftQuestion.id] || ''}${text}`,
+          };
+          scrollChatToBottom();
+        },
+      });
       semanticResults.value = result.sources;
-      generatedAnswer = result.answer || '';
+      generatedAnswer = result.answer || (draftQuestion ? streamingAnswers.value[draftQuestion.id] || '' : '');
     } catch (error) {
       const message = getErrorMessage(error);
       semanticResults.value = [];
@@ -712,6 +748,14 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
     });
     selectedQuestion.value = recordedQuestion;
     if (recordedQuestion) {
+      if (draftQuestion) {
+        const nextStreamingAnswers = { ...streamingAnswers.value };
+        delete nextStreamingAnswers[draftQuestion.id];
+        streamingAnswers.value = nextStreamingAnswers;
+        const nextQuestionAnswerStages = { ...questionAnswerStages.value };
+        delete nextQuestionAnswerStages[draftQuestion.id];
+        questionAnswerStages.value = nextQuestionAnswerStages;
+      }
       questionModes.value = {
         ...questionModes.value,
         [recordedQuestion.id]: 'qa',
@@ -956,10 +1000,16 @@ function getQuestionThinkingLabel(question: WorkbenchQuestionEntry): string {
     return t('search.agentTaskThinking');
   }
 
-  return t('label.aiRAGThinking');
+  const stage = questionAnswerStages.value[question.id] ?? 'preparing';
+  return t(`search.knowledgeAnswerStage.${stage}`);
 }
 
 function getQuestionAnswer(question: WorkbenchQuestionEntry): string {
+  const streamingAnswer = streamingAnswers.value[question.id];
+  if (streamingAnswer) {
+    return streamingAnswer;
+  }
+
   return question.fullAnswer || question.answer;
 }
 
@@ -968,6 +1018,10 @@ function canSaveQuestionAsNote(question: WorkbenchQuestionEntry): boolean {
 }
 
 function getQuestionSources(question: WorkbenchQuestionEntry): WorkbenchQuestionSource[] {
+  if (generatingQuestionId.value === question.id && currentSources.value.length > 0) {
+    return currentSources.value;
+  }
+
   if (question.sources?.length) {
     return question.sources;
   }
@@ -2353,3 +2407,5 @@ onBeforeUnmount(() => {
   }
 }
 </style>
+
+

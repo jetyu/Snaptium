@@ -1,17 +1,17 @@
-/**
- * RAG Store
+﻿/**
+ * KnowledgeAgent Store
  *
- * Manages RAG indexing/search state and orchestration-level cache metadata.
+ * Manages KnowledgeAgent indexing/search state and orchestration-level cache metadata.
  */
 
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { ragService } from '../services/rag.service';
+import { knowledgeAgentService } from '../services/knowledge-agent.service';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { useSettingsStore } from '../../settings/store/settings.store';
 
-const ragLogger = createLogger('RAGStore');
+const knowledgeAgentLogger = createLogger('KnowledgeAgentStore');
 
 export interface TextChunk {
   id: string;
@@ -94,7 +94,7 @@ async function runWithConcurrency<T>(tasks: Array<() => Promise<T>>, concurrency
   return results;
 }
 
-export const useRAGStore = defineStore('rag', () => {
+export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
   const indexStatus = ref<IndexStatus>({
     isIndexing: false,
     indexedNotes: 0,
@@ -117,7 +117,7 @@ export const useRAGStore = defineStore('rag', () => {
     chunkOverlap: number,
   ) => {
     try {
-      const result = await ragService.indexNote({
+      const result = await knowledgeAgentService.indexNote({
         noteId,
         noteTitle,
         content,
@@ -129,27 +129,27 @@ export const useRAGStore = defineStore('rag', () => {
         throw new Error(result.error || 'Failed to index note');
       }
 
-      ragLogger.info(`Indexed note: ${noteId}, chunks: ${result.chunksIndexed}`);
+      knowledgeAgentLogger.info(`Indexed note: ${noteId}, chunks: ${result.chunksIndexed}`);
       const lastIndexedDate = Date.now();
       indexStatus.value.lastIndexedAt = lastIndexedDate;
 
       const settingsStore = useSettingsStore();
-      const ragConfig = settingsStore.config.rag;
-      const previousChunkCounts = ragConfig.indexChunkCounts || {};
-      const previousSignatures = ragConfig.indexSignatures || {};
+      const knowledgeAgentConfig = settingsStore.config.knowledgeAgent;
+      const previousChunkCounts = knowledgeAgentConfig.indexChunkCounts || {};
+      const previousSignatures = knowledgeAgentConfig.indexSignatures || {};
       const previousCount = Number(previousChunkCounts[noteId] || 0);
       const nextCount = Number(result.chunksIndexed || 0);
-      const nextTotalChunks = Math.max(0, Number(ragConfig.cachedTotalChunks || 0) - previousCount + nextCount);
+      const nextTotalChunks = Math.max(0, Number(knowledgeAgentConfig.cachedTotalChunks || 0) - previousCount + nextCount);
       const nextSignature = buildIndexSignature(
         { id: noteId, title: noteTitle, content },
         chunkSize,
         chunkOverlap,
-        String(ragConfig.embeddingModel || ''),
+        String(knowledgeAgentConfig.embeddingModel || ''),
       );
 
       await settingsStore.saveSettings({
-        rag: {
-          ...ragConfig,
+        knowledgeAgent: {
+          ...knowledgeAgentConfig,
           lastIndexedAt: lastIndexedDate,
           indexSignatures: {
             ...previousSignatures,
@@ -170,7 +170,7 @@ export const useRAGStore = defineStore('rag', () => {
         totalChunks: nextTotalChunks,
       };
     } catch (error) {
-      ragLogger.error(`Failed to index note ${noteId}: ${getErrorMessage(error)}`);
+      knowledgeAgentLogger.error(`Failed to index note ${noteId}: ${getErrorMessage(error)}`);
       throw error;
     }
   };
@@ -183,23 +183,23 @@ export const useRAGStore = defineStore('rag', () => {
     fullRebuild = false,
   ) => {
     const settingsStore = useSettingsStore();
-    const ragConfig = settingsStore.config.rag;
-    const embeddingModel = String(ragConfig.embeddingModel || '');
-    const previousSignatures = { ...(ragConfig.indexSignatures || {}) };
-    const previousChunkCounts = { ...(ragConfig.indexChunkCounts || {}) };
+    const knowledgeAgentConfig = settingsStore.config.knowledgeAgent;
+    const embeddingModel = String(knowledgeAgentConfig.embeddingModel || '');
+    const previousSignatures = { ...(knowledgeAgentConfig.indexSignatures || {}) };
+    const previousChunkCounts = { ...(knowledgeAgentConfig.indexChunkCounts || {}) };
 
     indexStatus.value.isIndexing = true;
     indexStatus.value.error = null;
     indexStatus.value.totalNotes = notes.length;
     indexStatus.value.indexedNotes = 0;
-    indexStatus.value.totalChunks = Number(ragConfig.cachedTotalChunks || 0);
+    indexStatus.value.totalChunks = Number(knowledgeAgentConfig.cachedTotalChunks || 0);
     indexStatus.value.progress = 0;
     indexStatus.value.rebuildReason = reason;
     indexStatus.value.skippedNotes = 0;
 
     try {
       if (fullRebuild) {
-        const cleared = await ragService.clearIndex();
+        const cleared = await knowledgeAgentService.clearIndex();
         if (!cleared.success) {
           throw new Error(cleared.error || 'Failed to clear index');
         }
@@ -216,7 +216,7 @@ export const useRAGStore = defineStore('rag', () => {
       if (staleNoteIds.length > 0) {
         await runWithConcurrency(
           staleNoteIds.map((noteId) => async () => {
-            await ragService.deleteNoteIndex(noteId);
+            await knowledgeAgentService.deleteNoteIndex(noteId);
             return noteId;
           }),
           INDEX_CONCURRENCY,
@@ -265,7 +265,7 @@ export const useRAGStore = defineStore('rag', () => {
       await runWithConcurrency(
         notesToReindex.map((note) => async () => {
           try {
-            const res = await ragService.indexNote({
+            const res = await knowledgeAgentService.indexNote({
               noteId: note.id,
               noteTitle: note.title,
               content: note.content,
@@ -289,7 +289,7 @@ export const useRAGStore = defineStore('rag', () => {
               nextChunkCounts[note.id] = fallbackCount;
               cachedTotalChunks += fallbackCount;
             }
-            ragLogger.error(`Failed to index note ${note.id}: ${getErrorMessage(error)}`);
+            knowledgeAgentLogger.error(`Failed to index note ${note.id}: ${getErrorMessage(error)}`);
           } finally {
             processedCounter.value += 1;
             updateProgress();
@@ -310,8 +310,8 @@ export const useRAGStore = defineStore('rag', () => {
       indexStatus.value.progress = 100;
 
       await settingsStore.saveSettings({
-        rag: {
-          ...settingsStore.config.rag,
+        knowledgeAgent: {
+          ...settingsStore.config.knowledgeAgent,
           lastIndexedAt: lastIndexedDate,
           indexSignatures: nextSignatures,
           indexChunkCounts: nextChunkCounts,
@@ -325,12 +325,12 @@ export const useRAGStore = defineStore('rag', () => {
         totalChunks: cachedTotalChunks,
       };
 
-      ragLogger.info(
+      knowledgeAgentLogger.info(
         `${fullRebuild ? 'Full' : 'Incremental'} index sync finished: changed=${totalWork}, success=${successCounter.value}, failed=${failCounter.value}, skipped=${notes.length - totalWork}`,
       );
     } catch (error) {
       indexStatus.value.error = getErrorMessage(error);
-      ragLogger.error(`Failed to rebuild index: ${getErrorMessage(error)}`);
+      knowledgeAgentLogger.error(`Failed to rebuild index: ${getErrorMessage(error)}`);
       throw error;
     } finally {
       indexStatus.value.isIndexing = false;
@@ -343,7 +343,7 @@ export const useRAGStore = defineStore('rag', () => {
   const getStatus = async () => {
     try {
       const settingsStore = useSettingsStore();
-      const cachedChunks = Number(settingsStore.config.rag.cachedTotalChunks || 0);
+      const cachedChunks = Number(settingsStore.config.knowledgeAgent.cachedTotalChunks || 0);
       if (cachedChunks >= 0) {
         indexStatus.value.totalChunks = cachedChunks;
       }
@@ -359,14 +359,14 @@ export const useRAGStore = defineStore('rag', () => {
         };
       }
 
-      const response = await ragService.getStatus();
+      const response = await knowledgeAgentService.getStatus();
 
       if (response.success) {
         const actualTotalChunks = Number(response.totalChunks || 0);
         indexStatus.value.totalChunks = actualTotalChunks;
-        const currentCached = Number(settingsStore.config.rag.cachedTotalChunks || 0);
+        const currentCached = Number(settingsStore.config.knowledgeAgent.cachedTotalChunks || 0);
         if (actualTotalChunks !== currentCached) {
-          await settingsStore.updateRAGSetting('cachedTotalChunks', actualTotalChunks);
+          await settingsStore.updateKnowledgeAgentSetting('cachedTotalChunks', actualTotalChunks);
         }
         statusCache.value = {
           timestamp: now,
@@ -375,36 +375,36 @@ export const useRAGStore = defineStore('rag', () => {
           tableName: response.tableName,
           error: response.error,
         };
-        ragLogger.info(`Status: ${response.totalChunks} chunks indexed`);
+        knowledgeAgentLogger.info(`Status: ${response.totalChunks} chunks indexed`);
       }
 
       return response;
     } catch (error) {
-      ragLogger.error(`Failed to get status: ${getErrorMessage(error)}`);
+      knowledgeAgentLogger.error(`Failed to get status: ${getErrorMessage(error)}`);
       throw error;
     }
   };
 
   const deleteNoteIndex = async (noteId: string) => {
     try {
-      const result = await ragService.deleteNoteIndex(noteId);
+      const result = await knowledgeAgentService.deleteNoteIndex(noteId);
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to delete note index');
       }
 
       const settingsStore = useSettingsStore();
-      const ragConfig = settingsStore.config.rag;
-      const nextSignatures = { ...(ragConfig.indexSignatures || {}) };
-      const nextChunkCounts = { ...(ragConfig.indexChunkCounts || {}) };
+      const knowledgeAgentConfig = settingsStore.config.knowledgeAgent;
+      const nextSignatures = { ...(knowledgeAgentConfig.indexSignatures || {}) };
+      const nextChunkCounts = { ...(knowledgeAgentConfig.indexChunkCounts || {}) };
       const removedChunks = Number(nextChunkCounts[noteId] || 0);
       delete nextSignatures[noteId];
       delete nextChunkCounts[noteId];
-      const nextTotalChunks = Math.max(0, Number(ragConfig.cachedTotalChunks || 0) - removedChunks);
+      const nextTotalChunks = Math.max(0, Number(knowledgeAgentConfig.cachedTotalChunks || 0) - removedChunks);
 
       await settingsStore.saveSettings({
-        rag: {
-          ...ragConfig,
+        knowledgeAgent: {
+          ...knowledgeAgentConfig,
           indexSignatures: nextSignatures,
           indexChunkCounts: nextChunkCounts,
           cachedTotalChunks: nextTotalChunks,
@@ -418,16 +418,16 @@ export const useRAGStore = defineStore('rag', () => {
         totalChunks: nextTotalChunks,
       };
 
-      ragLogger.info(`Deleted index for note: ${noteId}`);
+      knowledgeAgentLogger.info(`Deleted index for note: ${noteId}`);
     } catch (error) {
-      ragLogger.error(`Failed to delete note index ${noteId}: ${getErrorMessage(error)}`);
+      knowledgeAgentLogger.error(`Failed to delete note index ${noteId}: ${getErrorMessage(error)}`);
       throw error;
     }
   };
 
   const clearIndex = async () => {
     try {
-      const result = await ragService.clearIndex();
+      const result = await knowledgeAgentService.clearIndex();
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to clear index');
@@ -441,8 +441,8 @@ export const useRAGStore = defineStore('rag', () => {
 
       const settingsStore = useSettingsStore();
       await settingsStore.saveSettings({
-        rag: {
-          ...settingsStore.config.rag,
+        knowledgeAgent: {
+          ...settingsStore.config.knowledgeAgent,
           lastIndexedAt: indexStatus.value.lastIndexedAt,
           indexSignatures: {},
           indexChunkCounts: {},
@@ -456,9 +456,9 @@ export const useRAGStore = defineStore('rag', () => {
         totalChunks: 0,
       };
 
-      ragLogger.info('Cleared all index data');
+      knowledgeAgentLogger.info('Cleared all index data');
     } catch (error) {
-      ragLogger.error(`Failed to clear index: ${getErrorMessage(error)}`);
+      knowledgeAgentLogger.error(`Failed to clear index: ${getErrorMessage(error)}`);
       throw error;
     }
   };
@@ -472,3 +472,4 @@ export const useRAGStore = defineStore('rag', () => {
     clearIndex,
   };
 });
+

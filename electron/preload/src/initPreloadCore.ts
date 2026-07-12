@@ -29,7 +29,7 @@ interface AiSourceTestConnectionPayload {
 type SyncProviderConfigPayload = JsonObject & { provider: string };
 interface SyncRunPayload { config: JsonObject; trigger: 'manual' | 'timer' | 'save'; }
 interface ShortcutKeybindingPayload { commandId: string; key: string; when?: string | null; }
-type RagQueryPayload = JsonObject;
+type KnowledgeAgentQueryPayload = JsonObject;
 type AiChatPayload = JsonObject;
 
 const electronAPI = Object.freeze({
@@ -180,7 +180,8 @@ const electronAPI = Object.freeze({
     setStartup: (enabled: boolean) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SET_STARTUP, enabled),
     pickDirectory: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_PICK_DIRECTORY),
     confirmEmbeddingSourceChange: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_EMBEDDING_SOURCE_CHANGE),
-    confirmRagRebuildMode: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_RAG_REBUILD_MODE),
+    confirmKnowledgeAgentChunkRebuild: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_KNOWLEDGE_AGENT_CHUNK_REBUILD),
+    confirmKnowledgeAgentRebuildMode: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_KNOWLEDGE_AGENT_REBUILD_MODE),
     confirmDeleteAiSource: (name: string) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_DELETE_AI_SOURCE, name),
     confirmResetSyncProvider: (name: string) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_CONFIRM_RESET_SYNC_PROVIDER, name),
     showMessage: (options: {
@@ -230,14 +231,19 @@ const electronAPI = Object.freeze({
     exportKeybindings: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_EXPORT_KEYBINDINGS),
     importKeybindings: (config: JsonObject) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_IMPORT_KEYBINDINGS, config),
   }),
-  rag: Object.freeze({
-    initialize: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_INITIALIZE),
-    indexNote: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_INDEX_NOTE, request),
-    rebuildIndex: (request: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_REBUILD_INDEX, request),
-    answerQuestion: (payload: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_ANSWER_QUESTION, payload),
-    runTask: (payload: RagQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.RAG_RUN_TASK, payload),
-    deleteNoteIndex: (noteId: string) => ipcRenderer.invoke(IPC_CHANNELS.RAG_DELETE_NOTE_INDEX, noteId),
-    getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.RAG_GET_STATUS),
+  knowledgeAgent: Object.freeze({
+    initialize: () => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_INITIALIZE),
+    indexNote: (request: KnowledgeAgentQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_INDEX_NOTE, request),
+    rebuildIndex: (request: KnowledgeAgentQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_REBUILD_INDEX, request),
+    answerQuestionStream: (payload: KnowledgeAgentQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_ANSWER_QUESTION_STREAM, payload),
+    onAnswerQuestionStreamEvent: (callback: (payload: JsonObject) => void) => {
+      const subscription = (_event: Electron.IpcRendererEvent, payload: JsonObject) => callback(payload);
+      ipcRenderer.on(IPC_CHANNELS.KNOWLEDGE_AGENT_ANSWER_QUESTION_STREAM_EVENT, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.KNOWLEDGE_AGENT_ANSWER_QUESTION_STREAM_EVENT, subscription);
+    },
+    runTask: (payload: KnowledgeAgentQueryPayload) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_RUN_TASK, payload),
+    deleteNoteIndex: (noteId: string) => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_DELETE_NOTE_INDEX, noteId),
+    getStatus: () => ipcRenderer.invoke(IPC_CHANNELS.KNOWLEDGE_AGENT_GET_STATUS),
   }),
   aiChat: Object.freeze({
     generate: (payload: AiChatPayload) => ipcRenderer.invoke(IPC_CHANNELS.AI_CHAT_GENERATE, payload),

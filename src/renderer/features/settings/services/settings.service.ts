@@ -4,7 +4,7 @@ import {
   type MarkdownExportResult,
   type MarkdownImportResult,
   type MessageDialogOptions,
-  type RagRebuildMode,
+  type KnowledgeAgentRebuildMode,
   type SppxExportResult,
   type SppxImportResult,
 } from '@renderer/core/bridge/electronApi';
@@ -27,6 +27,16 @@ import type { AppSettings, AISource } from '../store/settings.store';
 type SettingsChangeReason = 'save' | 'language' | 'import' | 'reset';
 type WindowCloseAction = AppSettings['windowCloseAction'];
 type AccentMode = AppSettings['accentMode'];
+
+function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const numericValue = Number(value);
+  const finiteValue = Number.isFinite(numericValue) ? numericValue : fallback;
+  return Math.min(max, Math.max(min, finiteValue));
+}
+
+function clampInteger(value: unknown, fallback: number, min: number, max: number): number {
+  return Math.trunc(clampNumber(value, fallback, min, max));
+}
 
 function normalizeWindowCloseAction(value: unknown): WindowCloseAction {
   return value === 'exit' ? 'exit' : 'minimize';
@@ -95,10 +105,10 @@ function normalizeAiAssistantSettings(
   return mergedConfig;
 }
 
-function normalizeRagSettings(
-  baseConfig: AppSettings['rag'],
-  incomingConfig?: Partial<AppSettings['rag']>,
-): AppSettings['rag'] {
+function normalizeKnowledgeAgentSettings(
+  baseConfig: AppSettings['knowledgeAgent'],
+  incomingConfig?: Partial<AppSettings['knowledgeAgent']>,
+): AppSettings['knowledgeAgent'] {
   const mergedConfig = {
     ...baseConfig,
     ...(incomingConfig ?? {}),
@@ -109,11 +119,17 @@ function normalizeRagSettings(
     mergedConfig.embeddingModel = OFFICIAL_AI_MODELS.EMBEDDING;
   }
 
-  if (mergedConfig.ragChatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
-    mergedConfig.ragChatModel = OFFICIAL_AI_MODELS.CHAT;
+  if (mergedConfig.chatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    mergedConfig.chatModel = OFFICIAL_AI_MODELS.CHAT;
   }
 
-  return mergedConfig;
+  return {
+    ...mergedConfig,
+    chunkSize: clampInteger(mergedConfig.chunkSize, 500, 500, 800),
+    chunkOverlap: clampInteger(mergedConfig.chunkOverlap, 50, 50, 100),
+    topK: clampInteger(mergedConfig.topK, 5, 1, 10),
+    similarityThreshold: clampNumber(mergedConfig.similarityThreshold, 0.45, 0, 1),
+  };
 }
 
 function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettings> | null): AppSettings {
@@ -123,7 +139,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
       aiSources: normalizeAiSources(baseConfig.aiSources),
       aiAssistant: normalizeAiAssistantSettings(baseConfig.aiAssistant),
       previewAppearance: { ...baseConfig.previewAppearance },
-      rag: normalizeRagSettings(baseConfig.rag),
+      knowledgeAgent: normalizeKnowledgeAgentSettings(baseConfig.knowledgeAgent),
       sync: {
         ...baseConfig.sync,
         webdav: { ...baseConfig.sync.webdav },
@@ -157,7 +173,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
         incomingConfig.previewAppearance?.trustedRemoteImageHosts ?? baseConfig.previewAppearance.trustedRemoteImageHosts,
       ),
     },
-    rag: normalizeRagSettings(baseConfig.rag, incomingConfig.rag),
+    knowledgeAgent: normalizeKnowledgeAgentSettings(baseConfig.knowledgeAgent, incomingConfig.knowledgeAgent),
     sync: {
       ...baseConfig.sync,
       ...(incomingConfig.sync ?? {}),
@@ -276,8 +292,12 @@ export const settingsService = {
     return await electronApi.settings.confirmEmbeddingSourceChange();
   },
 
-  async confirmRagRebuildMode(): Promise<RagRebuildMode> {
-    return await electronApi.settings.confirmRagRebuildMode();
+  async confirmKnowledgeAgentRebuildMode(): Promise<KnowledgeAgentRebuildMode> {
+    return await electronApi.settings.confirmKnowledgeAgentRebuildMode();
+  },
+
+  async confirmKnowledgeAgentChunkRebuild(): Promise<boolean> {
+    return await electronApi.settings.confirmKnowledgeAgentChunkRebuild();
   },
 
   async confirmDeleteAiSource(name: string): Promise<boolean> {

@@ -297,7 +297,7 @@ export interface SavedImagePayload {
   markdownPath: string;
 }
 
-export interface RagIndexNotePayload {
+export interface KnowledgeAgentIndexNotePayload {
   noteId: string;
   noteTitle: string;
   content: string;
@@ -305,11 +305,12 @@ export interface RagIndexNotePayload {
   chunkOverlap?: number;
 }
 
-export interface RagAskQuestionPayload {
+export interface KnowledgeAgentAskQuestionStreamPayload {
   query: string;
+  requestId: string;
 }
 
-export interface RagRunTaskPayload {
+export interface KnowledgeAgentRunTaskPayload {
   task: string;
   writeMode?: KnowledgeAgentWriteMode;
 }
@@ -317,11 +318,51 @@ export interface RagRunTaskPayload {
 export interface KnowledgeAnswerResult {
   success: boolean;
   answer?: string;
-  sources: RagSearchResult[];
+  sources: KnowledgeSearchResult[];
   error?: string;
   usedSearchFallback: boolean;
   insufficientEvidence?: boolean;
 }
+
+export type KnowledgeAnswerStage = 'preparing' | 'searching' | 'assessing' | 'sourcing' | 'generating';
+
+export type KnowledgeAnswerStreamEvent =
+  | {
+    requestId: string;
+    type: 'start';
+  }
+  | {
+    requestId: string;
+    type: 'stage';
+    stage: KnowledgeAnswerStage;
+  }
+  | {
+    requestId: string;
+    type: 'sources';
+    sources: KnowledgeSearchResult[];
+    usedSearchFallback: boolean;
+    insufficientEvidence?: boolean;
+  }
+  | {
+    requestId: string;
+    type: 'delta';
+    text: string;
+  }
+  | {
+    requestId: string;
+    type: 'done';
+    answer: string;
+    sources: KnowledgeSearchResult[];
+    usedSearchFallback: boolean;
+  }
+  | {
+    requestId: string;
+    type: 'error';
+    error: string;
+    sources?: KnowledgeSearchResult[];
+    usedSearchFallback?: boolean;
+    insufficientEvidence?: boolean;
+  };
 
 export interface KnowledgeAgentStep {
   title: string;
@@ -390,7 +431,7 @@ export interface KnowledgeAgentTaskResult {
   finalAnswer?: string;
   steps: KnowledgeAgentStep[];
   traceEvents: KnowledgeAgentTraceEvent[];
-  sources: RagSearchResult[];
+  sources: KnowledgeSearchResult[];
   writeMode: KnowledgeAgentWriteMode;
   pendingWrites: KnowledgeAgentWriteProposal[];
   executedWrites: KnowledgeAgentExecutedWrite[];
@@ -405,7 +446,7 @@ export interface KnowledgeAgentTaskResult {
   error?: string;
 }
 
-export interface RagSearchResult {
+export interface KnowledgeSearchResult {
   chunk: {
     id: string;
     noteId: string;
@@ -417,7 +458,7 @@ export interface RagSearchResult {
   noteTitle?: string;
 }
 
-export interface RagStatusResult {
+export interface KnowledgeAgentStatusResult {
   success: boolean;
   isInitialized: boolean;
   totalChunks: number;
@@ -495,7 +536,7 @@ export interface MessageDialogOptions {
   detail?: string;
 }
 
-export type RagRebuildMode = 'incremental' | 'full' | 'cancel';
+export type KnowledgeAgentRebuildMode = 'incremental' | 'full' | 'cancel';
 
 interface ShortcutsKeybindingPayload {
   commandId: string;
@@ -635,7 +676,8 @@ export const electronApi = {
     switchLanguage: (locale: string) => electronApi.settings.getApi().switchLanguage(locale),
     pickDirectory: () => electronApi.settings.getApi().pickDirectory(),
     confirmEmbeddingSourceChange: () => electronApi.settings.getApi().confirmEmbeddingSourceChange(),
-    confirmRagRebuildMode: (): Promise<RagRebuildMode> => electronApi.settings.getApi().confirmRagRebuildMode(),
+    confirmKnowledgeAgentChunkRebuild: (): Promise<boolean> => electronApi.settings.getApi().confirmKnowledgeAgentChunkRebuild(),
+    confirmKnowledgeAgentRebuildMode: (): Promise<KnowledgeAgentRebuildMode> => electronApi.settings.getApi().confirmKnowledgeAgentRebuildMode(),
     confirmDeleteAiSource: (name: string) => electronApi.settings.getApi().confirmDeleteAiSource(name),
     confirmResetSyncProvider: (name: string) => electronApi.settings.getApi().confirmResetSyncProvider(name),
     showMessage: (options: MessageDialogOptions): Promise<boolean> => {
@@ -823,33 +865,36 @@ export const electronApi = {
     },
   },
 
-  rag: {
-    isAvailable: (): boolean => !!window.electronAPI?.rag,
+  knowledgeAgent: {
+    isAvailable: (): boolean => !!window.electronAPI?.knowledgeAgent,
     getApi: () => {
-      const api = ensureElectronApi().rag;
-      if (!api) throw new Error('RAG bridge is unavailable');
+      const api = ensureElectronApi().knowledgeAgent;
+      if (!api) throw new Error('Knowledge-agent bridge is unavailable');
       return api;
     },
     initialize: () => {
-      return electronApi.rag.getApi().initialize();
+      return electronApi.knowledgeAgent.getApi().initialize();
     },
-    indexNote: (payload: RagIndexNotePayload) => {
-      return electronApi.rag.getApi().indexNote(payload);
+    indexNote: (payload: KnowledgeAgentIndexNotePayload) => {
+      return electronApi.knowledgeAgent.getApi().indexNote(payload);
     },
-    answerQuestion: (payload: RagAskQuestionPayload): Promise<KnowledgeAnswerResult> => {
-      return electronApi.rag.getApi().answerQuestion(payload);
+    answerQuestionStream: (payload: KnowledgeAgentAskQuestionStreamPayload): Promise<KnowledgeAnswerResult> => {
+      return electronApi.knowledgeAgent.getApi().answerQuestionStream(payload);
     },
-    runTask: (payload: RagRunTaskPayload): Promise<KnowledgeAgentTaskResult> => {
-      return electronApi.rag.getApi().runTask(payload);
+    onAnswerQuestionStreamEvent: (callback: (event: KnowledgeAnswerStreamEvent) => void): (() => void) => {
+      return electronApi.knowledgeAgent.getApi().onAnswerQuestionStreamEvent(callback);
+    },
+    runTask: (payload: KnowledgeAgentRunTaskPayload): Promise<KnowledgeAgentTaskResult> => {
+      return electronApi.knowledgeAgent.getApi().runTask(payload);
     },
     deleteNoteIndex: (noteId: string) => {
-      return electronApi.rag.getApi().deleteNoteIndex(noteId);
+      return electronApi.knowledgeAgent.getApi().deleteNoteIndex(noteId);
     },
-    getStatus: (): Promise<RagStatusResult> => {
-      return electronApi.rag.getApi().getStatus();
+    getStatus: (): Promise<KnowledgeAgentStatusResult> => {
+      return electronApi.knowledgeAgent.getApi().getStatus();
     },
     clearIndex: (): Promise<{ success: boolean; error?: string }> => {
-      return electronApi.rag.getApi().rebuildIndex();
+      return electronApi.knowledgeAgent.getApi().rebuildIndex();
     },
   },
 

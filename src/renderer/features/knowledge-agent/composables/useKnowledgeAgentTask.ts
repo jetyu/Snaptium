@@ -1,12 +1,12 @@
-import { ref } from 'vue';
+﻿import { ref } from 'vue';
 import { createLogger } from '@renderer/features/logger';
 import type { KnowledgeAgentTaskResult, KnowledgeAgentWriteMode } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
-import { ragService } from '../services/rag.service';
+import { knowledgeAgentService } from '../services/knowledge-agent.service';
 
-const ragAgentTaskLogger = createLogger('RAGAgentTask');
+const knowledgeAgentTaskLogger = createLogger('KnowledgeAgentTask');
 
-export function useRAGAgentTask() {
+export function useKnowledgeAgentTask() {
   const isRunning = ref(false);
   const result = ref<KnowledgeAgentTaskResult | null>(null);
   const error = ref<string | null>(null);
@@ -19,13 +19,13 @@ export function useRAGAgentTask() {
       throw new Error('Task cannot be empty');
     }
 
-    ragAgentTaskLogger.debug(`Starting agent task (length=${task.length})`);
+    knowledgeAgentTaskLogger.debug(`Starting agent task (length=${task.length})`);
     isRunning.value = true;
     error.value = null;
     result.value = null;
 
     try {
-      const taskResult = await ragService.runTask(task, writeMode);
+      const taskResult = await knowledgeAgentService.runTask(task, writeMode);
       if (!taskResult.success) {
         throw new Error(taskResult.error || 'Failed to run agent task');
       }
@@ -34,12 +34,12 @@ export function useRAGAgentTask() {
       return taskResult;
     } catch (err) {
       const message = getErrorMessage(err);
-      ragAgentTaskLogger.error(`Error running agent task: ${message}`);
+      knowledgeAgentTaskLogger.error(`Error running agent task: ${message}`);
       error.value = message;
       throw err;
     } finally {
       isRunning.value = false;
-      ragAgentTaskLogger.debug('Agent task flow finished');
+      knowledgeAgentTaskLogger.debug('Agent task flow finished');
     }
   };
 
@@ -50,3 +50,4 @@ export function useRAGAgentTask() {
     error,
   };
 }
+

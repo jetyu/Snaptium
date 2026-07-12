@@ -15,7 +15,7 @@ import {
   isOfficialAiSourceId,
 } from '@shared/official-ai.constants';
 
-import { DEFAULT_RAG_CONFIG } from '@renderer/features/rag/constants/rag.constants';
+import { DEFAULT_KNOWLEDGE_AGENT_CONFIG } from '@renderer/features/knowledge-agent/constants/knowledge-agent.constants';
 import { DEFAULT_SYNC_SETTINGS, type SyncProvider } from '@shared/sync.constants';
 import { DEFAULT_UPDATE_CHANNEL, type UpdateChannel } from '@shared/updater.constants';
 import { UPDATER_CONSTANTS } from '@renderer/features/updater/constants/updater.constants';
@@ -32,6 +32,39 @@ import {
 } from '@renderer/features/workbench/constants/workbench.constants';
 import { DEFAULT_TRUSTED_REMOTE_IMAGE_HOSTS, normalizeTrustedRemoteImageHosts } from '@shared/preview-security.constants';
 import { settingsService } from '../services/settings.service';
+
+function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const numericValue = Number(value);
+  const finiteValue = Number.isFinite(numericValue) ? numericValue : fallback;
+  return Math.min(max, Math.max(min, finiteValue));
+}
+
+function clampInteger(value: unknown, fallback: number, min: number, max: number): number {
+  return Math.trunc(clampNumber(value, fallback, min, max));
+}
+
+function normalizeKnowledgeAgentNumber<K extends keyof KnowledgeAgentSettings>(
+  key: K,
+  value: KnowledgeAgentSettings[K],
+): KnowledgeAgentSettings[K] {
+  if (key === 'chunkSize') {
+    return clampInteger(value, 500, 500, 800) as KnowledgeAgentSettings[K];
+  }
+
+  if (key === 'chunkOverlap') {
+    return clampInteger(value, 50, 50, 100) as KnowledgeAgentSettings[K];
+  }
+
+  if (key === 'topK') {
+    return clampInteger(value, 5, 1, 10) as KnowledgeAgentSettings[K];
+  }
+
+  if (key === 'similarityThreshold') {
+    return clampNumber(value, 0.45, 0, 1) as KnowledgeAgentSettings[K];
+  }
+
+  return value;
+}
 
 export interface AISource {
   id: string;
@@ -55,12 +88,12 @@ export interface AIAssistantSettings {
   systemPrompt: string;
 }
 
-export interface RAGSettings {
+export interface KnowledgeAgentSettings {
   enabled: boolean;
   embeddingSourceId: string;
   embeddingModel: string;
-  ragChatSourceId: string;
-  ragChatModel: string;
+  chatSourceId: string;
+  chatModel: string;
   rerankerSourceId: string;
   chunkSize: number;
   chunkOverlap: number;
@@ -138,7 +171,7 @@ export interface AppSettings {
   showStatusBar: boolean;
   aiSources: AISource[];
   aiAssistant: AIAssistantSettings;
-  rag: RAGSettings;
+  knowledgeAgent: KnowledgeAgentSettings;
   sync: SyncSettings;
   loggingEnabled: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
@@ -199,12 +232,12 @@ function createDefaultConfig(): AppSettings {
       writingScenario: AI_WRITING_DEFAULTS.SCENARIO,
       systemPrompt: '',
     },
-    rag: {
-      ...DEFAULT_RAG_CONFIG,
+    knowledgeAgent: {
+      ...DEFAULT_KNOWLEDGE_AGENT_CONFIG,
       embeddingSourceId: OFFICIAL_AI_SOURCE_IDS.EMBEDDING,
       embeddingModel: OFFICIAL_AI_MODELS.EMBEDDING,
-      ragChatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
-      ragChatModel: OFFICIAL_AI_MODELS.CHAT,
+      chatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+      chatModel: OFFICIAL_AI_MODELS.CHAT,
       rerankerSourceId: OFFICIAL_AI_SOURCE_IDS.RERANKER,
     },
     sync: createDefaultSyncConfig(),
@@ -273,9 +306,9 @@ export const useSettingsStore = defineStore('settings', () => {
           ? normalizeTrustedRemoteImageHosts(newConfig.previewAppearance.trustedRemoteImageHosts)
           : [...config.value.previewAppearance.trustedRemoteImageHosts],
       },
-      rag: {
-        ...config.value.rag,
-        ...(newConfig.rag ?? {}),
+      knowledgeAgent: {
+        ...config.value.knowledgeAgent,
+        ...(newConfig.knowledgeAgent ?? {}),
       },
       sync: {
         ...config.value.sync,
@@ -374,27 +407,27 @@ export const useSettingsStore = defineStore('settings', () => {
   };
 
   /**
-   * Update RAG specific setting
+   * Update knowledge-agent specific setting
    */
-  const updateRAGSetting = async <K extends keyof RAGSettings>(
+  const updateKnowledgeAgentSetting = async <K extends keyof KnowledgeAgentSettings>(
     key: K,
-    value: RAGSettings[K]
+    value: KnowledgeAgentSettings[K]
   ) => {
-    config.value.rag[key] = value;
+    config.value.knowledgeAgent[key] = normalizeKnowledgeAgentNumber(key, value);
 
     // Auto-update model if sourceId changes
     if (key === 'embeddingSourceId') {
       const source = config.value.aiSources.find(s => s.id === String(value));
       if (source && source.aiModel) {
-        config.value.rag.embeddingModel = source.aiModel;
+        config.value.knowledgeAgent.embeddingModel = source.aiModel;
       }
     }
-    if (key === 'ragChatSourceId') {
+    if (key === 'chatSourceId') {
       const source = config.value.aiSources.find(s => s.id === String(value));
       if (source && source.aiModel) {
-        config.value.rag.ragChatModel = source.aiModel;
+        config.value.knowledgeAgent.chatModel = source.aiModel;
       } else if (value === '') {
-        config.value.rag.ragChatModel = '';
+        config.value.knowledgeAgent.chatModel = '';
       }
     }
 
@@ -479,16 +512,16 @@ export const useSettingsStore = defineStore('settings', () => {
     if (config.value.aiAssistant.sourceId === id) {
       config.value.aiAssistant.sourceId = '';
     }
-    if (config.value.rag.embeddingSourceId === id) {
-      config.value.rag.embeddingSourceId = '';
-      config.value.rag.embeddingModel = '';
+    if (config.value.knowledgeAgent.embeddingSourceId === id) {
+      config.value.knowledgeAgent.embeddingSourceId = '';
+      config.value.knowledgeAgent.embeddingModel = '';
     }
-    if (config.value.rag.ragChatSourceId === id) {
-      config.value.rag.ragChatSourceId = '';
-      config.value.rag.ragChatModel = '';
+    if (config.value.knowledgeAgent.chatSourceId === id) {
+      config.value.knowledgeAgent.chatSourceId = '';
+      config.value.knowledgeAgent.chatModel = '';
     }
-    if (config.value.rag.rerankerSourceId === id) {
-      config.value.rag.rerankerSourceId = '';
+    if (config.value.knowledgeAgent.rerankerSourceId === id) {
+      config.value.knowledgeAgent.rerankerSourceId = '';
     }
     await saveSettings({});
   };
@@ -507,16 +540,16 @@ export const useSettingsStore = defineStore('settings', () => {
       if (config.value.aiAssistant.sourceId === id && !sourceSupportsCapability(source, 'chat')) {
         config.value.aiAssistant.sourceId = '';
       }
-      if (config.value.rag.embeddingSourceId === id && !sourceSupportsCapability(source, 'embedding')) {
-        config.value.rag.embeddingSourceId = '';
-        config.value.rag.embeddingModel = '';
+      if (config.value.knowledgeAgent.embeddingSourceId === id && !sourceSupportsCapability(source, 'embedding')) {
+        config.value.knowledgeAgent.embeddingSourceId = '';
+        config.value.knowledgeAgent.embeddingModel = '';
       }
-      if (config.value.rag.ragChatSourceId === id && !sourceSupportsCapability(source, 'chat')) {
-        config.value.rag.ragChatSourceId = '';
-        config.value.rag.ragChatModel = '';
+      if (config.value.knowledgeAgent.chatSourceId === id && !sourceSupportsCapability(source, 'chat')) {
+        config.value.knowledgeAgent.chatSourceId = '';
+        config.value.knowledgeAgent.chatModel = '';
       }
-      if (config.value.rag.rerankerSourceId === id && !sourceSupportsCapability(source, 'reranker')) {
-        config.value.rag.rerankerSourceId = '';
+      if (config.value.knowledgeAgent.rerankerSourceId === id && !sourceSupportsCapability(source, 'reranker')) {
+        config.value.knowledgeAgent.rerankerSourceId = '';
       }
       await saveSettings({});
     }
@@ -600,7 +633,7 @@ export const useSettingsStore = defineStore('settings', () => {
     updateSetting,
     updateAssistantSetting,
     updatePreviewAppearanceSetting,
-    updateRAGSetting,
+    updateKnowledgeAgentSetting,
     updateSyncSetting,
     updateSyncProviderSetting,
     addAiSource,
