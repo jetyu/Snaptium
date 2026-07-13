@@ -15,6 +15,7 @@ export const IPC_CHANNELS = {
   APP_GET_VERSION: 'app:get-version',
   APP_GET_WALLPAPER: 'app:get-wallpaper',
   DATA_EXPORT_MARKDOWN: 'data-transfer:export-markdown',
+  DATA_EXPORT_NOTE_PDF: 'data-transfer:export-note-pdf',
   DATA_EXPORT_SPPX: 'data-transfer:export-sppx',
   DATA_IMPORT_MARKDOWN: 'data-transfer:import-markdown',
   DATA_IMPORT_ENEX: 'data-transfer:import-enex',

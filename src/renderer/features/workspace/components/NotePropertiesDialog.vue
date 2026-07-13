@@ -6,7 +6,6 @@
         ref="overlayRef"
         class="note-properties-overlay"
         tabindex="0"
-        @click="closeDialog"
         @keydown.esc="closeDialog"
       >
         <div ref="dialogRef" class="note-properties-modal" :style="dialogStyle" @click.stop>

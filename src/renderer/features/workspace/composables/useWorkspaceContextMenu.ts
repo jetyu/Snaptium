@@ -30,6 +30,7 @@ interface UseWorkspaceContextMenuOptions {
   beginRenamingNote: (note: Note) => void;
   beginRenamingNotebook: (notebook: Notebook) => void;
   setNoteReadMode: (id: string, enabled: boolean) => Promise<void>;
+  exportNotePdf: (id: string) => Promise<void>;
   openNotebookAppearancePicker: (notebook: Notebook) => void;
   toggleNodeStar: (id: string, type: 'note' | 'notebook', starred: boolean) => Promise<void>;
   openHistory: (id: string) => void;
@@ -113,6 +114,11 @@ export function useWorkspaceContextMenu(options: UseWorkspaceContextMenuOptions)
       case WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_READ_MODE:
         if (context.note) {
           await options.setNoteReadMode(context.note.id, !context.note.locked);
+        }
+        break;
+      case WORKSPACE_CONSTANTS.ACTIONS.EXPORT_PDF:
+        if (context.note) {
+          await options.exportNotePdf(context.note.id);
         }
         break;
       case WORKSPACE_CONSTANTS.ACTIONS.TOGGLE_STAR:
