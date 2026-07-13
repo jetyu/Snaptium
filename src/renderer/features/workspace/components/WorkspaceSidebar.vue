@@ -184,6 +184,7 @@ const syncStore = useSyncStore();
 const settingsStore = useSettingsStore();
 const workspaceStore = useWorkspaceStore();
 const appShellStore = useAppShellStore();
+const exportNotePdf = (id: string): Promise<void> => workspaceStore.exportNotePdf(id);
 const { statusLabel, statusToneClass, summaryItems, formattedLastSynced } = useSyncPresentation();
 const { workspaceRenameRequest } = useWorkspaceUiActions();
 const sidebarRef = ref<HTMLElement | null>(null);
@@ -1144,6 +1145,7 @@ const { openCreateButtonMenu, openRootMenu, openNoteMenu, openNotebookMenu } =
     beginRenamingNote,
     beginRenamingNotebook,
     setNoteReadMode,
+    exportNotePdf,
     openNotebookAppearancePicker,
     toggleNodeStar,
     openHistory: openHistoryDialog,

@@ -509,6 +509,16 @@ export interface MarkdownExportResult extends DataTransferBaseResult {
   failedFilePaths?: string[];
 }
 
+export interface SingleNotePdfExportPayload {
+  title: string;
+  html: string;
+}
+
+export interface SingleNotePdfExportResult extends DataTransferBaseResult {
+  filePath?: string;
+  exportedAt?: number;
+}
+
 export interface NwpImportResult extends DataTransferBaseResult {
   stats?: {
     imported: number;
@@ -706,6 +716,9 @@ export const electronApi = {
     },
     exportMarkdown: (): Promise<MarkdownExportResult> => {
       return electronApi.dataTransfer.getApi().exportMarkdown();
+    },
+    exportNotePdf: (payload: SingleNotePdfExportPayload): Promise<SingleNotePdfExportResult> => {
+      return electronApi.dataTransfer.getApi().exportNotePdf(payload);
     },
     importEnex: (): Promise<EnexImportResult> => {
       return electronApi.dataTransfer.getApi().importEnex();

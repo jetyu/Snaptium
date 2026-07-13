@@ -1,7 +1,10 @@
 import { electronApi } from '@renderer/core/bridge/electronApi';
+import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { defineStore } from 'pinia';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
+import { i18n } from '@renderer/features/i18n';
 import { createLogger } from '@renderer/features/logger';
+import { useSettingsStore } from '@renderer/features/settings/store/settings.store';
 import type { HistoryVersion } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import {
@@ -837,6 +840,64 @@ export const useWorkspaceStore = defineStore('workspace', {
         await electronApi.dataTransfer.exportSppx();
       } catch (err: unknown) {
         logger.error(`Failed to export sppx: ${getErrorMessage(err)}`);
+      }
+    },
+
+    async exportNotePdf(id: string): Promise<void> {
+      if (!electronApi.dataTransfer.isAvailable()) {
+        return;
+      }
+
+      const note = this.notes.find((candidate) => candidate.id === id);
+      if (!note) {
+        logger.warn(`Cannot export note PDF, note not found: ${id}`);
+        return;
+      }
+
+      const settingsStore = useSettingsStore();
+      const t = i18n.global.t.bind(i18n.global);
+
+      try {
+        await this.forceFlushAutoSave();
+        const html = renderMarkdown(note.content, {
+          allowHtml: settingsStore.config.previewAppearance.allowHtml,
+          allowInlineSvg: settingsStore.config.previewAppearance.allowInlineSvg,
+          remoteImageMode: settingsStore.config.previewAppearance.remoteImageMode,
+          trustedRemoteImageHosts: settingsStore.config.previewAppearance.trustedRemoteImageHosts,
+          blockedImageLabel: t('preview.remoteImageBlocked'),
+          copyCodeButtonLabel: t('preview.copyCode'),
+          contentId: note.contentId,
+          workspaceRoot: workspaceService.getCurrentWorkspaceRoot(),
+        });
+
+        const result = await electronApi.dataTransfer.exportNotePdf({
+          title: note.title,
+          html,
+        });
+
+        if (result.cancelled) {
+          return;
+        }
+
+        if (!result.success) {
+          throw new Error(t('dataTransfer.message.failed'));
+        }
+
+        await electronApi.settings.showMessage({
+          type: 'info',
+          title: t('dataTransfer.notePdfExport.dialogTitle'),
+          message: result.filePath
+            ? `${t('dataTransfer.message.notePdfExportSuccess')} ${result.filePath}`
+            : t('dataTransfer.message.notePdfExportSuccess'),
+        });
+      } catch (err: unknown) {
+        logger.error(`Failed to export note PDF: ${getErrorMessage(err)}`);
+        await electronApi.settings.showMessage({
+          type: 'error',
+          title: t('dataTransfer.notePdfExport.dialogTitle'),
+          message: t('dataTransfer.message.failed'),
+          detail: getErrorMessage(err, t('common.unknown')),
+        });
       }
     },
   },
