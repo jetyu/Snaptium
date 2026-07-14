@@ -246,20 +246,14 @@ function getTopVisibleEditorLine(view: EditorView) {
   return view.state.doc.lineAt(block.from).number;
 }
 
-function syncPreviewToEditor() {
+function syncPreviewToEditor(sourceLine?: number) {
   const previewPane = previewPaneRef.value;
   if (!previewPane) {
     return;
   }
 
   const view = editorPaneRef.value?.getEditorApi()?.view;
-  if (!view) {
-    setIgnorePreviewScroll();
-    previewPane.scrollToSourceLine(activeSourceLine.value || 1);
-    return;
-  }
-
-  const line = getTopVisibleEditorLine(view);
+  const line = sourceLine ?? (view ? getTopVisibleEditorLine(view) : activeSourceLine.value || 1);
   activeSourceLine.value = line;
   setIgnorePreviewScroll();
   previewPane.scrollToSourceLine(line);
@@ -389,13 +383,32 @@ watch(
 );
 
 watch(
-  [editorView, () => compiledPreview.value.html],
+  editorView,
   async () => {
     await bindScrollListeners();
     await nextTick();
     syncPreviewToEditor();
   },
   { immediate: true },
+);
+
+watch(
+  [() => activeNote.value?.id, () => compiledPreview.value.html],
+  async ([noteId], [previousNoteId]) => {
+    const view = editorPaneRef.value?.getEditorApi()?.view;
+    const sourceLine = noteId !== previousNoteId || !view
+      ? activeSourceLine.value || 1
+      : getTopVisibleEditorLine(view);
+
+    setIgnorePreviewScroll();
+    if (previewScrollFrame) {
+      cancelAnimationFrame(previewScrollFrame);
+      previewScrollFrame = 0;
+    }
+
+    await nextTick();
+    syncPreviewToEditor(sourceLine);
+  },
 );
 </script>
 
