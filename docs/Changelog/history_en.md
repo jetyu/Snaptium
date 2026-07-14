@@ -1,4 +1,4 @@
-### v2.1.1 - 2026-07-16
+### v2.1.1 - 2026-07-14
 This update improves details and the user experience.
 #### New
 * Support for PDF export functionality

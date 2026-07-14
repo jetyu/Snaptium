@@ -270,7 +270,7 @@
   "label.logLevel": "Log Level",
   "label.maxHistoryVersions": "Max History Versions",
   "label.noteStorageLocation": "Local Storage Location",
-  "label.officialAiSource": "Snaptium AI",
+  "label.officialAiSource": "Siliconflow",
   "label.ossAccessKey": "AccessKey ID",
   "label.ossBucket": "Bucket",
   "label.ossEndpoint": "Service Endpoint",
