@@ -9,9 +9,9 @@ export const AI_CAPABILITIES = {
 export type AiCapability = (typeof AI_CAPABILITIES)[keyof typeof AI_CAPABILITIES];
 
 export const OFFICIAL_AI_MODELS = {
-  CHAT: 'Chat',
-  EMBEDDING: 'Embedding',
-  RERANKER: 'Reranker',
+  CHAT: 'Snaptium-Chat',
+  EMBEDDING: 'Snaptium-Embedding',
+  RERANKER: 'Snaptium-Reranker',
 } as const satisfies Record<string, string>;
 
 export const OFFICIAL_AI_SOURCE_IDS = {
