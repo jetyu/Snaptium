@@ -70,11 +70,6 @@ export const COMMANDS = {
     category: COMMAND_CATEGORIES.SEARCH,
     defaultKeybinding: 'CommandOrControl+F',
   },
-  SEARCH_FIND_IN_FILES: {
-    id: 'search.findInFiles',
-    category: COMMAND_CATEGORIES.SEARCH,
-    defaultKeybinding: 'CommandOrControl+Shift+F',
-  },
 
   // 应用操作
   APP_PREFERENCES: {

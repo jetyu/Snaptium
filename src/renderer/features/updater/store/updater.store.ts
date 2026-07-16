@@ -68,6 +68,7 @@ export const useUpdaterStore = defineStore('updater', () => {
   const installActionsDismissed = ref(false);
   const showNoUpdateResult = ref(false);
   const isSilentChecking = ref(false);
+  const visibleCheckRequested = ref(false);
   const isStoreDistribution = ref(false);
 
   let cleanupListeners: (() => void) | null = null;
@@ -159,13 +160,14 @@ export const useUpdaterStore = defineStore('updater', () => {
     installActionsDismissed.value = false;
     showNoUpdateResult.value = false;
     isSilentChecking.value = false;
+    visibleCheckRequested.value = false;
   }
 
   function handleUpdateChecking(context: UpdateEventContext): void {
     isChecking.value = true;
-    isSilentChecking.value = context.silent;
+    isSilentChecking.value = context.silent && !visibleCheckRequested.value;
 
-    if (context.silent) {
+    if (isSilentChecking.value) {
       return;
     }
 
@@ -192,6 +194,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     }
     showNoUpdateResult.value = false;
     error.value = null;
+    visibleCheckRequested.value = false;
   }
 
   function handleUpdateCancelled(info: UpdateInfo): void {
@@ -203,6 +206,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     installActionsDismissed.value = false;
     showNoUpdateResult.value = false;
     isSilentChecking.value = false;
+    visibleCheckRequested.value = false;
   }
 
   function handleDownloadStarted(_context: UpdateEventContext): void {
@@ -218,10 +222,12 @@ export const useUpdaterStore = defineStore('updater', () => {
   }
 
   function handleUpdateNotAvailable(_info: UpdateInfo, context: UpdateEventContext): void {
+    const shouldShowResult = !context.silent || visibleCheckRequested.value;
     isChecking.value = false;
     isSilentChecking.value = false;
+    visibleCheckRequested.value = false;
 
-    if (context.silent) {
+    if (!shouldShowResult) {
       return;
     }
 
@@ -252,6 +258,7 @@ export const useUpdaterStore = defineStore('updater', () => {
     isDownloading.value = false;
     isDownloadRequestPending.value = false;
     isSilentChecking.value = false;
+    visibleCheckRequested.value = false;
     if (isCancelledUpdateError(errorInfo)) {
       resetDownloadState();
       updateAvailable.value = true;
@@ -267,9 +274,19 @@ export const useUpdaterStore = defineStore('updater', () => {
 
   async function checkForUpdates(silent = false): Promise<void> {
     if (isStoreDistribution.value) return;
-    if (isChecking.value) return;
+    if (isChecking.value) {
+      if (!silent) {
+        visibleCheckRequested.value = true;
+        isSilentChecking.value = false;
+        error.value = null;
+        showNoUpdateResult.value = false;
+      }
+      return;
+    }
 
     isChecking.value = true;
+    isSilentChecking.value = silent;
+    visibleCheckRequested.value = !silent;
     error.value = null;
     showNoUpdateResult.value = false;
 
@@ -281,6 +298,8 @@ export const useUpdaterStore = defineStore('updater', () => {
         code: 'CHECK_FAILED',
       };
       isChecking.value = false;
+      isSilentChecking.value = false;
+      visibleCheckRequested.value = false;
       showNoUpdateResult.value = false;
     }
   }
