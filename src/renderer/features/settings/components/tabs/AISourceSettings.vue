@@ -2,6 +2,10 @@
   <div class="ai-source-settings">
     <div class="header-actions">
       <h3 class="panel-title">{{ t('pref.pane.aiSources') }}</h3>
+      <div v-if="!showAddForm" class="header-partner">
+        <img :src="siliconFlowLogoUrl" alt="SiliconFlow" class="header-partner-logo" />
+        <span class="header-partner-text">{{ t('text.officialInnerAiSource') }}</span>
+      </div>
     </div>
     <LicenseGateNotice v-if="isLicenseLocked" class="license-gate" title-key="license.gate.aiSources.title"
       description-key="license.gate.aiSources.description" />
@@ -451,6 +455,25 @@ const formatCapabilities = (capabilities: string[]): string => {
 
 .header-actions .panel-title {
   margin-bottom: 0;
+}
+
+.header-partner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-partner-logo {
+  display: block;
+  width: auto;
+  height: 28px;
+  object-fit: contain;
+}
+
+.header-partner-text {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .license-gate {
