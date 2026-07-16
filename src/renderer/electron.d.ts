@@ -405,6 +405,12 @@ declare global {
           failedFiles?: number;
           failedFilePaths?: string[];
         }>;
+        exportNotePdf: (payload: import('./core/bridge/electronApi').SingleNotePdfExportPayload) => Promise<{
+          success: boolean;
+          cancelled?: boolean;
+          filePath?: string;
+          exportedAt?: number;
+        }>;
         importMarkdown: () => Promise<{
           success: boolean;
           cancelled?: boolean;

@@ -2,13 +2,20 @@ import { ipcMain } from 'electron';
 import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { importExportService } from '../../services/import-export/import-export.service.js';
 import { loggerService } from '../../services/logger.service.js';
+import { z } from 'zod';
 
 const logger = loggerService.createLogger('Electron:ImportExport IPC');
+
+const singleNotePdfExportPayloadSchema = z.object({
+  title: z.string().min(1).max(255),
+  html: z.string(),
+});
 
 export function registerImportExportIpcHandlers() {
   ipcMain.removeHandler(IPC_CHANNELS.DATA_EXPORT_SPPX);
   ipcMain.removeHandler(IPC_CHANNELS.DATA_IMPORT_SPPX);
   ipcMain.removeHandler(IPC_CHANNELS.DATA_EXPORT_MARKDOWN);
+  ipcMain.removeHandler(IPC_CHANNELS.DATA_EXPORT_NOTE_PDF);
   ipcMain.removeHandler(IPC_CHANNELS.DATA_IMPORT_MARKDOWN);
   ipcMain.removeHandler(IPC_CHANNELS.DATA_IMPORT_ENEX);
   ipcMain.removeHandler(IPC_CHANNELS.DATA_IMPORT_NWP);
@@ -23,6 +30,10 @@ export function registerImportExportIpcHandlers() {
 
   ipcMain.handle(IPC_CHANNELS.DATA_EXPORT_MARKDOWN, async () => {
     return await importExportService.exportMarkdownBatch();
+  });
+
+  ipcMain.handle(IPC_CHANNELS.DATA_EXPORT_NOTE_PDF, async (_event, payload = {}) => {
+    return await importExportService.exportNotePdf(singleNotePdfExportPayloadSchema.parse(payload));
   });
 
   ipcMain.handle(IPC_CHANNELS.DATA_IMPORT_MARKDOWN, async () => {
