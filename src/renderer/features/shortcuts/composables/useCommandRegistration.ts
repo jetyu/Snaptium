@@ -92,11 +92,6 @@ export function useCommandRegistration() {
       }
     });
 
-    commandService.registerCommand('search.findInFiles', () => {
-      commandRegistrationLogger.debug('Command executed: search.findInFiles');
-      requestFocusQuickSearch();
-    });
-
     commandService.registerCommand('app.preferences', () => {
       commandRegistrationLogger.debug('Command executed: app.preferences');
       openSettings();

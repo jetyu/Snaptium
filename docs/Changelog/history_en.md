@@ -1,3 +1,11 @@
+### v2.1.2 - 2026-07-20
+This update improves details and the user experience.
+#### Improvements
+* Improved update check experience
+* Improved shortcut usage experience
+#### Fixes
+* Fixed known issues.
+
 ### v2.1.1 - 2026-07-16
 This update improves details and the user experience.
 #### New

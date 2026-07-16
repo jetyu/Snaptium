@@ -64,7 +64,6 @@
   "commands.file.toggleReadMode": "切换阅读 / 编辑模式",
   "commands.file.toggleStar": "收藏 / 取消收藏",
   "commands.search.find": "查找",
-  "commands.search.findInFiles": "全局搜索",
   "common.appName": "Snaptium",
   "common.edit": "编辑",
   "common.editor": "编辑",
