@@ -8,6 +8,7 @@ type VoidCallback = () => void;
 type DataCallback<T = unknown> = (data: T) => void;
 
 interface SaveFilePayload { filePath: string | null; content: string; }
+interface SingleNotePdfExportPayload { title: string; html: string; }
 interface WorkspaceContextMenuItemPayload {
   action?: string | null;
   labelKey?: string;
@@ -200,6 +201,8 @@ const electronAPI = Object.freeze({
     exportSppx: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_SPPX),
     importMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_MARKDOWN),
     exportMarkdown: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_MARKDOWN),
+    exportNotePdf: (payload: SingleNotePdfExportPayload) =>
+      ipcRenderer.invoke(IPC_CHANNELS.DATA_EXPORT_NOTE_PDF, payload),
     importNwp: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_NWP),
     importEnex: () => ipcRenderer.invoke(IPC_CHANNELS.DATA_IMPORT_ENEX),
   }),
