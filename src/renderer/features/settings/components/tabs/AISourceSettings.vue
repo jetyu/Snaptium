@@ -50,10 +50,6 @@
                 <span class="label">{{ t('label.aiModel') }}</span>
                 <span class="value" :title="source.aiModel">{{ source.aiModel }}</span>
               </div>
-              <div v-if="!isOfficialSource(source)" class="detail-item">
-                <span class="label">{{ t('label.aiApiKey') }}</span>
-                <span class="value">••••••••••••••••••••••••••</span>
-              </div>
               <div class="detail-item">
                 <span class="label">{{ t('label.aiCapabilities') }}</span>
                 <span class="value" :title="formatCapabilities(source.capabilities)">{{
@@ -831,24 +827,20 @@ const formatCapabilities = (capabilities: string[]): string => {
 .source-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.official-source-details {
   gap: 0;
   padding-top: 2px;
 }
 
-.official-source-details .detail-item {
+.source-details .detail-item {
   padding: 7px 0;
   border-top: 1px solid var(--border-color);
 }
 
-.official-source-details .detail-item:first-child {
+.source-details .detail-item:first-child {
   border-top: 0;
 }
 
-.official-source-details .detail-item .label {
+.source-details .detail-item .label {
   min-width: 72px;
   justify-content: flex-start;
   padding: 0;
@@ -857,7 +849,7 @@ const formatCapabilities = (capabilities: string[]): string => {
   color: var(--text-secondary);
 }
 
-.official-source-details .detail-item .value {
+.source-details .detail-item .value {
   color: var(--text-primary);
   font-weight: 600;
 }
