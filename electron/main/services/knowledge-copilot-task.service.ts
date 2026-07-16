@@ -1,9 +1,6 @@
 import { z } from 'zod';
 import { createAgent, humanInTheLoopMiddleware, tool, type HITLRequest, type HITLResponse } from 'langchain';
-import { Command, type Interrupt } from '@langchain/langgraph';
-import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
-import fs from 'node:fs/promises';
-import path from 'node:path';
+import { Command, MemorySaver, type Interrupt } from '@langchain/langgraph';
 import { createProviderChatModel } from './ai-provider.service.js';
 import { getErrorMessage } from './error.service.js';
 import { knowledgeCopilotIndexService } from './knowledge-copilot-index.service.js';
@@ -166,18 +163,7 @@ interface RunKnowledgeCopilotTaskOptions {
   decisions?: HITLResponse['decisions'];
 }
 
-const checkpointers = new Map<string, SqliteSaver>();
-
-async function getCheckpointer(workspaceRoot: string): Promise<SqliteSaver> {
-  const dataDirectory = path.join(workspaceRoot, '.snaptium');
-  const databasePath = path.join(dataDirectory, 'knowledge-copilot-checkpoints.sqlite');
-  const existing = checkpointers.get(databasePath);
-  if (existing) return existing;
-  await fs.mkdir(dataDirectory, { recursive: true });
-  const checkpointer = SqliteSaver.fromConnString(databasePath);
-  checkpointers.set(databasePath, checkpointer);
-  return checkpointer;
-}
+const checkpointer = new MemorySaver();
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
@@ -597,7 +583,7 @@ export async function runKnowledgeCopilotTask(
     model: llm,
     tools: buildLangChainTools(config, state),
     systemPrompt: buildAgentSystemPrompt(writeMode, config.uiLanguage, task),
-    checkpointer: await getCheckpointer(config.workspaceRoot),
+    checkpointer,
     middleware: [humanInTheLoopMiddleware({
       interruptOn: {
         createNote: writeMode === 'confirm',

@@ -7,7 +7,7 @@
 
 ## 2. Provider Runtime Integrations
 
-- [x] 2.1 Add required LangChain Provider, LangGraph, text splitter and SQLite persistence dependencies.
+- [x] 2.1 Add required LangChain Provider, LangGraph and text splitter dependencies without native SQLite checkpoint persistence.
 - [x] 2.2 Implement Main-process Provider factories for chat, embeddings and rerankers.
 - [x] 2.3 Implement SiliconFlow model discovery, Chat/Embedding adapters and reranker compressor.
 - [x] 2.4 Add provider-aware connection and Agent Tool Calling validation at the IPC boundary.
@@ -15,7 +15,7 @@
 ## 3. Knowledge Copilot Persistence and Index
 
 - [x] 3.1 Replace Knowledge Agent settings with typed Knowledge Copilot settings and defaults.
-- [x] 3.2 Implement SQLite conversation/checkpoint and incremental record persistence.
+- [x] 3.2 Implement in-memory LangGraph checkpoint for same-process interrupt/resume and incremental record persistence.
 - [x] 3.3 Implement Snaptium LanceDB LangChain VectorStore adapter with lifecycle operations.
 - [x] 3.4 Implement LangChain Document splitting and generation-safe full/incremental indexing.
 - [x] 3.5 Connect VFS create/update/rename/move/trash/restore events to the indexing queue.

@@ -38,11 +38,15 @@
 - **THEN** 系统返回来源内容 fallback，而不生成无来源回答
 
 ### Requirement: Knowledge Agent
-系统 SHALL 使用 LangGraph 和持久化 checkpoint 执行 Knowledge Agent，并允许知识检索及受控笔记管理工具。
+系统 SHALL 使用 LangGraph 和进程内 checkpoint 执行 Knowledge Agent，并允许知识检索及受控笔记管理工具。
 
-#### Scenario: 多轮恢复
-- **WHEN** 用户在同一 conversation 中从 Ask 切换到 Agent 或重启应用
-- **THEN** 系统恢复共享消息上下文与该 Agent thread 的 checkpoint
+#### Scenario: 当前会话恢复
+- **WHEN** 用户在当前应用进程内对同一 conversation 的 Agent 中断步骤进行确认或编辑
+- **THEN** 系统恢复该 Agent thread 的 checkpoint
+
+#### Scenario: 应用重启
+- **WHEN** 用户重启应用
+- **THEN** 系统不恢复运行中的 Agent checkpoint
 
 #### Scenario: Confirm 工具调用
 - **WHEN** confirm 模式中的 Agent 准备执行会改变工作区的工具

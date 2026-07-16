@@ -5,7 +5,7 @@
 ## What Changes
 
 - **BREAKING** 将 `knowledge-agent` 产品与代码边界替换为 `knowledge-copilot`，删除旧知识库首选项和旧功能数据。
-- 使用 LangChain/LangGraph 统一索引、检索、问答、agent 工具编排、HITL 与持久化会话。
+- 使用 LangChain/LangGraph 统一索引、检索、问答、agent 工具编排、HITL 与当前应用进程内的会话状态。
 - 保留 LanceDB，并通过 LangChain VectorStore 适配器和增量记录管理维护全部有效笔记索引。
 - 提供同页面 Knowledge Ask 与 Knowledge Agent；Agent 支持 confirm/auto，但破坏性工作区动作始终确认且不允许永久删除。
 - 扩展 AI Sources Provider：OpenAI、OpenAI-compatible、SiliconFlow、Anthropic、Google Gemini、Ollama、Cohere。
@@ -17,7 +17,7 @@
 
 ### New Capabilities
 
-- `knowledge-copilot`: Knowledge Ask、Knowledge Agent、索引、持久化会话、HITL 和安全笔记工具的统一能力。
+- `knowledge-copilot`: Knowledge Ask、Knowledge Agent、索引、进程内会话状态、HITL 和安全笔记工具的统一能力。
 - `ai-provider-sources`: 多 Provider AI Source 配置、能力发现、品牌呈现、连接验证与安全迁移。
 
 ### Modified Capabilities
@@ -27,7 +27,7 @@
 ## Impact
 
 - Renderer settings、search/workbench 与新的 `features/knowledge-copilot`。
-- Main knowledge services、AI configuration/provider factories、SQLite/LanceDB persistence。
+- Main knowledge services、AI configuration/provider factories、LanceDB persistence。
 - Preload、Renderer bridge、IPC constants 和输入验证。
 - Settings schema、迁移、简体中文与相关品牌 locale keys。
-- LangChain provider integrations、LangGraph checkpoint/interrupt 与文本切分依赖。
+- LangChain provider integrations、LangGraph in-memory checkpoint/interrupt 与文本切分依赖。

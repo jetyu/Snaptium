@@ -7,7 +7,7 @@
 **Goals:**
 
 - 统一产品与代码名称为 Knowledge Copilot，并保留同页面 Ask/Agent 模式。
-- 使用 LangChain/LangGraph 完成检索、agent、checkpoint 与逐步确认。
+- 使用 LangChain/LangGraph 完成检索、agent、当前进程内 checkpoint 与逐步确认。
 - 保留 LanceDB，通过自定义 LangChain VectorStore 适配现有本地数据库。
 - 用 Provider discriminator 驱动模型 factory、能力发现、连接测试和文字展示。
 - 自动索引全部有效笔记，保护 API Key 和 Electron 边界。
@@ -28,7 +28,7 @@
 
 ### LangGraph 分离 Ask 与 Agent 图
 
-Ask 图固定为 retrieve、rerank、answer 三阶段；无 Chat 模型时返回来源 fallback。Agent 图使用持久化 SQLite checkpointer、工具节点和 interrupt/resume 实现逐步确认。两个模式共享 conversation/thread 标识与消息存储，但不共享运行中 graph state。
+Ask 图固定为 retrieve、rerank、answer 三阶段；无 Chat 模型时返回来源 fallback。Agent 图使用 LangGraph `MemorySaver`、工具节点和 interrupt/resume 实现逐步确认。checkpoint 仅在当前应用进程内保留，应用重启后不恢复运行中任务。两个模式共享 conversation/thread 标识与消息存储，但不共享运行中 graph state。
 
 ### LanceDB 使用项目适配器
 
@@ -65,7 +65,7 @@ confirm 模式逐工具 interrupt。auto 模式仅自动允许 create/update；r
 
 1. 扩展 settings schema，迁移 AI Sources：官方 OpenAI URL 映射 `openai`、SiliconFlow URL 映射 `siliconflow`、其余映射 `openai-compatible`。
 2. 新增 Provider registry/factories、文字展示和连接验证能力。
-3. 新增 Knowledge Copilot settings、Main services、SQLite persistence、IPC/bridge 与 Renderer feature。
+3. 新增 Knowledge Copilot settings、Main services、进程内 checkpoint、IPC/bridge 与 Renderer feature。
 4. 切换 search/workbench 与设置入口，启动新索引重建。
 5. 删除旧 Knowledge Agent 代码、设置、历史和索引数据；保留 entitlement 映射。
 6. 分层验证；若发布前失败，回退整个变更，而不是保留双运行时。
