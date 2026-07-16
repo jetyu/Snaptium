@@ -14,8 +14,9 @@ import {
   getOfficialAiSources,
   isOfficialAiSourceId,
 } from '@shared/official-ai.constants';
+import { AI_PROVIDERS, type AiProvider } from '@shared/ai-provider.constants';
 
-import { DEFAULT_KNOWLEDGE_AGENT_CONFIG } from '@renderer/features/knowledge-agent/constants/knowledge-agent.constants';
+import { DEFAULT_KNOWLEDGE_COPILOT_CONFIG } from '@renderer/features/knowledge-copilot/constants/knowledge-copilot.constants';
 import { DEFAULT_SYNC_SETTINGS, type SyncProvider } from '@shared/sync.constants';
 import { DEFAULT_UPDATE_CHANNEL, type UpdateChannel } from '@shared/updater.constants';
 import { UPDATER_CONSTANTS } from '@renderer/features/updater/constants/updater.constants';
@@ -43,24 +44,24 @@ function clampInteger(value: unknown, fallback: number, min: number, max: number
   return Math.trunc(clampNumber(value, fallback, min, max));
 }
 
-function normalizeKnowledgeAgentNumber<K extends keyof KnowledgeAgentSettings>(
+function normalizeKnowledgeCopilotNumber<K extends keyof KnowledgeCopilotSettings>(
   key: K,
-  value: KnowledgeAgentSettings[K],
-): KnowledgeAgentSettings[K] {
+  value: KnowledgeCopilotSettings[K],
+): KnowledgeCopilotSettings[K] {
   if (key === 'chunkSize') {
-    return clampInteger(value, 500, 500, 800) as KnowledgeAgentSettings[K];
+    return clampInteger(value, 500, 500, 800) as KnowledgeCopilotSettings[K];
   }
 
   if (key === 'chunkOverlap') {
-    return clampInteger(value, 50, 50, 100) as KnowledgeAgentSettings[K];
+    return clampInteger(value, 50, 50, 100) as KnowledgeCopilotSettings[K];
   }
 
   if (key === 'topK') {
-    return clampInteger(value, 5, 1, 10) as KnowledgeAgentSettings[K];
+    return clampInteger(value, 5, 1, 10) as KnowledgeCopilotSettings[K];
   }
 
   if (key === 'similarityThreshold') {
-    return clampNumber(value, 0.45, 0, 1) as KnowledgeAgentSettings[K];
+    return clampNumber(value, 0.45, 0, 1) as KnowledgeCopilotSettings[K];
   }
 
   return value;
@@ -73,6 +74,7 @@ export interface AISource {
   apiKey: string;
   aiModel: string;
   capabilities: string[];
+  provider: AiProvider;
   official?: boolean;
   locked?: boolean;
 }
@@ -88,13 +90,18 @@ export interface AIAssistantSettings {
   systemPrompt: string;
 }
 
-export interface KnowledgeAgentSettings {
+export interface KnowledgeCopilotSettings {
   enabled: boolean;
   embeddingSourceId: string;
   embeddingModel: string;
-  chatSourceId: string;
-  chatModel: string;
+  askChatSourceId: string;
+  askChatModel: string;
+  agentChatSourceId: string;
+  agentChatModel: string;
   rerankerSourceId: string;
+  rerankerModel: string;
+  defaultMode: 'ask' | 'agent';
+  agentExecutionMode: 'confirm' | 'auto';
   chunkSize: number;
   chunkOverlap: number;
   topK: number;
@@ -153,6 +160,7 @@ export type ThemeMode = 'system' | 'light' | 'dark';
 export type AccentMode = 'black' | 'azureBlue' | 'indigo' | 'cyan' | 'teal';
 
 export interface AppSettings {
+  knowledgeCopilotSchemaVersion: number;
   language: string;
   autoStartup: boolean;
   windowCloseAction: WindowCloseAction;
@@ -171,7 +179,7 @@ export interface AppSettings {
   showStatusBar: boolean;
   aiSources: AISource[];
   aiAssistant: AIAssistantSettings;
-  knowledgeAgent: KnowledgeAgentSettings;
+  knowledgeCopilot: KnowledgeCopilotSettings;
   sync: SyncSettings;
   loggingEnabled: boolean;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
@@ -198,6 +206,7 @@ function createDefaultSyncConfig(): SyncSettings {
 
 function createDefaultConfig(): AppSettings {
   return {
+    knowledgeCopilotSchemaVersion: 1,
     language: 'en-US',
     autoStartup: false,
     windowCloseAction: 'minimize',
@@ -232,13 +241,16 @@ function createDefaultConfig(): AppSettings {
       writingScenario: AI_WRITING_DEFAULTS.SCENARIO,
       systemPrompt: '',
     },
-    knowledgeAgent: {
-      ...DEFAULT_KNOWLEDGE_AGENT_CONFIG,
+    knowledgeCopilot: {
+      ...DEFAULT_KNOWLEDGE_COPILOT_CONFIG,
       embeddingSourceId: OFFICIAL_AI_SOURCE_IDS.EMBEDDING,
       embeddingModel: OFFICIAL_AI_MODELS.EMBEDDING,
-      chatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
-      chatModel: OFFICIAL_AI_MODELS.CHAT,
+      askChatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+      askChatModel: OFFICIAL_AI_MODELS.CHAT,
+      agentChatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+      agentChatModel: OFFICIAL_AI_MODELS.CHAT,
       rerankerSourceId: OFFICIAL_AI_SOURCE_IDS.RERANKER,
+      rerankerModel: OFFICIAL_AI_MODELS.RERANKER,
     },
     sync: createDefaultSyncConfig(),
     loggingEnabled: false,
@@ -306,9 +318,9 @@ export const useSettingsStore = defineStore('settings', () => {
           ? normalizeTrustedRemoteImageHosts(newConfig.previewAppearance.trustedRemoteImageHosts)
           : [...config.value.previewAppearance.trustedRemoteImageHosts],
       },
-      knowledgeAgent: {
-        ...config.value.knowledgeAgent,
-        ...(newConfig.knowledgeAgent ?? {}),
+      knowledgeCopilot: {
+        ...config.value.knowledgeCopilot,
+        ...(newConfig.knowledgeCopilot ?? {}),
       },
       sync: {
         ...config.value.sync,
@@ -407,27 +419,28 @@ export const useSettingsStore = defineStore('settings', () => {
   };
 
   /**
-   * Update knowledge-agent specific setting
+   * Update knowledge-copilot specific setting
    */
-  const updateKnowledgeAgentSetting = async <K extends keyof KnowledgeAgentSettings>(
+  const updateKnowledgeCopilotSetting = async <K extends keyof KnowledgeCopilotSettings>(
     key: K,
-    value: KnowledgeAgentSettings[K]
+    value: KnowledgeCopilotSettings[K]
   ) => {
-    config.value.knowledgeAgent[key] = normalizeKnowledgeAgentNumber(key, value);
+    config.value.knowledgeCopilot[key] = normalizeKnowledgeCopilotNumber(key, value);
 
     // Auto-update model if sourceId changes
     if (key === 'embeddingSourceId') {
       const source = config.value.aiSources.find(s => s.id === String(value));
       if (source && source.aiModel) {
-        config.value.knowledgeAgent.embeddingModel = source.aiModel;
+        config.value.knowledgeCopilot.embeddingModel = source.aiModel;
       }
     }
-    if (key === 'chatSourceId') {
+    if (key === 'askChatSourceId' || key === 'agentChatSourceId') {
       const source = config.value.aiSources.find(s => s.id === String(value));
+      const modelKey = key === 'askChatSourceId' ? 'askChatModel' : 'agentChatModel';
       if (source && source.aiModel) {
-        config.value.knowledgeAgent.chatModel = source.aiModel;
+        config.value.knowledgeCopilot[modelKey] = source.aiModel;
       } else if (value === '') {
-        config.value.knowledgeAgent.chatModel = '';
+        config.value.knowledgeCopilot[modelKey] = '';
       }
     }
 
@@ -512,16 +525,20 @@ export const useSettingsStore = defineStore('settings', () => {
     if (config.value.aiAssistant.sourceId === id) {
       config.value.aiAssistant.sourceId = '';
     }
-    if (config.value.knowledgeAgent.embeddingSourceId === id) {
-      config.value.knowledgeAgent.embeddingSourceId = '';
-      config.value.knowledgeAgent.embeddingModel = '';
+    if (config.value.knowledgeCopilot.embeddingSourceId === id) {
+      config.value.knowledgeCopilot.embeddingSourceId = '';
+      config.value.knowledgeCopilot.embeddingModel = '';
     }
-    if (config.value.knowledgeAgent.chatSourceId === id) {
-      config.value.knowledgeAgent.chatSourceId = '';
-      config.value.knowledgeAgent.chatModel = '';
+    if (config.value.knowledgeCopilot.askChatSourceId === id) {
+      config.value.knowledgeCopilot.askChatSourceId = '';
+      config.value.knowledgeCopilot.askChatModel = '';
     }
-    if (config.value.knowledgeAgent.rerankerSourceId === id) {
-      config.value.knowledgeAgent.rerankerSourceId = '';
+    if (config.value.knowledgeCopilot.agentChatSourceId === id) {
+      config.value.knowledgeCopilot.agentChatSourceId = '';
+      config.value.knowledgeCopilot.agentChatModel = '';
+    }
+    if (config.value.knowledgeCopilot.rerankerSourceId === id) {
+      config.value.knowledgeCopilot.rerankerSourceId = '';
     }
     await saveSettings({});
   };
@@ -540,16 +557,20 @@ export const useSettingsStore = defineStore('settings', () => {
       if (config.value.aiAssistant.sourceId === id && !sourceSupportsCapability(source, 'chat')) {
         config.value.aiAssistant.sourceId = '';
       }
-      if (config.value.knowledgeAgent.embeddingSourceId === id && !sourceSupportsCapability(source, 'embedding')) {
-        config.value.knowledgeAgent.embeddingSourceId = '';
-        config.value.knowledgeAgent.embeddingModel = '';
+      if (config.value.knowledgeCopilot.embeddingSourceId === id && !sourceSupportsCapability(source, 'embedding')) {
+        config.value.knowledgeCopilot.embeddingSourceId = '';
+        config.value.knowledgeCopilot.embeddingModel = '';
       }
-      if (config.value.knowledgeAgent.chatSourceId === id && !sourceSupportsCapability(source, 'chat')) {
-        config.value.knowledgeAgent.chatSourceId = '';
-        config.value.knowledgeAgent.chatModel = '';
+      if (config.value.knowledgeCopilot.askChatSourceId === id && !sourceSupportsCapability(source, 'chat')) {
+        config.value.knowledgeCopilot.askChatSourceId = '';
+        config.value.knowledgeCopilot.askChatModel = '';
       }
-      if (config.value.knowledgeAgent.rerankerSourceId === id && !sourceSupportsCapability(source, 'reranker')) {
-        config.value.knowledgeAgent.rerankerSourceId = '';
+      if (config.value.knowledgeCopilot.agentChatSourceId === id && !sourceSupportsCapability(source, 'chat')) {
+        config.value.knowledgeCopilot.agentChatSourceId = '';
+        config.value.knowledgeCopilot.agentChatModel = '';
+      }
+      if (config.value.knowledgeCopilot.rerankerSourceId === id && !sourceSupportsCapability(source, 'reranker')) {
+        config.value.knowledgeCopilot.rerankerSourceId = '';
       }
       await saveSettings({});
     }
@@ -559,6 +580,7 @@ export const useSettingsStore = defineStore('settings', () => {
    * Test AI connection with provided or saved config
    */
   const testConnection = async (testConfig?: {
+    provider: AiProvider;
     aiBaseUrl: string;
     aiApiKey: string;
     aiModel: string;
@@ -566,6 +588,7 @@ export const useSettingsStore = defineStore('settings', () => {
   }): Promise<{ success: boolean; message?: string }> => {
     try {
       const payload = testConfig || {
+        provider: AI_PROVIDERS.OPENAI_COMPATIBLE,
         aiBaseUrl: '',
         aiApiKey: '',
         aiModel: config.value.aiAssistant.model,
@@ -577,6 +600,7 @@ export const useSettingsStore = defineStore('settings', () => {
         const source = config.value.aiSources.find((s) => s.id === config.value.aiAssistant.sourceId);
         if (source) {
           payload.aiBaseUrl = source.baseUrl;
+          payload.provider = source.provider;
           payload.aiApiKey = source.apiKey;
           payload.capabilities = [...source.capabilities];
         }
@@ -633,7 +657,7 @@ export const useSettingsStore = defineStore('settings', () => {
     updateSetting,
     updateAssistantSetting,
     updatePreviewAppearanceSetting,
-    updateKnowledgeAgentSetting,
+    updateKnowledgeCopilotSetting,
     updateSyncSetting,
     updateSyncProviderSetting,
     addAiSource,

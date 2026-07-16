@@ -4,7 +4,7 @@ import {
   type MarkdownExportResult,
   type MarkdownImportResult,
   type MessageDialogOptions,
-  type KnowledgeAgentRebuildMode,
+  type KnowledgeCopilotRebuildMode,
   type SppxExportResult,
   type SppxImportResult,
 } from '@renderer/core/bridge/electronApi';
@@ -22,6 +22,12 @@ import {
   getOfficialAiSources,
   isOfficialAiSourceId,
 } from '@shared/official-ai.constants';
+import {
+  getAiProviderCapabilities,
+  inferAiProvider,
+  isAiProvider,
+  type AiProvider,
+} from '@shared/ai-provider.constants';
 import type { AppSettings, AISource } from '../store/settings.store';
 
 type SettingsChangeReason = 'save' | 'language' | 'import' | 'reset';
@@ -49,6 +55,7 @@ function normalizeAccentMode(value: unknown): AccentMode {
 }
 
 export interface AiConnectionPayload {
+  provider: AiProvider;
   aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
@@ -67,13 +74,16 @@ function normalizeAiSources(value: unknown): AISource[] {
       ? normalized.capabilities.filter((capability): capability is string => typeof capability === 'string')
       : [];
 
+    const baseUrl = String(normalized.baseUrl ?? '');
+    const provider = isAiProvider(normalized.provider) ? normalized.provider : inferAiProvider(baseUrl);
     return {
       id,
       name: String(normalized.name ?? ''),
-      baseUrl: String(normalized.baseUrl ?? ''),
+      baseUrl,
       apiKey: String(normalized.apiKey ?? ''),
       aiModel: String(normalized.aiModel ?? ''),
-      capabilities,
+      capabilities: capabilities.length > 0 ? capabilities : getAiProviderCapabilities(provider),
+      provider,
       official: false,
       locked: false,
     };
@@ -105,10 +115,10 @@ function normalizeAiAssistantSettings(
   return mergedConfig;
 }
 
-function normalizeKnowledgeAgentSettings(
-  baseConfig: AppSettings['knowledgeAgent'],
-  incomingConfig?: Partial<AppSettings['knowledgeAgent']>,
-): AppSettings['knowledgeAgent'] {
+function normalizeKnowledgeCopilotSettings(
+  baseConfig: AppSettings['knowledgeCopilot'],
+  incomingConfig?: Partial<AppSettings['knowledgeCopilot']>,
+): AppSettings['knowledgeCopilot'] {
   const mergedConfig = {
     ...baseConfig,
     ...(incomingConfig ?? {}),
@@ -119,8 +129,11 @@ function normalizeKnowledgeAgentSettings(
     mergedConfig.embeddingModel = OFFICIAL_AI_MODELS.EMBEDDING;
   }
 
-  if (mergedConfig.chatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
-    mergedConfig.chatModel = OFFICIAL_AI_MODELS.CHAT;
+  if (mergedConfig.askChatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    mergedConfig.askChatModel = OFFICIAL_AI_MODELS.CHAT;
+  }
+  if (mergedConfig.agentChatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    mergedConfig.agentChatModel = OFFICIAL_AI_MODELS.CHAT;
   }
 
   return {
@@ -139,7 +152,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
       aiSources: normalizeAiSources(baseConfig.aiSources),
       aiAssistant: normalizeAiAssistantSettings(baseConfig.aiAssistant),
       previewAppearance: { ...baseConfig.previewAppearance },
-      knowledgeAgent: normalizeKnowledgeAgentSettings(baseConfig.knowledgeAgent),
+      knowledgeCopilot: normalizeKnowledgeCopilotSettings(baseConfig.knowledgeCopilot),
       sync: {
         ...baseConfig.sync,
         webdav: { ...baseConfig.sync.webdav },
@@ -173,7 +186,7 @@ function mergeConfig(baseConfig: AppSettings, incomingConfig?: Partial<AppSettin
         incomingConfig.previewAppearance?.trustedRemoteImageHosts ?? baseConfig.previewAppearance.trustedRemoteImageHosts,
       ),
     },
-    knowledgeAgent: normalizeKnowledgeAgentSettings(baseConfig.knowledgeAgent, incomingConfig.knowledgeAgent),
+    knowledgeCopilot: normalizeKnowledgeCopilotSettings(baseConfig.knowledgeCopilot, incomingConfig.knowledgeCopilot),
     sync: {
       ...baseConfig.sync,
       ...(incomingConfig.sync ?? {}),
@@ -220,6 +233,7 @@ function buildAiConnectionPayload(config: AppSettings, override?: AiConnectionPa
 
   const selectedSource = config.aiSources.find((source) => source.id === config.aiAssistant.sourceId);
   return {
+    provider: selectedSource?.provider ?? inferAiProvider(selectedSource?.baseUrl ?? ''),
     aiBaseUrl: selectedSource?.baseUrl ?? '',
     aiApiKey: selectedSource?.apiKey ?? '',
     aiModel: config.aiAssistant.model,
@@ -292,12 +306,12 @@ export const settingsService = {
     return await electronApi.settings.confirmEmbeddingSourceChange();
   },
 
-  async confirmKnowledgeAgentRebuildMode(): Promise<KnowledgeAgentRebuildMode> {
-    return await electronApi.settings.confirmKnowledgeAgentRebuildMode();
+  async confirmKnowledgeCopilotRebuildMode(): Promise<KnowledgeCopilotRebuildMode> {
+    return await electronApi.settings.confirmKnowledgeCopilotRebuildMode();
   },
 
-  async confirmKnowledgeAgentChunkRebuild(): Promise<boolean> {
-    return await electronApi.settings.confirmKnowledgeAgentChunkRebuild();
+  async confirmKnowledgeCopilotChunkRebuild(): Promise<boolean> {
+    return await electronApi.settings.confirmKnowledgeCopilotChunkRebuild();
   },
 
   async confirmDeleteAiSource(name: string): Promise<boolean> {

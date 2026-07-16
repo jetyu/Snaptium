@@ -1,24 +1,25 @@
-﻿import {
+import {
   electronApi,
-  type KnowledgeAgentWriteMode,
-  type KnowledgeAgentTaskResult,
+  type KnowledgeCopilotWriteMode,
+  type KnowledgeCopilotTaskResult,
+  type KnowledgeCopilotDecision,
   type KnowledgeAnswerResult,
   type KnowledgeAnswerStreamEvent,
-  type KnowledgeAgentStatusResult,
+  type KnowledgeCopilotStatusResult,
 } from '@renderer/core/bridge/electronApi';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
-import { KNOWLEDGE_AGENT_ERROR_MESSAGES } from '../constants/knowledge-agent.constants';
+import { KNOWLEDGE_COPILOT_ERROR_MESSAGES } from '../constants/knowledge-copilot.constants';
 
-const knowledgeAgentLogger = createLogger('Renderer:KnowledgeAgent Service');
+const knowledgeCopilotLogger = createLogger('Renderer:KnowledgeCopilot Service');
 
-interface KnowledgeAgentConfig {
+interface KnowledgeCopilotConfig {
   enabled?: boolean;
   embeddingSourceId?: string;
 }
 
 interface AppConfig {
-  knowledgeAgent?: KnowledgeAgentConfig;
+  knowledgeCopilot?: KnowledgeCopilotConfig;
   noteSavePath?: string;
 }
 
@@ -38,12 +39,12 @@ export interface RebuildIndexProgress {
 }
 
 /**
- * KnowledgeAgent Service - Orchestration Layer
+ * KnowledgeCopilot Service - Orchestration Layer
  * Handles complex business logic, initialization, and cross-service coordination.
  */
-export const knowledgeAgentService = {
+export const knowledgeCopilotService = {
   isAvailable(): boolean {
-    return electronApi.knowledgeAgent.isAvailable();
+    return electronApi.knowledgeCopilot.isAvailable();
   },
 
   /**
@@ -52,21 +53,21 @@ export const knowledgeAgentService = {
   async initialize(): Promise<{ success: boolean; error?: string }> {
     try {
       const config = await electronApi.settings.getConfig() as unknown as AppConfig;
-      if (!config.knowledgeAgent?.enabled) {
-        return { success: false, error: KNOWLEDGE_AGENT_ERROR_MESSAGES.DISABLED };
+      if (!config.knowledgeCopilot?.enabled) {
+        return { success: false, error: KNOWLEDGE_COPILOT_ERROR_MESSAGES.DISABLED };
       }
 
       const workspaceRoot = config.noteSavePath;
       if (!workspaceRoot) {
-        return { success: false, error: KNOWLEDGE_AGENT_ERROR_MESSAGES.NO_WORKSPACE };
+        return { success: false, error: KNOWLEDGE_COPILOT_ERROR_MESSAGES.NO_WORKSPACE };
       }
 
-      const result = await electronApi.knowledgeAgent.initialize();
+      const result = await electronApi.knowledgeCopilot.initialize();
 
       return result;
     } catch (error: unknown) {
       const message = getErrorMessage(error);
-      knowledgeAgentLogger.error('KnowledgeAgent initialization failed', { error: message });
+      knowledgeCopilotLogger.error('KnowledgeCopilot initialization failed', { error: message });
       return { success: false, error: message };
     }
   },
@@ -75,7 +76,7 @@ export const knowledgeAgentService = {
    * Index a single note (Batch-Atomic call to Main)
    */
   async indexNote(request: IndexNoteRequest): Promise<{ success: boolean; chunksIndexed?: number; error?: string }> {
-    return await electronApi.knowledgeAgent.indexNote({
+    return await electronApi.knowledgeCopilot.indexNote({
       ...request,
       chunkSize: request.chunkSize || 500,
       chunkOverlap: request.chunkOverlap || 50,
@@ -89,7 +90,7 @@ export const knowledgeAgentService = {
     notes: Array<{ id: string; title: string; content: string }>,
     options: { chunkSize: number; chunkOverlap: number; onProgress?: (p: RebuildIndexProgress) => void }
   ) {
-    const clearResult = await electronApi.knowledgeAgent.clearIndex();
+    const clearResult = await electronApi.knowledgeCopilot.clearIndex();
     if (!clearResult.success) {
       throw new Error(clearResult.error || 'Failed to clear vector index');
     }
@@ -140,7 +141,7 @@ export const knowledgeAgentService = {
     let unsubscribe: (() => void) | null = null;
 
     try {
-      unsubscribe = electronApi.knowledgeAgent.onAnswerQuestionStreamEvent((event) => {
+      unsubscribe = electronApi.knowledgeCopilot.onAnswerQuestionStreamEvent((event) => {
         if (event.requestId !== requestId) {
           return;
         }
@@ -151,10 +152,10 @@ export const knowledgeAgentService = {
         }
       });
 
-      return await electronApi.knowledgeAgent.answerQuestionStream({ query, requestId });
+      return await electronApi.knowledgeCopilot.answerQuestionStream({ query, requestId });
     } catch (error: unknown) {
       const message = getErrorMessage(error);
-      knowledgeAgentLogger.error('KnowledgeAgent streaming question failed', { error: message });
+      knowledgeCopilotLogger.error('KnowledgeCopilot streaming question failed', { error: message });
       return {
         success: false,
         error: message,
@@ -168,12 +169,17 @@ export const knowledgeAgentService = {
     }
   },
 
-  async runTask(task: string, writeMode: KnowledgeAgentWriteMode = 'confirm'): Promise<KnowledgeAgentTaskResult> {
+  async runTask(
+    task: string,
+    writeMode: KnowledgeCopilotWriteMode = 'confirm',
+    conversationId?: string,
+    decisions?: KnowledgeCopilotDecision[],
+  ): Promise<KnowledgeCopilotTaskResult> {
     try {
-      return await electronApi.knowledgeAgent.runTask({ task, writeMode });
+      return await electronApi.knowledgeCopilot.runTask({ task, writeMode, conversationId, decisions });
     } catch (error: unknown) {
       const message = getErrorMessage(error);
-      knowledgeAgentLogger.error('KnowledgeAgent agent task failed', { error: message });
+      knowledgeCopilotLogger.error('KnowledgeCopilot agent task failed', { error: message });
       return {
         success: false,
         error: message,
@@ -185,23 +191,25 @@ export const knowledgeAgentService = {
         pendingWrites: [],
         executedWrites: [],
         stopReason: undefined,
+        conversationId: conversationId ?? '',
+        pendingActions: [],
       };
     }
   },
 
-  async getStatus(): Promise<KnowledgeAgentStatusResult> {
-    return await electronApi.knowledgeAgent.getStatus();
+  async getStatus(): Promise<KnowledgeCopilotStatusResult> {
+    return await electronApi.knowledgeCopilot.getStatus();
   },
 
   async deleteNoteIndex(noteId: string): Promise<{ success: boolean; error?: string }> {
-    return await electronApi.knowledgeAgent.deleteNoteIndex(noteId);
+    return await electronApi.knowledgeCopilot.deleteNoteIndex(noteId);
   },
 
   /**
    * Clear all index data from the vector store
    */
   async clearIndex(): Promise<{ success: boolean; error?: string }> {
-    return await electronApi.knowledgeAgent.clearIndex();
+    return await electronApi.knowledgeCopilot.clearIndex();
   },
 };
 

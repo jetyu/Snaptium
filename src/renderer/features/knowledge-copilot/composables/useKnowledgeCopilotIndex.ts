@@ -1,22 +1,21 @@
-﻿/**
- * useKnowledgeAgentIndex Composable
+/**
+ * useKnowledgeCopilotIndex Composable
  * 
- * 绠＄悊 KnowledgeAgent 绱㈠紩鐨勭粍鍚堝紡鍑芥暟
  */
 
 import { computed, onMounted, onUnmounted } from 'vue';
-import { useKnowledgeAgentStore } from '../store/knowledge-agent.store';
-import { useKnowledgeAgentConfig } from './useKnowledgeAgentConfig';
+import { useKnowledgeCopilotStore } from '../store/knowledge-copilot.store';
+import { useKnowledgeCopilotConfig } from './useKnowledgeCopilotConfig';
 import { createLogger } from '@renderer/features/logger';
 
-const knowledgeAgentIndexLogger = createLogger('useKnowledgeAgentIndex');
+const knowledgeCopilotIndexLogger = createLogger('useKnowledgeCopilotIndex');
 
-export function useKnowledgeAgentIndex() {
-  const knowledgeAgentStore = useKnowledgeAgentStore();
-  const { isEnabled, isConfigured, knowledgeAgentConfig } = useKnowledgeAgentConfig();
+export function useKnowledgeCopilotIndex() {
+  const knowledgeCopilotStore = useKnowledgeCopilotStore();
+  const { isEnabled, isConfigured, knowledgeCopilotConfig } = useKnowledgeCopilotConfig();
 
   // 绱㈠紩鐘舵€?
-  const indexStatus = computed(() => knowledgeAgentStore.indexStatus);
+  const indexStatus = computed(() => knowledgeCopilotStore.indexStatus);
   const isIndexing = computed(() => indexStatus.value.isIndexing);
   const progress = computed(() => indexStatus.value.progress);
 
@@ -25,20 +24,20 @@ export function useKnowledgeAgentIndex() {
    */
   const indexNote = async (noteId: string, noteTitle: string, content: string) => {
     if (!isEnabled.value || !isConfigured.value) {
-      knowledgeAgentIndexLogger.warn('KnowledgeAgent is not enabled or configured, skipping indexing');
+      knowledgeCopilotIndexLogger.warn('KnowledgeCopilot is not enabled or configured, skipping indexing');
       return;
     }
 
     try {
-      await knowledgeAgentStore.indexNote(
+      await knowledgeCopilotStore.indexNote(
         noteId,
         noteTitle,
         content,
-        knowledgeAgentConfig.value.chunkSize,
-        knowledgeAgentConfig.value.chunkOverlap
+        knowledgeCopilotConfig.value.chunkSize,
+        knowledgeCopilotConfig.value.chunkOverlap
       );
     } catch (error) {
-      knowledgeAgentIndexLogger.error(`Failed to index note: ${error}`);
+      knowledgeCopilotIndexLogger.error(`Failed to index note: ${error}`);
       throw error;
     }
   };
@@ -53,19 +52,19 @@ export function useKnowledgeAgentIndex() {
     fullRebuild = false,
   ) => {
     if (!isEnabled.value || !isConfigured.value) {
-      throw new Error('KnowledgeAgent is not enabled or configured');
+      throw new Error('KnowledgeCopilot is not enabled or configured');
     }
 
     try {
-      await knowledgeAgentStore.rebuildIndex(
+      await knowledgeCopilotStore.rebuildIndex(
         notes,
-        knowledgeAgentConfig.value.chunkSize,
-        knowledgeAgentConfig.value.chunkOverlap,
+        knowledgeCopilotConfig.value.chunkSize,
+        knowledgeCopilotConfig.value.chunkOverlap,
         reason,
         fullRebuild,
       );
     } catch (error) {
-      knowledgeAgentIndexLogger.error(`Failed to rebuild index: ${error}`);
+      knowledgeCopilotIndexLogger.error(`Failed to rebuild index: ${error}`);
       throw error;
     }
   };
@@ -75,14 +74,14 @@ export function useKnowledgeAgentIndex() {
    */
   const deleteNoteIndex = async (noteId: string) => {
     if (!isEnabled.value || !isConfigured.value) {
-      knowledgeAgentIndexLogger.warn('KnowledgeAgent is not enabled or configured, skipping deletion');
+      knowledgeCopilotIndexLogger.warn('KnowledgeCopilot is not enabled or configured, skipping deletion');
       return;
     }
 
     try {
-      await knowledgeAgentStore.deleteNoteIndex(noteId);
+      await knowledgeCopilotStore.deleteNoteIndex(noteId);
     } catch (error) {
-      knowledgeAgentIndexLogger.error(`Failed to delete note index: ${error}`);
+      knowledgeCopilotIndexLogger.error(`Failed to delete note index: ${error}`);
       throw error;
     }
   };
@@ -92,14 +91,14 @@ export function useKnowledgeAgentIndex() {
    */
   const clearIndex = async () => {
     if (!isEnabled.value || !isConfigured.value) {
-      knowledgeAgentIndexLogger.warn('KnowledgeAgent is not enabled or configured, skipping clear index');
+      knowledgeCopilotIndexLogger.warn('KnowledgeCopilot is not enabled or configured, skipping clear index');
       return;
     }
 
     try {
-      await knowledgeAgentStore.clearIndex();
+      await knowledgeCopilotStore.clearIndex();
     } catch (error) {
-      knowledgeAgentIndexLogger.error(`Failed to clear index: ${error}`);
+      knowledgeCopilotIndexLogger.error(`Failed to clear index: ${error}`);
       throw error;
     }
   };
@@ -109,9 +108,9 @@ export function useKnowledgeAgentIndex() {
    */
   const refreshStatus = async () => {
     try {
-      await knowledgeAgentStore.getStatus();
+      await knowledgeCopilotStore.getStatus();
     } catch (error) {
-      knowledgeAgentIndexLogger.error(`Failed to refresh status: ${error}`);
+      knowledgeCopilotIndexLogger.error(`Failed to refresh status: ${error}`);
     }
   };
 

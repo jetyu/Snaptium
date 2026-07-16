@@ -22,7 +22,7 @@ import { useEditorSettings } from '@renderer/features/settings/composables/useEd
 import { useGeneralSettings } from '@renderer/features/settings/composables/useGeneralSettings';
 import { useShortcutsStore } from '@renderer/features/shortcuts';
 import { useCommandRegistration } from '@renderer/features/shortcuts/composables/useCommandRegistration';
-import { useKnowledgeAgentInitialization } from '@renderer/features/knowledge-agent';
+import { useKnowledgeCopilotInitialization } from '@renderer/features/knowledge-copilot';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { HistoryDialog, NotePropertiesDialog } from '@renderer/features/workspace';
 import { useSyncLifecycle } from '@renderer/features/sync';
@@ -41,7 +41,7 @@ const workspaceStore = useWorkspaceStore();
 const favoritesStore = useFavoritesStore();
 const updaterStore = useUpdaterStore();
 const { initMainProcessListeners } = useLicenseDialog();
-const { initializeKnowledgeAgent, setupAutoIndexOnSave } = useKnowledgeAgentInitialization();
+const { initializeKnowledgeCopilot, setupVfsAutoIndex } = useKnowledgeCopilotInitialization();
 const { initializeSync, setupAutoSync } = useSyncLifecycle();
 
 useEditorSettings();
@@ -68,11 +68,11 @@ onMounted(async () => {
 
   await initializeSync();
   
-  // Initialize knowledge-agent service.
-  await initializeKnowledgeAgent();
+  // Initialize knowledge-copilot service.
+  await initializeKnowledgeCopilot();
   
   // 设置保存时自动索引
-  setupAutoIndexOnSave();
+  setupVfsAutoIndex();
   setupAutoSync();
 
   // 注册原生菜单监听（顶部菜单栏触发）

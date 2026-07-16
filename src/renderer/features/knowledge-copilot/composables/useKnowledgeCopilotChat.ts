@@ -1,12 +1,12 @@
-﻿import { ref } from 'vue';
+import { ref } from 'vue';
 import { createLogger } from '@renderer/features/logger';
 import type { KnowledgeAnswerResult, KnowledgeAnswerStreamEvent } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
-import { knowledgeAgentService } from '../services/knowledge-agent.service';
+import { knowledgeCopilotService } from '../services/knowledge-copilot.service';
 
-const knowledgeAgentChatLogger = createLogger('KnowledgeAgentChat');
+const knowledgeCopilotChatLogger = createLogger('KnowledgeCopilotChat');
 
-export function useKnowledgeAgentChat() {
+export function useKnowledgeCopilotChat() {
   const isGenerating = ref(false);
   const answer = ref('');
   const error = ref<string | null>(null);
@@ -23,14 +23,14 @@ export function useKnowledgeAgentChat() {
       throw new Error('Question cannot be empty');
     }
 
-    knowledgeAgentChatLogger.debug(`Starting streaming question flow (length=${question.length})`);
+    knowledgeCopilotChatLogger.debug(`Starting streaming question flow (length=${question.length})`);
     isGenerating.value = true;
     error.value = null;
     answer.value = '';
     usedSearchFallback.value = false;
 
     try {
-      const result = await knowledgeAgentService.answerQuestionStream(question, {
+      const result = await knowledgeCopilotService.answerQuestionStream(question, {
         onEvent: callbacks.onEvent,
         onDelta: (text) => {
           answer.value += text;
@@ -51,12 +51,12 @@ export function useKnowledgeAgentChat() {
       throw new Error(result.error || 'Failed to generate answer');
     } catch (err) {
       const message = getErrorMessage(err);
-      knowledgeAgentChatLogger.error(`Error generating streaming answer: ${message}`);
+      knowledgeCopilotChatLogger.error(`Error generating streaming answer: ${message}`);
       error.value = message;
       throw err;
     } finally {
       isGenerating.value = false;
-      knowledgeAgentChatLogger.debug('Streaming question flow finished');
+      knowledgeCopilotChatLogger.debug('Streaming question flow finished');
     }
   };
 

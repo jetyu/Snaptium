@@ -1,15 +1,15 @@
-﻿import { remoteAiService } from './remote-ai.service.js';
 import { aiConfigService } from './ai-config.service.js';
-import { knowledgeAgentIndexService } from './knowledge-agent-index.service.js';
+import { createProviderChatModel } from './ai-provider.service.js';
+import { knowledgeCopilotIndexService } from './knowledge-copilot-index.service.js';
 import { assessKnowledgeEvidence } from './knowledge-evidence-assessment.service.js';
 import { loggerService } from './logger.service.js';
 import { buildKnowledgeAnswerPrompt } from '../prompts/index.js';
 import { $t } from '../utils/i18n.js';
 
-const logger = loggerService.createLogger('Main:KnowledgeAgentQAService');
+const logger = loggerService.createLogger('Main:KnowledgeCopilotQAService');
 
-type KnowledgeSearchResults = Awaited<ReturnType<typeof knowledgeAgentIndexService.searchByVector>>;
-type KnowledgeAgentConfig = Awaited<ReturnType<typeof aiConfigService.resolveKnowledgeAgentConfig>>;
+type KnowledgeSearchResults = Awaited<ReturnType<typeof knowledgeCopilotIndexService.searchByVector>>;
+type KnowledgeCopilotConfig = Awaited<ReturnType<typeof aiConfigService.resolveKnowledgeCopilotConfig>>;
 
 export interface KnowledgeAnswerResult {
   success: boolean;
@@ -40,18 +40,18 @@ export type KnowledgeAnswerStreamEvent =
 
 function createInsufficientEvidenceMessage(): string {
   return $t(
-    'search.knowledgeAgentInsufficientEvidence',
+    'search.knowledgeCopilotInsufficientEvidence',
     'The current knowledge base does not contain enough evidence to answer this question.',
   );
 }
 
-export async function ensureKnowledgeAgentReady(): Promise<KnowledgeAgentConfig> {
-  const config = await aiConfigService.resolveKnowledgeAgentConfig();
+export async function ensureKnowledgeCopilotReady(): Promise<KnowledgeCopilotConfig> {
+  const config = await aiConfigService.resolveKnowledgeCopilotConfig();
 
-  if (!knowledgeAgentIndexService.isReady()) {
-    await knowledgeAgentIndexService.initialize(config.workspaceRoot, config.embeddingConfig);
+  if (!knowledgeCopilotIndexService.isReady()) {
+    await knowledgeCopilotIndexService.initialize(config.workspaceRoot, config.embeddingConfig);
   } else {
-    knowledgeAgentIndexService.updateEmbeddingConfig(config.embeddingConfig);
+    await knowledgeCopilotIndexService.updateEmbeddingConfig(config.embeddingConfig);
   }
 
   return config;
@@ -62,12 +62,12 @@ export async function answerKnowledgeQuestionStream(
   onEvent: (event: KnowledgeAnswerStreamEvent) => void,
 ): Promise<KnowledgeAnswerResult> {
   onEvent({ type: 'stage', stage: 'preparing' });
-  const config = await ensureKnowledgeAgentReady();
+  const config = await ensureKnowledgeCopilotReady();
   onEvent({ type: 'stage', stage: 'searching' });
-  const results = await knowledgeAgentIndexService.searchKnowledgeBase({
+  const results = await knowledgeCopilotIndexService.searchKnowledgeBase({
     query,
-    topK: Number(config.knowledgeAgent.topK),
-    similarityThreshold: Number(config.knowledgeAgent.similarityThreshold),
+    topK: Number(config.knowledgeCopilot.topK),
+    similarityThreshold: Number(config.knowledgeCopilot.similarityThreshold),
     rerankerConfig: config.rerankerConfig,
   });
 
@@ -99,7 +99,7 @@ export async function answerKnowledgeQuestionStream(
   }
 
   onEvent({ type: 'stage', stage: 'sourcing' });
-  if (!config.chatConfig) {
+  if (!config.askChatConfig) {
     const summary = results
       .map((res, idx) => `[${idx + 1}] ${res.noteTitle || 'Untitled'}:\n${res.chunk.content}`)
       .join('\n\n');
@@ -121,23 +121,27 @@ export async function answerKnowledgeQuestionStream(
   onEvent({ type: 'stage', stage: 'generating' });
   const contextText = results.map((res) => res.chunk.content).join('\n---\n');
   const systemPrompt = buildKnowledgeAnswerPrompt(config.uiLanguage, query, contextText);
-  const streamResult = await remoteAiService.chatStream({
-    endpoint: config.chatConfig.endpoint,
-    apiKey: config.chatConfig.apiKey,
-    model: config.chatConfig.model,
-    messages: [
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: query },
-    ],
-    temperature: 0.7,
-    max_tokens: 1000,
-  }, (chunk) => {
-    onEvent({ type: 'delta', text: chunk.content });
+  const chatModel = createProviderChatModel({
+    provider: config.askChatConfig.provider,
+    baseUrl: config.askChatConfig.baseUrl,
+    apiKey: config.askChatConfig.apiKey,
+    model: config.askChatConfig.model,
   });
+  let answer = '';
+  const stream = await chatModel.stream([
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: query },
+  ]);
+  for await (const chunk of stream) {
+    const text = chunk.text;
+    if (!text) continue;
+    answer += text;
+    onEvent({ type: 'delta', text });
+  }
 
   return {
     success: true,
-    answer: streamResult.content,
+    answer,
     sources: results,
     usedSearchFallback: false,
   };

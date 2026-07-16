@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="search-view panel">
     <header class="search-view__header">
       <div class="search-view__title-wrap">
@@ -42,7 +42,7 @@
 
       <section class="search-view__answer-pane">
         <header class="search-view__pane-header">
-          <h2>{{ $t('label.aiKnowledgeAgentSearch') }}</h2>
+          <h2>{{ $t('label.aiKnowledgeCopilotSearch') }}</h2>
         </header>
 
         <div ref="messageListRef" class="search-view__chat-scroll">
@@ -88,7 +88,7 @@
                   </p>
                   <template v-else>
                     <div v-if="shouldDisplayFallbackNotice(question)" class="search-view__fallback-notice">
-                      {{ $t('message.knowledgeAgent.noChatModel') }}
+                      {{ $t('message.knowledgeCopilot.noChatModel') }}
                     </div>
                     <div v-if="getQuestionAnswer(question)" class="search-view__answer-content markdown-body"
                       v-html="renderQuestionAnswer(question)"></div>
@@ -130,6 +130,27 @@
                           <small>{{ formatAgentTraceDetail(event) }}</small>
                         </li>
                       </ol>
+                    </div>
+                    <div v-if="getPendingActions(question).length > 0" class="search-view__agent-writes">
+                      <h3>{{ $t('search.agentTaskApprovalRequired') }}</h3>
+                      <article v-for="(action, index) in getPendingActions(question)" :key="`${question.id}:approval:${index}`" class="search-view__agent-write-card">
+                        <div class="search-view__agent-write-main">
+                          <strong>{{ action.name }}</strong>
+                          <p>{{ action.description }}</p>
+                          <pre>{{ JSON.stringify(action.args, null, 2) }}</pre>
+                        </div>
+                        <div class="search-view__agent-write-actions">
+                          <button type="button" class="search-view__agent-write-apply icon-action-button" :disabled="isAgentRunning" @click="resumeAgentAction(question, 'approve')">
+                            <IconCheck :size="14" />{{ $t('button.approve') }}
+                          </button>
+                          <button v-if="action.allowedDecisions.includes('edit')" type="button" class="search-view__agent-write-dismiss" :disabled="isAgentRunning" @click="editAndResumeAgentAction(question, action, index)">
+                            {{ $t('button.edit') }}
+                          </button>
+                          <button type="button" class="search-view__agent-write-dismiss" :disabled="isAgentRunning" @click="resumeAgentAction(question, 'reject')">
+                            {{ $t('button.reject') }}
+                          </button>
+                        </div>
+                      </article>
                     </div>
                     <div v-if="getVisibleWriteProposals(question).length > 0" class="search-view__agent-writes">
                       <h3>{{ $t('search.agentTaskWriteProposal') }}</h3>
@@ -240,7 +261,7 @@ import { storeToRefs } from 'pinia';
 import { IconX, IconMessage2Bolt, IconSubtitlesAi, IconTrash, IconFileText, IconPlus, IconTextScanAi, IconChevronDown, IconCheck, IconSend, IconMessageChatbot } from '@tabler/icons-vue';
 import { renderMarkdown } from '@renderer/core/markdown/markdownRenderer';
 import { renderMarkdownEnhancements } from '@renderer/core/markdown/markdownEnhancements';
-import { useKnowledgeAgentConfig, useKnowledgeAgentChat, useKnowledgeAgentTask } from '@renderer/features/knowledge-agent';
+import { useKnowledgeCopilotConfig, useKnowledgeCopilotChat, useKnowledgeCopilotTask } from '@renderer/features/knowledge-copilot';
 import { useLicenseGate } from '@renderer/features/license';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
@@ -250,12 +271,13 @@ import { useWorkspace } from '@renderer/features/workspace';
 import { useAppShellStore } from '@renderer/app/store/appShell.store';
 import { useSettingsStore } from '@renderer/features/settings';
 import type {
-  KnowledgeAgentExecutedWrite,
+  KnowledgeCopilotExecutedWrite,
+  KnowledgeCopilotPendingAction,
   KnowledgeAnswerStage,
-  KnowledgeAgentStep,
-  KnowledgeAgentTraceEvent,
-  KnowledgeAgentWriteMode,
-  KnowledgeAgentWriteProposal,
+  KnowledgeCopilotStep,
+  KnowledgeCopilotTraceEvent,
+  KnowledgeCopilotWriteMode,
+  KnowledgeCopilotWriteProposal,
   KnowledgeSearchResult,
 } from '@renderer/core/bridge/electronApi';
 import type { WorkbenchQuestionEntry, WorkbenchQuestionSource } from '@renderer/features/workbench/constants/workbench.constants';
@@ -280,13 +302,15 @@ interface QuestionThread {
 }
 
 interface AgentTaskMetadata {
-  writeMode: KnowledgeAgentWriteMode;
-  steps: KnowledgeAgentStep[];
-  traceEvents: KnowledgeAgentTraceEvent[];
-  pendingWrites: KnowledgeAgentWriteProposal[];
-  executedWrites: KnowledgeAgentExecutedWrite[];
+  writeMode: KnowledgeCopilotWriteMode;
+  steps: KnowledgeCopilotStep[];
+  traceEvents: KnowledgeCopilotTraceEvent[];
+  pendingWrites: KnowledgeCopilotWriteProposal[];
+  executedWrites: KnowledgeCopilotExecutedWrite[];
   dismissedWriteIds: string[];
   createdWriteIds: string[];
+  conversationId: string;
+  pendingActions: KnowledgeCopilotPendingAction[];
 }
 
 const searchViewLogger = createLogger('SearchView');
@@ -298,10 +322,10 @@ const settingsStore = useSettingsStore();
 const { config } = storeToRefs(settingsStore);
 const { selectNote, createNote, initializeWorkspace, applyNoteContentUpdate } = useWorkspace();
 const { searchViewRequest } = useSearch();
-const { isEnabled: knowledgeAgentEnabled, isConfigured: knowledgeAgentConfigured } = useKnowledgeAgentConfig();
-const { askQuestionStream, isGenerating: isAIGenerating, usedSearchFallback } = useKnowledgeAgentChat();
-const { runTask, isRunning: isAgentRunning } = useKnowledgeAgentTask();
-const knowledgeAgentLicenseGate = useLicenseGate(LICENSE_FEATURES.KNOWLEDGE_AGENT);
+const { isEnabled: knowledgeCopilotEnabled, isConfigured: knowledgeCopilotConfigured } = useKnowledgeCopilotConfig();
+const { askQuestionStream, isGenerating: isAIGenerating, usedSearchFallback } = useKnowledgeCopilotChat();
+const { runTask, resumeTask, isRunning: isAgentRunning } = useKnowledgeCopilotTask();
+const knowledgeCopilotLicenseGate = useLicenseGate(LICENSE_FEATURES.KNOWLEDGE_COPILOT);
 
 const inputModes: InputModeOption[] = [
   {
@@ -316,7 +340,7 @@ const inputModes: InputModeOption[] = [
   },
 ];
 
-const inputMode = ref<KnowledgeInputMode>('qa');
+const inputMode = ref<KnowledgeInputMode>(config.value.knowledgeCopilot.defaultMode === 'agent' ? 'agent-task' : 'qa');
 const isModeMenuOpen = ref(false);
 const searchQuery = ref('');
 const semanticResults = ref<KnowledgeSearchResult[]>([]);
@@ -395,25 +419,25 @@ function handleDividerPointerDown(event: PointerEvent): void {
   window.addEventListener('pointercancel', handlePaneResizeEnd);
 }
 
-const canUseKnowledgeSearch = computed(() => knowledgeAgentLicenseGate.allowed.value && knowledgeAgentEnabled.value && knowledgeAgentConfigured.value);
+const canUseKnowledgeSearch = computed(() => knowledgeCopilotLicenseGate.allowed.value && knowledgeCopilotEnabled.value && knowledgeCopilotConfigured.value);
 const isBusy = computed(() => isSearching.value || isAIGenerating.value || isAgentRunning.value);
 const canAsk = computed(() => canUseKnowledgeSearch.value && Boolean(searchQuery.value.trim()) && !isBusy.value);
 const activeInputMode = computed(() => inputModes.find((mode) => mode.id === inputMode.value) ?? inputModes[0]);
-const agentWriteMode = computed<KnowledgeAgentWriteMode>(() => config.value.workbench.agentWriteMode ?? 'confirm');
+const agentWriteMode = computed<KnowledgeCopilotWriteMode>(() => config.value.workbench.agentWriteMode ?? 'confirm');
 const composerPlaceholder = computed(() => (
   inputMode.value === 'agent-task'
     ? t('search.agentTaskPlaceholder')
     : t('search.semanticPlaceholder')
 ));
 const knowledgeUnavailableReason = computed(() => {
-  if (!knowledgeAgentLicenseGate.allowed.value) {
-    return t('license.gate.knowledgeAgent.title');
+  if (!knowledgeCopilotLicenseGate.allowed.value) {
+    return t('license.gate.knowledgeCopilot.title');
   }
-  if (!knowledgeAgentEnabled.value) {
+  if (!knowledgeCopilotEnabled.value) {
     return t('search.knowledgeUnavailableDisabled');
   }
-  if (!knowledgeAgentConfigured.value) {
-    return t('message.error.knowledgeAgentNotConfigured');
+  if (!knowledgeCopilotConfigured.value) {
+    return t('message.error.knowledgeCopilotNotConfigured');
   }
   return '';
 });
@@ -790,7 +814,7 @@ function setAgentTaskMetadata(questionId: string, metadata: AgentTaskMetadata): 
 }
 
 async function toggleAgentWriteMode(): Promise<void> {
-  const nextMode: KnowledgeAgentWriteMode = agentWriteMode.value === 'auto' ? 'confirm' : 'auto';
+  const nextMode: KnowledgeCopilotWriteMode = agentWriteMode.value === 'auto' ? 'confirm' : 'auto';
   await settingsStore.saveSettings({
     workbench: {
       ...config.value.workbench,
@@ -822,6 +846,8 @@ async function runAgentTaskQuestion(query: string): Promise<void> {
     executedWrites: [],
     dismissedWriteIds: [],
     createdWriteIds: [],
+    conversationId: '',
+    pendingActions: [],
   };
 
   try {
@@ -854,7 +880,7 @@ async function runAgentTaskQuestion(query: string): Promise<void> {
 
     let generatedAnswer = '';
     try {
-      const result = await runTask(query, agentWriteMode.value);
+      const result = await runTask(query, agentWriteMode.value, threadId);
       semanticResults.value = result.sources;
       generatedAnswer = result.finalAnswer || '';
       metadata = {
@@ -865,6 +891,8 @@ async function runAgentTaskQuestion(query: string): Promise<void> {
         executedWrites: result.executedWrites,
         dismissedWriteIds: [],
         createdWriteIds: [],
+        conversationId: result.conversationId,
+        pendingActions: result.pendingActions,
       };
       if (result.executedWrites.length > 0) {
         await initializeWorkspace();
@@ -1047,22 +1075,71 @@ function getAgentMetadata(question: WorkbenchQuestionEntry): AgentTaskMetadata |
     executedWrites: question.executedWrites ?? [],
     dismissedWriteIds: question.dismissedWriteIds ?? [],
     createdWriteIds: question.createdWriteIds ?? [],
+    conversationId: question.threadId,
+    pendingActions: [],
   };
 }
 
-function getAgentSteps(question: WorkbenchQuestionEntry): KnowledgeAgentStep[] {
+function getPendingActions(question: WorkbenchQuestionEntry): KnowledgeCopilotPendingAction[] {
+  return getAgentMetadata(question)?.pendingActions ?? [];
+}
+
+async function editAndResumeAgentAction(question: WorkbenchQuestionEntry, action: KnowledgeCopilotPendingAction, actionIndex: number): Promise<void> {
+  const editedJson = window.prompt(t('search.agentTaskEditActionPrompt'), JSON.stringify(action.args, null, 2));
+  if (editedJson === null) return;
+  try {
+    const parsed = JSON.parse(editedJson) as unknown;
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error(t('search.agentTaskInvalidActionArgs'));
+    const metadata = getAgentMetadata(question);
+    if (!metadata) return;
+    const decisions = metadata.pendingActions.map((_pendingAction, index) => index === actionIndex
+      ? ({ type: 'edit' as const, editedAction: { name: action.name, args: parsed as Record<string, unknown> } })
+      : ({ type: 'reject' as const, message: 'Only the explicitly edited action was approved' }));
+    const result = await resumeTask(metadata.conversationId || question.threadId, decisions, metadata.writeMode);
+    setAgentTaskMetadata(question.id, {
+      ...metadata,
+      steps: [...metadata.steps, ...result.steps],
+      traceEvents: [...metadata.traceEvents, ...result.traceEvents],
+      executedWrites: [...result.executedWrites, ...metadata.executedWrites],
+      pendingActions: result.pendingActions,
+      conversationId: result.conversationId,
+    });
+  } catch (error) {
+    activeErrorQuestionId.value = question.id;
+    activeErrorMessage.value = getErrorMessage(error);
+  }
+}
+
+async function resumeAgentAction(question: WorkbenchQuestionEntry, decision: 'approve' | 'reject'): Promise<void> {
+  const metadata = getAgentMetadata(question);
+  if (!metadata || metadata.pendingActions.length === 0) return;
+  const decisions = metadata.pendingActions.map(() => decision === 'approve'
+    ? ({ type: 'approve' as const })
+    : ({ type: 'reject' as const, message: 'User rejected this action' }));
+  const result = await resumeTask(metadata.conversationId || question.threadId, decisions, metadata.writeMode);
+  setAgentTaskMetadata(question.id, {
+    ...metadata,
+    steps: [...metadata.steps, ...result.steps],
+    traceEvents: [...metadata.traceEvents, ...result.traceEvents],
+    executedWrites: [...result.executedWrites, ...metadata.executedWrites],
+    pendingActions: result.pendingActions,
+    conversationId: result.conversationId,
+  });
+}
+
+function getAgentSteps(question: WorkbenchQuestionEntry): KnowledgeCopilotStep[] {
   return getAgentMetadata(question)?.steps ?? [];
 }
 
-function getAgentTraceEvents(question: WorkbenchQuestionEntry): KnowledgeAgentTraceEvent[] {
+function getAgentTraceEvents(question: WorkbenchQuestionEntry): KnowledgeCopilotTraceEvent[] {
   return getAgentMetadata(question)?.traceEvents ?? [];
 }
 
-function getExecutedWrites(question: WorkbenchQuestionEntry): KnowledgeAgentExecutedWrite[] {
+function getExecutedWrites(question: WorkbenchQuestionEntry): KnowledgeCopilotExecutedWrite[] {
   return getAgentMetadata(question)?.executedWrites ?? [];
 }
 
-function formatAgentStepTitle(step: KnowledgeAgentStep): string {
+function formatAgentStepTitle(step: KnowledgeCopilotStep): string {
   const keyMap: Record<string, string> = {
     searchKnowledgeBase: 'search.agentStep.searchKnowledgeBase',
     listRecentNotes: 'search.agentStep.listRecentNotes',
@@ -1078,7 +1155,7 @@ function formatAgentStepTitle(step: KnowledgeAgentStep): string {
   return key ? t(key) : step.title;
 }
 
-function formatAgentStepDetail(step: KnowledgeAgentStep): string {
+function formatAgentStepDetail(step: KnowledgeCopilotStep): string {
   if (step.title === 'searchKnowledgeBase') {
     return t('search.agentStep.searchKnowledgeBaseDetail', { count: step.detail });
   }
@@ -1090,7 +1167,7 @@ function formatAgentStepDetail(step: KnowledgeAgentStep): string {
   return step.detail;
 }
 
-function formatAgentTraceTitle(event: KnowledgeAgentTraceEvent): string {
+function formatAgentTraceTitle(event: KnowledgeCopilotTraceEvent): string {
   if (event.type === 'model-response') {
     return t('search.agentTrace.modelResponse');
   }
@@ -1106,7 +1183,7 @@ function formatAgentTraceTitle(event: KnowledgeAgentTraceEvent): string {
   return t('search.agentTrace.toolResult', { tool: event.toolName ?? event.title });
 }
 
-function formatAgentTraceDetail(event: KnowledgeAgentTraceEvent): string {
+function formatAgentTraceDetail(event: KnowledgeCopilotTraceEvent): string {
   const duration = typeof event.durationMs === 'number'
     ? t('search.agentTrace.duration', { duration: event.durationMs })
     : '';
@@ -1118,7 +1195,7 @@ function formatAgentTraceDetail(event: KnowledgeAgentTraceEvent): string {
   return duration ? `${detail} ${duration}` : detail;
 }
 
-function getVisibleWriteProposals(question: WorkbenchQuestionEntry): KnowledgeAgentWriteProposal[] {
+function getVisibleWriteProposals(question: WorkbenchQuestionEntry): KnowledgeCopilotWriteProposal[] {
   const metadata = getAgentMetadata(question);
   if (!metadata) {
     return [];
@@ -1130,12 +1207,12 @@ function getVisibleWriteProposals(question: WorkbenchQuestionEntry): KnowledgeAg
   ));
 }
 
-function getWriteProposalPreview(proposal: KnowledgeAgentWriteProposal): string {
+function getWriteProposalPreview(proposal: KnowledgeCopilotWriteProposal): string {
   const content = proposal.content.trim();
   return content.length > 240 ? `${content.slice(0, 240)}...` : content;
 }
 
-function getWriteProposalTitle(proposal: KnowledgeAgentWriteProposal): string {
+function getWriteProposalTitle(proposal: KnowledgeCopilotWriteProposal): string {
   if (proposal.type === 'create-note') {
     return proposal.title;
   }
@@ -1143,7 +1220,7 @@ function getWriteProposalTitle(proposal: KnowledgeAgentWriteProposal): string {
   return proposal.noteTitle;
 }
 
-function getWriteProposalActionLabel(proposal: KnowledgeAgentWriteProposal): string {
+function getWriteProposalActionLabel(proposal: KnowledgeCopilotWriteProposal): string {
   return proposal.type === 'create-note'
     ? t('search.agentTaskApplyWrite')
     : t('search.agentTaskApplyUpdate');
@@ -1215,12 +1292,12 @@ async function persistFullQuestion(
   return updatedQuestion;
 }
 
-function getExecutedWritePreview(write: KnowledgeAgentExecutedWrite): string {
+function getExecutedWritePreview(write: KnowledgeCopilotExecutedWrite): string {
   const content = write.content.trim();
   return content.length > 240 ? `${content.slice(0, 240)}...` : content;
 }
 
-async function openExecutedWrite(write: KnowledgeAgentExecutedWrite): Promise<void> {
+async function openExecutedWrite(write: KnowledgeCopilotExecutedWrite): Promise<void> {
   await initializeWorkspace();
   await openNoteResult(write.noteId, write.noteTitle);
 }
@@ -1231,7 +1308,7 @@ async function saveQuestionAsNote(question: WorkbenchQuestionEntry): Promise<voi
     return;
   }
 
-  const proposal: KnowledgeAgentWriteProposal = {
+  const proposal: KnowledgeCopilotWriteProposal = {
     id: `agent-write-manual-${Date.now()}`,
     type: 'create-note',
     title: buildSummaryNoteTitle(question),
@@ -1248,7 +1325,7 @@ async function saveQuestionAsNote(question: WorkbenchQuestionEntry): Promise<voi
         return;
       }
 
-      const executedWrite: KnowledgeAgentExecutedWrite = {
+      const executedWrite: KnowledgeCopilotExecutedWrite = {
         id: proposal.id,
         type: 'create-note',
         noteId: createdNote.id,
@@ -1314,7 +1391,7 @@ async function dismissWriteProposal(question: WorkbenchQuestionEntry, proposalId
 
 async function applyWriteProposal(
   question: WorkbenchQuestionEntry,
-  proposal: KnowledgeAgentWriteProposal,
+  proposal: KnowledgeCopilotWriteProposal,
 ): Promise<void> {
   const metadata = getAgentMetadata(question);
   if (!metadata || applyingWriteProposalId.value) {

@@ -1,13 +1,17 @@
 import { vectorStoreService } from './vector-store.service.js';
-import { generateEmbeddingsBatch } from './embedding.service.js';
-import { chunkMarkdown } from '../utils/text-chunker.js';
 import { loggerService } from './logger.service.js';
 import { getErrorMessage } from '../services/error.service.js';
-import { remoteAiService } from './remote-ai.service.js';
+import { RecursiveCharacterTextSplitter } from '@langchain/textsplitters';
+import { Document } from '@langchain/core/documents';
+import { createProviderEmbeddings, createProviderReranker } from './ai-provider.service.js';
+import { SnaptiumLanceVectorStore } from './snaptium-lance-vector-store.js';
+import type { AiProvider } from '../../shared/ai-provider.constants.js';
 
-const logger = loggerService.createLogger('Main:KnowledgeAgentIndexService');
+const logger = loggerService.createLogger('Main:KnowledgeCopilotIndexService');
 
 interface EmbeddingConfig {
+  provider: AiProvider;
+  baseUrl: string;
   endpoint: string;
   apiKey: string;
   model: string;
@@ -28,6 +32,8 @@ interface SearchByVectorParams {
 }
 
 interface RerankerConfig {
+  provider: AiProvider;
+  baseUrl: string;
   endpoint: string;
   apiKey: string;
   model: string;
@@ -60,15 +66,17 @@ const RERANK_CANDIDATE_MAX = 20;
  * Knowledge-agent index service - execution layer.
  * Provides atomic and batch-atomic capabilities for vector storage and retrieval.
  */
-class KnowledgeAgentIndexService {
+class KnowledgeCopilotIndexService {
   private isInitialized: boolean;
   private workspaceRoot: string | null;
   private embeddingConfig: EmbeddingConfig | null;
+  private vectorStore: SnaptiumLanceVectorStore | null;
 
   constructor() {
     this.isInitialized = false;
     this.workspaceRoot = null;
     this.embeddingConfig = null;
+    this.vectorStore = null;
   }
 
   isReady(): boolean {
@@ -76,7 +84,7 @@ class KnowledgeAgentIndexService {
   }
 
   /**
-   * Initialize knowledge-agent index service (Atomic)
+   * Initialize knowledge-copilot index service (Atomic)
    * @param {string} workspaceRoot - Workspace root directory
    * @param {Object} embeddingConfig - Embedding API configuration
    */
@@ -90,8 +98,13 @@ class KnowledgeAgentIndexService {
 
       this.workspaceRoot = workspaceRoot;
       this.embeddingConfig = embeddingConfig;
-
-      await vectorStoreService.initialize(workspaceRoot);
+      this.vectorStore = new SnaptiumLanceVectorStore(createProviderEmbeddings({
+        provider: embeddingConfig.provider,
+        baseUrl: embeddingConfig.baseUrl,
+        apiKey: embeddingConfig.apiKey,
+        model: embeddingConfig.model,
+      }));
+      await this.vectorStore.initialize(workspaceRoot);
 
       this.isInitialized = true;
       logger.info('Initialization complete');
@@ -121,38 +134,35 @@ class KnowledgeAgentIndexService {
         return { success: true, chunksIndexed: 0 };
       }
 
-      // 1. Clear existing chunks for this note
-      await vectorStoreService.deleteByNoteId(noteId);
+      if (!this.vectorStore) throw new Error('Knowledge Copilot vector store is unavailable');
+      await this.vectorStore.delete({ noteId });
 
-      // 2. Chunking
-      let textChunks = chunkMarkdown(content, chunkSize, chunkOverlap);
-      textChunks = textChunks.filter(chunk => chunk.content && chunk.content.trim().length > 0);
+      const splitter = new RecursiveCharacterTextSplitter({
+        chunkSize: chunkSize ?? 500,
+        chunkOverlap: chunkOverlap ?? 50,
+      });
+      const textChunks = (await splitter.splitDocuments([
+        new Document({ pageContent: content, metadata: { noteId, noteTitle } }),
+      ])).filter((chunk) => chunk.pageContent.trim().length > 0);
 
       if (textChunks.length === 0) {
         return { success: true, chunksIndexed: 0 };
       }
 
-      // 3. Embedding (Batch)
-      if (!this.embeddingConfig) {
-        throw new Error('Embedding configuration is unavailable');
-      }
-      const texts = textChunks.map(chunk => chunk.content);
-      const embeddings = await generateEmbeddingsBatch(texts, this.embeddingConfig);
-
-      // 4. Store
-      const chunks = textChunks.map((chunk, index) => ({
+      const chunks = textChunks.map((chunk, index) => new Document({
         id: `${noteId}_chunk${index}`,
-        noteId,
-        noteTitle,
-        content: chunk.content,
-        startPos: chunk.startPos,
-        endPos: chunk.endPos,
-        vector: embeddings[index],
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
+        pageContent: chunk.pageContent,
+        metadata: {
+          ...chunk.metadata,
+          id: `${noteId}_chunk${index}`,
+          noteId,
+          noteTitle,
+          startPos: index * Math.max(1, (chunkSize ?? 500) - (chunkOverlap ?? 50)),
+          endPos: index * Math.max(1, (chunkSize ?? 500) - (chunkOverlap ?? 50)) + chunk.pageContent.length,
+        },
       }));
 
-      await vectorStoreService.addChunks(chunks);
+      await this.vectorStore.addDocuments(chunks);
 
       return {
         success: true,
@@ -227,43 +237,61 @@ class KnowledgeAgentIndexService {
       ? Math.min(Math.max(topK * RERANK_CANDIDATE_MULTIPLIER, RERANK_CANDIDATE_MIN), RERANK_CANDIDATE_MAX)
       : topK;
 
-    const queryEmbedding = (await generateEmbeddingsBatch([query], this.embeddingConfig))[0];
-    const candidates = await this.searchByVector({
-      queryEmbedding,
-      topK: candidateTopK,
-      similarityThreshold,
-    });
+    if (!this.vectorStore) throw new Error('Knowledge Copilot vector store is unavailable');
+    const matches = await this.vectorStore.similaritySearchWithScore(
+      query,
+      candidateTopK,
+      { threshold: similarityThreshold },
+    );
+    const candidates: SearchResultItem[] = matches.map(([document, score]) => ({
+      chunk: {
+        id: document.id ?? String(document.metadata.id ?? ''),
+        noteId: String(document.metadata.noteId ?? ''),
+        content: document.pageContent,
+        startPos: Number(document.metadata.startPos ?? 0),
+        endPos: Number(document.metadata.endPos ?? document.pageContent.length),
+      },
+      score,
+      noteTitle: typeof document.metadata.noteTitle === 'string' ? document.metadata.noteTitle : undefined,
+    }));
 
     if (!rerankerConfig || candidates.length < 2) {
       return candidates.slice(0, topK);
     }
 
     try {
-      const reranked = await remoteAiService.rerank({
-        endpoint: rerankerConfig.endpoint,
+      const reranker = createProviderReranker({
+        provider: rerankerConfig.provider,
+        baseUrl: rerankerConfig.baseUrl,
         apiKey: rerankerConfig.apiKey,
         model: rerankerConfig.model,
-        query,
-        documents: candidates.map((candidate) => candidate.chunk.content),
       });
+      const rerankedDocuments = await reranker.compressDocuments(
+        candidates.map((candidate, index) => new Document({
+          pageContent: candidate.chunk.content,
+          metadata: { candidateIndex: index },
+        })),
+        query,
+      );
 
-      if (!reranked.length) {
+      if (!rerankedDocuments.length) {
         return candidates.slice(0, topK);
       }
 
       const orderedResults: SearchResultItem[] = [];
       const consumedIndexes = new Set<number>();
-      for (const item of reranked) {
-        const candidate = candidates[item.index];
-        if (!candidate || consumedIndexes.has(item.index)) {
+      for (const document of rerankedDocuments) {
+        const candidateIndex = Number(document.metadata.candidateIndex);
+        const candidate = candidates[candidateIndex];
+        if (!candidate || consumedIndexes.has(candidateIndex)) {
           continue;
         }
 
         orderedResults.push({
           ...candidate,
-          score: item.score,
+          score: Number(document.metadata.relevanceScore ?? candidate.score),
         });
-        consumedIndexes.add(item.index);
+        consumedIndexes.add(candidateIndex);
       }
 
       for (let index = 0; index < candidates.length; index += 1) {
@@ -300,7 +328,7 @@ class KnowledgeAgentIndexService {
   }
 
   /**
-   * Get knowledge-agent index service status (Atomic)
+   * Get knowledge-copilot index service status (Atomic)
    * @returns {Promise<Object>} Status object
    */
   async getStatus(): Promise<Record<string, unknown>> {
@@ -339,13 +367,25 @@ class KnowledgeAgentIndexService {
    * Update embedding configuration (Atomic)
    * @param {Object} embeddingConfig - New embedding configuration
    */
-  updateEmbeddingConfig(embeddingConfig: EmbeddingConfig): void {
+  async updateEmbeddingConfig(embeddingConfig: EmbeddingConfig): Promise<void> {
+    const changed = !this.embeddingConfig
+      || this.embeddingConfig.provider !== embeddingConfig.provider
+      || this.embeddingConfig.baseUrl !== embeddingConfig.baseUrl
+      || this.embeddingConfig.model !== embeddingConfig.model;
     this.embeddingConfig = embeddingConfig;
+    if (!changed || !this.workspaceRoot) return;
+    this.vectorStore = new SnaptiumLanceVectorStore(createProviderEmbeddings({
+      provider: embeddingConfig.provider,
+      baseUrl: embeddingConfig.baseUrl,
+      apiKey: embeddingConfig.apiKey,
+      model: embeddingConfig.model,
+    }));
+    await this.vectorStore.initialize(this.workspaceRoot);
     logger.info('Embedding config updated');
   }
 
   /**
-   * Shutdown knowledge-agent index service (Atomic)
+   * Shutdown knowledge-copilot index service (Atomic)
    */
   async shutdown(): Promise<void> {
     if (this.isInitialized) {
@@ -356,4 +396,4 @@ class KnowledgeAgentIndexService {
   }
 }
 
-export const knowledgeAgentIndexService = new KnowledgeAgentIndexService();
+export const knowledgeCopilotIndexService = new KnowledgeCopilotIndexService();

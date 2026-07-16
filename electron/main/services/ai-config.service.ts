@@ -8,6 +8,7 @@ import {
   isValidAiWritingStyle,
 } from '../../shared/ai.constants.js';
 import { LICENSE_FEATURES, type LicensedFeature } from '../../shared/license.constants.js';
+import { inferAiProvider, isAiProvider, type AiProvider } from '../../shared/ai-provider.constants.js';
 import {
   OFFICIAL_AI_BASE_URL,
   OFFICIAL_AI_MODELS,
@@ -23,6 +24,7 @@ interface AiSourceConfig {
   apiKey: string;
   aiModel: string;
   capabilities: string[];
+  provider: AiProvider;
   official: boolean;
   locked: boolean;
 }
@@ -36,13 +38,16 @@ interface AiAssistantSettings {
   writingScenario: unknown;
 }
 
-interface KnowledgeAgentSettings {
+interface KnowledgeCopilotSettings {
   enabled: boolean;
   embeddingSourceId: string;
   embeddingModel: string;
-  chatSourceId: string;
-  chatModel: string;
+  askChatSourceId: string;
+  askChatModel: string;
+  agentChatSourceId: string;
+  agentChatModel: string;
   rerankerSourceId: string;
+  rerankerModel: string;
   topK: number;
   similarityThreshold: number;
 }
@@ -52,22 +57,28 @@ interface NormalizedAppConfig {
   noteSavePath: string;
   aiSources: AiSourceConfig[];
   aiAssistant: AiAssistantSettings;
-  knowledgeAgent: KnowledgeAgentSettings;
+  knowledgeCopilot: KnowledgeCopilotSettings;
 }
 
 interface ResolvedEmbeddingConfig {
+  provider: AiProvider;
+  baseUrl: string;
   endpoint: string;
   apiKey: string;
   model: string;
 }
 
 interface ResolvedChatConfig {
+  provider: AiProvider;
+  baseUrl: string;
   endpoint: string;
   apiKey: string;
   model: string;
 }
 
 interface ResolvedRerankerConfig {
+  provider: AiProvider;
+  baseUrl: string;
   sourceId: string;
   endpoint: string;
   apiKey: string;
@@ -84,12 +95,13 @@ interface ResolvedAssistantConfig {
   writingScenario: AiWritingScenario;
 }
 
-interface ResolvedKnowledgeAgentConfig {
+interface ResolvedKnowledgeCopilotConfig {
   uiLanguage: string;
   workspaceRoot: string;
-  knowledgeAgent: Pick<KnowledgeAgentSettings, 'topK' | 'similarityThreshold'>;
+  knowledgeCopilot: Pick<KnowledgeCopilotSettings, 'topK' | 'similarityThreshold'>;
   embeddingConfig: ResolvedEmbeddingConfig;
-  chatConfig: ResolvedChatConfig | null;
+  askChatConfig: ResolvedChatConfig | null;
+  agentChatConfig: ResolvedChatConfig | null;
   rerankerConfig: ResolvedRerankerConfig | null;
 }
 
@@ -141,6 +153,7 @@ function normalizeAiSource(item: unknown): AiSourceConfig {
     apiKey: toText(record.apiKey),
     aiModel: toText(record.aiModel),
     capabilities,
+    provider: isAiProvider(record.provider) ? record.provider : inferAiProvider(toText(record.baseUrl)),
     official: record.official === true || isOfficialAiSourceId(id),
     locked: record.locked === true || isOfficialAiSourceId(id),
   };
@@ -168,15 +181,18 @@ function normalizeAiAssistant(aiAssistant: unknown): AiAssistantSettings {
   };
 }
 
-function normalizeKnowledgeAgentSettings(knowledgeAgent: unknown): KnowledgeAgentSettings {
-  const record = toRecord(knowledgeAgent);
+function normalizeKnowledgeCopilotSettings(knowledgeCopilot: unknown): KnowledgeCopilotSettings {
+  const record = toRecord(knowledgeCopilot);
   return {
     enabled: toBoolean(record.enabled),
     embeddingSourceId: toText(record.embeddingSourceId),
     embeddingModel: toText(record.embeddingModel),
-    chatSourceId: toText(record.chatSourceId),
-    chatModel: toText(record.chatModel),
+    askChatSourceId: toText(record.askChatSourceId) || toText(record.chatSourceId),
+    askChatModel: toText(record.askChatModel) || toText(record.chatModel),
+    agentChatSourceId: toText(record.agentChatSourceId) || toText(record.chatSourceId),
+    agentChatModel: toText(record.agentChatModel) || toText(record.chatModel),
     rerankerSourceId: toText(record.rerankerSourceId),
+    rerankerModel: toText(record.rerankerModel),
     topK: normalizeTopK(record.topK),
     similarityThreshold: normalizeSimilarityThreshold(record.similarityThreshold),
   };
@@ -188,7 +204,7 @@ function normalizeAppConfig(config: LoadedAppConfig): NormalizedAppConfig {
     noteSavePath: toText(config.noteSavePath),
     aiSources: normalizeAiSources(config.aiSources),
     aiAssistant: normalizeAiAssistant(config.aiAssistant),
-    knowledgeAgent: normalizeKnowledgeAgentSettings(config.knowledgeAgent),
+    knowledgeCopilot: normalizeKnowledgeCopilotSettings(config.knowledgeCopilot),
   };
 }
 
@@ -245,6 +261,10 @@ function supportsCapability(source: AiSourceConfig, capability: string): boolean
 
 function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.trim().replace(/\/+$/, '');
+}
+
+function resolveSourceBaseUrl(source: AiSourceConfig): string {
+  return normalizeBaseUrl(source.official ? OFFICIAL_AI_BASE_URL : source.baseUrl);
 }
 
 function resolveSourceEndpoint(source: AiSourceConfig, capability: 'chat' | 'embedding' | 'reranker'): string {
@@ -344,12 +364,12 @@ export const aiConfigService = {
     };
   },
 
-  async resolveKnowledgeAgentConfig(): Promise<ResolvedKnowledgeAgentConfig> {
+  async resolveKnowledgeCopilotConfig(): Promise<ResolvedKnowledgeCopilotConfig> {
     const config = await this.loadAppConfig();
-    const knowledgeAgent = config.knowledgeAgent;
+    const knowledgeCopilot = config.knowledgeCopilot;
 
-    if (!knowledgeAgent.enabled) {
-      throw new Error('Knowledge agent is disabled in settings');
+    if (!knowledgeCopilot.enabled) {
+      throw new Error('Knowledge Copilot is disabled in settings');
     }
 
     if (!config.noteSavePath) {
@@ -358,54 +378,76 @@ export const aiConfigService = {
 
     const embeddingSource = requireConfiguredSourceWithCapability(
       config.aiSources,
-      knowledgeAgent.embeddingSourceId,
+      knowledgeCopilot.embeddingSourceId,
       'embedding',
       'Embedding source not found',
     );
 
-    const chatSource = knowledgeAgent.chatSourceId
-      ? config.aiSources.find((item) => item.id === knowledgeAgent.chatSourceId && supportsCapability(item, 'chat')) ?? null
+    const askChatSource = knowledgeCopilot.askChatSourceId
+      ? config.aiSources.find((item) => item.id === knowledgeCopilot.askChatSourceId && supportsCapability(item, 'chat')) ?? null
+      : null;
+    const agentChatSource = knowledgeCopilot.agentChatSourceId
+      ? config.aiSources.find((item) => item.id === knowledgeCopilot.agentChatSourceId && supportsCapability(item, 'chat')) ?? null
       : null;
 
-    const rerankerSource = knowledgeAgent.rerankerSourceId
-      ? config.aiSources.find((item) => item.id === knowledgeAgent.rerankerSourceId && supportsCapability(item, 'reranker')) ?? null
+    const rerankerSource = knowledgeCopilot.rerankerSourceId
+      ? config.aiSources.find((item) => item.id === knowledgeCopilot.rerankerSourceId && supportsCapability(item, 'reranker')) ?? null
       : null;
-    const embeddingApiKey = await resolveSourceApiKey(embeddingSource, LICENSE_FEATURES.KNOWLEDGE_AGENT);
-    const chatApiKey = chatSource
-      ? await resolveSourceApiKey(chatSource, LICENSE_FEATURES.KNOWLEDGE_AGENT)
+    const embeddingApiKey = await resolveSourceApiKey(embeddingSource, LICENSE_FEATURES.KNOWLEDGE_COPILOT);
+    const askChatApiKey = askChatSource
+      ? await resolveSourceApiKey(askChatSource, LICENSE_FEATURES.KNOWLEDGE_COPILOT)
+      : null;
+    const agentChatApiKey = agentChatSource
+      ? await resolveSourceApiKey(agentChatSource, LICENSE_FEATURES.KNOWLEDGE_COPILOT)
       : null;
     const rerankerApiKey = rerankerSource
-      ? await resolveSourceApiKey(rerankerSource, LICENSE_FEATURES.KNOWLEDGE_AGENT)
+      ? await resolveSourceApiKey(rerankerSource, LICENSE_FEATURES.KNOWLEDGE_COPILOT)
       : null;
 
     return {
       uiLanguage: config.language,
       workspaceRoot: config.noteSavePath,
-      knowledgeAgent: {
-        topK: knowledgeAgent.topK,
-        similarityThreshold: knowledgeAgent.similarityThreshold,
+      knowledgeCopilot: {
+        topK: knowledgeCopilot.topK,
+        similarityThreshold: knowledgeCopilot.similarityThreshold,
       },
       embeddingConfig: {
+        provider: embeddingSource.provider,
+        baseUrl: resolveSourceBaseUrl(embeddingSource),
         endpoint: resolveSourceEndpoint(embeddingSource, 'embedding'),
         apiKey: embeddingApiKey,
         model: resolveOfficialModel(embeddingSource, 'embedding')
-          ?? resolveModel(knowledgeAgent.embeddingModel, embeddingSource.aiModel, 'Embedding model not specified'),
+          ?? resolveModel(knowledgeCopilot.embeddingModel, embeddingSource.aiModel, 'Embedding model not specified'),
       },
-      chatConfig: chatSource
-        ? {
-            endpoint: resolveSourceEndpoint(chatSource, 'chat'),
-            apiKey: chatApiKey ?? '',
-            model: resolveOfficialModel(chatSource, 'chat')
-              ?? resolveModel(knowledgeAgent.chatModel, chatSource.aiModel, 'No chat model configured'),
+      askChatConfig: askChatSource
+          ? {
+            provider: askChatSource.provider,
+            baseUrl: resolveSourceBaseUrl(askChatSource),
+            endpoint: resolveSourceEndpoint(askChatSource, 'chat'),
+            apiKey: askChatApiKey ?? '',
+            model: resolveOfficialModel(askChatSource, 'chat')
+              ?? resolveModel(knowledgeCopilot.askChatModel, askChatSource.aiModel, 'No Ask chat model configured'),
+          }
+        : null,
+      agentChatConfig: agentChatSource
+          ? {
+            provider: agentChatSource.provider,
+            baseUrl: resolveSourceBaseUrl(agentChatSource),
+            endpoint: resolveSourceEndpoint(agentChatSource, 'chat'),
+            apiKey: agentChatApiKey ?? '',
+            model: resolveOfficialModel(agentChatSource, 'chat')
+              ?? resolveModel(knowledgeCopilot.agentChatModel, agentChatSource.aiModel, 'No Agent chat model configured'),
           }
         : null,
       rerankerConfig: rerankerSource
         ? {
+            provider: rerankerSource.provider,
+            baseUrl: resolveSourceBaseUrl(rerankerSource),
             sourceId: rerankerSource.id,
             endpoint: resolveSourceEndpoint(rerankerSource, 'reranker'),
             apiKey: rerankerApiKey ?? '',
             model: resolveOfficialModel(rerankerSource, 'reranker')
-              ?? resolveModel('', rerankerSource.aiModel, 'No reranker model configured'),
+              ?? resolveModel(knowledgeCopilot.rerankerModel, rerankerSource.aiModel, 'No reranker model configured'),
           }
         : null,
     };

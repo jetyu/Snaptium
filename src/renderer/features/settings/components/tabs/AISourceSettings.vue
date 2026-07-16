@@ -19,11 +19,10 @@
           <div class="source-info">
             <div class="source-header">
               <div class="source-identity">
-                <span v-if="isOfficialSource(source)" class="official-source-mark"
-                  :title="t('text.officialInnerAiSource')">
-                  <IconTextScanAi :size="16" />
-                </span>
-                <h4 class="source-title">{{ source.name }}</h4>
+                <div class="source-heading-copy">
+                  <h4 class="source-title">{{ source.name }}</h4>
+                  <span class="source-provider">{{ getAiProviderPresentation(source.provider).label }}</span>
+                </div>
               </div>
               <div class="settings-card-actions">
                 <span v-if="isLockedSource(source)" class="source-lock-badge" :title="t('text.officialInnerAiSource')">
@@ -82,6 +81,19 @@
             <input v-model="newSource.name" type="text" class="settings-input" maxlength="20"
               :placeholder="t('placeholder.sourceName')" :disabled="isLicenseLocked" />
           </div>
+          <div class="source-form-group">
+            <label class="setting-label">{{ t('label.aiProvider') }}</label>
+            <div class="provider-select-row">
+              <label class="select-shell provider-select-shell">
+                <select class="settings-select" :value="newSource.provider" :disabled="isLicenseLocked"
+                  @change="handleProviderSelect(($event.target as HTMLSelectElement).value as AiProvider)">
+                  <option v-for="provider in selectableProviders" :key="provider" :value="provider">
+                    {{ getAiProviderPresentation(provider).label }}
+                  </option>
+                </select>
+              </label>
+            </div>
+          </div>
 
           <div class="source-form-group">
             <label class="setting-label">{{ t('label.aiBaseUrl') }} <span class="required-mark">{{ t('label.starSign')
@@ -92,11 +104,11 @@
           <div class="source-form-group">
             <label class="setting-label">{{ t('label.aiModel') }} <span class="required-mark">{{ t('label.starSign')
             }}</span></label>
-            <input v-model="newSource.aiModel" type="text" class="settings-input" :placeholder="t('placeholder.aiModel')"
-              :disabled="isLicenseLocked" />
+            <input v-model="newSource.aiModel" type="text" class="settings-input"
+              :placeholder="t('placeholder.aiModel')" :disabled="isLicenseLocked" />
           </div>
           <div class="source-form-group">
-            <label class="setting-label">{{ t('label.aiApiKey') }} <span class="required-mark">{{ t('label.starSign')
+            <label class="setting-label">{{ t('label.aiApiKey') }} <span v-if="requiresApiKey" class="required-mark">{{ t('label.starSign')
             }}</span></label>
             <PasswordInput v-model="newSource.apiKey" :placeholder="t('placeholder.aiAPIKey')" autocomplete="off"
               :disabled="isLicenseLocked" />
@@ -185,12 +197,14 @@ import { ref, computed, reactive } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../store/settings.store';
 import type { AISource } from '../../store/settings.store';
+import { AI_PROVIDER_DEFAULT_BASE_URLS, AI_PROVIDERS, getAiProviderCapabilities, type AiProvider } from '@shared/ai-provider.constants';
+import { getAiProviderPresentation, SELECTABLE_AI_PROVIDERS } from '../../config/ai-providers';
 import { settingsService } from '../../services/settings.service';
 import { systemDialog } from '../../services/system-dialog.service';
 import { createLogger } from '../../../logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { isOfficialAiSourceId } from '@shared/official-ai.constants';
-import { IconPlus, IconBulb, IconTrash, IconPencil, IconSparkles , IconTextScanAi } from '@tabler/icons-vue';
+import { IconPlus, IconBulb, IconTrash, IconPencil, IconSparkles } from '@tabler/icons-vue';
 import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 import siliconFlowLogoUrl from '@assets/images/siliconflow.png';
 import PasswordInput from '../PasswordInput.vue';
@@ -234,13 +248,23 @@ const getOfficialModelDescriptionKey = (source: AISource): string => {
   return 'text.officialAiChatDescription';
 };
 
-const newSource = reactive({
+const newSource = reactive<{
+  provider: AiProvider;
+  name: string;
+  baseUrl: string;
+  apiKey: string;
+  aiModel: string;
+  capabilities: string[];
+}>({
+  provider: AI_PROVIDERS.SILICONFLOW,
   name: '',
-  baseUrl: '',
+  baseUrl: AI_PROVIDER_DEFAULT_BASE_URLS[AI_PROVIDERS.SILICONFLOW],
   apiKey: '',
   aiModel: '',
   capabilities: ['embedding', 'chat', 'reranker'],
 });
+const selectableProviders = SELECTABLE_AI_PROVIDERS;
+const requiresApiKey = computed(() => newSource.provider !== AI_PROVIDERS.OLLAMA);
 
 const capabilityOptions = [
   { value: 'embedding', labelKey: 'label.aiCapabilityEmbedding' },
@@ -254,7 +278,7 @@ const canTest = computed(() => {
     newSource.name.trim() &&
     newSource.baseUrl.trim() &&
     newSource.aiModel.trim() &&
-    newSource.apiKey.trim()
+    (!requiresApiKey.value || newSource.apiKey.trim())
   );
 });
 
@@ -297,6 +321,7 @@ const handleAddSource = async () => {
 
   try {
     const payload = {
+      provider: newSource.provider,
       name: newSource.name,
       baseUrl: newSource.baseUrl,
       apiKey: newSource.apiKey,
@@ -337,6 +362,7 @@ const handleEditSource = (source: AISource) => {
   }
 
   editingSourceId.value = source.id;
+  newSource.provider = source.provider;
   newSource.name = source.name;
   newSource.baseUrl = source.baseUrl;
   newSource.apiKey = source.apiKey;
@@ -346,12 +372,23 @@ const handleEditSource = (source: AISource) => {
 };
 
 const resetForm = () => {
+  newSource.provider = AI_PROVIDERS.SILICONFLOW;
   newSource.name = '';
-  newSource.baseUrl = '';
+  newSource.baseUrl = AI_PROVIDER_DEFAULT_BASE_URLS[AI_PROVIDERS.SILICONFLOW];
   newSource.apiKey = '';
   newSource.aiModel = '';
   newSource.capabilities = ['embedding', 'chat', 'reranker'];
   editingSourceId.value = null;
+};
+
+const handleProviderSelect = (provider: AiProvider): void => {
+  newSource.provider = provider;
+  newSource.baseUrl = AI_PROVIDER_DEFAULT_BASE_URLS[provider];
+  newSource.capabilities = getAiProviderCapabilities(provider);
+  if (!newSource.name.trim()) {
+    newSource.name = getAiProviderPresentation(provider).label;
+  }
+  newSource.aiModel = '';
 };
 
 const handleCancelAdd = () => {
@@ -371,6 +408,7 @@ const handleTestNewSource = async () => {
 
   try {
     const result = await settingsStore.testConnection({
+      provider: newSource.provider,
       aiBaseUrl: newSource.baseUrl,
       aiApiKey: newSource.apiKey,
       aiModel: newSource.aiModel,
@@ -445,6 +483,20 @@ const formatCapabilities = (capabilities: string[]): string => {
 </script>
 
 <style scoped>
+.provider-select-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.provider-select-row .settings-select {
+  flex: 1;
+}
+
+.provider-select-shell {
+  width: 100%;
+}
+
 .header-actions {
   display: flex;
   justify-content: space-between;
@@ -683,6 +735,43 @@ const formatCapabilities = (capabilities: string[]): string => {
   align-items: center;
   gap: 8px;
   min-width: 0;
+}
+
+.source-heading-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.source-provider {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+.provider-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 8px;
+}
+
+.provider-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 7px 10px;
+  color: var(--text-primary);
+  text-align: left;
+  border: 1px solid var(--settings-card-border, var(--border-muted));
+  border-radius: 10px;
+  background: var(--surface-subtle, var(--bg-secondary));
+  cursor: pointer;
+}
+
+.provider-option:hover:not(:disabled),
+.provider-option.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .official-source-mark {

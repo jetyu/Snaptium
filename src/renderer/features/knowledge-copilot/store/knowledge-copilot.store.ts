@@ -1,17 +1,17 @@
-﻿/**
- * KnowledgeAgent Store
+/**
+ * KnowledgeCopilot Store
  *
- * Manages KnowledgeAgent indexing/search state and orchestration-level cache metadata.
+ * Manages KnowledgeCopilot indexing/search state and orchestration-level cache metadata.
  */
 
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-import { knowledgeAgentService } from '../services/knowledge-agent.service';
+import { knowledgeCopilotService } from '../services/knowledge-copilot.service';
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { useSettingsStore } from '../../settings/store/settings.store';
 
-const knowledgeAgentLogger = createLogger('KnowledgeAgentStore');
+const knowledgeCopilotLogger = createLogger('KnowledgeCopilotStore');
 
 export interface TextChunk {
   id: string;
@@ -94,7 +94,7 @@ async function runWithConcurrency<T>(tasks: Array<() => Promise<T>>, concurrency
   return results;
 }
 
-export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
+export const useKnowledgeCopilotStore = defineStore('knowledgeCopilot', () => {
   const indexStatus = ref<IndexStatus>({
     isIndexing: false,
     indexedNotes: 0,
@@ -117,7 +117,7 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
     chunkOverlap: number,
   ) => {
     try {
-      const result = await knowledgeAgentService.indexNote({
+      const result = await knowledgeCopilotService.indexNote({
         noteId,
         noteTitle,
         content,
@@ -129,27 +129,27 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
         throw new Error(result.error || 'Failed to index note');
       }
 
-      knowledgeAgentLogger.info(`Indexed note: ${noteId}, chunks: ${result.chunksIndexed}`);
+      knowledgeCopilotLogger.info(`Indexed note: ${noteId}, chunks: ${result.chunksIndexed}`);
       const lastIndexedDate = Date.now();
       indexStatus.value.lastIndexedAt = lastIndexedDate;
 
       const settingsStore = useSettingsStore();
-      const knowledgeAgentConfig = settingsStore.config.knowledgeAgent;
-      const previousChunkCounts = knowledgeAgentConfig.indexChunkCounts || {};
-      const previousSignatures = knowledgeAgentConfig.indexSignatures || {};
+      const knowledgeCopilotConfig = settingsStore.config.knowledgeCopilot;
+      const previousChunkCounts = knowledgeCopilotConfig.indexChunkCounts || {};
+      const previousSignatures = knowledgeCopilotConfig.indexSignatures || {};
       const previousCount = Number(previousChunkCounts[noteId] || 0);
       const nextCount = Number(result.chunksIndexed || 0);
-      const nextTotalChunks = Math.max(0, Number(knowledgeAgentConfig.cachedTotalChunks || 0) - previousCount + nextCount);
+      const nextTotalChunks = Math.max(0, Number(knowledgeCopilotConfig.cachedTotalChunks || 0) - previousCount + nextCount);
       const nextSignature = buildIndexSignature(
         { id: noteId, title: noteTitle, content },
         chunkSize,
         chunkOverlap,
-        String(knowledgeAgentConfig.embeddingModel || ''),
+        String(knowledgeCopilotConfig.embeddingModel || ''),
       );
 
       await settingsStore.saveSettings({
-        knowledgeAgent: {
-          ...knowledgeAgentConfig,
+        knowledgeCopilot: {
+          ...knowledgeCopilotConfig,
           lastIndexedAt: lastIndexedDate,
           indexSignatures: {
             ...previousSignatures,
@@ -170,7 +170,7 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
         totalChunks: nextTotalChunks,
       };
     } catch (error) {
-      knowledgeAgentLogger.error(`Failed to index note ${noteId}: ${getErrorMessage(error)}`);
+      knowledgeCopilotLogger.error(`Failed to index note ${noteId}: ${getErrorMessage(error)}`);
       throw error;
     }
   };
@@ -183,23 +183,23 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
     fullRebuild = false,
   ) => {
     const settingsStore = useSettingsStore();
-    const knowledgeAgentConfig = settingsStore.config.knowledgeAgent;
-    const embeddingModel = String(knowledgeAgentConfig.embeddingModel || '');
-    const previousSignatures = { ...(knowledgeAgentConfig.indexSignatures || {}) };
-    const previousChunkCounts = { ...(knowledgeAgentConfig.indexChunkCounts || {}) };
+    const knowledgeCopilotConfig = settingsStore.config.knowledgeCopilot;
+    const embeddingModel = String(knowledgeCopilotConfig.embeddingModel || '');
+    const previousSignatures = { ...(knowledgeCopilotConfig.indexSignatures || {}) };
+    const previousChunkCounts = { ...(knowledgeCopilotConfig.indexChunkCounts || {}) };
 
     indexStatus.value.isIndexing = true;
     indexStatus.value.error = null;
     indexStatus.value.totalNotes = notes.length;
     indexStatus.value.indexedNotes = 0;
-    indexStatus.value.totalChunks = Number(knowledgeAgentConfig.cachedTotalChunks || 0);
+    indexStatus.value.totalChunks = Number(knowledgeCopilotConfig.cachedTotalChunks || 0);
     indexStatus.value.progress = 0;
     indexStatus.value.rebuildReason = reason;
     indexStatus.value.skippedNotes = 0;
 
     try {
       if (fullRebuild) {
-        const cleared = await knowledgeAgentService.clearIndex();
+        const cleared = await knowledgeCopilotService.clearIndex();
         if (!cleared.success) {
           throw new Error(cleared.error || 'Failed to clear index');
         }
@@ -216,7 +216,7 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
       if (staleNoteIds.length > 0) {
         await runWithConcurrency(
           staleNoteIds.map((noteId) => async () => {
-            await knowledgeAgentService.deleteNoteIndex(noteId);
+            await knowledgeCopilotService.deleteNoteIndex(noteId);
             return noteId;
           }),
           INDEX_CONCURRENCY,
@@ -265,7 +265,7 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
       await runWithConcurrency(
         notesToReindex.map((note) => async () => {
           try {
-            const res = await knowledgeAgentService.indexNote({
+            const res = await knowledgeCopilotService.indexNote({
               noteId: note.id,
               noteTitle: note.title,
               content: note.content,
@@ -289,7 +289,7 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
               nextChunkCounts[note.id] = fallbackCount;
               cachedTotalChunks += fallbackCount;
             }
-            knowledgeAgentLogger.error(`Failed to index note ${note.id}: ${getErrorMessage(error)}`);
+            knowledgeCopilotLogger.error(`Failed to index note ${note.id}: ${getErrorMessage(error)}`);
           } finally {
             processedCounter.value += 1;
             updateProgress();
@@ -310,8 +310,8 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
       indexStatus.value.progress = 100;
 
       await settingsStore.saveSettings({
-        knowledgeAgent: {
-          ...settingsStore.config.knowledgeAgent,
+        knowledgeCopilot: {
+          ...settingsStore.config.knowledgeCopilot,
           lastIndexedAt: lastIndexedDate,
           indexSignatures: nextSignatures,
           indexChunkCounts: nextChunkCounts,
@@ -325,12 +325,12 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
         totalChunks: cachedTotalChunks,
       };
 
-      knowledgeAgentLogger.info(
+      knowledgeCopilotLogger.info(
         `${fullRebuild ? 'Full' : 'Incremental'} index sync finished: changed=${totalWork}, success=${successCounter.value}, failed=${failCounter.value}, skipped=${notes.length - totalWork}`,
       );
     } catch (error) {
       indexStatus.value.error = getErrorMessage(error);
-      knowledgeAgentLogger.error(`Failed to rebuild index: ${getErrorMessage(error)}`);
+      knowledgeCopilotLogger.error(`Failed to rebuild index: ${getErrorMessage(error)}`);
       throw error;
     } finally {
       indexStatus.value.isIndexing = false;
@@ -343,7 +343,7 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
   const getStatus = async () => {
     try {
       const settingsStore = useSettingsStore();
-      const cachedChunks = Number(settingsStore.config.knowledgeAgent.cachedTotalChunks || 0);
+      const cachedChunks = Number(settingsStore.config.knowledgeCopilot.cachedTotalChunks || 0);
       if (cachedChunks >= 0) {
         indexStatus.value.totalChunks = cachedChunks;
       }
@@ -359,14 +359,14 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
         };
       }
 
-      const response = await knowledgeAgentService.getStatus();
+      const response = await knowledgeCopilotService.getStatus();
 
       if (response.success) {
         const actualTotalChunks = Number(response.totalChunks || 0);
         indexStatus.value.totalChunks = actualTotalChunks;
-        const currentCached = Number(settingsStore.config.knowledgeAgent.cachedTotalChunks || 0);
+        const currentCached = Number(settingsStore.config.knowledgeCopilot.cachedTotalChunks || 0);
         if (actualTotalChunks !== currentCached) {
-          await settingsStore.updateKnowledgeAgentSetting('cachedTotalChunks', actualTotalChunks);
+          await settingsStore.updateKnowledgeCopilotSetting('cachedTotalChunks', actualTotalChunks);
         }
         statusCache.value = {
           timestamp: now,
@@ -375,36 +375,36 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
           tableName: response.tableName,
           error: response.error,
         };
-        knowledgeAgentLogger.info(`Status: ${response.totalChunks} chunks indexed`);
+        knowledgeCopilotLogger.info(`Status: ${response.totalChunks} chunks indexed`);
       }
 
       return response;
     } catch (error) {
-      knowledgeAgentLogger.error(`Failed to get status: ${getErrorMessage(error)}`);
+      knowledgeCopilotLogger.error(`Failed to get status: ${getErrorMessage(error)}`);
       throw error;
     }
   };
 
   const deleteNoteIndex = async (noteId: string) => {
     try {
-      const result = await knowledgeAgentService.deleteNoteIndex(noteId);
+      const result = await knowledgeCopilotService.deleteNoteIndex(noteId);
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to delete note index');
       }
 
       const settingsStore = useSettingsStore();
-      const knowledgeAgentConfig = settingsStore.config.knowledgeAgent;
-      const nextSignatures = { ...(knowledgeAgentConfig.indexSignatures || {}) };
-      const nextChunkCounts = { ...(knowledgeAgentConfig.indexChunkCounts || {}) };
+      const knowledgeCopilotConfig = settingsStore.config.knowledgeCopilot;
+      const nextSignatures = { ...(knowledgeCopilotConfig.indexSignatures || {}) };
+      const nextChunkCounts = { ...(knowledgeCopilotConfig.indexChunkCounts || {}) };
       const removedChunks = Number(nextChunkCounts[noteId] || 0);
       delete nextSignatures[noteId];
       delete nextChunkCounts[noteId];
-      const nextTotalChunks = Math.max(0, Number(knowledgeAgentConfig.cachedTotalChunks || 0) - removedChunks);
+      const nextTotalChunks = Math.max(0, Number(knowledgeCopilotConfig.cachedTotalChunks || 0) - removedChunks);
 
       await settingsStore.saveSettings({
-        knowledgeAgent: {
-          ...knowledgeAgentConfig,
+        knowledgeCopilot: {
+          ...knowledgeCopilotConfig,
           indexSignatures: nextSignatures,
           indexChunkCounts: nextChunkCounts,
           cachedTotalChunks: nextTotalChunks,
@@ -418,16 +418,16 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
         totalChunks: nextTotalChunks,
       };
 
-      knowledgeAgentLogger.info(`Deleted index for note: ${noteId}`);
+      knowledgeCopilotLogger.info(`Deleted index for note: ${noteId}`);
     } catch (error) {
-      knowledgeAgentLogger.error(`Failed to delete note index ${noteId}: ${getErrorMessage(error)}`);
+      knowledgeCopilotLogger.error(`Failed to delete note index ${noteId}: ${getErrorMessage(error)}`);
       throw error;
     }
   };
 
   const clearIndex = async () => {
     try {
-      const result = await knowledgeAgentService.clearIndex();
+      const result = await knowledgeCopilotService.clearIndex();
 
       if (!result.success) {
         throw new Error(result.error || 'Failed to clear index');
@@ -441,8 +441,8 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
 
       const settingsStore = useSettingsStore();
       await settingsStore.saveSettings({
-        knowledgeAgent: {
-          ...settingsStore.config.knowledgeAgent,
+        knowledgeCopilot: {
+          ...settingsStore.config.knowledgeCopilot,
           lastIndexedAt: indexStatus.value.lastIndexedAt,
           indexSignatures: {},
           indexChunkCounts: {},
@@ -456,9 +456,9 @@ export const useKnowledgeAgentStore = defineStore('knowledgeAgent', () => {
         totalChunks: 0,
       };
 
-      knowledgeAgentLogger.info('Cleared all index data');
+      knowledgeCopilotLogger.info('Cleared all index data');
     } catch (error) {
-      knowledgeAgentLogger.error(`Failed to clear index: ${getErrorMessage(error)}`);
+      knowledgeCopilotLogger.error(`Failed to clear index: ${getErrorMessage(error)}`);
       throw error;
     }
   };

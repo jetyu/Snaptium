@@ -1,3 +1,5 @@
+import { AI_PROVIDERS, type AiProvider } from './ai-provider.constants.js';
+
 export const OFFICIAL_AI_BASE_URL = 'https://api.snaptium.com/v1/ai';
 
 export const AI_CAPABILITIES = {
@@ -29,6 +31,7 @@ export interface OfficialAiSource {
   apiKey: string;
   aiModel: string;
   capabilities: AiCapability[];
+  provider: AiProvider;
   official: true;
   locked: true;
 }
@@ -41,6 +44,7 @@ export const OFFICIAL_AI_SOURCES = [
     apiKey: '',
     aiModel: OFFICIAL_AI_MODELS.CHAT,
     capabilities: [AI_CAPABILITIES.CHAT],
+    provider: AI_PROVIDERS.SNAPTIUM,
     official: true,
     locked: true,
   },
@@ -51,6 +55,7 @@ export const OFFICIAL_AI_SOURCES = [
     apiKey: '',
     aiModel: OFFICIAL_AI_MODELS.EMBEDDING,
     capabilities: [AI_CAPABILITIES.EMBEDDING],
+    provider: AI_PROVIDERS.SNAPTIUM,
     official: true,
     locked: true,
   },
@@ -61,6 +66,7 @@ export const OFFICIAL_AI_SOURCES = [
     apiKey: '',
     aiModel: OFFICIAL_AI_MODELS.RERANKER,
     capabilities: [AI_CAPABILITIES.RERANKER],
+    provider: AI_PROVIDERS.SNAPTIUM,
     official: true,
     locked: true,
   },

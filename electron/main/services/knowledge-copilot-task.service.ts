@@ -1,10 +1,14 @@
-﻿import { z } from 'zod';
-import { createAgent, tool } from 'langchain';
-import { ChatOpenAI } from '@langchain/openai';
+import { z } from 'zod';
+import { createAgent, humanInTheLoopMiddleware, tool, type HITLRequest, type HITLResponse } from 'langchain';
+import { Command, type Interrupt } from '@langchain/langgraph';
+import { SqliteSaver } from '@langchain/langgraph-checkpoint-sqlite';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { createProviderChatModel } from './ai-provider.service.js';
 import { getErrorMessage } from './error.service.js';
-import { knowledgeAgentIndexService } from './knowledge-agent-index.service.js';
+import { knowledgeCopilotIndexService } from './knowledge-copilot-index.service.js';
 import { assessKnowledgeEvidence } from './knowledge-evidence-assessment.service.js';
-import { ensureKnowledgeAgentReady } from './knowledge-agent-qa.service.js';
+import { ensureKnowledgeCopilotReady } from './knowledge-copilot-qa.service.js';
 import { vfsService } from './vfs.service.js';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { buildAgentSystemPrompt } from '../prompts/index.js';
@@ -38,16 +42,29 @@ const ProposeUpdateNoteToolArgsSchema = z.object({
   reason: z.string().min(1).max(500),
 });
 
-type KnowledgeSearchResults = Awaited<ReturnType<typeof knowledgeAgentIndexService.searchByVector>>;
-type KnowledgeAgentConfig = Awaited<ReturnType<typeof ensureKnowledgeAgentReady>>;
+const RenameNoteToolArgsSchema = z.object({
+  noteId: z.string().min(1),
+  name: z.string().min(1).max(120),
+});
 
-export interface KnowledgeAgentStep {
+const MoveNoteToolArgsSchema = z.object({
+  noteId: z.string().min(1),
+  parentId: z.string().min(1).nullable(),
+  index: z.number().int().nonnegative().default(0),
+});
+
+const NoteIdToolArgsSchema = z.object({ noteId: z.string().min(1) });
+
+type KnowledgeSearchResults = Awaited<ReturnType<typeof knowledgeCopilotIndexService.searchByVector>>;
+type KnowledgeCopilotConfig = Awaited<ReturnType<typeof ensureKnowledgeCopilotReady>>;
+
+export interface KnowledgeCopilotStep {
   title: string;
   detail: string;
   status: 'completed' | 'failed';
 }
 
-export interface KnowledgeAgentTraceEvent {
+export interface KnowledgeCopilotTraceEvent {
   id: string;
   type: 'model-response' | 'tool-call' | 'tool-result' | 'tool-error';
   title: string;
@@ -58,7 +75,7 @@ export interface KnowledgeAgentTraceEvent {
   toolName?: string;
 }
 
-export interface KnowledgeAgentCreateNoteProposal {
+export interface KnowledgeCopilotCreateNoteProposal {
   id: string;
   type: 'create-note';
   title: string;
@@ -66,7 +83,7 @@ export interface KnowledgeAgentCreateNoteProposal {
   reason: string;
 }
 
-export interface KnowledgeAgentUpdateNoteProposal {
+export interface KnowledgeCopilotUpdateNoteProposal {
   id: string;
   type: 'update-note';
   noteId: string;
@@ -75,13 +92,13 @@ export interface KnowledgeAgentUpdateNoteProposal {
   reason: string;
 }
 
-export type KnowledgeAgentWriteProposal =
-  | KnowledgeAgentCreateNoteProposal
-  | KnowledgeAgentUpdateNoteProposal;
+export type KnowledgeCopilotWriteProposal =
+  | KnowledgeCopilotCreateNoteProposal
+  | KnowledgeCopilotUpdateNoteProposal;
 
-export type KnowledgeAgentWriteMode = 'confirm' | 'auto';
+export type KnowledgeCopilotWriteMode = 'confirm' | 'auto';
 
-export interface KnowledgeAgentExecutedCreateNote {
+export interface KnowledgeCopilotExecutedCreateNote {
   id: string;
   type: 'create-note';
   noteId: string;
@@ -90,7 +107,7 @@ export interface KnowledgeAgentExecutedCreateNote {
   reason: string;
 }
 
-export interface KnowledgeAgentExecutedUpdateNote {
+export interface KnowledgeCopilotExecutedUpdateNote {
   id: string;
   type: 'update-note';
   noteId: string;
@@ -99,42 +116,67 @@ export interface KnowledgeAgentExecutedUpdateNote {
   reason: string;
 }
 
-export type KnowledgeAgentExecutedWrite =
-  | KnowledgeAgentExecutedCreateNote
-  | KnowledgeAgentExecutedUpdateNote;
+export type KnowledgeCopilotExecutedWrite =
+  | KnowledgeCopilotExecutedCreateNote
+  | KnowledgeCopilotExecutedUpdateNote;
 
-export type KnowledgeAgentStopReason =
+export type KnowledgeCopilotStopReason =
   | 'completed'
+  | 'interrupted'
   | 'insufficient-evidence'
   | 'tool-call-limit'
   | 'tool-failure-limit';
 
-export interface KnowledgeAgentTaskResult {
+export interface KnowledgeCopilotTaskResult {
   success: boolean;
   finalAnswer?: string;
-  steps: KnowledgeAgentStep[];
-  traceEvents: KnowledgeAgentTraceEvent[];
+  steps: KnowledgeCopilotStep[];
+  traceEvents: KnowledgeCopilotTraceEvent[];
   sources: KnowledgeSearchResults;
-  writeMode: KnowledgeAgentWriteMode;
-  pendingWrites: KnowledgeAgentWriteProposal[];
-  executedWrites: KnowledgeAgentExecutedWrite[];
-  stopReason?: KnowledgeAgentStopReason;
+  writeMode: KnowledgeCopilotWriteMode;
+  pendingWrites: KnowledgeCopilotWriteProposal[];
+  executedWrites: KnowledgeCopilotExecutedWrite[];
+  stopReason?: KnowledgeCopilotStopReason;
   error?: string;
+  conversationId: string;
+  pendingActions: KnowledgeCopilotPendingAction[];
+}
+
+export interface KnowledgeCopilotPendingAction {
+  name: string;
+  args: Record<string, unknown>;
+  description?: string;
+  allowedDecisions: Array<'approve' | 'edit' | 'reject'>;
 }
 
 interface AgentExecutionState {
   sources: KnowledgeSearchResults;
-  pendingWrites: KnowledgeAgentWriteProposal[];
-  executedWrites: KnowledgeAgentExecutedWrite[];
-  steps: KnowledgeAgentStep[];
-  traceEvents: KnowledgeAgentTraceEvent[];
+  pendingWrites: KnowledgeCopilotWriteProposal[];
+  executedWrites: KnowledgeCopilotExecutedWrite[];
+  steps: KnowledgeCopilotStep[];
+  traceEvents: KnowledgeCopilotTraceEvent[];
   toolCallCount: number;
   lastSearchHadSufficientEvidence: boolean | null;
   hadSufficientEvidence: boolean;
 }
 
-interface RunKnowledgeAgentTaskOptions {
-  writeMode?: KnowledgeAgentWriteMode;
+interface RunKnowledgeCopilotTaskOptions {
+  writeMode?: KnowledgeCopilotWriteMode;
+  conversationId?: string;
+  decisions?: HITLResponse['decisions'];
+}
+
+const checkpointers = new Map<string, SqliteSaver>();
+
+async function getCheckpointer(workspaceRoot: string): Promise<SqliteSaver> {
+  const dataDirectory = path.join(workspaceRoot, '.snaptium');
+  const databasePath = path.join(dataDirectory, 'knowledge-copilot-checkpoints.sqlite');
+  const existing = checkpointers.get(databasePath);
+  if (existing) return existing;
+  await fs.mkdir(dataDirectory, { recursive: true });
+  const checkpointer = SqliteSaver.fromConnString(databasePath);
+  checkpointers.set(databasePath, checkpointer);
+  return checkpointer;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -151,7 +193,7 @@ function createToolResponse(payload: Record<string, unknown>): string {
 
 function createInsufficientEvidenceMessage(): string {
   return $t(
-    'search.knowledgeAgentInsufficientEvidence',
+    'search.knowledgeCopilotInsufficientEvidence',
     'The current knowledge base does not contain enough evidence to answer this question.',
   );
 }
@@ -165,10 +207,10 @@ function createWriteBlockedMessage(): string {
 
 function createTraceEvent(
   state: AgentExecutionState,
-  event: Omit<KnowledgeAgentTraceEvent, 'id' | 'at'> & { at?: number },
+  event: Omit<KnowledgeCopilotTraceEvent, 'id' | 'at'> & { at?: number },
 ): void {
   state.traceEvents.push({
-    id: `knowledge-agent-trace-${Date.now()}-${state.traceEvents.length}`,
+    id: `knowledge-copilot-trace-${Date.now()}-${state.traceEvents.length}`,
     at: event.at ?? Date.now(),
     ...event,
   });
@@ -197,10 +239,6 @@ function ensureWriteEvidenceAllowed(state: AgentExecutionState): void {
   if (state.lastSearchHadSufficientEvidence === false) {
     throw new Error(createWriteBlockedMessage());
   }
-}
-
-function endpointToOpenAIBaseUrl(endpoint: string): string {
-  return endpoint.replace(/\/chat\/completions\/?$/, '').replace(/\/+$/, '');
 }
 
 function extractFinalAnswer(result: unknown): string {
@@ -291,14 +329,25 @@ async function executeToolWithTrace<TArgs>(
   }
 }
 
-function buildLangChainTools(config: KnowledgeAgentConfig, state: AgentExecutionState, writeMode: KnowledgeAgentWriteMode) {
+function buildLangChainTools(config: KnowledgeCopilotConfig, state: AgentExecutionState) {
+  const refreshNoteIndex = async (noteId: string): Promise<void> => {
+    const node = getActiveNoteNode(noteId);
+    if (!node?.contentId) return;
+    await knowledgeCopilotIndexService.indexNote({
+      noteId: node.id,
+      noteTitle: node.name,
+      content: await vfsService.readContent(node.contentId),
+      chunkSize: 500,
+      chunkOverlap: 50,
+    });
+  };
   const searchKnowledgeBase = tool(
     async (args) => executeToolWithTrace(state, 'searchKnowledgeBase', args, async () => {
       const validated = SearchKnowledgeBaseToolArgsSchema.parse(args);
-      const results = await knowledgeAgentIndexService.searchKnowledgeBase({
+      const results = await knowledgeCopilotIndexService.searchKnowledgeBase({
         query: validated.query,
-        topK: Number(config.knowledgeAgent.topK),
-        similarityThreshold: Number(config.knowledgeAgent.similarityThreshold),
+        topK: Number(config.knowledgeCopilot.topK),
+        similarityThreshold: Number(config.knowledgeCopilot.similarityThreshold),
         rerankerConfig: config.rerankerConfig,
       });
       const evidence = assessKnowledgeEvidence(results);
@@ -388,63 +437,14 @@ function buildLangChainTools(config: KnowledgeAgentConfig, state: AgentExecution
     },
   );
 
-  const proposeCreateNote = tool(
-    async (args) => executeToolWithTrace(state, 'proposeCreateNote', args, async () => {
-      ensureWriteEvidenceAllowed(state);
-      const validated = ProposeCreateNoteToolArgsSchema.parse(args);
-      const proposal: KnowledgeAgentCreateNoteProposal = {
-        id: `knowledge-agent-write-${Date.now()}-${state.pendingWrites.length}`,
-        type: 'create-note',
-        title: validated.title.trim(),
-        content: validated.content.trim(),
-        reason: validated.reason.trim(),
-      };
-      state.pendingWrites.push(proposal);
-      state.steps.push({ title: 'proposeCreateNote', detail: proposal.title, status: 'completed' });
-      return createToolResponse({ success: true, proposal });
-    }),
-    {
-      name: 'proposeCreateNote',
-      description: 'Prepare a note creation proposal. This does not write any file and requires user confirmation later.',
-      schema: ProposeCreateNoteToolArgsSchema,
-    },
-  );
-
-  const proposeUpdateNote = tool(
-    async (args) => executeToolWithTrace(state, 'proposeUpdateNote', args, async () => {
-      ensureWriteEvidenceAllowed(state);
-      const validated = ProposeUpdateNoteToolArgsSchema.parse(args);
-      const node = getActiveNoteNode(validated.noteId);
-      if (!node) {
-        throw new Error(`Note not found: ${validated.noteId}`);
-      }
-
-      const proposal: KnowledgeAgentUpdateNoteProposal = {
-        id: `knowledge-agent-write-${Date.now()}-${state.pendingWrites.length}`,
-        type: 'update-note',
-        noteId: node.id,
-        noteTitle: node.name,
-        content: validated.content.trim(),
-        reason: validated.reason.trim(),
-      };
-      state.pendingWrites.push(proposal);
-      state.steps.push({ title: 'proposeUpdateNote', detail: proposal.noteTitle, status: 'completed' });
-      return createToolResponse({ success: true, proposal });
-    }),
-    {
-      name: 'proposeUpdateNote',
-      description: 'Prepare a full-content note update proposal. This does not write any file and requires user confirmation later.',
-      schema: ProposeUpdateNoteToolArgsSchema,
-    },
-  );
-
   const createNote = tool(
     async (args) => executeToolWithTrace(state, 'createNote', args, async () => {
       ensureWriteEvidenceAllowed(state);
       const validated = ProposeCreateNoteToolArgsSchema.parse(args);
       const node = await vfsService.createFile(null, validated.title.trim(), validated.content.trim());
-      const executedWrite: KnowledgeAgentExecutedCreateNote = {
-        id: `knowledge-agent-write-${Date.now()}-${state.executedWrites.length}`,
+      await refreshNoteIndex(node.id);
+      const executedWrite: KnowledgeCopilotExecutedCreateNote = {
+        id: `knowledge-copilot-write-${Date.now()}-${state.executedWrites.length}`,
         type: 'create-note',
         noteId: node.id,
         noteTitle: node.name,
@@ -472,8 +472,9 @@ function buildLangChainTools(config: KnowledgeAgentConfig, state: AgentExecution
       }
 
       await vfsService.writeContent(node.contentId, validated.content.trim());
-      const executedWrite: KnowledgeAgentExecutedUpdateNote = {
-        id: `knowledge-agent-write-${Date.now()}-${state.executedWrites.length}`,
+      await refreshNoteIndex(node.id);
+      const executedWrite: KnowledgeCopilotExecutedUpdateNote = {
+        id: `knowledge-copilot-write-${Date.now()}-${state.executedWrites.length}`,
         type: 'update-note',
         noteId: node.id,
         noteTitle: node.name,
@@ -491,17 +492,73 @@ function buildLangChainTools(config: KnowledgeAgentConfig, state: AgentExecution
     },
   );
 
-  return writeMode === 'auto'
-    ? [searchKnowledgeBase, listRecentNotes, readNote, createNote, updateNote]
-    : [searchKnowledgeBase, listRecentNotes, readNote, proposeCreateNote, proposeUpdateNote];
+  const renameNote = tool(
+    async (args) => executeToolWithTrace(state, 'renameNote', args, async () => {
+      const validated = RenameNoteToolArgsSchema.parse(args);
+      const node = await vfsService.renameNode(validated.noteId, validated.name.trim());
+      await refreshNoteIndex(node.id);
+      state.steps.push({ title: 'renameNote', detail: node.name, status: 'completed' });
+      return createToolResponse({ success: true, note: { noteId: node.id, noteTitle: node.name } });
+    }),
+    { name: 'renameNote', description: 'Rename an active note.', schema: RenameNoteToolArgsSchema },
+  );
+
+  const moveNote = tool(
+    async (args) => executeToolWithTrace(state, 'moveNote', args, async () => {
+      const validated = MoveNoteToolArgsSchema.parse(args);
+      const node = await vfsService.moveNode(validated.noteId, validated.parentId, validated.index);
+      await refreshNoteIndex(node.id);
+      state.steps.push({ title: 'moveNote', detail: node.name, status: 'completed' });
+      return createToolResponse({ success: true, note: { noteId: node.id, parentId: node.parentId } });
+    }),
+    { name: 'moveNote', description: 'Move an active note to a notebook or workspace root.', schema: MoveNoteToolArgsSchema },
+  );
+
+  const trashNote = tool(
+    async (args) => executeToolWithTrace(state, 'trashNote', args, async () => {
+      const validated = NoteIdToolArgsSchema.parse(args);
+      const [node] = await vfsService.deleteNodes([validated.noteId]);
+      await knowledgeCopilotIndexService.deleteNoteIndex(node.id);
+      state.steps.push({ title: 'trashNote', detail: node.name, status: 'completed' });
+      return createToolResponse({ success: true, note: { noteId: node.id, noteTitle: node.name } });
+    }),
+    { name: 'trashNote', description: 'Move an active note to trash. This is reversible.', schema: NoteIdToolArgsSchema },
+  );
+
+  const restoreNote = tool(
+    async (args) => executeToolWithTrace(state, 'restoreNote', args, async () => {
+      const validated = NoteIdToolArgsSchema.parse(args);
+      const node = await vfsService.restoreNode(validated.noteId);
+      await refreshNoteIndex(node.id);
+      state.steps.push({ title: 'restoreNote', detail: node.name, status: 'completed' });
+      return createToolResponse({ success: true, note: { noteId: node.id, noteTitle: node.name } });
+    }),
+    { name: 'restoreNote', description: 'Restore a note from trash.', schema: NoteIdToolArgsSchema },
+  );
+
+  return [searchKnowledgeBase, listRecentNotes, readNote, createNote, updateNote, renameNote, moveNote, trashNote, restoreNote];
 }
 
-export async function runKnowledgeAgentTask(
+function extractPendingActions(result: unknown): KnowledgeCopilotPendingAction[] {
+  if (!isRecord(result) || !Array.isArray(result.__interrupt__)) return [];
+  const interrupt = result.__interrupt__[0] as Interrupt<HITLRequest> | undefined;
+  const request = interrupt?.value;
+  if (!request) return [];
+  return request.actionRequests.map((action, index) => ({
+    name: action.name,
+    args: action.args,
+    description: action.description,
+    allowedDecisions: request.reviewConfigs[index]?.allowedDecisions ?? ['approve', 'reject'],
+  }));
+}
+
+export async function runKnowledgeCopilotTask(
   task: string,
-  options: RunKnowledgeAgentTaskOptions = {},
-): Promise<KnowledgeAgentTaskResult> {
+  options: RunKnowledgeCopilotTaskOptions = {},
+): Promise<KnowledgeCopilotTaskResult> {
   const writeMode = options.writeMode === 'auto' ? 'auto' : 'confirm';
-  const config = await ensureKnowledgeAgentReady();
+  const conversationId = options.conversationId?.trim() || crypto.randomUUID();
+  const config = await ensureKnowledgeCopilotReady();
   const state: AgentExecutionState = {
     sources: [],
     pendingWrites: [],
@@ -513,7 +570,7 @@ export async function runKnowledgeAgentTask(
     hadSufficientEvidence: false,
   };
 
-  if (!config.chatConfig) {
+  if (!config.agentChatConfig) {
     return {
       success: false,
       error: 'Chat model is not configured for agent tasks.',
@@ -525,28 +582,43 @@ export async function runKnowledgeAgentTask(
       pendingWrites: [],
       executedWrites: [],
       stopReason: undefined,
+      conversationId,
+      pendingActions: [],
     };
   }
 
-  const llm = new ChatOpenAI({
-    apiKey: config.chatConfig.apiKey,
-    model: config.chatConfig.model,
-    temperature: 0.4,
-    maxTokens: 1400,
-    configuration: {
-      baseURL: endpointToOpenAIBaseUrl(config.chatConfig.endpoint),
-    },
+  const llm = createProviderChatModel({
+    provider: config.agentChatConfig.provider,
+    baseUrl: config.agentChatConfig.baseUrl,
+    apiKey: config.agentChatConfig.apiKey,
+    model: config.agentChatConfig.model,
   });
   const agent = createAgent({
     model: llm,
-    tools: buildLangChainTools(config, state, writeMode),
+    tools: buildLangChainTools(config, state),
     systemPrompt: buildAgentSystemPrompt(writeMode, config.uiLanguage, task),
+    checkpointer: await getCheckpointer(config.workspaceRoot),
+    middleware: [humanInTheLoopMiddleware({
+      interruptOn: {
+        createNote: writeMode === 'confirm',
+        updateNote: writeMode === 'confirm',
+        renameNote: true,
+        moveNote: true,
+        trashNote: true,
+        restoreNote: true,
+      },
+      descriptionPrefix: 'Knowledge Copilot action requires approval',
+    })],
   });
 
   const startedAt = Date.now();
-  const result = await agent.invoke({
-    messages: [{ role: 'user', content: task }],
-  });
+  const result = await agent.invoke(
+    options.decisions
+      ? new Command({ resume: { decisions: options.decisions } })
+      : { messages: [{ role: 'user', content: task }] },
+    { configurable: { thread_id: conversationId } },
+  );
+  const pendingActions = extractPendingActions(result);
   createTraceEvent(state, {
     type: 'model-response',
     title: 'modelResponse',
@@ -556,7 +628,9 @@ export async function runKnowledgeAgentTask(
     durationMs: Date.now() - startedAt,
   });
 
-  const stopReason: KnowledgeAgentStopReason = state.toolCallCount > AGENT_MAX_TOOL_CALLS
+  const stopReason: KnowledgeCopilotStopReason = pendingActions.length > 0
+    ? 'interrupted'
+    : state.toolCallCount > AGENT_MAX_TOOL_CALLS
     ? 'tool-call-limit'
     : state.lastSearchHadSufficientEvidence === false && !state.hadSufficientEvidence
       ? 'insufficient-evidence'
@@ -564,7 +638,9 @@ export async function runKnowledgeAgentTask(
 
   return {
     success: true,
-    finalAnswer: stopReason === 'insufficient-evidence'
+    finalAnswer: stopReason === 'interrupted'
+      ? undefined
+      : stopReason === 'insufficient-evidence'
       ? createInsufficientEvidenceMessage()
       : extractFinalAnswer(result) || 'Agent task completed.',
     steps: state.steps,
@@ -574,6 +650,8 @@ export async function runKnowledgeAgentTask(
     pendingWrites: state.pendingWrites,
     executedWrites: state.executedWrites,
     stopReason,
+    conversationId,
+    pendingActions,
   };
 }
 

@@ -2,8 +2,8 @@ import type { AiPromptPreset, AiWritingScenario, AiWritingStyle } from '../../sh
 import type { PromptLanguageContext, PromptTemplateLanguage } from './language.js';
 import { buildAgentPromptEnUs } from './agent/en-US.js';
 import { buildAgentPromptZhCn } from './agent/zh-CN.js';
-import { buildKnowledgeAnswerPromptEnUs } from './knowledge-agent/en-US.js';
-import { buildKnowledgeAnswerPromptZhCn } from './knowledge-agent/zh-CN.js';
+import { buildKnowledgeAnswerPromptEnUs } from './knowledge-copilot/en-US.js';
+import { buildKnowledgeAnswerPromptZhCn } from './knowledge-copilot/zh-CN.js';
 import { buildAssistantPromptEnUs } from './assistant/en-US.js';
 import { buildAssistantPromptZhCn } from './assistant/zh-CN.js';
 import { buildEditorPromptEnUs } from './editor/en-US.js';

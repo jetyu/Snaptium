@@ -92,6 +92,7 @@ interface WallpaperResult {
 }
 
 interface AiSourceConfig {
+  provider: string;
   aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
@@ -356,8 +357,8 @@ declare global {
         setStartup: (enabled: boolean) => Promise<{ enabled: boolean; supported: boolean }>;
         pickDirectory: () => Promise<string | null>;
         confirmEmbeddingSourceChange: () => Promise<boolean>;
-        confirmKnowledgeAgentChunkRebuild: () => Promise<boolean>;
-        confirmKnowledgeAgentRebuildMode: () => Promise<'incremental' | 'full' | 'cancel'>;
+        confirmKnowledgeCopilotChunkRebuild: () => Promise<boolean>;
+        confirmKnowledgeCopilotRebuildMode: () => Promise<'incremental' | 'full' | 'cancel'>;
         confirmDeleteAiSource: (name: string) => Promise<boolean>;
         confirmResetSyncProvider: (name: string) => Promise<boolean>;
         showMessage: (options: {
@@ -441,6 +442,10 @@ declare global {
 
       aiSource?: {
         testConnection: (config: AiSourceConfig) => Promise<{ success: boolean; message?: string }>;
+        validateToolCalling: (config: { provider: string; baseUrl: string; apiKey: string; model: string }) => Promise<{
+          success: boolean;
+          message?: string;
+        }>;
       };
 
       sync?: {
@@ -512,7 +517,7 @@ declare global {
         importKeybindings: (config: ShortcutsKeybindingsConfigPayload) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
       };
 
-      knowledgeAgent?: {
+      knowledgeCopilot?: {
         initialize: () => Promise<{ success: boolean; error?: string }>;
         indexNote: (payload: {
           noteId: string;
@@ -540,7 +545,7 @@ declare global {
           insufficientEvidence?: boolean;
         }>;
         onAnswerQuestionStreamEvent: (callback: (event: import('@renderer/core/bridge/electronApi').KnowledgeAnswerStreamEvent) => void) => () => void;
-        runTask: (payload: { task: string; writeMode?: 'confirm' | 'auto' }) => Promise<{
+        runTask: (payload: import('@renderer/core/bridge/electronApi').KnowledgeCopilotRunTaskPayload) => Promise<{
           success: boolean;
           finalAnswer?: string;
           steps: Array<{
@@ -607,6 +612,7 @@ declare global {
           >;
           stopReason?:
             | 'completed'
+            | 'interrupted'
             | 'insufficient-evidence'
             | 'tool-call-limit'
             | 'iteration-limit'
@@ -614,6 +620,8 @@ declare global {
             | 'tool-failure-limit'
             | 'weak-search-limit';
           error?: string;
+          conversationId: string;
+          pendingActions: import('@renderer/core/bridge/electronApi').KnowledgeCopilotPendingAction[];
         }>;
         deleteNoteIndex: (noteId: string) => Promise<{ success: boolean; error?: string }>;
         getStatus: () => Promise<{
