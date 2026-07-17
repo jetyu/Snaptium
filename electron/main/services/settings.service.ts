@@ -475,7 +475,7 @@ async function migrateKnowledgeCopilotSettings(
   const recentQuestions = Array.isArray(incomingConfig.workbench?.recentQuestions)
     ? incomingConfig.workbench.recentQuestions.filter((entry) => {
       if (!isRecord(entry)) return true;
-      return entry.mode !== 'qa' && entry.mode !== 'agent-task';
+      return entry.mode !== 'ask' && entry.mode !== 'agent-task';
     })
     : [];
   const migratedConfig: SettingsInput = {

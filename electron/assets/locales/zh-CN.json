@@ -715,7 +715,7 @@
   "text.officialAiChatDescription": "智能写作与对话",
   "text.officialAiEmbeddingDescription": "知识库检索与向量化服务",
   "text.officialAiRerankerDescription": "提升知识库问答相关性",
-  "text.officialInnerAiSource": "内置AI服务由硅基流动赞助提供",
+  "text.officialInnerAiSource": "内置AI服务由硅基流动赞助",
   "text.ossAccessKey": "访问ID",
   "text.ossBucket": "存储桶名称",
   "text.ossEndpoint": "Endpoint服务地址",

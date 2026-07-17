@@ -1,3 +1,9 @@
+### v2.2.0 - 2026-08-01
+This update improves details and the user experience.
+#### New
+* Upgraded the knowledge base to a knowledge assistant, supporting long conversation memory, more intelligent Agent capabilities, and an improved knowledge Q&A experience.
+* Fully upgraded AI service provider configuration, supporting more convenient multi-model management and custom API integration.
+
 ### v2.1.2 - 2026-07-20
 This update improves details and the user experience.
 #### Improvements

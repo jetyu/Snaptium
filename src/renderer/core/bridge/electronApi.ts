@@ -1,3 +1,5 @@
+import type { KnowledgeCopilotConversationContext } from '@shared/knowledge-copilot.constants';
+
 export interface OpenFileResult {
   filePath: string;
   content: string;
@@ -309,12 +311,15 @@ export interface KnowledgeCopilotIndexNotePayload {
 export interface KnowledgeCopilotAskQuestionStreamPayload {
   query: string;
   requestId: string;
+  conversationId?: string;
+  context?: KnowledgeCopilotConversationContext;
 }
 
 export interface KnowledgeCopilotRunTaskPayload {
   task: string;
   writeMode?: KnowledgeCopilotWriteMode;
   conversationId?: string;
+  context?: KnowledgeCopilotConversationContext;
   decisions?: KnowledgeCopilotDecision[];
 }
 
@@ -337,6 +342,8 @@ export interface KnowledgeAnswerResult {
   error?: string;
   usedSearchFallback: boolean;
   insufficientEvidence?: boolean;
+  conversationSummary?: string;
+  conversationSummaryUpToQuestionId?: string;
 }
 
 export type KnowledgeAnswerStage = 'preparing' | 'searching' | 'assessing' | 'sourcing' | 'generating';
@@ -462,6 +469,8 @@ export interface KnowledgeCopilotTaskResult {
   error?: string;
   conversationId: string;
   pendingActions: KnowledgeCopilotPendingAction[];
+  conversationSummary?: string;
+  conversationSummaryUpToQuestionId?: string;
 }
 
 export interface KnowledgeSearchResult {

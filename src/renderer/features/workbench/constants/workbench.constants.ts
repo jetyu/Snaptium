@@ -31,7 +31,7 @@ export interface WorkbenchQuestionSource {
   noteTitle: string;
 }
 
-export type WorkbenchQuestionMode = 'qa' | 'agent-task';
+export type WorkbenchQuestionMode = 'ask' | 'agent-task';
 
 export type WorkbenchAgentWriteMode = 'confirm' | 'auto';
 
@@ -114,10 +114,19 @@ export interface WorkbenchRecommendationFeedbackEntry {
 
 export interface WorkbenchSettings {
   recentQuestions: WorkbenchQuestionEntry[];
+  conversationThreads: WorkbenchConversationThread[];
   recommendationFeedback: WorkbenchRecommendationFeedbackEntry[];
   onboardingGuideActivated: boolean;
   onboardingGuideDismissed: boolean;
   agentWriteMode: WorkbenchAgentWriteMode;
+}
+
+export interface WorkbenchConversationThread {
+  id: string;
+  questions: WorkbenchQuestionEntry[];
+  summary?: string;
+  summaryUpToQuestionId?: string;
+  updatedAt: number;
 }
 
 export interface WorkbenchModuleDefinition {
@@ -128,6 +137,8 @@ export interface WorkbenchModuleDefinition {
 
 export const WORKBENCH_LIMITS = {
   QUESTIONS: 10,
+  CONVERSATION_THREADS: 30,
+  CONVERSATION_TURNS: 12,
   RECENT_ACTIVITY: 4,
   RECOMMENDATION_FEEDBACK: 80,
 } as const;
@@ -155,7 +166,7 @@ export const WORKBENCH_MODULE_DEFINITIONS: WorkbenchModuleDefinition[] = [
 ];
 
 function sanitizeQuestionMode(value: unknown): WorkbenchQuestionMode | undefined {
-  return value === 'agent-task' ? 'agent-task' : undefined;
+  return value === 'agent-task' ? 'agent-task' : value === 'ask' ? 'ask' : undefined;
 }
 
 function sanitizeAgentWriteMode(value: unknown): WorkbenchAgentWriteMode {
@@ -333,7 +344,7 @@ function sanitizeIdList(value: unknown): string[] {
     .slice(0, 20);
 }
 
-function sanitizeRecentQuestions(value: unknown): WorkbenchQuestionEntry[] {
+function sanitizeRecentQuestions(value: unknown, limit: number = WORKBENCH_LIMITS.QUESTIONS): WorkbenchQuestionEntry[] {
   if (!Array.isArray(value)) {
     return [];
   }
@@ -381,7 +392,33 @@ function sanitizeRecentQuestions(value: unknown): WorkbenchQuestionEntry[] {
     })
     .filter((entry) => entry.id.length > 0 && entry.query.length > 0 && Number.isFinite(entry.askedAt))
     .sort((a, b) => b.askedAt - a.askedAt)
-    .slice(0, WORKBENCH_LIMITS.QUESTIONS);
+    .slice(0, limit);
+}
+
+function sanitizeConversationThreads(value: unknown, fallbackQuestions: WorkbenchQuestionEntry[]): WorkbenchConversationThread[] {
+  const source = Array.isArray(value) ? value : Array.from(new Map(
+    fallbackQuestions.map((question) => [question.threadId, {
+      id: question.threadId,
+      questions: fallbackQuestions.filter((entry) => entry.threadId === question.threadId),
+      updatedAt: question.askedAt,
+    }]),
+  ).values());
+
+  return source
+    .map((thread) => {
+      const normalized = (thread ?? {}) as Partial<WorkbenchConversationThread>;
+      const questions = sanitizeRecentQuestions(normalized.questions, WORKBENCH_LIMITS.CONVERSATION_TURNS);
+      return {
+        id: String(normalized.id ?? '').trim(),
+        questions: questions.sort((left, right) => left.askedAt - right.askedAt),
+        summary: String(normalized.summary ?? '').trim().slice(0, 2400) || undefined,
+        summaryUpToQuestionId: String(normalized.summaryUpToQuestionId ?? '').trim() || undefined,
+        updatedAt: Number(normalized.updatedAt ?? questions[questions.length - 1]?.askedAt ?? 0),
+      };
+    })
+    .filter((thread) => thread.id.length > 0 && thread.questions.length > 0 && Number.isFinite(thread.updatedAt))
+    .sort((left, right) => right.updatedAt - left.updatedAt)
+    .slice(0, WORKBENCH_LIMITS.CONVERSATION_THREADS);
 }
 
 function sanitizeRecommendationFeedbackAction(value: unknown): WorkbenchRecommendationFeedbackAction | null {
@@ -431,6 +468,7 @@ function sanitizeRecommendationFeedback(value: unknown): WorkbenchRecommendation
 export function createDefaultWorkbenchSettings(): WorkbenchSettings {
   return {
     recentQuestions: [],
+    conversationThreads: [],
     recommendationFeedback: [],
     onboardingGuideActivated: false,
     onboardingGuideDismissed: false,
@@ -444,8 +482,10 @@ export function sanitizeWorkbenchSettings(value?: Partial<WorkbenchSettings> | n
     return base;
   }
 
+  const recentQuestions = sanitizeRecentQuestions(value.recentQuestions);
   return {
-    recentQuestions: sanitizeRecentQuestions(value.recentQuestions),
+    recentQuestions,
+    conversationThreads: sanitizeConversationThreads(value.conversationThreads, recentQuestions),
     recommendationFeedback: sanitizeRecommendationFeedback(value.recommendationFeedback),
     onboardingGuideActivated: value.onboardingGuideActivated === true,
     onboardingGuideDismissed: value.onboardingGuideDismissed === true,

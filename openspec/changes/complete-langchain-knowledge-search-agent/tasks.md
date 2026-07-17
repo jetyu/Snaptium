@@ -23,6 +23,8 @@
 ## 4. Knowledge Ask and Agent Graphs
 
 - [x] 4.1 Implement fixed retrieve/rerank/answer Knowledge Ask graph with source-only fallback.
+- [x] 4.1a Add bounded shared conversation context, follow-up query rewriting, and evidence-safe answer history.
+- [x] 4.1b Add persistent per-thread conversation summaries with six recent context turns and twelve visible turns.
 - [x] 4.2 Implement LangGraph Knowledge Agent with shared conversation context and approved tools.
 - [x] 4.3 Implement per-step interrupt/resume confirmation and the confirm/auto permission matrix.
 - [x] 4.4 Implement note create/read/update/rename/move/trash/restore tools and exclude permanent delete.

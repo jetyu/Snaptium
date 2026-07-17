@@ -37,6 +37,14 @@
 - **WHEN** 检索成功但 Ask Chat 未配置或不可用
 - **THEN** 系统返回来源内容 fallback，而不生成无来源回答
 
+#### Scenario: 同线程追问
+- **WHEN** 用户在同一 Knowledge Copilot 线程内提出省略实体或代词的追问
+- **THEN** 系统使用受限的近期对话上下文将问题改写为独立检索查询，并且仅将本次检索到的笔记作为事实证据
+
+#### Scenario: 长会话摘要
+- **WHEN** 同一线程已超过六个完成回合
+- **THEN** 系统自动维护早期回合摘要，并将摘要与最近六个回合用于 Ask 和 Agent 上下文
+
 ### Requirement: Knowledge Agent
 系统 SHALL 使用 LangGraph 和进程内 checkpoint 执行 Knowledge Agent，并允许知识检索及受控笔记管理工具。
 

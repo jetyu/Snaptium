@@ -3,6 +3,7 @@ import { createLogger } from '@renderer/features/logger';
 import type { KnowledgeAnswerResult, KnowledgeAnswerStreamEvent } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { knowledgeCopilotService } from '../services/knowledge-copilot.service';
+import type { KnowledgeCopilotConversationContext } from '@shared/knowledge-copilot.constants';
 
 const knowledgeCopilotChatLogger = createLogger('KnowledgeCopilotChat');
 
@@ -14,6 +15,8 @@ export function useKnowledgeCopilotChat() {
 
   const askQuestionStream = async (
     question: string,
+    conversationId: string | undefined,
+    context: KnowledgeCopilotConversationContext,
     callbacks: {
       onEvent?: (event: KnowledgeAnswerStreamEvent) => void;
       onDelta?: (text: string) => void;
@@ -30,7 +33,7 @@ export function useKnowledgeCopilotChat() {
     usedSearchFallback.value = false;
 
     try {
-      const result = await knowledgeCopilotService.answerQuestionStream(question, {
+      const result = await knowledgeCopilotService.answerQuestionStream(question, conversationId, context, {
         onEvent: callbacks.onEvent,
         onDelta: (text) => {
           answer.value += text;

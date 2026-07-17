@@ -281,9 +281,10 @@ import type {
   KnowledgeSearchResult,
 } from '@renderer/core/bridge/electronApi';
 import type { WorkbenchQuestionEntry, WorkbenchQuestionSource } from '@renderer/features/workbench/constants/workbench.constants';
+import { KNOWLEDGE_COPILOT_CONVERSATION_LIMITS, type KnowledgeCopilotConversationContext } from '@shared/knowledge-copilot.constants';
 import { useSearch } from '../composables/useSearch';
 
-type KnowledgeInputMode = 'qa' | 'agent-task';
+type KnowledgeInputMode = 'ask' | 'agent-task';
 
 interface InputModeOption {
   id: KnowledgeInputMode;
@@ -316,7 +317,7 @@ interface AgentTaskMetadata {
 const searchViewLogger = createLogger('SearchView');
 const { t } = useI18n();
 const workbenchStore = useWorkbenchStore();
-const { recentQuestions } = storeToRefs(workbenchStore);
+const { conversationThreads } = storeToRefs(workbenchStore);
 const appShellStore = useAppShellStore();
 const settingsStore = useSettingsStore();
 const { config } = storeToRefs(settingsStore);
@@ -329,7 +330,7 @@ const knowledgeCopilotLicenseGate = useLicenseGate(LICENSE_FEATURES.KNOWLEDGE_CO
 
 const inputModes: InputModeOption[] = [
   {
-    id: 'qa',
+    id: 'ask',
     labelKey: 'search.inputModeQa',
     descriptionKey: 'search.inputModeQaDescription',
   },
@@ -340,7 +341,7 @@ const inputModes: InputModeOption[] = [
   },
 ];
 
-const inputMode = ref<KnowledgeInputMode>(config.value.knowledgeCopilot.defaultMode === 'agent' ? 'agent-task' : 'qa');
+const inputMode = ref<KnowledgeInputMode>(config.value.knowledgeCopilot.defaultMode === 'agent' ? 'agent-task' : 'ask');
 const isModeMenuOpen = ref(false);
 const searchQuery = ref('');
 const semanticResults = ref<KnowledgeSearchResult[]>([]);
@@ -444,12 +445,7 @@ const knowledgeUnavailableReason = computed(() => {
 const questionThreads = computed<QuestionThread[]>(() => {
   const threadMap = new Map<string, WorkbenchQuestionEntry[]>();
 
-  recentQuestions.value.forEach((question) => {
-    const threadId = getQuestionThreadId(question);
-    const threadQuestions = threadMap.get(threadId) ?? [];
-    threadQuestions.push(question);
-    threadMap.set(threadId, threadQuestions);
-  });
+  conversationThreads.value.forEach((thread) => threadMap.set(thread.id, thread.questions));
 
   const threads = Array.from(threadMap.entries())
     .map(([threadId, questions]) => {
@@ -536,8 +532,28 @@ function createThreadId(askedAt: number): string {
   return `${askedAt}:thread`;
 }
 
-function getQuestionThreadId(question: WorkbenchQuestionEntry): string {
-  return question.threadId || question.id;
+function getThreadConversationContext(threadId: string): KnowledgeCopilotConversationContext {
+  const thread = conversationThreads.value.find((entry) => entry.id === threadId);
+  return {
+    summary: thread?.summary,
+    summaryUpToQuestionId: thread?.summaryUpToQuestionId,
+    turns: (thread?.questions ?? [])
+    .map((question): KnowledgeCopilotConversationContext['turns'][number] | null => {
+      const answer = (question.fullAnswer || question.answer).trim();
+      if (!answer) {
+        return null;
+      }
+
+      return {
+        id: question.id,
+        mode: question.mode === 'agent-task' ? 'agent-task' : 'ask',
+        query: question.query.trim().slice(0, KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.QUESTION_LENGTH),
+        answer: answer.slice(0, KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.ANSWER_LENGTH),
+      };
+    })
+    .filter((turn): turn is KnowledgeCopilotConversationContext['turns'][number] => turn !== null)
+    .slice(-KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.VISIBLE_TURNS),
+  };
 }
 
 function resizeComposer(): void {
@@ -688,19 +704,20 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
   try {
     const askedAt = Date.now();
     const threadId = activeThreadId.value ?? createThreadId(askedAt);
+    const context = getThreadConversationContext(threadId);
     activeThreadId.value = threadId;
-    draftQuestion = await workbenchStore.recordQuestion({ query, threadId, mode: 'qa', askedAt });
+    draftQuestion = await workbenchStore.recordQuestion({ query, threadId, mode: 'ask', askedAt });
     if (draftThreadId.value === threadId) {
       draftThreadId.value = null;
       draftThreadCreatedAt.value = 0;
     }
     selectedQuestion.value = draftQuestion;
     generatingQuestionId.value = draftQuestion?.id ?? '';
-    generatingQuestionMode.value = 'qa';
+    generatingQuestionMode.value = 'ask';
     if (draftQuestion) {
       questionModes.value = {
         ...questionModes.value,
-        [draftQuestion.id]: 'qa',
+        [draftQuestion.id]: 'ask',
       };
       questionAnswerStages.value = {
         ...questionAnswerStages.value,
@@ -715,7 +732,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
 
     let generatedAnswer = '';
     try {
-      const result = await askQuestionStream(query, {
+      const result = await askQuestionStream(query, threadId, context, {
         onEvent: (event) => {
           if (event.type === 'stage' && draftQuestion) {
             questionAnswerStages.value = {
@@ -744,6 +761,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       });
       semanticResults.value = result.sources;
       generatedAnswer = result.answer || (draftQuestion ? streamingAnswers.value[draftQuestion.id] || '' : '');
+      await workbenchStore.updateConversationSummary(threadId, result.conversationSummary, result.conversationSummaryUpToQuestionId);
     } catch (error) {
       const message = getErrorMessage(error);
       semanticResults.value = [];
@@ -768,7 +786,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       answer: generatedAnswer,
       sourceNoteIds: Array.from(new Set(semanticResults.value.map((result) => result.chunk.noteId))),
       sources: currentSources.value,
-      mode: 'qa',
+      mode: 'ask',
     });
     selectedQuestion.value = recordedQuestion;
     if (recordedQuestion) {
@@ -782,7 +800,7 @@ async function askKnowledgeQuestion(query: string): Promise<void> {
       }
       questionModes.value = {
         ...questionModes.value,
-        [recordedQuestion.id]: 'qa',
+        [recordedQuestion.id]: 'ask',
       };
     }
     if (recordedQuestion) {
@@ -853,6 +871,7 @@ async function runAgentTaskQuestion(query: string): Promise<void> {
   try {
     const askedAt = Date.now();
     const threadId = activeThreadId.value ?? createThreadId(askedAt);
+    const context = getThreadConversationContext(threadId);
     activeThreadId.value = threadId;
     draftQuestion = await workbenchStore.recordQuestion({
       query,
@@ -880,7 +899,8 @@ async function runAgentTaskQuestion(query: string): Promise<void> {
 
     let generatedAnswer = '';
     try {
-      const result = await runTask(query, agentWriteMode.value, threadId);
+      const result = await runTask(query, agentWriteMode.value, threadId, context);
+      await workbenchStore.updateConversationSummary(threadId, result.conversationSummary, result.conversationSummaryUpToQuestionId);
       semanticResults.value = result.sources;
       generatedAnswer = result.finalAnswer || '';
       metadata = {
@@ -998,12 +1018,7 @@ async function deleteQuestionThread(thread: QuestionThread): Promise<void> {
     return;
   }
 
-  let hasDeleted = false;
-
-  for (const question of thread.questions) {
-    const deleted = await workbenchStore.deleteQuestion(question.id);
-    hasDeleted = hasDeleted || deleted;
-  }
+  const hasDeleted = await workbenchStore.deleteConversationThread(thread.id);
 
   if (hasDeleted && activeThreadId.value === thread.id) {
     activeThreadId.value = null;
@@ -1020,7 +1035,7 @@ function getQuestionPreview(question: WorkbenchQuestionEntry): string {
 }
 
 function getQuestionMode(question: WorkbenchQuestionEntry): KnowledgeInputMode {
-  return question.mode ?? questionModes.value[question.id] ?? 'qa';
+  return question.mode ?? questionModes.value[question.id] ?? 'ask';
 }
 
 function getQuestionThinkingLabel(question: WorkbenchQuestionEntry): string {

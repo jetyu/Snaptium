@@ -8,6 +8,7 @@ import { IPC_CHANNELS } from '../../constants/ipc.constants.js';
 import { loggerService } from '../../services/logger.service.js';
 import { getErrorMessage } from '../../services/error.service.js';
 import { LICENSE_RUNTIME_FEATURES, licenseService } from '../../services/license.service.js';
+import { KNOWLEDGE_COPILOT_CONVERSATION_LIMITS } from '../../../shared/knowledge-copilot.constants.js';
 
 const logger = loggerService.createLogger('Main:KnowledgeCopilotIPC');
 
@@ -24,12 +25,35 @@ const IndexNoteSchema = z.object({
 const StreamQuestionSchema = z.object({
   query: z.string().min(1),
   requestId: z.string().min(1),
+  conversationId: z.string().min(1).optional(),
+  context: z.object({
+    summary: z.string().max(KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.SUMMARY_LENGTH).optional(),
+    summaryUpToQuestionId: z.string().min(1).optional(),
+    turns: z.array(z.object({
+      id: z.string().min(1),
+    mode: z.enum(['ask', 'agent-task']),
+    query: z.string().min(1).max(KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.QUESTION_LENGTH),
+    answer: z.string().min(1).max(KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.ANSWER_LENGTH),
+    })).max(KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.VISIBLE_TURNS),
+  }).optional(),
+});
+
+const ConversationContextSchema = z.object({
+  summary: z.string().max(KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.SUMMARY_LENGTH).optional(),
+  summaryUpToQuestionId: z.string().min(1).optional(),
+  turns: z.array(z.object({
+  id: z.string().min(1),
+  mode: z.enum(['ask', 'agent-task']),
+  query: z.string().min(1).max(KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.QUESTION_LENGTH),
+  answer: z.string().min(1).max(KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.ANSWER_LENGTH),
+  })).max(KNOWLEDGE_COPILOT_CONVERSATION_LIMITS.VISIBLE_TURNS),
 });
 
 const RunTaskSchema = z.object({
   task: z.string().default(''),
   writeMode: z.enum(['confirm', 'auto']).optional(),
   conversationId: z.string().min(1).optional(),
+  context: ConversationContextSchema.optional(),
   decisions: z.array(z.discriminatedUnion('type', [
     z.object({ type: z.literal('approve') }),
     z.object({ type: z.literal('edit'), editedAction: z.object({ name: z.string().min(1), args: z.record(z.string(), z.unknown()) }) }),
@@ -77,7 +101,7 @@ export function registerKnowledgeCopilotHandlers(): void {
         type: 'start',
       });
 
-      const result = await answerKnowledgeQuestionStream(validated.query, (streamEvent) => {
+      const result = await answerKnowledgeQuestionStream(validated.query, validated.context ?? { turns: [] }, (streamEvent) => {
         event.sender.send(IPC_CHANNELS.KNOWLEDGE_COPILOT_ANSWER_QUESTION_STREAM_EVENT, {
           requestId,
           ...streamEvent,
@@ -133,6 +157,7 @@ export function registerKnowledgeCopilotHandlers(): void {
       return await runKnowledgeCopilotTask(validated.task, {
         writeMode: validated.writeMode,
         conversationId: validated.conversationId,
+        context: validated.context,
         decisions: validated.decisions,
       });
     } catch (error) {

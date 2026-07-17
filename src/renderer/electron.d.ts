@@ -526,7 +526,12 @@ declare global {
           chunkSize?: number;
           chunkOverlap?: number;
         }) => Promise<{ success: boolean; chunksIndexed?: number; error?: string }>;
-        answerQuestionStream: (payload: { query: string; requestId: string }) => Promise<{
+        answerQuestionStream: (payload: {
+          query: string;
+          requestId: string;
+          conversationId?: string;
+          context?: import('@shared/knowledge-copilot.constants').KnowledgeCopilotConversationContext;
+        }) => Promise<{
           success: boolean;
           answer?: string;
           sources: Array<{

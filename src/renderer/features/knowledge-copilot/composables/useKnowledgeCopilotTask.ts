@@ -3,6 +3,7 @@ import { createLogger } from '@renderer/features/logger';
 import type { KnowledgeCopilotDecision, KnowledgeCopilotTaskResult, KnowledgeCopilotWriteMode } from '@renderer/core/bridge/electronApi';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { knowledgeCopilotService } from '../services/knowledge-copilot.service';
+import type { KnowledgeCopilotConversationContext } from '@shared/knowledge-copilot.constants';
 
 const knowledgeCopilotTaskLogger = createLogger('KnowledgeCopilotTask');
 
@@ -15,6 +16,7 @@ export function useKnowledgeCopilotTask() {
     task: string,
     writeMode: KnowledgeCopilotWriteMode = 'confirm',
     conversationId?: string,
+    context: KnowledgeCopilotConversationContext = { turns: [] },
   ): Promise<KnowledgeCopilotTaskResult> => {
     if (!task.trim()) {
       throw new Error('Task cannot be empty');
@@ -26,7 +28,7 @@ export function useKnowledgeCopilotTask() {
     result.value = null;
 
     try {
-      const taskResult = await knowledgeCopilotService.runTask(task, writeMode, conversationId);
+      const taskResult = await knowledgeCopilotService.runTask(task, writeMode, conversationId, context);
       if (!taskResult.success) {
         throw new Error(taskResult.error || 'Failed to run agent task');
       }
@@ -52,7 +54,7 @@ export function useKnowledgeCopilotTask() {
     isRunning.value = true;
     error.value = null;
     try {
-      const taskResult = await knowledgeCopilotService.runTask('', writeMode, conversationId, decisions);
+      const taskResult = await knowledgeCopilotService.runTask('', writeMode, conversationId, { turns: [] }, decisions);
       if (!taskResult.success) throw new Error(taskResult.error || 'Failed to resume agent task');
       result.value = taskResult;
       return taskResult;

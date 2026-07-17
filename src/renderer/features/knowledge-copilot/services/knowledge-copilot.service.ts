@@ -10,6 +10,7 @@ import {
 import { createLogger } from '@renderer/features/logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { KNOWLEDGE_COPILOT_ERROR_MESSAGES } from '../constants/knowledge-copilot.constants';
+import type { KnowledgeCopilotConversationContext } from '@shared/knowledge-copilot.constants';
 
 const knowledgeCopilotLogger = createLogger('Renderer:KnowledgeCopilot Service');
 
@@ -132,6 +133,8 @@ export const knowledgeCopilotService = {
 
   async answerQuestionStream(
     query: string,
+    conversationId: string | undefined,
+    context: KnowledgeCopilotConversationContext,
     callbacks: {
       onEvent?: (event: KnowledgeAnswerStreamEvent) => void;
       onDelta?: (text: string) => void;
@@ -152,7 +155,7 @@ export const knowledgeCopilotService = {
         }
       });
 
-      return await electronApi.knowledgeCopilot.answerQuestionStream({ query, requestId });
+      return await electronApi.knowledgeCopilot.answerQuestionStream({ query, requestId, conversationId, context });
     } catch (error: unknown) {
       const message = getErrorMessage(error);
       knowledgeCopilotLogger.error('KnowledgeCopilot streaming question failed', { error: message });
@@ -173,10 +176,11 @@ export const knowledgeCopilotService = {
     task: string,
     writeMode: KnowledgeCopilotWriteMode = 'confirm',
     conversationId?: string,
+    context: KnowledgeCopilotConversationContext = { turns: [] },
     decisions?: KnowledgeCopilotDecision[],
   ): Promise<KnowledgeCopilotTaskResult> {
     try {
-      return await electronApi.knowledgeCopilot.runTask({ task, writeMode, conversationId, decisions });
+      return await electronApi.knowledgeCopilot.runTask({ task, writeMode, conversationId, context, decisions });
     } catch (error: unknown) {
       const message = getErrorMessage(error);
       knowledgeCopilotLogger.error('KnowledgeCopilot agent task failed', { error: message });
