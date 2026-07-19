@@ -1515,6 +1515,13 @@ function formatQuestionAnsweredAt(question: WorkbenchQuestionEntry): string {
 
 function applySearchRequest(): void {
   const request = searchViewRequest.value;
+  const requestedThread = request.threadId
+    ? questionThreads.value.find((thread) => thread.id === request.threadId)
+    : undefined;
+  if (requestedThread) {
+    selectThread(requestedThread);
+    return;
+  }
   activeThreadId.value = null;
   draftThreadId.value = null;
   draftThreadCreatedAt.value = 0;
