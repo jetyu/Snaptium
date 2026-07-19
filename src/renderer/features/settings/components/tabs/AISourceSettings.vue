@@ -25,7 +25,7 @@
                 <IconPlugConnected v-else :size="20" aria-hidden="true" class="provider-fallback-icon" />
                 <div class="source-heading-copy">
                   <h4 class="source-title">{{ source.name }}</h4>
-                  <span class="source-provider">{{ getAiProviderPresentation(source.provider).label }}</span>
+                  <span class="source-provider">{{ getAiProviderLabel(source.provider) }}</span>
                 </div>
               </div>
               <div class="settings-card-actions">
@@ -86,13 +86,13 @@
             <div ref="providerSelectRef" class="provider-select-row">
               <button ref="providerSelectButtonRef" type="button" class="provider-select-trigger"
                 :disabled="isLicenseLocked" :aria-expanded="isProviderMenuOpen"
-                :aria-label="`${t('label.aiProvider')}: ${getAiProviderPresentation(newSource.provider).label}`"
+                :aria-label="`${t('label.aiProvider')}: ${getAiProviderLabel(newSource.provider)}`"
                 @click="toggleProviderMenu" @keydown.esc.prevent="closeProviderMenu(true)">
                 <img v-if="getAiProviderPresentation(newSource.provider).logoUrl"
                   :src="getAiProviderPresentation(newSource.provider).logoUrl" alt="" aria-hidden="true"
                   class="provider-logo" />
                 <IconPlugConnected v-else :size="20" aria-hidden="true" class="provider-fallback-icon" />
-                <span>{{ getAiProviderPresentation(newSource.provider).label }}</span>
+                <span>{{ getAiProviderLabel(newSource.provider) }}</span>
                 <IconChevronDown :size="16" class="provider-select-chevron" />
               </button>
               <div v-if="isProviderMenuOpen" class="provider-select-menu" @keydown.esc.prevent="closeProviderMenu(true)">
@@ -102,7 +102,7 @@
                   <img v-if="getAiProviderPresentation(provider).logoUrl"
                     :src="getAiProviderPresentation(provider).logoUrl" alt="" aria-hidden="true" class="provider-logo" />
                   <IconPlugConnected v-else :size="20" aria-hidden="true" class="provider-fallback-icon" />
-                  <span>{{ getAiProviderPresentation(provider).label }}</span>
+                  <span :title="getAiProviderLabel(provider)">{{ getAiProviderLabel(provider) }}</span>
                   <IconCheck v-if="newSource.provider === provider" :size="15" class="provider-select-check" />
                 </button>
               </div>
@@ -224,6 +224,7 @@ import siliconFlowLogoUrl from '@assets/images/siliconflow.png';
 import PasswordInput from '../PasswordInput.vue';
 
 const { t } = useI18n();
+const getAiProviderLabel = (provider: AiProvider): string => t(getAiProviderPresentation(provider).labelKey);
 const settingsStore = useSettingsStore();
 const aisLogger = createLogger('AISettings');
 const aiSourceLicenseGate = useLicenseGate('aiSources');
@@ -403,7 +404,7 @@ const handleProviderSelect = (provider: AiProvider): void => {
   newSource.baseUrl = AI_PROVIDER_DEFAULT_BASE_URLS[provider];
   newSource.capabilities = getAiProviderCapabilities(provider);
   if (!newSource.name.trim()) {
-    newSource.name = getAiProviderPresentation(provider).label;
+    newSource.name = getAiProviderLabel(provider);
   }
   newSource.aiModel = '';
 };
@@ -584,7 +585,7 @@ const formatCapabilities = (capabilities: string[]): string => {
   top: calc(100% + 6px);
   left: 0;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   width: max(100%, 340px);
   max-height: 320px;
   overflow-y: auto;
@@ -599,10 +600,10 @@ const formatCapabilities = (capabilities: string[]): string => {
 .provider-select-option {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   width: 100%;
-  min-height: 44px;
-  padding: 7px 8px;
+  min-height: 36px;
+  padding: 5px 7px;
   border: 1px solid transparent;
   border-radius: 7px;
   background: transparent;
@@ -614,9 +615,11 @@ const formatCapabilities = (capabilities: string[]): string => {
 
 .provider-select-option span {
   min-width: 0;
-  font-size: 0.8rem;
+  overflow: hidden;
+  font-size: 0.76rem;
   line-height: 1.2;
-  text-wrap: balance;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .provider-select-check {
@@ -636,8 +639,8 @@ const formatCapabilities = (capabilities: string[]): string => {
 .provider-logo,
 .provider-fallback-icon {
   flex: 0 0 auto;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
 }
 
 .provider-logo {
@@ -692,7 +695,7 @@ const formatCapabilities = (capabilities: string[]): string => {
 
 .add-form-card {
   grid-column: 1 / -1;
-  background: var(--bg-secondary, #f8f9fa);
+  background: var(--surface-raised);
   padding: 20px;
   border-radius: 12px;
   border: 1px solid var(--border-color, #e0e0e0);
