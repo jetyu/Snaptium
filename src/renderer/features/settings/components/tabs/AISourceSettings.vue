@@ -22,7 +22,6 @@
                 <img v-if="getAiProviderPresentation(source.provider).logoUrl"
                   :src="getAiProviderPresentation(source.provider).logoUrl" alt="" aria-hidden="true"
                   class="provider-logo source-provider-logo" />
-                <IconPlugConnected v-else :size="20" aria-hidden="true" class="provider-fallback-icon" />
                 <div class="source-heading-copy">
                   <h4 class="source-title">{{ source.name }}</h4>
                   <span class="source-provider">{{ getAiProviderLabel(source.provider) }}</span>
@@ -91,7 +90,6 @@
                 <img v-if="getAiProviderPresentation(newSource.provider).logoUrl"
                   :src="getAiProviderPresentation(newSource.provider).logoUrl" alt="" aria-hidden="true"
                   class="provider-logo" />
-                <IconPlugConnected v-else :size="20" aria-hidden="true" class="provider-fallback-icon" />
                 <span>{{ getAiProviderLabel(newSource.provider) }}</span>
                 <IconChevronDown :size="16" class="provider-select-chevron" />
               </button>
@@ -101,7 +99,6 @@
                   @click="handleProviderMenuSelect(provider)">
                   <img v-if="getAiProviderPresentation(provider).logoUrl"
                     :src="getAiProviderPresentation(provider).logoUrl" alt="" aria-hidden="true" class="provider-logo" />
-                  <IconPlugConnected v-else :size="20" aria-hidden="true" class="provider-fallback-icon" />
                   <span :title="getAiProviderLabel(provider)">{{ getAiProviderLabel(provider) }}</span>
                   <IconCheck v-if="newSource.provider === provider" :size="15" class="provider-select-check" />
                 </button>
@@ -218,7 +215,7 @@ import { systemDialog } from '../../services/system-dialog.service';
 import { createLogger } from '../../../logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { isOfficialAiSourceId } from '@shared/official-ai.constants';
-import { IconPlus, IconBulb, IconTrash, IconPencil, IconSparkles, IconChevronDown, IconPlugConnected, IconCheck } from '@tabler/icons-vue';
+import { IconPlus, IconBulb, IconTrash, IconPencil, IconSparkles, IconChevronDown, IconCheck } from '@tabler/icons-vue';
 import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 import siliconFlowLogoUrl from '@assets/images/siliconflow.png';
 import PasswordInput from '../PasswordInput.vue';
@@ -636,8 +633,7 @@ const formatCapabilities = (capabilities: string[]): string => {
   outline: none;
 }
 
-.provider-logo,
-.provider-fallback-icon {
+.provider-logo {
   flex: 0 0 auto;
   width: 18px;
   height: 18px;
@@ -649,13 +645,6 @@ const formatCapabilities = (capabilities: string[]): string => {
   border-radius: 5px;
   background: #fff;
   object-fit: contain;
-}
-
-.provider-fallback-icon {
-  padding: 2px;
-  border-radius: 5px;
-  color: var(--text-secondary);
-  background: var(--surface-subtle, var(--bg-secondary));
 }
 
 .header-actions {
@@ -898,8 +887,7 @@ const formatCapabilities = (capabilities: string[]): string => {
   min-width: 0;
 }
 
-.source-provider-logo,
-.source-identity .provider-fallback-icon {
+.source-provider-logo {
   width: 24px;
   height: 24px;
 }

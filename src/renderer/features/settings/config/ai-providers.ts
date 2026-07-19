@@ -1,6 +1,7 @@
 import { AI_PROVIDERS, type AiProvider } from '@shared/ai-provider.constants';
 import snaptiumLogoUrl from '@assets/logo/app-logo-32.png';
 import openAiLogoUrl from '@assets/images/ai-providers/openai.svg';
+import openaiCompatibleLogoUrl from '@assets/images/ai-providers/openaiCompatible.svg';
 import siliconFlowLogoUrl from '@assets/images/ai-providers/siliconflow.svg';
 import geminiLogoUrl from '@assets/images/ai-providers/gemini.svg';
 import ollamaLogoUrl from '@assets/images/ai-providers/ollama.svg';
@@ -21,7 +22,7 @@ export const AI_PROVIDER_PRESENTATIONS = {
   [AI_PROVIDERS.SNAPTIUM]: { labelKey: 'aiProvider.snaptium', logoUrl: snaptiumLogoUrl },
   [AI_PROVIDERS.SILICONFLOW]: { labelKey: 'aiProvider.siliconflow', logoUrl: siliconFlowLogoUrl },
   [AI_PROVIDERS.OPENAI]: { labelKey: 'aiProvider.openai', logoUrl: openAiLogoUrl },
-  [AI_PROVIDERS.OPENAI_COMPATIBLE]: { labelKey: 'aiProvider.openaiCompatible' },
+  [AI_PROVIDERS.OPENAI_COMPATIBLE]: { labelKey: 'aiProvider.openaiCompatible', logoUrl: openaiCompatibleLogoUrl },
   [AI_PROVIDERS.GOOGLE_GEMINI]: { labelKey: 'aiProvider.googleGemini', logoUrl: geminiLogoUrl },
   [AI_PROVIDERS.OLLAMA]: { labelKey: 'aiProvider.ollama', logoUrl: ollamaLogoUrl },
   [AI_PROVIDERS.OPENROUTER]: { labelKey: 'aiProvider.openRouter', logoUrl: openRouterLogoUrl },
