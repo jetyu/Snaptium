@@ -48,7 +48,12 @@ function isOpenAiCompatibleProvider(provider: AiProvider): boolean {
     || provider === AI_PROVIDERS.OPENAI_COMPATIBLE
     || provider === AI_PROVIDERS.SILICONFLOW
     || provider === AI_PROVIDERS.OPENROUTER
-    || provider === AI_PROVIDERS.DEEPSEEK;
+    || provider === AI_PROVIDERS.DEEPSEEK
+    || provider === AI_PROVIDERS.QWEN
+    || provider === AI_PROVIDERS.DOUBAO
+    || provider === AI_PROVIDERS.KIMI
+    || provider === AI_PROVIDERS.ZHIPU
+    || provider === AI_PROVIDERS.GROK;
 }
 
 function requireApiKey(config: AiProviderModelConfig): string {
