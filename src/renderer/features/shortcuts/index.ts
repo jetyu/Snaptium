@@ -21,6 +21,8 @@ export { formatKeybinding } from '../../core/utils/formatKeybinding.utils';
 // Types (从 store 导出)
 export type {
   Command,
+  CommandScope,
+  GlobalShortcutStatus,
   Keybinding,
   KeybindingsConfig,
   KeybindingConflict,

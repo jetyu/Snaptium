@@ -33,6 +33,7 @@ import { electronApi } from '@renderer/core/bridge/electronApi';
 import { useUpdaterStore } from '@renderer/features/updater';
 import { licenseService } from '@renderer/features/license/services/license.service';
 import { useAppShellStore } from './store/appShell.store';
+import { useQuickCapture } from '@renderer/features/quick-capture';
 
 const settingsStore = useSettingsStore();
 const appShellStore = useAppShellStore();
@@ -43,10 +44,12 @@ const updaterStore = useUpdaterStore();
 const { initMainProcessListeners } = useLicenseDialog();
 const { initializeKnowledgeCopilot, setupVfsAutoIndex } = useKnowledgeCopilotInitialization();
 const { initializeSync, setupAutoSync } = useSyncLifecycle();
+const quickCapture = useQuickCapture();
 
 useEditorSettings();
 useGeneralSettings();
 useCommandRegistration();
+quickCapture.start();
 
 // 原生菜单（macOS/Windows）的监听器清理函数
 const unsubscribers: Array<(() => void)> = [];
@@ -64,6 +67,7 @@ onMounted(async () => {
   
   // 等待工作区初始化完成
   await workspaceStore.initializeWorkspace();
+  quickCapture.markApplicationReady();
   await favoritesStore.initialize(true);
 
   await initializeSync();
@@ -118,6 +122,7 @@ onMounted(async () => {
 onUnmounted(() => {
   updaterStore.dispose();
   licenseService.dispose();
+  quickCapture.dispose();
   unsubscribers.forEach((unsub) => unsub());
 });
 </script>

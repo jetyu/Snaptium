@@ -176,6 +176,14 @@ const electronAPI = Object.freeze({
       return () => ipcRenderer.removeListener(IPC_CHANNELS.MENU_EXPORT_SPPX, subscription);
     },
   }),
+  quickCapture: Object.freeze({
+    markReady: () => ipcRenderer.send(IPC_CHANNELS.QUICK_CAPTURE_READY),
+    onRequested: (callback: VoidCallback) => {
+      const subscription = (_event: Electron.IpcRendererEvent) => callback();
+      ipcRenderer.on(IPC_CHANNELS.QUICK_CAPTURE_REQUESTED, subscription);
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.QUICK_CAPTURE_REQUESTED, subscription);
+    },
+  }),
   settings: Object.freeze({
     getConfig: () => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_LOAD),
     saveConfig: (config: JsonObject) => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_SAVE, config),
@@ -223,6 +231,7 @@ const electronAPI = Object.freeze({
     getCommands: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS),
     getCommandsByCategory: (category: string) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_COMMANDS_BY_CATEGORY, category),
     loadKeybindings: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_LOAD_KEYBINDINGS),
+    getGlobalShortcutStatuses: () => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_GET_GLOBAL_STATUS),
     saveKeybindings: (keybindings: ShortcutKeybindingPayload[]) => ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_SAVE_KEYBINDINGS, keybindings),
     addKeybinding: (payload: { commandId: string; key: string; when?: string | null }) =>
       ipcRenderer.invoke(IPC_CHANNELS.SHORTCUTS_ADD_KEYBINDING, payload),

@@ -15,6 +15,9 @@ import { accessControlService } from './services/access-control.service.js';
 import { errorService } from './services/error.service.js';
 import { licenseService } from './services/license.service.js';
 import { keyManagerService } from './services/key-manager.service.js';
+import { quickCaptureService } from './services/quick-capture.service.js';
+import { shortcutsService } from './services/shortcuts.service.js';
+import { COMMANDS } from './constants/commands.constants.js';
 import packageJson from '../../package.json' with { type: 'json' };
 
 const WORKSPACE_RESOURCE_SCHEME = 'note-resource';
@@ -137,13 +140,20 @@ app.whenReady().then(async () => {
   loggerService.updateConfig(preferences);
   const appRootPath = app.getAppPath();
   const mainWindow = createMainWindow({ isDev, appPath: appRootPath });
+  quickCaptureService.initialize(mainWindow);
+  shortcutsService.setGlobalCommandHandler((commandId) => {
+    if (commandId === COMMANDS.APP_QUICK_CAPTURE.id) {
+      quickCaptureService.request();
+    }
+  });
+  await shortcutsService.refreshGlobalShortcuts();
   registerIpcHandlers(mainWindow);
   setupAppMenu(mainWindow, preferences.language);
   mainWindow.webContents.once('did-finish-load', () => {
     broadcastLicenseState();
   });
 
-  trayService.init(mainWindow);
+  trayService.init(mainWindow, () => quickCaptureService.request());
 
   if (!isDev) {
     await updaterService.initialize(mainWindow);
@@ -169,9 +179,10 @@ app.whenReady().then(async () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       void settingsService.loadConfig().then((nextPreferences) => {
         const window = createMainWindow({ isDev, appPath: appRootPath });
+        quickCaptureService.attachWindow(window);
         registerIpcHandlers(window);
         setupAppMenu(window, nextPreferences.language);
-        trayService.init(window);
+        trayService.init(window, () => quickCaptureService.request());
         window.webContents.once('did-finish-load', () => {
           broadcastLicenseState();
         });
@@ -198,6 +209,8 @@ app.on(IPC_CHANNELS.ELECTRON_WIN_ALL_CLOSED, () => {
 app.on(IPC_CHANNELS.ELECTRON_BEFORE_QUIT, () => {
   isQuitting = true;
   trayService.destroy();
+  quickCaptureService.destroy();
+  shortcutsService.destroyGlobalShortcuts();
   updaterService.destroy();
   licenseService.destroy();
 });

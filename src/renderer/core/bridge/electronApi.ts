@@ -586,6 +586,12 @@ interface ShortcutsKeybindingsConfigPayload {
   keybindings: ShortcutsKeybindingPayload[];
 }
 
+export interface GlobalShortcutStatusPayload {
+  commandId: string;
+  registeredAccelerators: string[];
+  failedAccelerators: string[];
+}
+
 function ensureElectronApi(): Window['electronAPI'] {
   if (!window.electronAPI) {
     throw new Error('electronAPI bridge is unavailable. Make sure preload is loaded.');
@@ -636,6 +642,17 @@ export const electronApi = {
     onImportNwp: (callback: () => void) => electronApi.menu.getApi().onImportNwp(callback),
     onExportMarkdown: (callback: () => void) => electronApi.menu.getApi().onExportMarkdown(callback),
     onExportSppx: (callback: () => void) => electronApi.menu.getApi().onExportSppx(callback),
+  },
+
+  quickCapture: {
+    isAvailable: (): boolean => !!window.electronAPI?.quickCapture,
+    getApi: () => {
+      const api = ensureElectronApi().quickCapture;
+      if (!api) throw new Error('Quick capture bridge is unavailable');
+      return api;
+    },
+    markReady: (): void => electronApi.quickCapture.getApi().markReady(),
+    onRequested: (callback: () => void): (() => void) => electronApi.quickCapture.getApi().onRequested(callback),
   },
 
   app: {
@@ -1097,6 +1114,7 @@ export const electronApi = {
     getCommands: () => electronApi.shortcuts.getApi().getCommands(),
     getCommandsByCategory: (category: string) => electronApi.shortcuts.getApi().getCommandsByCategory(category),
     loadKeybindings: () => electronApi.shortcuts.getApi().loadKeybindings(),
+    getGlobalShortcutStatuses: () => electronApi.shortcuts.getApi().getGlobalShortcutStatuses(),
     saveKeybindings: (keybindings: ShortcutsKeybindingPayload[]) => electronApi.shortcuts.getApi().saveKeybindings(keybindings),
     addKeybinding: (payload: { commandId: string; key: string; when?: string | null }) => electronApi.shortcuts.getApi().addKeybinding(payload),
     removeKeybinding: (payload: { commandId: string; key: string }) => electronApi.shortcuts.getApi().removeKeybinding(payload),

@@ -18,13 +18,22 @@ export enum CommandCategory {
   APP = 'app',
 }
 
+export type CommandScope = 'renderer' | 'global';
+
 /**
  * 命令定义
  */
 export interface Command {
   id: string;
   category: CommandCategory;
+  scope: CommandScope;
   defaultKeybinding?: string | null;
+}
+
+export interface GlobalShortcutStatus {
+  commandId: string;
+  registeredAccelerators: string[];
+  failedAccelerators: string[];
 }
 
 /**
@@ -78,6 +87,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
   // 状态
   const commands = ref<Command[]>([]);
   const keybindings = ref<Keybinding[]>([]);
+  const globalShortcutStatuses = ref<GlobalShortcutStatus[]>([]);
   const loading = ref(false);
   const error = ref<string | null>(null);
 
@@ -98,6 +108,21 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
     return map;
   });
 
+  const globalShortcutStatusMap = computed(() => {
+    return new Map(globalShortcutStatuses.value.map(status => [status.commandId, status]));
+  });
+
+  function updateRendererKeybindings(): void {
+    const globalCommandIds = new Set(
+      commands.value
+        .filter(command => command.scope === 'global')
+        .map(command => command.id)
+    );
+    keyboardService.setKeybindings(
+      keybindings.value.filter(keybinding => !globalCommandIds.has(keybinding.commandId))
+    );
+  }
+
   // 根据分类分组命令
   const commandsByCategory = computed(() => {
     const grouped = new Map<CommandCategory, Command[]>();
@@ -115,6 +140,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       loading.value = true;
       error.value = null;
       commands.value = await shortcutsService.getCommands();
+      updateRendererKeybindings();
     } catch (e) {
       error.value = getErrorMessage(e, 'Failed to load commands');
       shortcutsLogger.error(`Failed to load commands: ${getErrorMessage(e)}`);
@@ -130,7 +156,7 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keybindings.value = await shortcutsService.loadKeybindings();
       
       // 更新键盘管理器
-      keyboardService.setKeybindings(keybindings.value);
+      updateRendererKeybindings();
     } catch (e) {
       error.value = getErrorMessage(e, 'Failed to load keybindings');
       shortcutsLogger.error(`Failed to load keybindings: ${getErrorMessage(e)}`);
@@ -146,7 +172,8 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keybindings.value = await shortcutsService.saveKeybindings(keybindings.value);
       
       // 更新键盘管理器
-      keyboardService.setKeybindings(keybindings.value);
+      updateRendererKeybindings();
+      await loadGlobalShortcutStatuses();
     } catch (e) {
       error.value = getErrorMessage(e, 'Failed to save keybindings');
       shortcutsLogger.error(`Failed to save keybindings: ${getErrorMessage(e)}`);
@@ -163,7 +190,8 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keybindings.value = await shortcutsService.addKeybinding(commandId, key, when);
       
       // 更新键盘管理器
-      keyboardService.setKeybindings(keybindings.value);
+      updateRendererKeybindings();
+      await loadGlobalShortcutStatuses();
     } catch (e) {
       error.value = getErrorMessage(e, 'Failed to add keybinding');
       shortcutsLogger.error(`Failed to add keybinding: ${getErrorMessage(e)}`);
@@ -180,7 +208,8 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keybindings.value = await shortcutsService.removeKeybinding(commandId, key);
       
       // 更新键盘管理器
-      keyboardService.setKeybindings(keybindings.value);
+      updateRendererKeybindings();
+      await loadGlobalShortcutStatuses();
     } catch (e) {
       error.value = getErrorMessage(e, 'Failed to remove keybinding');
       shortcutsLogger.error(`Failed to remove keybinding: ${getErrorMessage(e)}`);
@@ -209,7 +238,8 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
       keybindings.value = await shortcutsService.resetToDefaults();
       
       // 更新键盘管理器
-      keyboardService.setKeybindings(keybindings.value);
+      updateRendererKeybindings();
+      await loadGlobalShortcutStatuses();
     } catch (e) {
       error.value = getErrorMessage(e, 'Failed to reset keybindings');
       shortcutsLogger.error(`Failed to reset keybindings: ${getErrorMessage(e)}`);
@@ -236,9 +266,23 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
     return commandsMap.value.get(commandId);
   }
 
+  async function loadGlobalShortcutStatuses(): Promise<void> {
+    try {
+      globalShortcutStatuses.value = await shortcutsService.getGlobalShortcutStatuses();
+    } catch (e) {
+      shortcutsLogger.error(`Failed to load global shortcut status: ${getErrorMessage(e)}`);
+      globalShortcutStatuses.value = [];
+    }
+  }
+
+  function getGlobalShortcutStatus(commandId: string): GlobalShortcutStatus | undefined {
+    return globalShortcutStatusMap.value.get(commandId);
+  }
+
   // 初始化
   async function initialize() {
-    await Promise.all([loadCommands(), loadKeybindings()]);
+    await Promise.all([loadCommands(), loadKeybindings(), loadGlobalShortcutStatuses()]);
+    updateRendererKeybindings();
     
     // 启动键盘管理器
     keyboardService.startListening();
@@ -248,12 +292,14 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
     // 状态
     commands,
     keybindings,
+    globalShortcutStatuses,
     loading,
     error,
     
     // 计算属性
     commandsMap,
     keybindingsMap,
+    globalShortcutStatusMap,
     commandsByCategory,
     
     // 操作
@@ -266,6 +312,8 @@ export const useShortcutsStore = defineStore('shortcuts', () => {
     detectConflicts,
     getKeybindingsForCommand,
     getCommand,
+    loadGlobalShortcutStatuses,
+    getGlobalShortcutStatus,
     initialize,
   };
 });

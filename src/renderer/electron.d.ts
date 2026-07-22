@@ -207,6 +207,12 @@ interface ShortcutsKeybindingsConfigPayload {
   keybindings: ShortcutsKeybindingPayload[];
 }
 
+interface GlobalShortcutStatusPayload {
+  commandId: string;
+  registeredAccelerators: string[];
+  failedAccelerators: string[];
+}
+
 type ShortcutsDataPayload = Array<Record<string, JsonValue>>;
 
 interface UpdaterUpdateInfoPayload {
@@ -339,6 +345,11 @@ declare global {
         onImportNwp: (callback: () => void) => () => void;
         onExportMarkdown: (callback: () => void) => () => void;
         onExportSppx: (callback: () => void) => () => void;
+      };
+
+      quickCapture?: {
+        markReady: () => void;
+        onRequested: (callback: () => void) => () => void;
       };
 
       license?: {
@@ -504,6 +515,7 @@ declare global {
         getCommands: () => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
         getCommandsByCategory: (category: string) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
         loadKeybindings: () => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
+        getGlobalShortcutStatuses: () => Promise<{ success: boolean; data?: GlobalShortcutStatusPayload[]; error?: string }>;
         saveKeybindings: (keybindings: ShortcutsKeybindingPayload[]) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
         addKeybinding: (payload: { commandId: string; key: string; when?: string | null }) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
         removeKeybinding: (payload: { commandId: string; key: string }) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
