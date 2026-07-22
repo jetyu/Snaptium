@@ -9,22 +9,37 @@ import {
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
-import { getAllCommands } from '../constants/commands.constants.js';
+import { COMMANDS, COMMAND_SCOPES, getAllCommands } from '../constants/commands.constants.js';
 import { $t } from '../utils/i18n.js';
 import { loggerService } from './logger.service.js';
 import { getErrorCode, getErrorMessage } from '../services/error.service.js';
 
 const logger = loggerService.createLogger('Electron:Shortcuts Service');
 
-interface ShortcutKeybinding {
+const KEYBINDINGS_CONFIG_VERSION = '1.1.0';
+
+export interface ShortcutKeybinding {
   commandId: string;
   key: string;
   when: string | null;
 }
 
 interface ImportedKeybindingConfig {
+  version?: string;
   keybindings: ShortcutKeybinding[];
 }
+
+export interface GlobalShortcutStatus {
+  commandId: string;
+  registeredAccelerators: string[];
+  failedAccelerators: string[];
+}
+
+type GlobalCommandHandler = (commandId: string) => void;
+
+let globalCommandHandler: GlobalCommandHandler | null = null;
+const registeredGlobalAccelerators = new Set<string>();
+let globalShortcutStatuses: GlobalShortcutStatus[] = [];
 
 function getFocusedWindow(): BrowserWindow | null {
   return BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
@@ -61,8 +76,17 @@ export const shortcutsService = {
     const filePath = this.getShortcutsPath();
     try {
       const content = await fs.readFile(filePath, 'utf-8');
-      const parsed = JSON.parse(content) as { keybindings?: ShortcutKeybinding[] };
-      return parsed.keybindings || this.getDefaultKeybindings();
+      const parsed = JSON.parse(content) as { version?: string; keybindings?: ShortcutKeybinding[] };
+      const keybindings = parsed.keybindings || this.getDefaultKeybindings();
+      if (
+        parsed.version !== KEYBINDINGS_CONFIG_VERSION
+        && !keybindings.some(keybinding => keybinding.commandId === COMMANDS.APP_QUICK_CAPTURE.id)
+      ) {
+        const quickCaptureDefault = this.getDefaultKeybindings()
+          .find(keybinding => keybinding.commandId === COMMANDS.APP_QUICK_CAPTURE.id);
+        return quickCaptureDefault ? [...keybindings, quickCaptureDefault] : keybindings;
+      }
+      return keybindings;
     } catch (error: unknown) {
       if (getErrorCode(error) !== 'ENOENT') {
         logger.error('Failed to load keybindings', { error: getErrorMessage(error) });
@@ -76,10 +100,11 @@ export const shortcutsService = {
     try {
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       const config = {
-        version: '1.0.0',
+        version: KEYBINDINGS_CONFIG_VERSION,
         keybindings,
       };
       await fs.writeFile(filePath, JSON.stringify(config, null, 2), 'utf-8');
+      await this.refreshGlobalShortcuts(keybindings);
       return keybindings;
     } catch (error: unknown) {
       logger.error('Failed to save keybindings', { error: getErrorMessage(error) });
@@ -214,6 +239,72 @@ export const shortcutsService = {
     globalShortcut.unregisterAll();
   },
 
+  setGlobalCommandHandler(handler: GlobalCommandHandler): void {
+    globalCommandHandler = handler;
+  },
+
+  async refreshGlobalShortcuts(keybindings?: ShortcutKeybinding[]): Promise<GlobalShortcutStatus[]> {
+    for (const accelerator of registeredGlobalAccelerators) {
+      this.unregisterGlobalShortcut(accelerator);
+    }
+    registeredGlobalAccelerators.clear();
+
+    const currentKeybindings = keybindings ?? await this.loadKeybindings();
+    const globalCommands = getAllCommands().filter(command => command.scope === COMMAND_SCOPES.GLOBAL);
+    const nextStatuses: GlobalShortcutStatus[] = [];
+
+    for (const command of globalCommands) {
+      const registeredAccelerators: string[] = [];
+      const failedAccelerators: string[] = [];
+      const accelerators = Array.from(new Set(
+        currentKeybindings
+          .filter(keybinding => keybinding.commandId === command.id)
+          .map(keybinding => this.normalizeKeybinding(keybinding.key))
+          .filter(accelerator => accelerator.length > 0)
+      ));
+
+      for (const accelerator of accelerators) {
+        const registered = this.validateKeybinding(accelerator)
+          && this.registerGlobalShortcut(accelerator, () => {
+            globalCommandHandler?.(command.id);
+          });
+
+        if (registered) {
+          registeredGlobalAccelerators.add(accelerator);
+          registeredAccelerators.push(accelerator);
+        } else {
+          failedAccelerators.push(accelerator);
+        }
+      }
+
+      nextStatuses.push({
+        commandId: command.id,
+        registeredAccelerators,
+        failedAccelerators,
+      });
+    }
+
+    globalShortcutStatuses = nextStatuses;
+    return this.getGlobalShortcutStatuses();
+  },
+
+  getGlobalShortcutStatuses(): GlobalShortcutStatus[] {
+    return globalShortcutStatuses.map(status => ({
+      commandId: status.commandId,
+      registeredAccelerators: [...status.registeredAccelerators],
+      failedAccelerators: [...status.failedAccelerators],
+    }));
+  },
+
+  destroyGlobalShortcuts(): void {
+    for (const accelerator of registeredGlobalAccelerators) {
+      this.unregisterGlobalShortcut(accelerator);
+    }
+    registeredGlobalAccelerators.clear();
+    globalShortcutStatuses = [];
+    globalCommandHandler = null;
+  },
+
   async getKeybindingsForCommand(commandId: string): Promise<ShortcutKeybinding[]> {
     const keybindings = await this.loadKeybindings();
     return keybindings.filter((kb: ShortcutKeybinding) => kb.commandId === commandId);
@@ -222,7 +313,7 @@ export const shortcutsService = {
   async exportKeybindings(): Promise<{ version: string; exportDate: string; keybindings: ShortcutKeybinding[] }> {
     const keybindings = await this.loadKeybindings();
     return {
-      version: '1.0.0',
+      version: KEYBINDINGS_CONFIG_VERSION,
       exportDate: new Date().toISOString(),
       keybindings,
     };
@@ -241,6 +332,15 @@ export const shortcutsService = {
       }
     }
 
-    return await this.saveKeybindings(config.keybindings);
+    const keybindings = config.version === KEYBINDINGS_CONFIG_VERSION
+      || config.keybindings.some(keybinding => keybinding.commandId === COMMANDS.APP_QUICK_CAPTURE.id)
+      ? config.keybindings
+      : [
+          ...config.keybindings,
+          ...this.getDefaultKeybindings()
+            .filter(keybinding => keybinding.commandId === COMMANDS.APP_QUICK_CAPTURE.id),
+        ];
+
+    return await this.saveKeybindings(keybindings);
   },
 };

@@ -57,6 +57,17 @@ export function registerShortcutsHandlers() {
     }
   });
 
+  ipcMain.handle(IPC_CHANNELS.SHORTCUTS_GET_GLOBAL_STATUS, async () => {
+    try {
+      return {
+        success: true,
+        data: shortcutsService.getGlobalShortcutStatuses(),
+      };
+    } catch (error) {
+      return logIpcError('Failed to get global shortcut status', error);
+    }
+  });
+
   ipcMain.handle(IPC_CHANNELS.SHORTCUTS_SAVE_KEYBINDINGS, async (_event, keybindings) => {
     try {
       const saved = await shortcutsService.saveKeybindings(keybindings);

@@ -5,6 +5,7 @@ export type SearchMode = 'semantic';
 
 export interface OpenSearchViewOptions {
   query?: string;
+  threadId?: string;
   mode?: SearchMode;
   run?: boolean;
 }
@@ -12,6 +13,7 @@ export interface OpenSearchViewOptions {
 export interface SearchViewRequest {
   id: number;
   query: string;
+  threadId?: string;
   mode: SearchMode;
   run: boolean;
 }
@@ -43,6 +45,7 @@ export function useSearch() {
     searchViewRequest.value = {
       id: searchViewRequest.value.id + 1,
       query,
+      threadId: options.threadId?.trim() || undefined,
       mode: options.mode ?? 'semantic',
       run: options.run ?? Boolean(query.trim()),
     };

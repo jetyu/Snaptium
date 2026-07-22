@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="settings-panel">
     <aside class="settings-panel__sidebar">
       <header class="settings-panel__sidebar-header">
@@ -63,7 +63,7 @@ import PreviewSettings from './tabs/PreviewSettings.vue';
 import EditorSettings from './tabs/EditorSettings.vue';
 import AISourceSettings from './tabs/AISourceSettings.vue';
 import AIAssistantSettings from './tabs/AIAssistantSettings.vue';
-import KnowledgeAgentSettings from './tabs/KnowledgeAgentSettings.vue';
+import KnowledgeCopilotSettings from './tabs/KnowledgeCopilotSettings.vue';
 import LogSettings from './tabs/LogSettings.vue';
 import ShortcutSettings from './tabs/ShortcutSettings.vue';
 import AdvancedOptionsSettings from './tabs/AdvancedOptionsSettings.vue';
@@ -93,7 +93,7 @@ const baseTabs: TabItem[] = [
   { id: 'sep-2', type: 'separator' },
   { id: 'ai-sources', labelKey: 'pref.pane.aiSources', icon: IconAdjustmentsSpark, component: AISourceSettings },
   { id: 'ai-assistant', labelKey: 'pref.pane.aiAssistant', icon: IconImageGeneration, component: AIAssistantSettings },
-  { id: 'knowledge-agent', labelKey: 'pref.pane.knowledgeAgent', icon: IconSubtitlesAi, component: KnowledgeAgentSettings },
+  { id: 'knowledge-copilot', labelKey: 'pref.pane.knowledgeCopilot', icon: IconSubtitlesAi, component: KnowledgeCopilotSettings },
   { id: 'sep-3', type: 'separator' },
   { id: 'noteStorage', labelKey: 'pref.pane.noteStorage', icon: IconSettings2, component: AdvancedOptionsSettings },
   { id: 'sep-4', type: 'separator' },

@@ -8,7 +8,7 @@ import { registerWorkspaceMenuIpcHandlers } from './modules/workspace-menu.js';
 import { registerEditorMenuIpcHandlers } from './modules/editor-menu.js';
 import { registerSearchIpcHandlers } from './modules/search.js';
 import { registerShortcutsHandlers } from './modules/shortcuts.js';
-import { registerKnowledgeAgentHandlers } from './modules/knowledge-agent.js';
+import { registerKnowledgeCopilotHandlers } from './modules/knowledge-copilot.js';
 import { registerAIChatHandlers } from './modules/ai-chat.js';
 import { registerSyncHandlers } from './modules/sync.js';
 import { registerUpdaterHandlers } from './modules/updater.js';
@@ -30,7 +30,7 @@ export function registerIpcHandlers(mainWindow: BrowserWindow): void {
   registerEditorMenuIpcHandlers(mainWindow);
   registerSearchIpcHandlers();
   registerShortcutsHandlers();
-  registerKnowledgeAgentHandlers();
+  registerKnowledgeCopilotHandlers();
   registerAIChatHandlers();
   registerSyncHandlers();
   registerUpdaterHandlers();

@@ -22,7 +22,7 @@ import { useEditorSettings } from '@renderer/features/settings/composables/useEd
 import { useGeneralSettings } from '@renderer/features/settings/composables/useGeneralSettings';
 import { useShortcutsStore } from '@renderer/features/shortcuts';
 import { useCommandRegistration } from '@renderer/features/shortcuts/composables/useCommandRegistration';
-import { useKnowledgeAgentInitialization } from '@renderer/features/knowledge-agent';
+import { useKnowledgeCopilotInitialization } from '@renderer/features/knowledge-copilot';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { HistoryDialog, NotePropertiesDialog } from '@renderer/features/workspace';
 import { useSyncLifecycle } from '@renderer/features/sync';
@@ -33,6 +33,7 @@ import { electronApi } from '@renderer/core/bridge/electronApi';
 import { useUpdaterStore } from '@renderer/features/updater';
 import { licenseService } from '@renderer/features/license/services/license.service';
 import { useAppShellStore } from './store/appShell.store';
+import { useQuickCapture } from '@renderer/features/quick-capture';
 
 const settingsStore = useSettingsStore();
 const appShellStore = useAppShellStore();
@@ -41,12 +42,14 @@ const workspaceStore = useWorkspaceStore();
 const favoritesStore = useFavoritesStore();
 const updaterStore = useUpdaterStore();
 const { initMainProcessListeners } = useLicenseDialog();
-const { initializeKnowledgeAgent, setupAutoIndexOnSave } = useKnowledgeAgentInitialization();
+const { initializeKnowledgeCopilot, setupVfsAutoIndex } = useKnowledgeCopilotInitialization();
 const { initializeSync, setupAutoSync } = useSyncLifecycle();
+const quickCapture = useQuickCapture();
 
 useEditorSettings();
 useGeneralSettings();
 useCommandRegistration();
+quickCapture.start();
 
 // 原生菜单（macOS/Windows）的监听器清理函数
 const unsubscribers: Array<(() => void)> = [];
@@ -64,15 +67,16 @@ onMounted(async () => {
   
   // 等待工作区初始化完成
   await workspaceStore.initializeWorkspace();
+  quickCapture.markApplicationReady();
   await favoritesStore.initialize(true);
 
   await initializeSync();
   
-  // Initialize knowledge-agent service.
-  await initializeKnowledgeAgent();
+  // Initialize knowledge-copilot service.
+  await initializeKnowledgeCopilot();
   
   // 设置保存时自动索引
-  setupAutoIndexOnSave();
+  setupVfsAutoIndex();
   setupAutoSync();
 
   // 注册原生菜单监听（顶部菜单栏触发）
@@ -118,6 +122,7 @@ onMounted(async () => {
 onUnmounted(() => {
   updaterStore.dispose();
   licenseService.dispose();
+  quickCapture.dispose();
   unsubscribers.forEach((unsub) => unsub());
 });
 </script>
