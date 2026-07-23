@@ -477,7 +477,6 @@
   "noteProperties.updatedAt": "Last Modified",
   "noteProperties.wordCount": "Word Count",
   "noteProperties.workspace": "Workspace",
-  "option.aiModel.selectDiscovered": "Select from discovered models",
   "option.aiWritingMode.aggressive": "Enhanced",
   "option.aiWritingMode.focus": "Focus",
   "option.aiWritingMode.standard": "Standard",

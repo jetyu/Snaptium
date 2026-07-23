@@ -477,7 +477,6 @@
   "noteProperties.updatedAt": "最近修改",
   "noteProperties.wordCount": "字数",
   "noteProperties.workspace": "工作区",
-  "option.aiModel.selectDiscovered": "选择已同步的模型",
   "option.aiWritingMode.aggressive": "增强",
   "option.aiWritingMode.focus": "专注",
   "option.aiWritingMode.standard": "标准",
