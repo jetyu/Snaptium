@@ -6,6 +6,7 @@ This update improves details and the user experience.
 * Added a quick note-taking feature, allowing notes to be created rapidly via keyboard shortcuts or the system tray.
 #### Improvements
 * Improved the recommendation experience on the workspace dashboard.
+* Improved the experience of the cloud sync feature.
 #### Fixes
 * Fixed display issues with AI service configuration in dark mode.
 
