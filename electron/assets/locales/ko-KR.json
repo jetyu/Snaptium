@@ -477,6 +477,7 @@
   "noteProperties.updatedAt": "최근 수정됨",
   "noteProperties.wordCount": "단어 수",
   "noteProperties.workspace": "작업 공간",
+  "option.aiModel.selectDiscovered": "选择已同步的模型",
   "option.aiWritingMode.aggressive": "향상시키다",
   "option.aiWritingMode.focus": "집중하다",
   "option.aiWritingMode.standard": "기준",
