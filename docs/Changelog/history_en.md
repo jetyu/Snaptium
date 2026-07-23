@@ -1,5 +1,5 @@
 ### v2.2.0 - 2026-08-01
-This update optimizes details and the user experience.
+This update improves details and the user experience.
 #### New
 * Upgraded the Knowledge Base to a Knowledge Copilot, featuring long-conversation memory, smarter Agent capabilities, and an improved Q&A experience.
 * Fully upgraded AI provider configuration, supporting easier multi-model management and custom API integration.
