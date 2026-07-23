@@ -9,6 +9,7 @@ This update improves details and the user experience.
 * Improved the experience of the cloud sync feature.
 #### Fixes
 * Fixed display issues with AI service configuration in dark mode.
+* Fixed security vulnerabilities.
 
 ### v2.1.2 - 2026-07-20
 This update improves details and the user experience.
