@@ -52,25 +52,41 @@ export const AI_PROVIDER_CAPABILITIES = {
 
 const AI_PROVIDER_SET = new Set<string>(Object.values(AI_PROVIDERS));
 
+const AI_PROVIDER_BY_HOSTNAME = new Map<string, AiProvider>([
+  ['api.snaptium.com', AI_PROVIDERS.SNAPTIUM],
+  ['api.siliconflow.cn', AI_PROVIDERS.SILICONFLOW],
+  ['api.openai.com', AI_PROVIDERS.OPENAI],
+  ['generativelanguage.googleapis.com', AI_PROVIDERS.GOOGLE_GEMINI],
+  ['openrouter.ai', AI_PROVIDERS.OPENROUTER],
+  ['api.deepseek.com', AI_PROVIDERS.DEEPSEEK],
+  ['dashscope.aliyuncs.com', AI_PROVIDERS.QWEN],
+  ['maas.aliyuncs.com', AI_PROVIDERS.QWEN],
+  ['ark.cn-beijing.volces.com', AI_PROVIDERS.DOUBAO],
+  ['api.moonshot.ai', AI_PROVIDERS.KIMI],
+  ['open.bigmodel.cn', AI_PROVIDERS.ZHIPU],
+  ['api.x.ai', AI_PROVIDERS.GROK],
+]);
+
 export function isAiProvider(value: unknown): value is AiProvider {
   return typeof value === 'string' && AI_PROVIDER_SET.has(value);
 }
 
 export function inferAiProvider(baseUrl: string): AiProvider {
-  const normalized = baseUrl.trim().toLowerCase();
-  if (normalized.includes('api.snaptium.com')) return AI_PROVIDERS.SNAPTIUM;
-  if (normalized.includes('api.siliconflow.cn')) return AI_PROVIDERS.SILICONFLOW;
-  if (normalized.includes('api.openai.com')) return AI_PROVIDERS.OPENAI;
-  if (normalized.includes('generativelanguage.googleapis.com')) return AI_PROVIDERS.GOOGLE_GEMINI;
-  if (normalized.includes('openrouter.ai')) return AI_PROVIDERS.OPENROUTER;
-  if (normalized.includes('api.deepseek.com')) return AI_PROVIDERS.DEEPSEEK;
-  if (normalized.includes('dashscope.aliyuncs.com') || normalized.includes('maas.aliyuncs.com')) return AI_PROVIDERS.QWEN;
-  if (normalized.includes('ark.cn-beijing.volces.com')) return AI_PROVIDERS.DOUBAO;
-  if (normalized.includes('api.moonshot.ai')) return AI_PROVIDERS.KIMI;
-  if (normalized.includes('open.bigmodel.cn')) return AI_PROVIDERS.ZHIPU;
-  if (normalized.includes('api.x.ai')) return AI_PROVIDERS.GROK;
-  if (normalized.includes('localhost:11434') || normalized.includes('127.0.0.1:11434')) return AI_PROVIDERS.OLLAMA;
-  return AI_PROVIDERS.OPENAI_COMPATIBLE;
+  try {
+    const parsedUrl = new URL(baseUrl.trim());
+    if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+      return AI_PROVIDERS.OPENAI_COMPATIBLE;
+    }
+
+    const hostname = parsedUrl.hostname.toLowerCase();
+    if ((hostname === 'localhost' || hostname === '127.0.0.1') && parsedUrl.port === '11434') {
+      return AI_PROVIDERS.OLLAMA;
+    }
+
+    return AI_PROVIDER_BY_HOSTNAME.get(hostname) ?? AI_PROVIDERS.OPENAI_COMPATIBLE;
+  } catch {
+    return AI_PROVIDERS.OPENAI_COMPATIBLE;
+  }
 }
 
 export function getAiProviderCapabilities(provider: AiProvider): AiCapability[] {
