@@ -1,8 +1,13 @@
 ### v2.2.0 - 2026-08-01
-This update improves details and the user experience.
+This update optimizes details and the user experience.
 #### New
-* Upgraded the knowledge base to a knowledge assistant, supporting long conversation memory, more intelligent Agent capabilities, and an improved knowledge Q&A experience.
-* Fully upgraded AI service provider configuration, supporting more convenient multi-model management and custom API integration.
+* Upgraded the Knowledge Base to a Knowledge Copilot, featuring long-conversation memory, smarter Agent capabilities, and an improved Q&A experience.
+* Fully upgraded AI provider configuration, supporting easier multi-model management and custom API integration.
+* Added a quick note-taking feature, allowing notes to be created rapidly via keyboard shortcuts or the system tray.
+#### Improvements
+* Improved the recommendation experience on the workspace dashboard.
+#### Fixes
+* Fixed display issues with AI service configuration in dark mode.
 
 ### v2.1.2 - 2026-07-20
 This update improves details and the user experience.
