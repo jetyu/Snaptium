@@ -244,6 +244,7 @@
   "history.restoreConfirm": "确定要恢复到此版本吗？当前内容将被覆盖",
   "history.restoring": "恢复中...",
   "history.title": "版本历史",
+  "label.ConversationContent": "对话内容",
   "label.aiApiKey": "API 密钥",
   "label.aiAssistant": "智能写作",
   "label.aiAutoContinue": "自动续写",

@@ -42,7 +42,7 @@
 
       <section class="search-view__answer-pane">
         <header class="search-view__pane-header">
-          <h2>{{ $t('label.aiKnowledgeCopilotSearch') }}</h2>
+          <h2>{{ $t('label.ConversationContent') }}</h2>
         </header>
 
         <div ref="messageListRef" class="search-view__chat-scroll">
