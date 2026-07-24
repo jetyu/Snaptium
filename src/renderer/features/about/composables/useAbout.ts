@@ -36,6 +36,21 @@ export function useAbout() {
     }
   };
 
+  const copyDiagnosticInfo = async (): Promise<boolean> => {
+    try {
+      await aboutService.copyDiagnosticInfo({
+        appName: appName.value,
+        appVersion: appVersion.value,
+        envVersion: envVersion.value,
+        distribution: distribution.value,
+      });
+      return true;
+    } catch (error) {
+      aboutLogger.error(`Failed to copy diagnostic info: ${getErrorMessage(error)}`);
+      return false;
+    }
+  };
+
   const initMainProcessListeners = () => {
     return aboutService.onOpenAbout(() => {
       aboutStore.openAbout();
@@ -51,6 +66,7 @@ export function useAbout() {
     openAbout: aboutStore.openAbout,
     closeAbout: aboutStore.closeAbout,
     loadVersionInfo,
+    copyDiagnosticInfo,
     initMainProcessListeners
   };
 }

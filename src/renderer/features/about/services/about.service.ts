@@ -43,6 +43,19 @@ class AboutService {
       distribution,
     };
   }
+
+  async copyDiagnosticInfo(info: AboutInfo): Promise<void> {
+    const diagnosticInfo = [
+      `${info.appName} ${info.appVersion}`,
+      `Distribution: ${info.distribution}`,
+      `Electron: ${info.envVersion.electron}`,
+      `Node.js: ${info.envVersion.node}`,
+      `Chromium: ${info.envVersion.chrome}`,
+      `V8: ${info.envVersion.v8}`,
+    ].join('\n');
+
+    await electronApi.editor.writeClipboard(diagnosticInfo);
+  }
 }
 
 export const aboutService = new AboutService();

@@ -10,16 +10,24 @@ const logger = loggerService.createLogger('Electron:Tray Service');
 class TrayService {
   private tray: Tray | null;
   private mainWindow: BrowserWindow | null;
+  private onQuickCapture: (() => void) | null;
   private lastUpdateNotificationVersion: string | null;
 
   constructor() {
     this.tray = null;
     this.mainWindow = null;
+    this.onQuickCapture = null;
     this.lastUpdateNotificationVersion = null;
   }
 
-  init(mainWindow: BrowserWindow): void {
+  init(mainWindow: BrowserWindow, onQuickCapture: () => void): void {
     this.mainWindow = mainWindow;
+    this.onQuickCapture = onQuickCapture;
+
+    if (this.tray) {
+      this.updateContextMenu();
+      return;
+    }
 
     const iconPath = this.getTrayIconPath();
     const icon = nativeImage.createFromPath(iconPath);
@@ -43,10 +51,7 @@ class TrayService {
         return;
       }
 
-      if (!mainWindow.isVisible()) {
-        mainWindow.show();
-        mainWindow.focus();
-      }
+      this.showAndFocusMainWindow();
     });
     logger.debug('Tray initialized');
   }
@@ -70,17 +75,15 @@ class TrayService {
 
     const contextMenu = Menu.buildFromTemplate([
       {
+        label: $t('tray.quickCapture'),
+        click: () => {
+          this.onQuickCapture?.();
+        }
+      },
+      {
         label: $t('tray.open'),
         click: () => {
-          const mainWindow = this.mainWindow;
-          if (!mainWindow) {
-            return;
-          }
-
-          if (!mainWindow.isVisible()) {
-            mainWindow.show();
-            mainWindow.focus();
-          }
+          this.showAndFocusMainWindow();
         }
       },
       {
@@ -101,6 +104,21 @@ class TrayService {
     this.updateContextMenu();
   }
 
+  private showAndFocusMainWindow(): void {
+    const mainWindow = this.mainWindow;
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      return;
+    }
+
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    }
+    if (!mainWindow.isVisible()) {
+      mainWindow.show();
+    }
+    mainWindow.focus();
+  }
+
   showUpdateNotification(version: string): void {
     if (!this.tray) return;
 
@@ -108,6 +126,8 @@ class TrayService {
     if (!normalizedVersion || normalizedVersion === this.lastUpdateNotificationVersion) {
       return;
     }
+    this.mainWindow = null;
+    this.onQuickCapture = null;
 
     this.lastUpdateNotificationVersion = normalizedVersion;
     this.tray.displayBalloon({

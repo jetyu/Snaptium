@@ -92,6 +92,7 @@ interface WallpaperResult {
 }
 
 interface AiSourceConfig {
+  provider: string;
   aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
@@ -204,6 +205,12 @@ interface ShortcutsKeybindingPayload {
 interface ShortcutsKeybindingsConfigPayload {
   version: string;
   keybindings: ShortcutsKeybindingPayload[];
+}
+
+interface GlobalShortcutStatusPayload {
+  commandId: string;
+  registeredAccelerators: string[];
+  failedAccelerators: string[];
 }
 
 type ShortcutsDataPayload = Array<Record<string, JsonValue>>;
@@ -340,6 +347,11 @@ declare global {
         onExportSppx: (callback: () => void) => () => void;
       };
 
+      quickCapture?: {
+        markReady: () => void;
+        onRequested: (callback: () => void) => () => void;
+      };
+
       license?: {
         getState: () => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
         activate: (licenseKey: string) => Promise<{ success: true; data: import('@shared/license.constants').LicenseState } | LicenseErrorResult>;
@@ -356,8 +368,8 @@ declare global {
         setStartup: (enabled: boolean) => Promise<{ enabled: boolean; supported: boolean }>;
         pickDirectory: () => Promise<string | null>;
         confirmEmbeddingSourceChange: () => Promise<boolean>;
-        confirmKnowledgeAgentChunkRebuild: () => Promise<boolean>;
-        confirmKnowledgeAgentRebuildMode: () => Promise<'incremental' | 'full' | 'cancel'>;
+        confirmKnowledgeCopilotChunkRebuild: () => Promise<boolean>;
+        confirmKnowledgeCopilotRebuildMode: () => Promise<'incremental' | 'full' | 'cancel'>;
         confirmDeleteAiSource: (name: string) => Promise<boolean>;
         confirmResetSyncProvider: (name: string) => Promise<boolean>;
         showMessage: (options: {
@@ -441,6 +453,10 @@ declare global {
 
       aiSource?: {
         testConnection: (config: AiSourceConfig) => Promise<{ success: boolean; message?: string }>;
+        validateToolCalling: (config: { provider: string; baseUrl: string; apiKey: string; model: string }) => Promise<{
+          success: boolean;
+          message?: string;
+        }>;
       };
 
       sync?: {
@@ -499,6 +515,7 @@ declare global {
         getCommands: () => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
         getCommandsByCategory: (category: string) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
         loadKeybindings: () => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
+        getGlobalShortcutStatuses: () => Promise<{ success: boolean; data?: GlobalShortcutStatusPayload[]; error?: string }>;
         saveKeybindings: (keybindings: ShortcutsKeybindingPayload[]) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
         addKeybinding: (payload: { commandId: string; key: string; when?: string | null }) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
         removeKeybinding: (payload: { commandId: string; key: string }) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
@@ -512,7 +529,7 @@ declare global {
         importKeybindings: (config: ShortcutsKeybindingsConfigPayload) => Promise<{ success: boolean; data?: ShortcutsDataPayload; error?: string }>;
       };
 
-      knowledgeAgent?: {
+      knowledgeCopilot?: {
         initialize: () => Promise<{ success: boolean; error?: string }>;
         indexNote: (payload: {
           noteId: string;
@@ -521,7 +538,12 @@ declare global {
           chunkSize?: number;
           chunkOverlap?: number;
         }) => Promise<{ success: boolean; chunksIndexed?: number; error?: string }>;
-        answerQuestionStream: (payload: { query: string; requestId: string }) => Promise<{
+        answerQuestionStream: (payload: {
+          query: string;
+          requestId: string;
+          conversationId?: string;
+          context?: import('@shared/knowledge-copilot.constants').KnowledgeCopilotConversationContext;
+        }) => Promise<{
           success: boolean;
           answer?: string;
           sources: Array<{
@@ -540,7 +562,7 @@ declare global {
           insufficientEvidence?: boolean;
         }>;
         onAnswerQuestionStreamEvent: (callback: (event: import('@renderer/core/bridge/electronApi').KnowledgeAnswerStreamEvent) => void) => () => void;
-        runTask: (payload: { task: string; writeMode?: 'confirm' | 'auto' }) => Promise<{
+        runTask: (payload: import('@renderer/core/bridge/electronApi').KnowledgeCopilotRunTaskPayload) => Promise<{
           success: boolean;
           finalAnswer?: string;
           steps: Array<{
@@ -607,6 +629,7 @@ declare global {
           >;
           stopReason?:
             | 'completed'
+            | 'interrupted'
             | 'insufficient-evidence'
             | 'tool-call-limit'
             | 'iteration-limit'
@@ -614,6 +637,8 @@ declare global {
             | 'tool-failure-limit'
             | 'weak-search-limit';
           error?: string;
+          conversationId: string;
+          pendingActions: import('@renderer/core/bridge/electronApi').KnowledgeCopilotPendingAction[];
         }>;
         deleteNoteIndex: (noteId: string) => Promise<{ success: boolean; error?: string }>;
         getStatus: () => Promise<{

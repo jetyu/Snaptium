@@ -25,8 +25,8 @@ export type LicenseStatus = (typeof LICENSE_STATUSES)[keyof typeof LICENSE_STATU
 export const LICENSE_FEATURES = {
   AI_SOURCES: 'aiSources',
   AI_ASSISTANT: 'aiAssistant',
-  // Server entitlement remains "rag" for existing licenses; code-facing APIs use knowledge-agent.
-  KNOWLEDGE_AGENT: 'rag',
+  // Server entitlement remains "rag" for existing licenses; code-facing APIs use knowledge-copilot.
+  KNOWLEDGE_COPILOT: 'rag',
   SYNC: 'sync',
 } as const satisfies Record<string, string>;
 

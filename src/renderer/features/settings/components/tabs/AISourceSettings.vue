@@ -19,11 +19,13 @@
           <div class="source-info">
             <div class="source-header">
               <div class="source-identity">
-                <span v-if="isOfficialSource(source)" class="official-source-mark"
-                  :title="t('text.officialInnerAiSource')">
-                  <IconTextScanAi :size="16" />
-                </span>
-                <h4 class="source-title">{{ source.name }}</h4>
+                <img v-if="getAiProviderPresentation(source.provider).logoUrl"
+                  :src="getAiProviderPresentation(source.provider).logoUrl" alt="" aria-hidden="true"
+                  class="provider-logo source-provider-logo" />
+                <div class="source-heading-copy">
+                  <h4 class="source-title">{{ source.name }}</h4>
+                  <span class="source-provider">{{ getAiProviderLabel(source.provider) }}</span>
+                </div>
               </div>
               <div class="settings-card-actions">
                 <span v-if="isLockedSource(source)" class="source-lock-badge" :title="t('text.officialInnerAiSource')">
@@ -50,10 +52,6 @@
               <div class="detail-item">
                 <span class="label">{{ t('label.aiModel') }}</span>
                 <span class="value" :title="source.aiModel">{{ source.aiModel }}</span>
-              </div>
-              <div v-if="!isOfficialSource(source)" class="detail-item">
-                <span class="label">{{ t('label.aiApiKey') }}</span>
-                <span class="value">••••••••••••••••••••••••••</span>
               </div>
               <div class="detail-item">
                 <span class="label">{{ t('label.aiCapabilities') }}</span>
@@ -82,6 +80,31 @@
             <input v-model="newSource.name" type="text" class="settings-input" maxlength="20"
               :placeholder="t('placeholder.sourceName')" :disabled="isLicenseLocked" />
           </div>
+          <div class="source-form-group">
+            <label class="setting-label">{{ t('label.aiProvider') }}</label>
+            <div ref="providerSelectRef" class="provider-select-row">
+              <button ref="providerSelectButtonRef" type="button" class="provider-select-trigger"
+                :disabled="isLicenseLocked" :aria-expanded="isProviderMenuOpen"
+                :aria-label="`${t('label.aiProvider')}: ${getAiProviderLabel(newSource.provider)}`"
+                @click="toggleProviderMenu" @keydown.esc.prevent="closeProviderMenu(true)">
+                <img v-if="getAiProviderPresentation(newSource.provider).logoUrl"
+                  :src="getAiProviderPresentation(newSource.provider).logoUrl" alt="" aria-hidden="true"
+                  class="provider-logo" />
+                <span>{{ getAiProviderLabel(newSource.provider) }}</span>
+                <IconChevronDown :size="16" class="provider-select-chevron" />
+              </button>
+              <div v-if="isProviderMenuOpen" class="provider-select-menu" @keydown.esc.prevent="closeProviderMenu(true)">
+                <button v-for="provider in selectableProviders" :key="provider" type="button" class="provider-select-option"
+                  :class="{ active: newSource.provider === provider }" :aria-pressed="newSource.provider === provider"
+                  @click="handleProviderMenuSelect(provider)">
+                  <img v-if="getAiProviderPresentation(provider).logoUrl"
+                    :src="getAiProviderPresentation(provider).logoUrl" alt="" aria-hidden="true" class="provider-logo" />
+                  <span :title="getAiProviderLabel(provider)">{{ getAiProviderLabel(provider) }}</span>
+                  <IconCheck v-if="newSource.provider === provider" :size="15" class="provider-select-check" />
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div class="source-form-group">
             <label class="setting-label">{{ t('label.aiBaseUrl') }} <span class="required-mark">{{ t('label.starSign')
@@ -92,11 +115,11 @@
           <div class="source-form-group">
             <label class="setting-label">{{ t('label.aiModel') }} <span class="required-mark">{{ t('label.starSign')
             }}</span></label>
-            <input v-model="newSource.aiModel" type="text" class="settings-input" :placeholder="t('placeholder.aiModel')"
-              :disabled="isLicenseLocked" />
+            <input v-model="newSource.aiModel" type="text" class="settings-input"
+              :placeholder="t('placeholder.aiModel')" :disabled="isLicenseLocked" />
           </div>
           <div class="source-form-group">
-            <label class="setting-label">{{ t('label.aiApiKey') }} <span class="required-mark">{{ t('label.starSign')
+            <label class="setting-label">{{ t('label.aiApiKey') }} <span v-if="requiresApiKey" class="required-mark">{{ t('label.starSign')
             }}</span></label>
             <PasswordInput v-model="newSource.apiKey" :placeholder="t('placeholder.aiAPIKey')" autocomplete="off"
               :disabled="isLicenseLocked" />
@@ -181,21 +204,24 @@
 
 
 <script setup lang="ts">
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, onBeforeUnmount, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '../../store/settings.store';
 import type { AISource } from '../../store/settings.store';
+import { AI_PROVIDER_DEFAULT_BASE_URLS, AI_PROVIDERS, getAiProviderCapabilities, type AiProvider } from '@shared/ai-provider.constants';
+import { getAiProviderPresentation, SELECTABLE_AI_PROVIDERS } from '../../config/ai-providers';
 import { settingsService } from '../../services/settings.service';
 import { systemDialog } from '../../services/system-dialog.service';
 import { createLogger } from '../../../logger';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { isOfficialAiSourceId } from '@shared/official-ai.constants';
-import { IconPlus, IconBulb, IconTrash, IconPencil, IconSparkles , IconTextScanAi } from '@tabler/icons-vue';
+import { IconPlus, IconBulb, IconTrash, IconPencil, IconSparkles, IconChevronDown, IconCheck } from '@tabler/icons-vue';
 import { LicenseGateNotice, useLicenseGate } from '@renderer/features/license';
 import siliconFlowLogoUrl from '@assets/images/siliconflow.png';
 import PasswordInput from '../PasswordInput.vue';
 
 const { t } = useI18n();
+const getAiProviderLabel = (provider: AiProvider): string => t(getAiProviderPresentation(provider).labelKey);
 const settingsStore = useSettingsStore();
 const aisLogger = createLogger('AISettings');
 const aiSourceLicenseGate = useLicenseGate('aiSources');
@@ -206,6 +232,9 @@ const showAddForm = ref(false);
 const isAdding = ref(false);
 const isTesting = ref(false);
 const editingSourceId = ref<string | null>(null);
+const isProviderMenuOpen = ref(false);
+const providerSelectRef = ref<HTMLElement | null>(null);
+const providerSelectButtonRef = ref<HTMLButtonElement | null>(null);
 const isLicenseLocked = computed(() => !aiSourceLicenseGate.allowed.value);
 
 const isEditMode = computed(() => !!editingSourceId.value);
@@ -234,13 +263,23 @@ const getOfficialModelDescriptionKey = (source: AISource): string => {
   return 'text.officialAiChatDescription';
 };
 
-const newSource = reactive({
+const newSource = reactive<{
+  provider: AiProvider;
+  name: string;
+  baseUrl: string;
+  apiKey: string;
+  aiModel: string;
+  capabilities: string[];
+}>({
+  provider: AI_PROVIDERS.SILICONFLOW,
   name: '',
-  baseUrl: '',
+  baseUrl: AI_PROVIDER_DEFAULT_BASE_URLS[AI_PROVIDERS.SILICONFLOW],
   apiKey: '',
   aiModel: '',
   capabilities: ['embedding', 'chat', 'reranker'],
 });
+const selectableProviders = SELECTABLE_AI_PROVIDERS;
+const requiresApiKey = computed(() => newSource.provider !== AI_PROVIDERS.OLLAMA);
 
 const capabilityOptions = [
   { value: 'embedding', labelKey: 'label.aiCapabilityEmbedding' },
@@ -254,7 +293,7 @@ const canTest = computed(() => {
     newSource.name.trim() &&
     newSource.baseUrl.trim() &&
     newSource.aiModel.trim() &&
-    newSource.apiKey.trim()
+    (!requiresApiKey.value || newSource.apiKey.trim())
   );
 });
 
@@ -297,6 +336,7 @@ const handleAddSource = async () => {
 
   try {
     const payload = {
+      provider: newSource.provider,
       name: newSource.name,
       baseUrl: newSource.baseUrl,
       apiKey: newSource.apiKey,
@@ -337,6 +377,7 @@ const handleEditSource = (source: AISource) => {
   }
 
   editingSourceId.value = source.id;
+  newSource.provider = source.provider;
   newSource.name = source.name;
   newSource.baseUrl = source.baseUrl;
   newSource.apiKey = source.apiKey;
@@ -346,15 +387,62 @@ const handleEditSource = (source: AISource) => {
 };
 
 const resetForm = () => {
+  newSource.provider = AI_PROVIDERS.SILICONFLOW;
   newSource.name = '';
-  newSource.baseUrl = '';
+  newSource.baseUrl = AI_PROVIDER_DEFAULT_BASE_URLS[AI_PROVIDERS.SILICONFLOW];
   newSource.apiKey = '';
   newSource.aiModel = '';
   newSource.capabilities = ['embedding', 'chat', 'reranker'];
   editingSourceId.value = null;
 };
 
+const handleProviderSelect = (provider: AiProvider): void => {
+  newSource.provider = provider;
+  newSource.baseUrl = AI_PROVIDER_DEFAULT_BASE_URLS[provider];
+  newSource.capabilities = getAiProviderCapabilities(provider);
+  if (!newSource.name.trim()) {
+    newSource.name = getAiProviderLabel(provider);
+  }
+  newSource.aiModel = '';
+};
+
+const closeProviderMenu = (restoreFocus = false): void => {
+  isProviderMenuOpen.value = false;
+  if (restoreFocus) {
+    providerSelectButtonRef.value?.focus();
+  }
+};
+
+const toggleProviderMenu = (): void => {
+  if (isLicenseLocked.value) {
+    return;
+  }
+
+  isProviderMenuOpen.value = !isProviderMenuOpen.value;
+};
+
+const handleProviderMenuSelect = (provider: AiProvider): void => {
+  handleProviderSelect(provider);
+  closeProviderMenu();
+};
+
+const handleDocumentClick = (event: MouseEvent): void => {
+  const target = event.target;
+  if (target instanceof Node && !providerSelectRef.value?.contains(target)) {
+    closeProviderMenu();
+  }
+};
+
+onMounted(() => {
+  document.addEventListener('click', handleDocumentClick);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', handleDocumentClick);
+});
+
 const handleCancelAdd = () => {
+  closeProviderMenu();
   resetForm();
   showAddForm.value = false;
 };
@@ -371,6 +459,7 @@ const handleTestNewSource = async () => {
 
   try {
     const result = await settingsStore.testConnection({
+      provider: newSource.provider,
       aiBaseUrl: newSource.baseUrl,
       aiApiKey: newSource.apiKey,
       aiModel: newSource.aiModel,
@@ -445,6 +534,119 @@ const formatCapabilities = (capabilities: string[]): string => {
 </script>
 
 <style scoped>
+.provider-select-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.provider-select-trigger {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: var(--settings-control-height, 32px);
+  gap: 10px;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid var(--input-border);
+  border-radius: var(--radius-sm);
+  background: var(--input-bg);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 0.86rem;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.provider-select-trigger:hover:not(:disabled),
+.provider-select-trigger:focus-visible {
+  border-color: var(--input-border-focus);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+  outline: none;
+}
+
+.provider-select-trigger:disabled {
+  cursor: not-allowed;
+  opacity: 0.62;
+}
+
+.provider-select-chevron {
+  margin-left: auto;
+  color: var(--text-secondary);
+}
+
+.provider-select-menu {
+  position: absolute;
+  z-index: 12;
+  top: calc(100% + 6px);
+  left: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: max(100%, 340px);
+  max-height: 320px;
+  overflow-y: auto;
+  gap: 4px;
+  padding: 6px;
+  border: 1px solid var(--settings-card-border, var(--border-muted));
+  border-radius: 10px;
+  background: var(--panel, #ffffff);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+}
+
+.provider-select-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 36px;
+  padding: 5px 7px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.provider-select-option span {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.76rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.provider-select-check {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--accent);
+}
+
+.provider-select-option:hover,
+.provider-select-option:focus-visible,
+.provider-select-option.active {
+  border-color: color-mix(in srgb, var(--accent) 26%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
+  outline: none;
+}
+
+.provider-logo {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+}
+
+.provider-logo {
+  box-sizing: border-box;
+  padding: 2px;
+  border-radius: 5px;
+  background: #fff;
+  object-fit: contain;
+}
+
 .header-actions {
   display: flex;
   justify-content: space-between;
@@ -482,7 +684,7 @@ const formatCapabilities = (capabilities: string[]): string => {
 
 .add-form-card {
   grid-column: 1 / -1;
-  background: var(--bg-secondary, #f8f9fa);
+  background: var(--surface-raised);
   padding: 20px;
   border-radius: 12px;
   border: 1px solid var(--border-color, #e0e0e0);
@@ -685,6 +887,48 @@ const formatCapabilities = (capabilities: string[]): string => {
   min-width: 0;
 }
 
+.source-provider-logo {
+  width: 24px;
+  height: 24px;
+}
+
+.source-heading-copy {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.source-provider {
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+}
+
+.provider-picker {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+  gap: 8px;
+}
+
+.provider-option {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 48px;
+  padding: 7px 10px;
+  color: var(--text-primary);
+  text-align: left;
+  border: 1px solid var(--settings-card-border, var(--border-muted));
+  border-radius: 10px;
+  background: var(--surface-subtle, var(--bg-secondary));
+  cursor: pointer;
+}
+
+.provider-option:hover:not(:disabled),
+.provider-option.active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+
 .official-source-mark {
   display: inline-flex;
   align-items: center;
@@ -742,24 +986,20 @@ const formatCapabilities = (capabilities: string[]): string => {
 .source-details {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-}
-
-.official-source-details {
   gap: 0;
   padding-top: 2px;
 }
 
-.official-source-details .detail-item {
+.source-details .detail-item {
   padding: 7px 0;
   border-top: 1px solid var(--border-color);
 }
 
-.official-source-details .detail-item:first-child {
+.source-details .detail-item:first-child {
   border-top: 0;
 }
 
-.official-source-details .detail-item .label {
+.source-details .detail-item .label {
   min-width: 72px;
   justify-content: flex-start;
   padding: 0;
@@ -768,7 +1008,7 @@ const formatCapabilities = (capabilities: string[]): string => {
   color: var(--text-secondary);
 }
 
-.official-source-details .detail-item .value {
+.source-details .detail-item .value {
   color: var(--text-primary);
   font-weight: 600;
 }

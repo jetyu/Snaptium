@@ -51,16 +51,16 @@ export function registerSettingsIpcHandlers() {
   });
 
   /**
-   * Confirm knowledge-agent rebuild mode using the native Electron dialog
+   * Confirm knowledge-copilot rebuild mode using the native Electron dialog
    */
-  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_KNOWLEDGE_AGENT_REBUILD_MODE, async () => {
-    logger.debug('Settings confirm knowledge-agent rebuild mode');
-    return await settingsService.confirmKnowledgeAgentRebuildMode();
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_KNOWLEDGE_COPILOT_REBUILD_MODE, async () => {
+    logger.debug('Settings confirm knowledge-copilot rebuild mode');
+    return await settingsService.confirmKnowledgeCopilotRebuildMode();
   });
 
-  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_KNOWLEDGE_AGENT_CHUNK_REBUILD, async () => {
-    logger.debug('Settings confirm knowledge-agent chunk rebuild');
-    return await settingsService.confirmKnowledgeAgentChunkRebuild();
+  ipcMain.handle(IPC_CHANNELS.SETTINGS_CONFIRM_KNOWLEDGE_COPILOT_CHUNK_REBUILD, async () => {
+    logger.debug('Settings confirm knowledge-copilot chunk rebuild');
+    return await settingsService.confirmKnowledgeCopilotChunkRebuild();
   });
 
   /**

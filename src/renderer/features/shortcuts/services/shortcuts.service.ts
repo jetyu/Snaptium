@@ -1,5 +1,15 @@
-import { electronApi, type JsonValue } from '@renderer/core/bridge/electronApi';
-import type { Command, Keybinding, KeybindingsConfig, KeybindingConflict } from '../store/shortcuts.store';
+import {
+  electronApi,
+  type GlobalShortcutStatusPayload,
+  type JsonValue,
+} from '@renderer/core/bridge/electronApi';
+import type {
+  Command,
+  GlobalShortcutStatus,
+  Keybinding,
+  KeybindingsConfig,
+  KeybindingConflict,
+} from '../store/shortcuts.store';
 
 type ShortcutRecord = Record<string, JsonValue>;
 
@@ -46,6 +56,10 @@ function normalizeCommandCategory(value: JsonValue | undefined): Command['catego
   }
 }
 
+function normalizeCommandScope(value: JsonValue | undefined): Command['scope'] {
+  return value === 'global' ? 'global' : 'renderer';
+}
+
 function normalizeKeybindingRecord(record: ShortcutRecord): Keybinding {
   return {
     commandId: toStringValue(record.commandId),
@@ -58,7 +72,23 @@ function normalizeCommandRecord(record: ShortcutRecord): Command {
   return {
     id: toStringValue(record.id),
     category: normalizeCommandCategory(record.category),
+    scope: normalizeCommandScope(record.scope),
     defaultKeybinding: toOptionalStringValue(record.defaultKeybinding),
+  };
+}
+
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value.filter((item): item is string => typeof item === 'string');
+}
+
+function normalizeGlobalShortcutStatusRecord(record: GlobalShortcutStatusPayload): GlobalShortcutStatus {
+  return {
+    commandId: typeof record.commandId === 'string' ? record.commandId : '',
+    registeredAccelerators: normalizeStringArray(record.registeredAccelerators),
+    failedAccelerators: normalizeStringArray(record.failedAccelerators),
   };
 }
 
@@ -110,6 +140,12 @@ export const shortcutsService = {
   async loadKeybindings(): Promise<Keybinding[]> {
     const result = await electronApi.shortcuts.loadKeybindings();
     return normalizeKeybindings(ensureIpcSuccess(result, 'Failed to load keybindings'));
+  },
+
+  async getGlobalShortcutStatuses(): Promise<GlobalShortcutStatus[]> {
+    const result = await electronApi.shortcuts.getGlobalShortcutStatuses();
+    const statuses = ensureIpcSuccess(result, 'Failed to get global shortcut status');
+    return statuses.map(status => normalizeGlobalShortcutStatusRecord(status));
   },
 
   async saveKeybindings(keybindings: Keybinding[]): Promise<Keybinding[]> {
