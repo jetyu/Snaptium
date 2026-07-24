@@ -7,7 +7,12 @@
         <h4 class="category-title">{{ t(`shortcuts.category.${category}`) }}</h4>
         <div class="shortcuts-list">
           <div v-for="command in cmds" :key="command.id" class="shortcut-row">
-            <span class="command-name">{{ t(`commands.${command.id}`) }}</span>
+            <div class="command-meta">
+              <span class="command-name">{{ t(`commands.${command.id}`) }}</span>
+              <p v-if="getFailedAccelerators(command.id).length > 0" class="registration-warning">
+                {{ t('shortcuts.globalRegistrationFailed', { keys: getFailedAccelerators(command.id).join(', ') }) }}
+              </p>
+            </div>
             <div class="shortcut-keys">
               <template v-if="getKeybindingsForCommand(command.id).length > 0">
                 <div v-for="(kb, index) in getKeybindingsForCommand(command.id)" :key="index" class="key-group">
@@ -106,6 +111,10 @@ onMounted(async () => {
 
 function getKeybindingsForCommand(commandId: string) {
   return shortcutsStore.getKeybindingsForCommand(commandId);
+}
+
+function getFailedAccelerators(commandId: string): string[] {
+  return shortcutsStore.getGlobalShortcutStatus(commandId)?.failedAccelerators ?? [];
 }
 
 function handleAddShortcut(commandId: string) {
@@ -214,6 +223,16 @@ async function handleReset() {
   font-size: 0.9rem;
   color: var(--text-primary);
   font-weight: 500;
+}
+
+.command-meta {
+  min-width: 0;
+}
+
+.registration-warning {
+  margin: 4px 0 0;
+  color: var(--status-warning-text);
+  font-size: 0.75rem;
 }
 
 .shortcut-keys {

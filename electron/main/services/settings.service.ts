@@ -1,8 +1,14 @@
-﻿import { app, dialog, BrowserWindow } from 'electron';
+import { app, dialog, BrowserWindow } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import { $t } from '../utils/i18n.js';
 import { AI_WRITING_DEFAULTS } from '../../shared/ai.constants.js';
+import {
+  getAiProviderCapabilities,
+  inferAiProvider,
+  isAiProvider,
+  type AiProvider,
+} from '../../shared/ai-provider.constants.js';
 import {
   OFFICIAL_AI_MODELS,
   OFFICIAL_AI_SOURCE_IDS,
@@ -71,7 +77,7 @@ interface SettingsMessageOptions {
   detail?: string;
 }
 
-type KnowledgeAgentRebuildMode = 'incremental' | 'full' | 'cancel';
+type KnowledgeCopilotRebuildMode = 'incremental' | 'full' | 'cancel';
 
 function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
   const numericValue = Number(value);
@@ -90,6 +96,7 @@ export interface AccessControlConfig {
 }
 
 interface AppSettings {
+  knowledgeCopilotSchemaVersion: number;
   language: string;
   autoStartup: boolean;
   windowCloseAction: WindowCloseAction;
@@ -108,7 +115,7 @@ interface AppSettings {
   showStatusBar: boolean;
   aiSources: AiSourceSettings[];
   aiAssistant: Record<string, unknown>;
-  knowledgeAgent: Record<string, unknown>;
+  knowledgeCopilot: Record<string, unknown>;
   sync: SyncConfig;
   loggingEnabled: boolean;
   logLevel: LogLevel;
@@ -153,11 +160,12 @@ type SyncConfigInput = Partial<SyncConfig> & {
 
 type SettingsInput = Partial<AppSettings> & {
   aiAssistant?: Partial<Record<string, unknown>>;
-  knowledgeAgent?: Partial<Record<string, unknown>>;
+  knowledgeCopilot?: Partial<Record<string, unknown>>;
   previewAppearance?: Partial<PreviewAppearanceConfig>;
   sync?: SyncConfigInput;
   accessControl?: Partial<AccessControlConfig>;
   workbench?: Partial<AppSettings['workbench']>;
+  knowledgeAgent?: Partial<Record<string, unknown>>;
 };
 
 const logger = loggerService.createLogger('Electron:Settings Service');
@@ -166,6 +174,7 @@ const SNAPTIUM_CONFIG_PACKAGE_TYPE = 'sppcfg' as const;
 const SNAPTIUM_CONFIG_PACKAGE_VERSION = 1;
 const SNAPTIUM_CONFIG_EXTENSION = 'sppcfg' as const;
 const DEFAULT_WINDOW_CLOSE_ACTION: WindowCloseAction = 'minimize';
+const KNOWLEDGE_COPILOT_SCHEMA_VERSION = 1;
 
 interface AiSourceSettings {
   id: string;
@@ -174,6 +183,7 @@ interface AiSourceSettings {
   apiKey: string;
   aiModel: string;
   capabilities: string[];
+  provider: AiProvider;
   official?: boolean;
   locked?: boolean;
 }
@@ -319,13 +329,18 @@ function normalizeCustomAiSource(value: unknown): AiSourceSettings | null {
     return null;
   }
 
+  const baseUrl = String(value.baseUrl ?? '').trim();
+  const provider = isAiProvider(value.provider) ? value.provider : inferAiProvider(baseUrl);
+  const capabilities = normalizeStringArray(value.capabilities);
+
   return {
     id,
     name: String(value.name ?? '').trim(),
-    baseUrl: String(value.baseUrl ?? '').trim(),
+    baseUrl,
     apiKey: String(value.apiKey ?? ''),
     aiModel: String(value.aiModel ?? '').trim(),
-    capabilities: normalizeStringArray(value.capabilities),
+    capabilities: capabilities.length > 0 ? capabilities : getAiProviderCapabilities(provider),
+    provider,
     official: false,
     locked: false,
   };
@@ -365,25 +380,38 @@ function normalizeAiAssistantConfig(
   return mergedConfig;
 }
 
-function normalizeKnowledgeAgentConfig(
-  defaultConfig: AppSettings['knowledgeAgent'],
-  incomingConfig: SettingsInput['knowledgeAgent'],
+function normalizeKnowledgeCopilotConfig(
+  defaultConfig: AppSettings['knowledgeCopilot'],
+  incomingConfig: SettingsInput['knowledgeCopilot'],
 ): Record<string, unknown> {
   const mergedConfig: Record<string, unknown> = {
     ...defaultConfig,
     ...(incomingConfig || {}),
   };
   const embeddingSourceId = String(mergedConfig.embeddingSourceId ?? '').trim();
-  const chatSourceId = String(mergedConfig.chatSourceId ?? '').trim();
+  const legacyChatSourceId = String(mergedConfig.chatSourceId ?? '').trim();
+  const legacyChatModel = String(mergedConfig.chatModel ?? '').trim();
+  const askChatSourceId = String(mergedConfig.askChatSourceId ?? legacyChatSourceId).trim();
+  const agentChatSourceId = String(mergedConfig.agentChatSourceId ?? legacyChatSourceId).trim();
   const nextConfig: Record<string, unknown> = { ...mergedConfig };
+
+  nextConfig.askChatSourceId = askChatSourceId;
+  nextConfig.askChatModel = String(mergedConfig.askChatModel ?? legacyChatModel).trim();
+  nextConfig.agentChatSourceId = agentChatSourceId;
+  nextConfig.agentChatModel = String(mergedConfig.agentChatModel ?? legacyChatModel).trim();
+  delete nextConfig.chatSourceId;
+  delete nextConfig.chatModel;
 
   if (!embeddingSourceId || embeddingSourceId === OFFICIAL_AI_SOURCE_IDS.EMBEDDING) {
     nextConfig.embeddingSourceId = OFFICIAL_AI_SOURCE_IDS.EMBEDDING;
     nextConfig.embeddingModel = OFFICIAL_AI_MODELS.EMBEDDING;
   }
 
-  if (chatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
-    nextConfig.chatModel = OFFICIAL_AI_MODELS.CHAT;
+  if (askChatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    nextConfig.askChatModel = OFFICIAL_AI_MODELS.CHAT;
+  }
+  if (agentChatSourceId === OFFICIAL_AI_SOURCE_IDS.CHAT) {
+    nextConfig.agentChatModel = OFFICIAL_AI_MODELS.CHAT;
   }
 
   nextConfig.chunkSize = clampInteger(nextConfig.chunkSize, 500, 500, 800);
@@ -409,7 +437,7 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
     accentMode: normalizeAccentMode(incomingConfig.accentMode ?? defaultConfig.accentMode),
     aiSources: normalizeAiSources(incomingConfig.aiSources ?? defaultConfig.aiSources),
     aiAssistant: normalizeAiAssistantConfig(defaultConfig.aiAssistant, incomingConfig.aiAssistant),
-    knowledgeAgent: normalizeKnowledgeAgentConfig(defaultConfig.knowledgeAgent, incomingConfig.knowledgeAgent),
+    knowledgeCopilot: normalizeKnowledgeCopilotConfig(defaultConfig.knowledgeCopilot, incomingConfig.knowledgeCopilot),
     previewAppearance: normalizePreviewAppearanceConfig(incomingConfig.previewAppearance),
     sync: normalizeSyncConfig(incomingConfig.sync),
     autoCheckUpdates: incomingConfig.autoCheckUpdates ?? defaultConfig.autoCheckUpdates,
@@ -435,6 +463,48 @@ function mergeConfigWithDefaults(defaultConfig: AppSettings, incomingConfig: Set
   };
 }
 
+async function migrateKnowledgeCopilotSettings(
+  incomingConfig: SettingsInput,
+  defaultConfig: AppSettings,
+): Promise<{ config: SettingsInput; migrated: boolean }> {
+  const currentVersion = Number(incomingConfig.knowledgeCopilotSchemaVersion ?? 0);
+  if (currentVersion >= KNOWLEDGE_COPILOT_SCHEMA_VERSION) {
+    return { config: incomingConfig, migrated: false };
+  }
+
+  const recentQuestions = Array.isArray(incomingConfig.workbench?.recentQuestions)
+    ? incomingConfig.workbench.recentQuestions.filter((entry) => {
+      if (!isRecord(entry)) return true;
+      return entry.mode !== 'ask' && entry.mode !== 'agent-task';
+    })
+    : [];
+  const migratedConfig: SettingsInput = {
+    ...incomingConfig,
+    knowledgeCopilotSchemaVersion: KNOWLEDGE_COPILOT_SCHEMA_VERSION,
+    knowledgeCopilot: { ...defaultConfig.knowledgeCopilot },
+    workbench: {
+      ...defaultConfig.workbench,
+      ...(incomingConfig.workbench ?? {}),
+      recentQuestions,
+    },
+  };
+  delete migratedConfig.knowledgeAgent;
+
+  const workspaceRoot = typeof incomingConfig.noteSavePath === 'string' && incomingConfig.noteSavePath.trim()
+    ? incomingConfig.noteSavePath.trim()
+    : defaultConfig.noteSavePath;
+  const obsoletePaths = [
+    path.join(workspaceRoot, '.lancedb', 'knowledge_agent_chunks.lance'),
+    path.join(workspaceRoot, '.lancedb', 'knowledge_copilot_chunks.lance'),
+    path.join(workspaceRoot, '.snaptium', 'knowledge-agent-checkpoints.sqlite'),
+  ];
+  await Promise.all(obsoletePaths.map(async (obsoletePath) => {
+    await fs.rm(obsoletePath, { recursive: true, force: true });
+  }));
+  logger.info('Migrated settings to Knowledge Copilot schema v1');
+  return { config: migratedConfig, migrated: true };
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null;
 }
@@ -454,6 +524,7 @@ export const settingsService = {
 
   getDefaultConfig(): AppSettings {
     return {
+      knowledgeCopilotSchemaVersion: KNOWLEDGE_COPILOT_SCHEMA_VERSION,
       language: app.getLocale().toLowerCase().startsWith('en') ? 'en-US' : 'zh-CN',
       autoStartup: false,
       windowCloseAction: DEFAULT_WINDOW_CLOSE_ACTION,
@@ -488,19 +559,24 @@ export const settingsService = {
         writingScenario: AI_WRITING_DEFAULTS.SCENARIO,
         systemPrompt: '',
       },
-      knowledgeAgent: {
+      knowledgeCopilot: {
         enabled: false,
         embeddingSourceId: OFFICIAL_AI_SOURCE_IDS.EMBEDDING,
         embeddingModel: OFFICIAL_AI_MODELS.EMBEDDING,
-        chatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
-        chatModel: OFFICIAL_AI_MODELS.CHAT,
+        askChatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+        askChatModel: OFFICIAL_AI_MODELS.CHAT,
+        agentChatSourceId: OFFICIAL_AI_SOURCE_IDS.CHAT,
+        agentChatModel: OFFICIAL_AI_MODELS.CHAT,
         rerankerSourceId: OFFICIAL_AI_SOURCE_IDS.RERANKER,
+        rerankerModel: OFFICIAL_AI_MODELS.RERANKER,
+        defaultMode: 'ask',
+        agentExecutionMode: 'confirm',
         chunkSize: 500,
         chunkOverlap: 50,
         topK: 5,
         similarityThreshold: 0.45,
-        autoIndex: false,
-        indexOnSave: false,
+        autoIndex: true,
+        indexOnSave: true,
         lastIndexedAt: null,
         indexSignatures: {},
         indexChunkCounts: {},
@@ -545,7 +621,12 @@ export const settingsService = {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       const parsed = JSON.parse(content) as SettingsInput;
-      const nextConfig = normalizeLoggingConfig(mergeConfigWithDefaults(this.getDefaultConfig(), parsed));
+      const defaultConfig = this.getDefaultConfig();
+      const migration = await migrateKnowledgeCopilotSettings(parsed, defaultConfig);
+      const nextConfig = normalizeLoggingConfig(mergeConfigWithDefaults(defaultConfig, migration.config));
+      if (migration.migrated) {
+        await fs.writeFile(filePath, JSON.stringify(nextConfig, null, 2), 'utf-8');
+      }
       previewPolicyService.updateConfig(nextConfig);
       return nextConfig;
     } catch (error) {
@@ -658,7 +739,7 @@ export const settingsService = {
     return selectedButtonIndex === 1;
   },
 
-  async confirmKnowledgeAgentRebuildMode(): Promise<KnowledgeAgentRebuildMode> {
+  async confirmKnowledgeCopilotRebuildMode(): Promise<KnowledgeCopilotRebuildMode> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 
     const dialogResult = await dialog.showMessageBox(focusedWindow, {
@@ -667,8 +748,8 @@ export const settingsService = {
       defaultId: 1,
       cancelId: 0,
       noLink: true,
-      title: $t('label.knowledgeAgentIndexStatus'),
-      message: $t('message.confirm.knowledgeAgentRebuildMode'),
+      title: $t('label.knowledgeCopilotIndexStatus'),
+      message: $t('message.confirm.knowledgeCopilotRebuildMode'),
     });
     // selectedButtonIndex is zero-based and follows the order of buttons[]
     const selectedButtonIndex = dialogResult.response;
@@ -684,7 +765,7 @@ export const settingsService = {
     return 'cancel';
   },
 
-  async confirmKnowledgeAgentChunkRebuild(): Promise<boolean> {
+  async confirmKnowledgeCopilotChunkRebuild(): Promise<boolean> {
     const focusedWindow = BrowserWindow.getFocusedWindow() ?? BrowserWindow.getAllWindows()[0] ?? null;
 
     const dialogResult = await dialog.showMessageBox(focusedWindow, {
@@ -693,9 +774,9 @@ export const settingsService = {
       defaultId: 1,
       cancelId: 0,
       noLink: true,
-      title: $t('label.knowledgeAgentIndexStatus'),
+      title: $t('label.knowledgeCopilotIndexStatus'),
       message: $t(
-        'message.confirm.knowledgeAgentChunkRebuild',
+        'message.confirm.knowledgeCopilotChunkRebuild',
         'Changing chunk size or overlap only affects newly built indexes. Rebuild the knowledge base index now?',
       ),
     });

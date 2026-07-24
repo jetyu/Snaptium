@@ -37,8 +37,8 @@ export const importExportService = {
 
     await saveSettingsPartial((config: AppSettings) => ({
       ...config,
-      knowledgeAgent: {
-        ...config.knowledgeAgent,
+      knowledgeCopilot: {
+        ...config.knowledgeCopilot,
         lastIndexedAt: null,
         indexSignatures: {},
         indexChunkCounts: {},

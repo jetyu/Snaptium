@@ -344,6 +344,7 @@ import {
 import { useKnowledgeTopicClusters } from '../composables/useKnowledgeTopicClusters';
 import {
   WORKBENCH_LIMITS,
+  type WorkbenchConversationThread,
   type WorkbenchQuestionEntry,
   type WorkbenchRecommendationFeedbackAction,
 } from '../constants/workbench.constants';
@@ -353,7 +354,7 @@ interface ActivityEntry {
   kind: 'saved' | 'questioned';
   timestamp: number;
   note?: Note;
-  question?: WorkbenchQuestionEntry;
+  thread?: WorkbenchConversationThread;
 }
 
 interface TodoFallbackEntry {
@@ -402,7 +403,7 @@ const appShellStore = useAppShellStore();
 const workspaceStore = useWorkspaceStore();
 const settingsStore = useSettingsStore();
 const workbenchStore = useWorkbenchStore();
-const { recentQuestions, recommendationFeedback } = storeToRefs(workbenchStore);
+const { recentQuestions, conversationThreads, recommendationFeedback } = storeToRefs(workbenchStore);
 const wallpaper = ref<WallpaperResult | null>(null);
 const wallpaperLoading = ref<boolean>(false);
 const wallpaperSrc = ref<string>(defaultHeroUrl);
@@ -502,15 +503,18 @@ const recentActivity = computed<ActivityEntry[]>(() => {
     note,
   }));
 
-  const questionedActivities: ActivityEntry[] = recentQuestionEntries.value
+  const questionedActivities: ActivityEntry[] = conversationThreads.value
     .slice(0, WORKBENCH_LIMITS.RECENT_ACTIVITY)
-    .map((entry) => ({
-      id: `questioned:${entry.id}`,
+    .map((thread) => {
+      const latestQuestion = [...thread.questions].sort((left, right) => right.askedAt - left.askedAt)[0];
+      return {
+      id: `questioned:${thread.id}`,
       kind: 'questioned',
-      timestamp: entry.askedAt,
-      question: entry,
-      note: entry.sourceNoteIds.length > 0 ? noteMap.value.get(entry.sourceNoteIds[0]) : undefined,
-    }));
+      timestamp: thread.updatedAt,
+      thread,
+      note: latestQuestion?.sourceNoteIds[0] ? noteMap.value.get(latestQuestion.sourceNoteIds[0]) : undefined,
+      };
+    });
 
   return [...savedActivities, ...questionedActivities]
     .sort((left, right) => right.timestamp - left.timestamp)
@@ -969,7 +973,7 @@ function formatRelativeTime(timestamp: number): string {
 
 function getActivityTitle(entry: ActivityEntry): string {
   if (entry.kind === 'questioned') {
-    return entry.question?.query ?? t('workbench.empty.noData');
+    return entry.thread?.questions[0]?.query ?? t('workbench.empty.noData');
   }
   return entry.note?.title ?? t('workbench.empty.noData');
 }
@@ -986,8 +990,8 @@ function getActivityTooltip(entry: ActivityEntry): string {
 }
 
 async function handleActivityClick(entry: ActivityEntry): Promise<void> {
-  if (entry.kind === 'questioned' && entry.question) {
-    await openSearchView({ query: entry.question.query, mode: 'semantic', run: true });
+  if (entry.kind === 'questioned' && entry.thread) {
+    await openSearchView({ threadId: entry.thread.id, mode: 'semantic', run: false });
     return;
   }
   if (entry.note) {

@@ -17,6 +17,7 @@ import {
   type WorkbenchQuestionMode,
   type WorkbenchQuestionSource,
   type WorkbenchSettings,
+  type WorkbenchConversationThread,
 } from '../constants/workbench.constants';
 
 const workbenchLogger = createLogger('WorkbenchStore');
@@ -71,6 +72,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
   const workbench = computed(() => sanitizeWorkbenchSettings(config.value.workbench));
   const recentQuestions = computed(() => workbench.value.recentQuestions);
+  const conversationThreads = computed(() => workbench.value.conversationThreads);
   const recommendationFeedback = computed(() => workbench.value.recommendationFeedback);
 
   async function saveWorkbench(nextValue: Partial<WorkbenchSettings>) {
@@ -145,8 +147,46 @@ export const useWorkbenchStore = defineStore('workbench', () => {
       ...recentQuestions.value.filter((entry) => entry.id !== nextEntry.id),
     ].slice(0, WORKBENCH_LIMITS.QUESTIONS);
 
-    await saveWorkbench({ recentQuestions: nextQuestions });
+    const existingThread = conversationThreads.value.find((thread) => thread.id === threadId);
+    const nextThread: WorkbenchConversationThread = {
+      id: threadId,
+      questions: [
+        nextEntry,
+        ...(existingThread?.questions ?? []).filter((entry) => entry.id !== nextEntry.id),
+      ].sort((left, right) => left.askedAt - right.askedAt).slice(-WORKBENCH_LIMITS.CONVERSATION_TURNS),
+      summary: existingThread?.summary,
+      summaryUpToQuestionId: existingThread?.summaryUpToQuestionId,
+      updatedAt: askedAt,
+    };
+    await saveWorkbench({
+      recentQuestions: nextQuestions,
+      conversationThreads: [
+        nextThread,
+        ...conversationThreads.value.filter((thread) => thread.id !== threadId),
+      ].slice(0, WORKBENCH_LIMITS.CONVERSATION_THREADS),
+    });
     return nextEntry;
+  }
+
+  async function updateConversationSummary(threadId: string, summary?: string, summaryUpToQuestionId?: string): Promise<void> {
+    const normalizedThreadId = threadId.trim();
+    const thread = conversationThreads.value.find((entry) => entry.id === normalizedThreadId);
+    if (!thread) return;
+    await saveWorkbench({
+      conversationThreads: conversationThreads.value.map((entry) => entry.id === normalizedThreadId
+        ? { ...entry, summary: summary?.trim() || undefined, summaryUpToQuestionId: summaryUpToQuestionId?.trim() || undefined }
+        : entry),
+    });
+  }
+
+  async function deleteConversationThread(threadId: string): Promise<boolean> {
+    const normalizedThreadId = threadId.trim();
+    if (!normalizedThreadId || !conversationThreads.value.some((thread) => thread.id === normalizedThreadId)) return false;
+    await saveWorkbench({
+      conversationThreads: conversationThreads.value.filter((thread) => thread.id !== normalizedThreadId),
+      recentQuestions: recentQuestions.value.filter((question) => question.threadId !== normalizedThreadId),
+    });
+    return true;
   }
 
   async function updateQuestionAgentWriteState(payload: {
@@ -255,10 +295,13 @@ export const useWorkbenchStore = defineStore('workbench', () => {
   return {
     workbench,
     recentQuestions,
+    conversationThreads,
     recommendationFeedback,
     recordQuestion,
     updateQuestionAgentWriteState,
     deleteQuestion,
+    deleteConversationThread,
+    updateConversationSummary,
     recordRecommendationFeedback,
     cleanupNoteReferences,
   };

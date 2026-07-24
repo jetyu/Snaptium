@@ -1,3 +1,5 @@
+import type { KnowledgeCopilotConversationContext } from '@shared/knowledge-copilot.constants';
+
 export interface OpenFileResult {
   filePath: string;
   content: string;
@@ -24,6 +26,7 @@ export type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
 export type JsonObject = { [key: string]: JsonValue };
 
 export interface AiSourceConfig {
+  provider: import('@shared/ai-provider.constants').AiProvider;
   aiBaseUrl: string;
   aiApiKey: string;
   aiModel: string;
@@ -297,7 +300,7 @@ export interface SavedImagePayload {
   markdownPath: string;
 }
 
-export interface KnowledgeAgentIndexNotePayload {
+export interface KnowledgeCopilotIndexNotePayload {
   noteId: string;
   noteTitle: string;
   content: string;
@@ -305,14 +308,31 @@ export interface KnowledgeAgentIndexNotePayload {
   chunkOverlap?: number;
 }
 
-export interface KnowledgeAgentAskQuestionStreamPayload {
+export interface KnowledgeCopilotAskQuestionStreamPayload {
   query: string;
   requestId: string;
+  conversationId?: string;
+  context?: KnowledgeCopilotConversationContext;
 }
 
-export interface KnowledgeAgentRunTaskPayload {
+export interface KnowledgeCopilotRunTaskPayload {
   task: string;
-  writeMode?: KnowledgeAgentWriteMode;
+  writeMode?: KnowledgeCopilotWriteMode;
+  conversationId?: string;
+  context?: KnowledgeCopilotConversationContext;
+  decisions?: KnowledgeCopilotDecision[];
+}
+
+export type KnowledgeCopilotDecision =
+  | { type: 'approve' }
+  | { type: 'edit'; editedAction: { name: string; args: Record<string, unknown> } }
+  | { type: 'reject'; message?: string };
+
+export interface KnowledgeCopilotPendingAction {
+  name: string;
+  args: Record<string, unknown>;
+  description?: string;
+  allowedDecisions: Array<'approve' | 'edit' | 'reject'>;
 }
 
 export interface KnowledgeAnswerResult {
@@ -322,6 +342,8 @@ export interface KnowledgeAnswerResult {
   error?: string;
   usedSearchFallback: boolean;
   insufficientEvidence?: boolean;
+  conversationSummary?: string;
+  conversationSummaryUpToQuestionId?: string;
 }
 
 export type KnowledgeAnswerStage = 'preparing' | 'searching' | 'assessing' | 'sourcing' | 'generating';
@@ -364,13 +386,13 @@ export type KnowledgeAnswerStreamEvent =
     insufficientEvidence?: boolean;
   };
 
-export interface KnowledgeAgentStep {
+export interface KnowledgeCopilotStep {
   title: string;
   detail: string;
   status: 'completed' | 'failed';
 }
 
-export interface KnowledgeAgentTraceEvent {
+export interface KnowledgeCopilotTraceEvent {
   id: string;
   type: 'model-response' | 'tool-call' | 'tool-result' | 'tool-error';
   title: string;
@@ -381,7 +403,7 @@ export interface KnowledgeAgentTraceEvent {
   toolName?: string;
 }
 
-export interface KnowledgeAgentCreateNoteProposal {
+export interface KnowledgeCopilotCreateNoteProposal {
   id: string;
   type: 'create-note';
   title: string;
@@ -389,7 +411,7 @@ export interface KnowledgeAgentCreateNoteProposal {
   reason: string;
 }
 
-export interface KnowledgeAgentUpdateNoteProposal {
+export interface KnowledgeCopilotUpdateNoteProposal {
   id: string;
   type: 'update-note';
   noteId: string;
@@ -398,13 +420,13 @@ export interface KnowledgeAgentUpdateNoteProposal {
   reason: string;
 }
 
-export type KnowledgeAgentWriteProposal =
-  | KnowledgeAgentCreateNoteProposal
-  | KnowledgeAgentUpdateNoteProposal;
+export type KnowledgeCopilotWriteProposal =
+  | KnowledgeCopilotCreateNoteProposal
+  | KnowledgeCopilotUpdateNoteProposal;
 
-export type KnowledgeAgentWriteMode = 'confirm' | 'auto';
+export type KnowledgeCopilotWriteMode = 'confirm' | 'auto';
 
-export interface KnowledgeAgentExecutedCreateNote {
+export interface KnowledgeCopilotExecutedCreateNote {
   id: string;
   type: 'create-note';
   noteId: string;
@@ -413,7 +435,7 @@ export interface KnowledgeAgentExecutedCreateNote {
   reason: string;
 }
 
-export interface KnowledgeAgentExecutedUpdateNote {
+export interface KnowledgeCopilotExecutedUpdateNote {
   id: string;
   type: 'update-note';
   noteId: string;
@@ -422,21 +444,22 @@ export interface KnowledgeAgentExecutedUpdateNote {
   reason: string;
 }
 
-export type KnowledgeAgentExecutedWrite =
-  | KnowledgeAgentExecutedCreateNote
-  | KnowledgeAgentExecutedUpdateNote;
+export type KnowledgeCopilotExecutedWrite =
+  | KnowledgeCopilotExecutedCreateNote
+  | KnowledgeCopilotExecutedUpdateNote;
 
-export interface KnowledgeAgentTaskResult {
+export interface KnowledgeCopilotTaskResult {
   success: boolean;
   finalAnswer?: string;
-  steps: KnowledgeAgentStep[];
-  traceEvents: KnowledgeAgentTraceEvent[];
+  steps: KnowledgeCopilotStep[];
+  traceEvents: KnowledgeCopilotTraceEvent[];
   sources: KnowledgeSearchResult[];
-  writeMode: KnowledgeAgentWriteMode;
-  pendingWrites: KnowledgeAgentWriteProposal[];
-  executedWrites: KnowledgeAgentExecutedWrite[];
+  writeMode: KnowledgeCopilotWriteMode;
+  pendingWrites: KnowledgeCopilotWriteProposal[];
+  executedWrites: KnowledgeCopilotExecutedWrite[];
   stopReason?:
     | 'completed'
+    | 'interrupted'
     | 'insufficient-evidence'
     | 'tool-call-limit'
     | 'iteration-limit'
@@ -444,6 +467,10 @@ export interface KnowledgeAgentTaskResult {
     | 'tool-failure-limit'
     | 'weak-search-limit';
   error?: string;
+  conversationId: string;
+  pendingActions: KnowledgeCopilotPendingAction[];
+  conversationSummary?: string;
+  conversationSummaryUpToQuestionId?: string;
 }
 
 export interface KnowledgeSearchResult {
@@ -458,7 +485,7 @@ export interface KnowledgeSearchResult {
   noteTitle?: string;
 }
 
-export interface KnowledgeAgentStatusResult {
+export interface KnowledgeCopilotStatusResult {
   success: boolean;
   isInitialized: boolean;
   totalChunks: number;
@@ -546,7 +573,7 @@ export interface MessageDialogOptions {
   detail?: string;
 }
 
-export type KnowledgeAgentRebuildMode = 'incremental' | 'full' | 'cancel';
+export type KnowledgeCopilotRebuildMode = 'incremental' | 'full' | 'cancel';
 
 interface ShortcutsKeybindingPayload {
   commandId: string;
@@ -557,6 +584,12 @@ interface ShortcutsKeybindingPayload {
 interface ShortcutsKeybindingsConfigPayload {
   version: string;
   keybindings: ShortcutsKeybindingPayload[];
+}
+
+export interface GlobalShortcutStatusPayload {
+  commandId: string;
+  registeredAccelerators: string[];
+  failedAccelerators: string[];
 }
 
 function ensureElectronApi(): Window['electronAPI'] {
@@ -609,6 +642,17 @@ export const electronApi = {
     onImportNwp: (callback: () => void) => electronApi.menu.getApi().onImportNwp(callback),
     onExportMarkdown: (callback: () => void) => electronApi.menu.getApi().onExportMarkdown(callback),
     onExportSppx: (callback: () => void) => electronApi.menu.getApi().onExportSppx(callback),
+  },
+
+  quickCapture: {
+    isAvailable: (): boolean => !!window.electronAPI?.quickCapture,
+    getApi: () => {
+      const api = ensureElectronApi().quickCapture;
+      if (!api) throw new Error('Quick capture bridge is unavailable');
+      return api;
+    },
+    markReady: (): void => electronApi.quickCapture.getApi().markReady(),
+    onRequested: (callback: () => void): (() => void) => electronApi.quickCapture.getApi().onRequested(callback),
   },
 
   app: {
@@ -686,8 +730,8 @@ export const electronApi = {
     switchLanguage: (locale: string) => electronApi.settings.getApi().switchLanguage(locale),
     pickDirectory: () => electronApi.settings.getApi().pickDirectory(),
     confirmEmbeddingSourceChange: () => electronApi.settings.getApi().confirmEmbeddingSourceChange(),
-    confirmKnowledgeAgentChunkRebuild: (): Promise<boolean> => electronApi.settings.getApi().confirmKnowledgeAgentChunkRebuild(),
-    confirmKnowledgeAgentRebuildMode: (): Promise<KnowledgeAgentRebuildMode> => electronApi.settings.getApi().confirmKnowledgeAgentRebuildMode(),
+    confirmKnowledgeCopilotChunkRebuild: (): Promise<boolean> => electronApi.settings.getApi().confirmKnowledgeCopilotChunkRebuild(),
+    confirmKnowledgeCopilotRebuildMode: (): Promise<KnowledgeCopilotRebuildMode> => electronApi.settings.getApi().confirmKnowledgeCopilotRebuildMode(),
     confirmDeleteAiSource: (name: string) => electronApi.settings.getApi().confirmDeleteAiSource(name),
     confirmResetSyncProvider: (name: string) => electronApi.settings.getApi().confirmResetSyncProvider(name),
     showMessage: (options: MessageDialogOptions): Promise<boolean> => {
@@ -747,6 +791,8 @@ export const electronApi = {
       return api;
     },
     testConnection: (config: AiSourceConfig) => electronApi.aiSource.getApi().testConnection(config),
+    validateToolCalling: (config: { provider: import('@shared/ai-provider.constants').AiProvider; baseUrl: string; apiKey: string; model: string }) =>
+      electronApi.aiSource.getApi().validateToolCalling(config),
   },
 
   sync: {
@@ -878,36 +924,36 @@ export const electronApi = {
     },
   },
 
-  knowledgeAgent: {
-    isAvailable: (): boolean => !!window.electronAPI?.knowledgeAgent,
+  knowledgeCopilot: {
+    isAvailable: (): boolean => !!window.electronAPI?.knowledgeCopilot,
     getApi: () => {
-      const api = ensureElectronApi().knowledgeAgent;
+      const api = ensureElectronApi().knowledgeCopilot;
       if (!api) throw new Error('Knowledge-agent bridge is unavailable');
       return api;
     },
     initialize: () => {
-      return electronApi.knowledgeAgent.getApi().initialize();
+      return electronApi.knowledgeCopilot.getApi().initialize();
     },
-    indexNote: (payload: KnowledgeAgentIndexNotePayload) => {
-      return electronApi.knowledgeAgent.getApi().indexNote(payload);
+    indexNote: (payload: KnowledgeCopilotIndexNotePayload) => {
+      return electronApi.knowledgeCopilot.getApi().indexNote(payload);
     },
-    answerQuestionStream: (payload: KnowledgeAgentAskQuestionStreamPayload): Promise<KnowledgeAnswerResult> => {
-      return electronApi.knowledgeAgent.getApi().answerQuestionStream(payload);
+    answerQuestionStream: (payload: KnowledgeCopilotAskQuestionStreamPayload): Promise<KnowledgeAnswerResult> => {
+      return electronApi.knowledgeCopilot.getApi().answerQuestionStream(payload);
     },
     onAnswerQuestionStreamEvent: (callback: (event: KnowledgeAnswerStreamEvent) => void): (() => void) => {
-      return electronApi.knowledgeAgent.getApi().onAnswerQuestionStreamEvent(callback);
+      return electronApi.knowledgeCopilot.getApi().onAnswerQuestionStreamEvent(callback);
     },
-    runTask: (payload: KnowledgeAgentRunTaskPayload): Promise<KnowledgeAgentTaskResult> => {
-      return electronApi.knowledgeAgent.getApi().runTask(payload);
+    runTask: (payload: KnowledgeCopilotRunTaskPayload): Promise<KnowledgeCopilotTaskResult> => {
+      return electronApi.knowledgeCopilot.getApi().runTask(payload);
     },
     deleteNoteIndex: (noteId: string) => {
-      return electronApi.knowledgeAgent.getApi().deleteNoteIndex(noteId);
+      return electronApi.knowledgeCopilot.getApi().deleteNoteIndex(noteId);
     },
-    getStatus: (): Promise<KnowledgeAgentStatusResult> => {
-      return electronApi.knowledgeAgent.getApi().getStatus();
+    getStatus: (): Promise<KnowledgeCopilotStatusResult> => {
+      return electronApi.knowledgeCopilot.getApi().getStatus();
     },
     clearIndex: (): Promise<{ success: boolean; error?: string }> => {
-      return electronApi.knowledgeAgent.getApi().rebuildIndex();
+      return electronApi.knowledgeCopilot.getApi().rebuildIndex();
     },
   },
 
@@ -1068,6 +1114,7 @@ export const electronApi = {
     getCommands: () => electronApi.shortcuts.getApi().getCommands(),
     getCommandsByCategory: (category: string) => electronApi.shortcuts.getApi().getCommandsByCategory(category),
     loadKeybindings: () => electronApi.shortcuts.getApi().loadKeybindings(),
+    getGlobalShortcutStatuses: () => electronApi.shortcuts.getApi().getGlobalShortcutStatuses(),
     saveKeybindings: (keybindings: ShortcutsKeybindingPayload[]) => electronApi.shortcuts.getApi().saveKeybindings(keybindings),
     addKeybinding: (payload: { commandId: string; key: string; when?: string | null }) => electronApi.shortcuts.getApi().addKeybinding(payload),
     removeKeybinding: (payload: { commandId: string; key: string }) => electronApi.shortcuts.getApi().removeKeybinding(payload),
