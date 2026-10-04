@@ -1,13 +1,30 @@
-/node_modules/*
-/dist/*
-/electron-cache/*
+# Frontend
+/node_modules/
+**/node_modules/
+/dist/
+**/dist/
 
-/release/*
+# Rust / Tauri
+/target/
+**/target/
+**/src-tauri/gen/
+
+# Runtime data and secrets
+/.env
+/.env.*
+!/.env.example
+/data/
+/logs/
+
+# Local tooling and temporary output
+/.agents/
+/.codex/
+/.vscode/
 /.electron-build/
-/main.js
-/preload.js
-/electron/**/*.js
+/.tmp-*/
+/.tmp-tools/
+*.log
 
-/.*/
-!.github/
-!.github/** 
+# OS metadata
+.DS_Store
+Thumbs.db

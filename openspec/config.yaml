@@ -1,20 +1,25 @@
 schema: spec-driven
 
-# Project context (optional)
-# This is shown to AI when creating artifacts.
-# Add your tech stack, conventions, style guides, domain knowledge, etc.
-# Example:
-#   context: |
-#     Tech stack: TypeScript, React, Node.js
-#     We use conventional commits
-#     Domain: e-commerce platform
+context: |
+  Product: a greenfield self-hosted, local-first Markdown notes platform.
+  Clients: an embedded Vue 3 Web client and Tauri 2 native clients.
+  Native core and server: Rust; server framework: Axum.
+  Storage: server SQLite, native-client SQLite, and online-first Web drafts in IndexedDB.
+  Deployment: a single application container embeds the Web build and persists database and attachments in documented volumes.
+  Initial release: Docker Web and Windows; no E2EE, collaboration, CRDT, PostgreSQL, or complete Web offline replica.
+  Canonical content: a controlled WYSIWYG Markdown subset stored as portable Markdown.
+  Synchronization: versioned revision/cursor protocol with idempotent mutations, tombstones, pagination, and conflict copies.
+  Use strict TypeScript and Rust types, validate every trust boundary, keep user-visible text in i18n, and favor minimal single-node architecture.
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always include a "Non-goals" section
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - State first-release non-goals explicitly.
+    - Distinguish user-facing requirements from future possibilities.
+  design:
+    - Document data-loss, authentication, authorization, migration, and rollback boundaries.
+    - Keep Web, native-client, and server persistence models separate.
+  specs:
+    - Make synchronization and recovery behavior testable under interruption and retry.
+  tasks:
+    - Place risk spikes and protocol fixtures before production implementation.
+    - Include automated data-loss and cross-client compatibility checks.
