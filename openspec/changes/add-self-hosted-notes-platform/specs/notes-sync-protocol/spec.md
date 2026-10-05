@@ -29,7 +29,7 @@ The server SHALL expose user-scoped changes after a cursor in deterministic orde
 - **THEN** the next synchronization resumes after the last transactionally committed cursor
 
 ### Requirement: Deletion propagation
-The system SHALL represent deletions as tombstones in the synchronization stream for the configured retention period.
+The system SHALL represent deletions as tombstones in the synchronization stream. The first release SHALL retain these tombstones without automatic purging; bounded cleanup requires a later reviewed recovery and expired-cursor policy.
 
 #### Scenario: Offline device receives deletion
 - **WHEN** a device reconnects within tombstone retention after another client deleted a note

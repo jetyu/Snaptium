@@ -59,7 +59,9 @@ Database files and database row models are never synchronized. Shared contracts 
 
 Server SQLite runs as a single writer-capable application instance with WAL, foreign keys, busy timeout, short write transactions, and application-level backup coordination. Attachments remain outside SQLite as files referenced by database metadata.
 
-First-release organization uses folders, as confirmed by the user on 2026-10-05. Tags and note-tag associations are deferred; do not add speculative tag tables, APIs, or UI. Folder access and note moves must remain owner-scoped across Web and native clients. Folder hierarchy and deletion behavior must be defined before implementing those operations, without silently deleting note content.
+First-release organization uses single-level folders, as confirmed by the user on 2026-10-05. Tags and note-tag associations are deferred; do not add speculative tag tables, APIs, or UI. Folder access and note moves must remain owner-scoped across Web and native clients. Deleting a folder moves its notes to the virtual uncategorized group without deleting their content; the eventual repository operation must also update revisions and the change log atomically.
+
+Confirmed first-release defaults: each attachment is bounded to 20 MiB (20,971,520 bytes); each account starts with a 5 GiB (5,368,709,120 bytes) administrator-adjustable quota; retain the latest 100 versions per note; do not automatically purge synchronization tombstones in the first release; public registration is disabled and administrators create accounts. These are product defaults, not measured performance promises. Quota accounting and history pruning remain implementation tasks and must include retained content and attachments without deleting data to force compliance after a quota reduction.
 
 ### 4. Use Markdown as canonical content with a controlled WYSIWYG projection
 
@@ -129,7 +131,4 @@ Rollback restores the previous application image together with the backup taken 
 ## Open Questions
 
 - Final product name, application identifiers, and image names.
-- Folder hierarchy and folder-deletion behavior; the first-release organization type is resolved as folders, with tags deferred.
-- Maximum attachment size, total user quota, tombstone retention period, and retained note-history depth.
-- Whether public registration is disabled by default after administrator initialization.
 - Which Windows signing and update distribution channel will be used for the first public beta.

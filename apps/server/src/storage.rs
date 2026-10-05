@@ -42,8 +42,7 @@ pub struct ServerStorage {
 }
 
 impl ServerStorage {
-    /// This foundation accepts only a new/empty database at schema version zero.
-    /// Existing product databases are refused until migration/backup support exists.
+    /// Accept empty schema zero or an exact supported schema one. No upgrades.
     pub async fn open(directory: &Path) -> Result<Self, StorageError> {
         if directory.as_os_str().is_empty() {
             return Err(StorageError::InvalidDirectory);
@@ -93,10 +92,11 @@ impl ServerStorage {
                 .fetch_one(&probe)
                 .await
                 .map_err(|_| StorageError::DatabaseUnavailable)?;
-                if version != 0 || tables != 0 {
-                    return Err(StorageError::IncompatibleDatabase);
+                match version {
+                    0 if tables == 0 => Ok(()),
+                    1 => crate::schema::verify(&probe).await,
+                    _ => Err(StorageError::IncompatibleDatabase),
                 }
-                Ok(())
             }
             .await;
             probe.close().await;
@@ -130,6 +130,32 @@ impl ServerStorage {
             .await
             .map_err(|_| StorageError::DatabaseUnavailable)?;
         Ok(())
+    }
+
+    /// Explicitly initialize only an empty database. Never upgrade existing data.
+    pub async fn open_initialized(directory: &Path) -> Result<Self, StorageError> {
+        let storage = Self::open(directory).await?;
+        let result = async {
+            let version: i64 = sqlx::query_scalar("PRAGMA user_version")
+                .fetch_one(&storage.pool)
+                .await
+                .map_err(|_| StorageError::DatabaseUnavailable)?;
+            if version == 0 {
+                crate::schema::initialize(&storage.pool).await?;
+            }
+            crate::schema::verify(&storage.pool).await
+        }
+        .await;
+        if let Err(error) = result {
+            storage.close().await;
+            return Err(error);
+        }
+        Ok(storage)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn pool(&self) -> &SqlitePool {
+        &self.pool
     }
 
     /// Drain connections before releasing ownership. Call on graceful shutdown.

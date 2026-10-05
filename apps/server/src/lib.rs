@@ -1,5 +1,6 @@
 use std::path::PathBuf;
 
+mod schema;
 pub mod storage;
 
 use axum::{

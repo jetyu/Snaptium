@@ -1,8 +1,8 @@
 ## 1. Product Decisions and Risk Spikes
 
 - [ ] 1.1 Choose the product name, application identifiers, and container image name using the agreed platform workspace paths without changing existing application entry points
-- [ ] 1.2 Resolve first-release organization scope, attachment limit, storage quota, tombstone retention, note-history retention, and registration default
-  - Organization type confirmed on 2026-10-05: folders for the first release; tags deferred. Remaining policy decisions keep this task pending.
+- [x] 1.2 Resolve first-release organization scope, attachment limit, storage quota, tombstone retention, note-history retention, and registration default
+  - Confirmed: single-level folders, folder deletion preserves notes as uncategorized, 20 MiB attachments, administrator-adjustable 5 GiB/account default, latest 100 note versions, no automatic tombstone purge, and administrator-created accounts with public registration disabled.
 - [ ] 1.3 Prototype Milkdown WYSIWYG editing with Chinese IME, selection, undo, paste, image insertion, and canonical Markdown round trips
 - [ ] 1.4 Prototype Tauri 2 on Windows with Vue assets, coarse-grained Rust commands, SQLite access, credential storage, and production packaging
 - [ ] 1.5 Prototype Tauri 2 on Android for Chinese IME, keyboard layout, file selection, WebView performance, and WorkManager-to-Rust synchronization invocation, then record the native-shell fallback decision
@@ -33,6 +33,7 @@
 - [ ] 4.1 Implement server SQLite connection configuration with WAL, foreign keys, busy timeout, bounded connections, and single-instance ownership
 - [x] 4.1.1 Implement and verify the server-only empty-database connection module with per-connection WAL/foreign keys/FULL synchronous/busy timeout, bounded pool, cross-process ownership, and incompatible-database refusal; keep HTTP startup integration and migrated storage pending
 - [ ] 4.2 Add forward migrations for users, devices, sessions, notes, organization, attachments, mutation outcomes, change log, quotas, and schema metadata
+- [x] 4.2.1 Implement and verify transactional empty-database schema initialization for users, single-level folders, notes, confirmed policy defaults and schema metadata; verify reopen, rollback/retry, cross-owner constraints and exact-schema refusal, keeping business APIs and existing-data upgrades pending
 - [ ] 4.3 Implement typed server repositories with short transactions and owner-scoped queries
 - [ ] 4.4 Implement local attachment storage with opaque paths, atomic writes, integrity metadata, and garbage-collection state
 - [ ] 4.5 Add repository integration tests for constraints, concurrency, restart durability, and attachment/database consistency

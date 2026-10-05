@@ -7,6 +7,17 @@ The system SHALL require a one-time initialization flow to create the first admi
 - **WHEN** an operator accesses an uninitialized deployment with the required initialization authority
 - **THEN** the system allows creation of the first administrator and permanently closes the bootstrap operation after success
 
+### Requirement: First-release account and storage defaults
+The system SHALL disable public registration by default and allow administrators to create accounts. The default per-account storage quota SHALL be 5 GiB and SHALL be administrator-adjustable. Each attachment SHALL be limited to 20 MiB. Reducing a quota SHALL NOT silently delete existing data.
+
+#### Scenario: New account uses default quota
+- **WHEN** an administrator creates an account without a quota override
+- **THEN** the account receives a storage quota of 5,368,709,120 bytes and public self-registration remains disabled
+
+#### Scenario: Oversized attachment
+- **WHEN** a user attempts to upload an attachment larger than 20,971,520 bytes
+- **THEN** the system rejects it without committing the attachment
+
 ### Requirement: Secure password verification
 The server MUST store password verifiers using Argon2id with versioned parameters and MUST never store or log plaintext passwords.
 

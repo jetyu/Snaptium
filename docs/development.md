@@ -68,6 +68,7 @@ cargo fmt --all -- --check
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 cargo test --locked -p snaptium-server storage::tests
+cargo test --locked -p snaptium-server schema::tests
 cargo run --locked -p snaptium-server
 ```
 
@@ -77,7 +78,7 @@ cargo run --locked -p snaptium-server
 
 生产响应设置 CSP、nosniff、no-referrer、no-store 和生成的请求标识。开发模式 Vite 的 HMR 策略不代表生产 CSP。结构化业务错误与完整请求日志策略在任务 2.5 中继续完善。
 
-新增服务端 SQLite 连接模块已进行隔离目录测试，包含 WAL、外键、FULL synchronous、连接池上限与跨进程所有权锁。该模块尚未接入 HTTP 启动，不创建业务表、不执行迁移，也不改变健康端点的存储状态，参见 [服务端存储基础](server-storage.md)。
+服务端 SQLite 模块已进行隔离目录测试，包含 WAL、外键、FULL synchronous、连接池上限、跨进程所有权锁及显式空库 schema 初始化。尚未接入 HTTP 启动，不改变健康端点的存储状态，参见 [服务端存储基础](server-storage.md)。
 
 ## Docker 开发部署（待本地容器验证）
 
@@ -104,6 +105,6 @@ docker compose -f deploy/docker/compose.yaml down
 
 本机验证：`pnpm check` 已通过，包含类型检查、零警告 lint、50 项契约/真实 Milkdown 引擎/草稿存储与组件测试和生产构建；离线冻结锁文件安装也已通过。编辑器按需加载。当前无可用浏览器连接，尚未完成真实浏览器视觉、中文 IME、刷新草稿恢复、键盘与响应式回归验证，任务 1.3 保持未完成。
 
-本机 Rust 验证：格式检查、零警告 clippy 与锁定依赖的离线测试通过，共 9 项测试（其中 1 项为跨进程测试辅助入口）。未运行 NAS 容器验证。
+本机 Rust 验证：格式检查、零警告 clippy 与锁定依赖的离线测试通过，共 13 项测试（其中 1 项为跨进程测试辅助入口）。新增 schema 初始化/回滚、策略默认值、数据重开保留、跨账号文件夹约束和 schema 修改拒绝测试。未运行 NAS 容器验证。
 
-首版组织方式已确定为文件夹，标签延后。下一阶段仍需确定任务 1.2 的容量、保留和注册策略，再落实业务 schema、迁移/恢复保护与服务启动接入，随后实现账号初始化/登录并打通笔记创建、编辑、保存和重载。文件夹层级及删除行为在对应操作实现前明确。Windows 与 Android 不在当前实施范围。
+任务 1.2 已确认：单层文件夹（删除时保留笔记并移至未分类）、附件 20 MiB、可调整的默认账号容量 5 GiB、每篇最近 100 个历史版本、同步删除记录不自动清理、关闭公开注册由管理员创建账号。初始账号/文件夹/笔记 schema 与策略元数据已验证，但没有正式业务写入 API。下一阶段实现有严格输入校验的 owner-scoped repository、账号初始化/登录、后续迁移恢复保护和服务启动接入，再打通笔记保存和重载。Windows 与 Android 不在当前实施范围。

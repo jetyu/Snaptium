@@ -8,7 +8,11 @@ The system SHALL provide a responsive Web workspace in which an authenticated us
 - **THEN** the server persists the note and the workspace displays the committed content after reload
 
 ### Requirement: First-release folder organization
-The first release SHALL organize notes using owner-scoped folders and SHALL NOT provide tag organization. Folder operations and moving notes between folders MUST verify ownership of both the note and the target folder.
+The first release SHALL organize notes using single-level owner-scoped folders and SHALL NOT provide tag organization. Folder operations and moving notes between folders MUST verify ownership of both the note and the target folder. Deleting a folder SHALL preserve its notes by moving them to the uncategorized group.
+
+#### Scenario: Delete a folder containing notes
+- **WHEN** an authenticated user deletes their own folder containing notes
+- **THEN** those notes become uncategorized without losing Markdown content, and the operation follows revision and synchronization change-log rules
 
 #### Scenario: Move a note to an owned folder
 - **WHEN** an authenticated user moves their own note to their own folder
@@ -24,6 +28,13 @@ The system SHALL provide WYSIWYG authoring for the supported Markdown subset whi
 #### Scenario: Markdown round trip
 - **WHEN** a user applies supported rich-text formatting, saves the note, and reopens it
 - **THEN** the visual formatting and canonical Markdown meaning remain equivalent
+
+### Requirement: Bounded note revision history
+The system SHALL retain the latest 100 versions per note and SHALL prune older history without changing the current note. Attachment cleanup MUST preserve files referenced by retained history.
+
+#### Scenario: Note history exceeds the limit
+- **WHEN** committing a note revision would exceed 100 retained versions
+- **THEN** the system keeps the latest 100 versions and the current note remains unchanged by history pruning
 
 ### Requirement: Safe Markdown rendering
 The system MUST prevent note content from executing scripts, unsafe URLs, or untrusted embedded HTML in the Web client.
