@@ -36,6 +36,10 @@ Stakeholders include self-hosting users, browser-only users, Windows users who r
 
 The repository will add separate applications for the Web/Tauri client and Axum server, shared Vue editor/UI packages, and shared Rust protocol/domain crates. Existing Electron layering does not apply to the new Tauri runtime, but the same principles of strict boundaries, typed inputs, i18n, and minimum privilege remain mandatory.
 
+Application paths are platform-oriented: `apps/web/` contains the browser entry, `apps/windows/` contains the Windows Vue entry and `src-tauri/` shell, and `apps/server/` contains the Axum application, server repositories, and server migrations. Dockerfile, Compose, proxy examples, and deployment configuration live in `deploy/docker/`; Docker packages Web and API together rather than defining another client.
+
+Shared Vue UI, editor, i18n, and frontend contracts live in `packages/ui/`, `packages/editor/`, `packages/i18n/`, and `packages/contracts/`. Shared Rust crates live in `crates/domain/`, `crates/protocol/`, and `crates/native-core/`. The root Cargo workspace includes `apps/server/`, `apps/windows/src-tauri/`, and these shared crates; there is no duplicate `crates/server/`. Platform applications depend on shared packages instead of copying UI or synchronization logic. Additional lowercase platform directories are introduced only when those platforms enter implementation scope; the Android risk spike does not imply a first-release Android application.
+
 Alternatives considered:
 
 - Extending the current Electron app would reduce initial scaffolding but retain a desktop-only runtime and conflict with the requested clean restart.
@@ -60,6 +64,8 @@ Server SQLite runs as a single writer-capable application instance with WAL, for
 Milkdown/ProseMirror provides the editor UI, but normalized Markdown text is the stored and synchronized representation. The first supported subset includes paragraphs, headings, emphasis, strike-through, ordered/unordered/task lists, quotes, code, links, images, and horizontal rules. Arbitrary HTML is rejected or sanitized.
 
 Canonical serialization and cross-client fixtures prevent format churn. Unsupported Markdown must not be silently destroyed; it is either preserved as source-compatible content or blocked with an explicit import warning.
+
+Format v1 details and fixtures are documented in `docs/markdown-format.md`. The shared `packages/editor/` implementation rejects raw HTML, tables, footnotes, reference definitions/links/images, and extra code-fence metadata before rich projection. Rejected source remains editable as text. The prototype renders image references as non-fetching placeholders while preserving URLs, alt text, and titles; authenticated image loading is added with the attachment workflow. Paste accepts plain text through the Markdown boundary, arbitrary clipboard HTML and file drops are blocked, and composition prevents toolbar operations and mode switches. The 512 KiB prototype editor input bound does not resolve the final persisted-note quota decision.
 
 ### 5. Use revision-and-cursor synchronization rather than database replication
 
@@ -120,7 +126,7 @@ Rollback restores the previous application image together with the backup taken 
 
 ## Open Questions
 
-- Final product name, application identifiers, image names, and public repository structure.
+- Final product name, application identifiers, and image names.
 - Whether first-release organization uses folders, tags, or both; the proposed product scope permits both, but implementation sequencing should pick one first.
 - Maximum attachment size, total user quota, tombstone retention period, and retained note-history depth.
 - Whether public registration is disabled by default after administrator initialization.

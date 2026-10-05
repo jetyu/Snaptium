@@ -1,6 +1,6 @@
 # 开发规约
 
-本规约依据 [AGENTS.md](../AGENTS.md) 和 [OpenSpec 变更](../openspec/changes/add-self-hosted-notes-platform/)制定，与 [技术架构](technical-architecture.md)配套使用。“必须/禁止”为提交与评审要求，“建议”为可在具体任务中调整的实现方案。工程尚未搭建，下面标为“待建立”的命令不能视为已可运行。
+本规约依据 [AGENTS.md](../AGENTS.md) 和 [OpenSpec 变更](../openspec/changes/add-self-hosted-notes-platform/)制定，与 [技术架构](technical-architecture.md)配套使用。“必须/禁止”为提交与评审要求，“建议”为可在具体任务中调整的实现方案。Web 基础已搭建，实际可执行命令与验证状态见 [本地开发与验证](development.md)；下表保留完整工程的目标接口，尚未实现的模块不能视为已通过验收。
 
 ## 1. 变更流程
 
@@ -13,6 +13,9 @@
 
 ## 2. 模块和契约
 
+- 应用按平台使用小写目录：`apps/web/`、`apps/windows/`；服务端位于 `apps/server/`，Docker 配置位于 `deploy/docker/`。未来平台正式纳入范围后再创建对应目录，不使用含混的 `apps/desktop/`。
+- 平台目录只保存入口、配置及平台专属适配；共享 UI、编辑器、i18n、前端契约放在 `packages/`，共享 Rust 领域、协议和原生核心放在 `crates/`。禁止按平台复制共享业务代码。
+- 根 Cargo workspace 包含 `apps/server/`、`apps/windows/src-tauri/` 和共享 crates；前端 workspace 包含 Web、Windows Vue 入口与共享 packages。CI 按依赖关系运行受影响共享模块和应用检查，不能仅按平台文件夹过滤。
 - 组件通过明确领域接口操作数据；HTTP/Tauri 入口不堆积业务逻辑或事务。
 - 服务端仓储、原生仓储、各自迁移独立维护。共享包仅包含领域基础类型、协议和纯逻辑。
 - 所有 HTTP、WebSocket、Tauri command、文件、导入、配置和持久化恢复入口做运行时验证。生成的 TypeScript 类型不能替代运行时校验。

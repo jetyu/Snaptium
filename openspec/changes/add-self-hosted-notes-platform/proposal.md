@@ -32,6 +32,7 @@ None.
 ## Impact
 
 - Adds a greenfield workspace containing a Vue 3/TypeScript Web interface, Tauri 2 desktop shell, Rust client core, and Rust Axum server.
+- Organizes application entries by platform in `apps/web/` and `apps/windows/`, places the server in `apps/server/`, shares UI and Rust core through `packages/` and `crates/`, and stores Docker deployment assets in `deploy/docker/`.
 - Adds SQLite schemas for the authoritative server store and the desktop offline replica; these stores share domain semantics but not database files or identical schemas.
 - Adds a versioned HTTP/WebSocket API and shared Rust protocol types consumed by Web and native clients.
 - Adds Docker image, Compose configuration, persistent volume layout, health checks, upgrade flow, and release artifacts.

@@ -1,6 +1,6 @@
 # 技术架构
 
-本文依据 [OpenSpec 变更](../openspec/changes/add-self-hosted-notes-platform/proposal.md)、[设计](../openspec/changes/add-self-hosted-notes-platform/design.md)、六项能力规范及 [任务清单](../openspec/changes/add-self-hosted-notes-platform/tasks.md)编写。当前项目处于规划阶段，本文描述目标架构，不代表功能已实现或提案已获得评审批准。
+本文依据 [OpenSpec 变更](../openspec/changes/add-self-hosted-notes-platform/proposal.md)、[设计](../openspec/changes/add-self-hosted-notes-platform/design.md)、六项能力规范及 [任务清单](../openspec/changes/add-self-hosted-notes-platform/tasks.md)编写。项目已开始 Web-first 基础实施，本文描述完整目标架构，不代表全部功能已实现；实际交付状态见 [本地开发与验证](development.md)。
 
 OpenSpec 定义产品行为和架构决策，本文提供工程落地说明；出现冲突时先修订并评审 OpenSpec。下文标记为“建议”的目录、工具及实现细节需在对应任务中落实；待决策项不能作为已确定产品承诺。
 
@@ -45,12 +45,13 @@ flowchart TB
 
 ## 3. 仓库布局和依赖方向
 
-建议在任务 1.1、2.1、2.2 中确认以下布局；目录名称不是现有工程事实。
+已确定按平台划分应用目录，以下完整布局在任务 2.1、2.2 中逐步搭建；Web、服务端入口及部分共享包已有基础代码，尚未建立的模块按对应任务创建。
 
 ```text
 apps/
   web/                    Web 入口与 HTTP 适配器
-  desktop/                Vue 原生入口及 src-tauri 壳
+  windows/                Windows Vue 入口及 src-tauri 壳
+  server/                 Axum、服务端用例、仓储及迁移
 packages/
   ui/                     共享工作区组件
   editor/                 Markdown 编辑与序列化
@@ -59,12 +60,14 @@ packages/
 crates/
   domain/                 纯领域基础类型与规则
   protocol/               Wire DTO 与协议版本
-  server/                 Axum、服务端用例及仓储
   native-core/            本地仓储、同步、凭据与文件适配器
 tests/                    协议、跨客户端和故障场景
-deploy/                   Docker、Compose、代理示例
+deploy/
+  docker/                 Dockerfile、Compose、代理与部署配置
 docs/                     工程与运维文档
 ```
+
+`apps/windows/` 只承载 Windows 入口、Tauri 配置及平台专属适配，UI、编辑器与存储/同步核心分别复用 `packages/` 和 `crates/native-core/`。服务端 Rust crate 位于 `apps/server/`，Windows 壳 crate 位于 `apps/windows/src-tauri/`，二者与 `crates/` 下共享 crate 一同纳入根 Cargo workspace；不得额外复制一份 `crates/server/`。Docker 是 Web 与服务端的部署方式，不作为独立客户端。未来正式支持 Android、macOS、Linux 或 iOS 时，再增加对应小写平台目录；Android 风险验证不等于正式客户端交付。
 
 界面通过领域操作接口访问 Web 或原生适配器；HTTP handler 与 Tauri command 只负责校验、上下文建立、用例调用与错误转换。业务事务在用例/仓储层完成。领域层不依赖 Axum、Tauri 或 SQL；服务端与原生端只能向共享契约依赖，不能相互导入内部实现。抽象以已有用例为依据，不预建微服务、插件框架或通用数据库平台。
 
@@ -169,4 +172,4 @@ Tauri 使用按窗口配置的最小 capabilities，并对自定义 commands 显
 | 同步与 Windows | 8–10 | 幂等、冲突、崩溃恢复、离线编辑与跨端一致性 |
 | 恢复与交付 | 11–14 | 备份恢复、迁移回滚、镜像/安装包、威胁与数据丢失评审 |
 
-实现前仍须确定：产品名与稳定标识、最终目录、文件夹/标签范围、附件和账号配额、tombstone/mutation/history 保留策略、注册默认策略、Windows 签名及分发渠道。性能预算依据目标硬件测量确定；不得以未经验证的吞吐或容量数字作为发布承诺。
+实现前仍须确定：产品名与稳定标识、文件夹/标签范围、附件和账号配额、tombstone/mutation/history 保留策略、注册默认策略、Windows 签名及分发渠道。性能预算依据目标硬件测量确定；不得以未经验证的吞吐或容量数字作为发布承诺。

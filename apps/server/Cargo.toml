@@ -1,0 +1,20 @@
+[package]
+name = "snaptium-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[dependencies]
+snaptium-protocol = { path = "../../crates/protocol" }
+axum.workspace = true
+tokio.workspace = true
+tower-http.workspace = true
+uuid.workspace = true
+
+[dev-dependencies]
+tower.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

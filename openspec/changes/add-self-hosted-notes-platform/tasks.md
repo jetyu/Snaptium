@@ -1,18 +1,21 @@
 ## 1. Product Decisions and Risk Spikes
 
-- [ ] 1.1 Choose the product name, application identifiers, container image name, and greenfield workspace paths without changing existing application entry points
+- [ ] 1.1 Choose the product name, application identifiers, and container image name using the agreed platform workspace paths without changing existing application entry points
 - [ ] 1.2 Resolve first-release organization scope, attachment limit, storage quota, tombstone retention, note-history retention, and registration default
 - [ ] 1.3 Prototype Milkdown WYSIWYG editing with Chinese IME, selection, undo, paste, image insertion, and canonical Markdown round trips
 - [ ] 1.4 Prototype Tauri 2 on Windows with Vue assets, coarse-grained Rust commands, SQLite access, credential storage, and production packaging
 - [ ] 1.5 Prototype Tauri 2 on Android for Chinese IME, keyboard layout, file selection, WebView performance, and WorkManager-to-Rust synchronization invocation, then record the native-shell fallback decision
-- [ ] 1.6 Define the supported Markdown subset and add canonical serialization/import fixtures before building persistent note storage
+- [x] 1.6 Define the supported Markdown subset and add canonical serialization/import fixtures before building persistent note storage
 
 ## 2. Greenfield Workspace and Quality Gates
 
-- [ ] 2.1 Create the Rust workspace for server, shared domain/protocol crates, native core, and integration tests
-- [ ] 2.2 Create the frontend workspace for shared Vue UI, editor, i18n, Web application, and Tauri application
+- [ ] 2.1 Create the root Rust workspace with `apps/server/`, `apps/windows/src-tauri/`, `crates/domain/`, `crates/protocol/`, `crates/native-core/`, and integration tests, keeping server and native repositories/migrations separate
+- [ ] 2.2 Create the frontend workspace with platform entries in `apps/web/` and `apps/windows/` and shared `packages/ui/`, `packages/editor/`, `packages/i18n/`, and `packages/contracts/` without duplicating shared application logic
+- [x] 2.2.1 Scaffold and verify the Web entry and shared UI, Simplified Chinese i18n, and runtime-validated foundation health contract; keep Windows scaffolding pending
 - [ ] 2.3 Configure strict TypeScript, Rust formatting/linting, dependency policies, and reproducible lockfiles
+- [x] 2.3.1 Configure strict Vue/TypeScript checks, frontend ESLint rules, pinned compatible dependencies, and a verified frozen pnpm lockfile
 - [ ] 2.4 Add CI jobs for frontend typecheck/lint/unit tests, Rust format/clippy/tests, protocol fixtures, Docker build, and Windows Tauri build
+- [x] 2.4.1 Add frontend CI commands and locally verify typecheck, lint, health-boundary/component tests, and production Web build
 - [ ] 2.5 Define structured error codes, request correlation, content-free logs, and development diagnostics shared across applications
 
 ## 3. Shared Domain and API Contract
@@ -54,10 +57,11 @@
 ## 7. Web Client and Editor
 
 - [ ] 7.1 Build the responsive authenticated shell, navigation, note list, editor layout, settings, device management, and administration entry points
-- [ ] 7.2 Implement the Milkdown editor using the controlled Markdown schema and canonical serialization fixtures
+- [x] 7.2 Implement the Milkdown editor using the controlled Markdown schema and canonical serialization fixtures
 - [ ] 7.3 Sanitize rendered/imported Markdown and enforce a strict content-security policy without third-party runtime scripts
 - [ ] 7.4 Implement online-first note CRUD, organization, trash, search, history, and attachment workflows against the versioned API
 - [ ] 7.5 Implement IndexedDB-backed unsent drafts, preferences, and transient upload recovery without claiming a full offline replica
+- [x] 7.5.1 Implement and verify preview-only IndexedDB drafts with exact raw-source retention, explicit recovery into independent copies, serial transaction-complete save states, bounded validation, and failure retry; keep authenticated drafts, preferences, and upload recovery pending
 - [ ] 7.6 Implement revision-conflict UI that preserves the local Web draft and displays the current server version
 - [ ] 7.7 Add Simplified Chinese resources for all user-visible strings and enforce i18n usage in shared UI
 - [ ] 7.8 Add browser unit/component tests and end-to-end tests for authoring, drafts, search, attachment access, security sanitization, and session expiry
@@ -105,8 +109,8 @@
 ## 12. Docker Packaging and Operations
 
 - [ ] 12.1 Build the Vue production assets and embed or package them with the Axum release so Web/API versions are atomic
-- [ ] 12.2 Create a minimal non-root multi-architecture application image with read-only runtime filesystem outside documented volumes
-- [ ] 12.3 Create the supported Compose configuration, environment example, persistent volume layout, health checks, restart policy, and resource guidance
+- [ ] 12.2 Create the Dockerfile under `deploy/docker/` for a minimal non-root multi-architecture application image with read-only runtime filesystem outside documented volumes
+- [ ] 12.3 Create the supported Compose configuration and environment example under `deploy/docker/`, documenting persistent volume layout, health checks, restart policy, and resource guidance
 - [ ] 12.4 Add same-origin routing for Web, API, WebSocket, attachments, service discovery, and SPA fallback
 - [ ] 12.5 Document Caddy HTTPS setup, trusted local-network development, initialization, updates, backups, restoration, and troubleshooting
 - [ ] 12.6 Validate fresh install, container replacement, upgrade, rollback, amd64, and arm64 deployment scenarios

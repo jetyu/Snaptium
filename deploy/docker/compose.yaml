@@ -1,0 +1,21 @@
+services:
+  app:
+    image: snaptium:dev
+    build:
+      context: ../..
+      dockerfile: deploy/docker/Dockerfile
+    ports:
+      - "127.0.0.1:3000:3000"
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    volumes:
+      - snaptium-data:/data
+    init: true
+    restart: unless-stopped
+volumes:
+  snaptium-data:

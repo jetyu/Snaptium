@@ -1,0 +1,16 @@
+{
+  "name": "@snaptium/editor",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": "./src/index.ts",
+  "dependencies": {
+    "@milkdown/kit": "7.22.2",
+    "@snaptium/i18n": "workspace:*",
+    "@types/mdast": "4.0.4",
+    "remark-gfm": "4.0.1",
+    "remark-parse": "11.0.0",
+    "unified": "11.0.5",
+    "vue": "3.5.43"
+  }
+}

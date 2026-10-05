@@ -1,0 +1,12 @@
+.git
+.codex
+.agents
+.pnpm-store
+**/node_modules
+**/dist
+target
+data
+logs
+.env
+.env.*
+*.log
