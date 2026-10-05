@@ -12,6 +12,10 @@ tokio.workspace = true
 tower-http.workspace = true
 uuid.workspace = true
 sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio", "sqlite"] }
+argon2 = { version = "=0.5.3", features = ["std"] }
+rand_core = { version = "=0.6.4", features = ["getrandom"] }
+subtle = "=2.6.1"
+zeroize = "=1.8.2"
 
 [dev-dependencies]
 tower.workspace = true

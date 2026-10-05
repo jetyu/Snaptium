@@ -146,6 +146,8 @@ Web 使用 Secure、HttpOnly、SameSite Cookie；所有写请求实施 CSRF 防�
 
 密码使用 Argon2id，保存参数版本，登录后可按策略升级哈希。参数依照部署硬件测量和 [OWASP 密码存储指南](https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html)确定，限制哈希任务并发以控制资源耗尽。
 
+当前已实现的 Rust 身份基础使用有界的初始 Argon2id 参数与输入校验，并在独立新 schema 2 中原子创建首个管理员及永久关闭初始化；已有 schema 1 在只读阶段拒绝自动升级。HTTP 初始化、Web 会话、登录限流及哈希成本升级尚未接入，具体实现与验证边界见 [服务端身份基础](server-identity.md)。
+
 首次管理员初始化验证初始化权限并在事务内永久关闭入口。管理接口单独授权；管理员角色不自动获得普通账号笔记 API 的跨用户访问权。登录、初始化、导出和上传等敏感入口采用有界资源和限流。跨账号 ID 使用统一失败行为避免存在性泄露。
 
 Tauri 使用按窗口配置的最小 capabilities，并对自定义 commands 显式限制调用权限；Rust 再次检查参数与账号/服务器上下文，不能把 capability 当作业务授权。参见 [Tauri Runtime Authority](https://v2.tauri.app/security/runtime-authority/)。文件选择授权不等于允许任意路径；服务地址和重定向必须验证，不能跨服务器转发凭据或绕过 TLS 错误。

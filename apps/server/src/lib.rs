@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+pub mod identity;
+pub mod repository;
 mod schema;
 pub mod storage;
 

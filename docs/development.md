@@ -1,6 +1,6 @@
 # 本地开发与验证
 
-当前交付为 Web-first 工程基础：Vue Web 页面、共享 UI/i18n、健康响应边界校验、Milkdown Markdown 编辑预览、IndexedDB 预览草稿、Axum 路由、独立 SQLite 连接模块与同镜像 Docker 构建配置。没有账号或服务端笔记保存能力，SQLite 尚未接入 HTTP 启动；浏览器草稿可显式恢复为副本，但不能作为真实笔记的唯一备份。产品名暂沿用仓库名 Snaptium；正式标识与分发名称仍由任务 1.1 确定。
+当前交付为 Web-first 工程基础：Vue Web 页面、共享 UI/i18n、健康响应边界校验、Milkdown Markdown 编辑预览、IndexedDB 预览草稿、Axum 路由、独立 SQLite/读取 repository/密码与管理员初始化模块及同镜像 Docker 构建配置。尚无 Web 登录或服务端笔记保存能力，SQLite 与身份模块未接入 HTTP 启动；浏览器草稿可显式恢复为副本，但不能作为真实笔记的唯一备份。产品名暂沿用仓库名 Snaptium；正式标识与分发名称仍由任务 1.1 确定。
 
 ## Web 开发
 
@@ -69,6 +69,8 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 cargo test --locked -p snaptium-server storage::tests
 cargo test --locked -p snaptium-server schema::tests
+cargo test --locked -p snaptium-server repository::tests
+cargo test --locked -p snaptium-server identity::tests
 cargo run --locked -p snaptium-server
 ```
 
@@ -79,6 +81,8 @@ cargo run --locked -p snaptium-server
 生产响应设置 CSP、nosniff、no-referrer、no-store 和生成的请求标识。开发模式 Vite 的 HMR 策略不代表生产 CSP。结构化业务错误与完整请求日志策略在任务 2.5 中继续完善。
 
 服务端 SQLite 模块已进行隔离目录测试，包含 WAL、外键、FULL synchronous、连接池上限、跨进程所有权锁及显式空库 schema 初始化。尚未接入 HTTP 启动，不改变健康端点的存储状态，参见 [服务端存储基础](server-storage.md)。
+
+Rust 身份模块可在独立的新 schema 2 测试库中创建首个管理员并校验密码；已有 schema 1 只读拒绝升级。初始化密钥配置、HTTP 初始化/登录、Web 会话、CSRF、登录限流与退出尚未接入，不新增可用的账号 API 或部署环境变量。接口和运行边界见 [服务端密码与管理员初始化](server-identity.md)。
 
 ## Docker 开发部署（待本地容器验证）
 
@@ -105,6 +109,8 @@ docker compose -f deploy/docker/compose.yaml down
 
 本机验证：`pnpm check` 已通过，包含类型检查、零警告 lint、50 项契约/真实 Milkdown 引擎/草稿存储与组件测试和生产构建；离线冻结锁文件安装也已通过。编辑器按需加载。当前无可用浏览器连接，尚未完成真实浏览器视觉、中文 IME、刷新草稿恢复、键盘与响应式回归验证，任务 1.3 保持未完成。
 
-本机 Rust 验证：格式检查、零警告 clippy 与锁定依赖的离线测试通过，共 13 项测试（其中 1 项为跨进程测试辅助入口）。新增 schema 初始化/回滚、策略默认值、数据重开保留、跨账号文件夹约束和 schema 修改拒绝测试。未运行 NAS 容器验证。
+本机 Rust 验证：格式检查、零警告 clippy 与锁定依赖的离线测试通过，共 25 项测试（其中 1 项为跨进程测试辅助入口）。覆盖 schema/锁、owner-scoped 笔记读取、文件夹分页、非法参数与存储数据、源码及回收站状态保留；身份模块新增版本化密码、容量限制、初始化竞争/回滚/重启和旧库拒绝保护。未运行 NAS 容器验证。
 
-任务 1.2 已确认：单层文件夹（删除时保留笔记并移至未分类）、附件 20 MiB、可调整的默认账号容量 5 GiB、每篇最近 100 个历史版本、同步删除记录不自动清理、关闭公开注册由管理员创建账号。初始账号/文件夹/笔记 schema 与策略元数据已验证，但没有正式业务写入 API。下一阶段实现有严格输入校验的 owner-scoped repository、账号初始化/登录、后续迁移恢复保护和服务启动接入，再打通笔记保存和重载。Windows 与 Android 不在当前实施范围。
+读取 repository 子项 4.3.1 已落实，详见 [服务端读取数据访问层](server-repositories.md)。身份基础子项 5.1.1、5.2.1 已落实。这些接口仅为服务端模块，未开放 HTTP；会话认证和笔记写入仍待实现，不接受浏览器自报 owner 作为认证。
+
+任务 1.2 已确认：单层文件夹（删除时保留笔记并移至未分类）、附件 20 MiB、可调整的默认账号容量 5 GiB、每篇最近 100 个历史版本、同步删除记录不自动清理、关闭公开注册由管理员创建账号。初始账号/文件夹/笔记 schema 与策略元数据已验证，但没有正式业务写入 API。下一阶段接入可信初始化配置、服务启动、HTTP 初始化与登录，以及 Secure/HttpOnly/SameSite 会话、CSRF、限流和退出，再增加经过会话认证的 owner-scoped 笔记保存与重载。已有库升级另须先完成迁移恢复保护。Windows 与 Android 不在当前实施范围。

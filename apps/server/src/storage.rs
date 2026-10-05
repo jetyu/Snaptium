@@ -42,8 +42,15 @@ pub struct ServerStorage {
 }
 
 impl ServerStorage {
-    /// Accept empty schema zero or an exact supported schema one. No upgrades.
+    /// Accept empty schema zero or an exact supported schema one/two. No upgrades.
     pub async fn open(directory: &Path) -> Result<Self, StorageError> {
+        Self::open_supported(directory, true).await
+    }
+
+    async fn open_supported(
+        directory: &Path,
+        allow_schema_one: bool,
+    ) -> Result<Self, StorageError> {
         if directory.as_os_str().is_empty() {
             return Err(StorageError::InvalidDirectory);
         }
@@ -94,7 +101,8 @@ impl ServerStorage {
                 .map_err(|_| StorageError::DatabaseUnavailable)?;
                 match version {
                     0 if tables == 0 => Ok(()),
-                    1 => crate::schema::verify(&probe).await,
+                    1 if allow_schema_one => crate::schema::verify(&probe).await,
+                    2 => crate::schema::verify(&probe).await,
                     _ => Err(StorageError::IncompatibleDatabase),
                 }
             }
@@ -153,13 +161,41 @@ impl ServerStorage {
         Ok(storage)
     }
 
-    #[cfg(test)]
     pub(crate) fn pool(&self) -> &SqlitePool {
         &self.pool
     }
 
+    /// New schema-2 identity stores only. Refuse schema-1 upgrades until a
+    /// verified pre-upgrade recovery path exists; never replace the old store.
+    pub async fn open_identity(directory: &Path) -> Result<Self, StorageError> {
+        let storage = Self::open_supported(directory, false).await?;
+        let result = async {
+            let version: i64 = sqlx::query_scalar("PRAGMA user_version")
+                .fetch_one(&storage.pool)
+                .await
+                .map_err(|_| StorageError::DatabaseUnavailable)?;
+            match version {
+                0 => crate::schema::initialize_identity(&storage.pool).await?,
+                2 => (),
+                _ => return Err(StorageError::IncompatibleDatabase),
+            }
+            crate::schema::verify(&storage.pool).await
+        }
+        .await;
+        if let Err(error) = result {
+            storage.close().await;
+            return Err(error);
+        }
+        Ok(storage)
+    }
+
     /// Drain connections before releasing ownership. Call on graceful shutdown.
     pub async fn close(self) {
+        // Await a best-effort checkpoint before dropping SQLite workers. A
+        // failed checkpoint is not data loss: committed pages remain in WAL.
+        let _ = sqlx::query("PRAGMA wal_checkpoint(TRUNCATE)")
+            .fetch_all(&self.pool)
+            .await;
         self.pool.close().await;
     }
 }

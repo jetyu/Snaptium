@@ -35,13 +35,16 @@
 - [ ] 4.2 Add forward migrations for users, devices, sessions, notes, organization, attachments, mutation outcomes, change log, quotas, and schema metadata
 - [x] 4.2.1 Implement and verify transactional empty-database schema initialization for users, single-level folders, notes, confirmed policy defaults and schema metadata; verify reopen, rollback/retry, cross-owner constraints and exact-schema refusal, keeping business APIs and existing-data upgrades pending
 - [ ] 4.3 Implement typed server repositories with short transactions and owner-scoped queries
+- [x] 4.3.1 Implement and verify server-only owner-scoped note reads and bounded UUID-keyset folder pagination, canonical UUIDv7 inputs, positive lossless revisions, content-free errors and raw-source preservation; keep authenticated HTTP integration and transactional writes pending
 - [ ] 4.4 Implement local attachment storage with opaque paths, atomic writes, integrity metadata, and garbage-collection state
 - [ ] 4.5 Add repository integration tests for constraints, concurrency, restart durability, and attachment/database consistency
 
 ## 5. Identity, Devices, and Authorization
 
 - [ ] 5.1 Implement one-time administrator bootstrap with initialization-secret validation and permanent closure after success
+- [x] 5.1.1 Implement and verify validated server-only initialization secrets and transactional administrator creation with persistent closure, concurrent-winner isolation, rollback/retry and restart protection; initialize fresh schema 2 and refuse schema 1 without mutation, keeping configuration and HTTP bootstrap pending
 - [ ] 5.2 Implement account creation policy and Argon2id password verification with versioned parameters
+- [x] 5.2.1 Implement and verify typed credential boundaries, salted versioned Argon2id hashes, bounded PHC parameters and process-wide blocking-work capacity, generic credential failures and first-administrator password policy; keep administrator-managed accounts, password updates and HTTP login pending
 - [ ] 5.3 Implement Secure HttpOnly SameSite Web sessions with CSRF protection and logout
 - [ ] 5.4 Implement native device registration, short-lived access credentials, hashed rotating refresh credentials, and protected client storage integration
 - [ ] 5.5 Implement user device listing, naming, last-seen metadata, individual revocation, and revoke-all behavior

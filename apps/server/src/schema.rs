@@ -1,9 +1,10 @@
-//! Initial server schema only. No existing-user-data upgrade is supported yet.
+//! Fresh server schemas only. No existing-user-data upgrade is supported yet.
 use sqlx::SqlitePool;
 
 use crate::storage::StorageError;
 
 pub(crate) const INITIAL_SQL: &str = include_str!("../migrations/0001_core.sql");
+const IDENTITY_SQL: &str = include_str!("../migrations/0002_identity.sql");
 
 pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
     let record: Option<(i64, String)> =
@@ -15,6 +16,23 @@ pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
     if record != Some((1, canonical_sql.clone())) {
         return Err(StorageError::IncompatibleDatabase);
     }
+    let version: i64 = sqlx::query_scalar("PRAGMA user_version")
+        .fetch_one(pool)
+        .await
+        .map_err(|_| StorageError::IncompatibleDatabase)?;
+    if !matches!(version, 1 | 2) {
+        return Err(StorageError::IncompatibleDatabase);
+    }
+    if version == 2 {
+        let state: Option<(i64, String)> =
+            sqlx::query_as("SELECT closed, migration_sql FROM bootstrap_state WHERE singleton = 1")
+                .fetch_optional(pool)
+                .await
+                .map_err(|_| StorageError::IncompatibleDatabase)?;
+        if !matches!(state, Some((0 | 1, ref sql)) if sql == &IDENTITY_SQL.replace("\r\n", "\n")) {
+            return Err(StorageError::IncompatibleDatabase);
+        }
+    }
     // Compare actual schema objects with a fresh reference, not merely a version
     // marker. Missing constraints, extra objects, and altered columns fail closed.
     let reference = SqlitePool::connect("sqlite::memory:")
@@ -23,6 +41,10 @@ pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
     let result = async {
         sqlx::raw_sql(&canonical_sql).execute(&reference).await
             .map_err(|_| StorageError::DatabaseUnavailable)?;
+        if version == 2 {
+            sqlx::raw_sql(&IDENTITY_SQL.replace("\r\n", "\n")).execute(&reference).await
+                .map_err(|_| StorageError::DatabaseUnavailable)?;
+        }
         let query = "SELECT type, name, tbl_name, sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name";
         let actual: Vec<(String, String, String, Option<String>)> = sqlx::query_as(query)
             .fetch_all(pool).await.map_err(|_| StorageError::IncompatibleDatabase)?;
@@ -36,10 +58,14 @@ pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
 }
 
 pub(crate) async fn initialize(pool: &SqlitePool) -> Result<(), StorageError> {
-    initialize_sql(pool, INITIAL_SQL).await
+    initialize_sql(pool, INITIAL_SQL, false).await
 }
 
-async fn initialize_sql(pool: &SqlitePool, sql: &str) -> Result<(), StorageError> {
+pub(crate) async fn initialize_identity(pool: &SqlitePool) -> Result<(), StorageError> {
+    initialize_sql(pool, INITIAL_SQL, true).await
+}
+
+async fn initialize_sql(pool: &SqlitePool, sql: &str, identity: bool) -> Result<(), StorageError> {
     let sql = sql.replace("\r\n", "\n");
     let mut transaction = pool
         .begin()
@@ -59,6 +85,21 @@ async fn initialize_sql(pool: &SqlitePool, sql: &str) -> Result<(), StorageError
             .execute(&mut *transaction)
             .await
             .map_err(|_| StorageError::DatabaseUnavailable)?;
+        if identity {
+            sqlx::raw_sql(&IDENTITY_SQL.replace("\r\n", "\n"))
+                .execute(&mut *transaction)
+                .await
+                .map_err(|_| StorageError::DatabaseUnavailable)?;
+            sqlx::query("INSERT INTO bootstrap_state VALUES (1, 0, ?)")
+                .bind(IDENTITY_SQL.replace("\r\n", "\n"))
+                .execute(&mut *transaction)
+                .await
+                .map_err(|_| StorageError::DatabaseUnavailable)?;
+            sqlx::query("PRAGMA user_version = 2")
+                .execute(&mut *transaction)
+                .await
+                .map_err(|_| StorageError::DatabaseUnavailable)?;
+        }
         Ok(())
     }
     .await;
@@ -106,7 +147,7 @@ mod tests {
         let pool = SqlitePool::connect("sqlite::memory:").await?;
         let broken = format!("{INITIAL_SQL}\nINSERT INTO missing_table VALUES (1);");
         assert_eq!(
-            initialize_sql(&pool, &broken).await,
+            initialize_sql(&pool, &broken, false).await,
             Err(StorageError::DatabaseUnavailable)
         );
         let objects: i64 =
@@ -120,6 +161,39 @@ mod tests {
         assert_eq!(version, 0);
         initialize(&pool).await?;
         verify(&pool).await?;
+        pool.close().await;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn failed_identity_initialization_rolls_back_core_and_retries()
+    -> Result<(), Box<dyn std::error::Error>> {
+        let pool = SqlitePool::connect("sqlite::memory:").await?;
+        sqlx::query("CREATE TABLE bootstrap_state (placeholder INTEGER)")
+            .execute(&pool)
+            .await?;
+        assert_eq!(
+            initialize_identity(&pool).await,
+            Err(StorageError::DatabaseUnavailable)
+        );
+        let objects: i64 =
+            sqlx::query_scalar("SELECT count(*) FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%'")
+                .fetch_one(&pool)
+                .await?;
+        assert_eq!(objects, 1);
+        let version: i64 = sqlx::query_scalar("PRAGMA user_version")
+            .fetch_one(&pool)
+            .await?;
+        assert_eq!(version, 0);
+        sqlx::query("DROP TABLE bootstrap_state")
+            .execute(&pool)
+            .await?;
+        initialize_identity(&pool).await?;
+        verify(&pool).await?;
+        let version: i64 = sqlx::query_scalar("PRAGMA user_version")
+            .fetch_one(&pool)
+            .await?;
+        assert_eq!(version, 2);
         pool.close().await;
         Ok(())
     }
@@ -191,7 +265,10 @@ mod tests {
                 ServerStorage::open_initialized(directory.path()).await,
                 Err(StorageError::IncompatibleDatabase)
             ));
-            assert_eq!(before, std::fs::read(filename)?);
+            assert!(
+                before == std::fs::read(filename)?,
+                "refusal modified database bytes"
+            );
         }
         Ok(())
     }
