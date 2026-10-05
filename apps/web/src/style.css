@@ -65,3 +65,10 @@ footer { border-top: 1px solid #dce3dc; padding: 24px 0; color: #89928a; font-si
 .draft-panel > button { margin: .5rem; padding: .65rem 1rem; border: 1px solid #d8d8d0; border-radius: .5rem; background: #fff; cursor: pointer; }
 .draft-status { color: #52634d; }
 .draft-status[role="alert"] { color: #93432d; }
+.identity-panel { margin-top: 26px; padding: 26px; background: white; border: 1px solid #dce3dc; border-radius: 16px; }
+.identity-panel p { font-size: 13px; line-height: 1.8; color: #6b786d; }
+.identity-panel form { display: grid; gap: 10px; margin: 24px 0; }
+.identity-panel input { width: 100%; padding: 12px; border: 1px solid #cfd9d0; border-radius: 8px; font: inherit; }
+.identity-panel input:focus-visible { outline: 3px solid #d7a24b; outline-offset: 3px; }
+.identity-panel form p { margin: 0 0 10px; }
+.identity-retry { margin-top: 18px; background: transparent; border: 1px solid #cfd9d0; padding: 10px; border-radius: 8px; cursor: pointer; }

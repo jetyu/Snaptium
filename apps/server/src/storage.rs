@@ -191,6 +191,11 @@ impl ServerStorage {
 
     /// Drain connections before releasing ownership. Call on graceful shutdown.
     pub async fn close(self) {
+        self.shutdown().await;
+    }
+
+    /// Close a shared server pool while its ownership guard remains alive.
+    pub async fn shutdown(&self) {
         // Await a best-effort checkpoint before dropping SQLite workers. A
         // failed checkpoint is not data loss: committed pages remain in WAL.
         let _ = sqlx::query("PRAGMA wal_checkpoint(TRUNCATE)")

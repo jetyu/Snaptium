@@ -1,27 +1,57 @@
-use std::{net::SocketAddr, path::PathBuf};
+use snaptium_server::{
+    configuration::{Settings, read_bootstrap_secret},
+    storage::ServerStorage,
+    web_identity::WebIdentity,
+};
+use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let listen: SocketAddr = setting("SNAPTIUM_LISTEN", "127.0.0.1:3000")?.parse()?;
-    let web_dir = PathBuf::from(setting("SNAPTIUM_WEB_DIR", "apps/web/dist")?);
-    if !web_dir.join("index.html").is_file() {
+    let settings = Settings::from_env()?;
+    if !settings.web_dir.join("index.html").is_file() {
         return Err("web build missing; run pnpm build:web before starting the server".into());
     }
-    let listener = tokio::net::TcpListener::bind(listen).await?;
+    let mut storage = None;
+    let app = if let Some(identity) = settings.identity {
+        let authority = match identity.secret_file {
+            Some(path) => Some(read_bootstrap_secret(path).await?),
+            None => None,
+        };
+        let database = Arc::new(ServerStorage::open_identity(&identity.directory).await?);
+        let identity = match WebIdentity::new(database.clone(), identity.policy, authority).await {
+            Ok(identity) => Arc::new(identity),
+            Err(error) => {
+                database.shutdown().await;
+                return Err(error.into());
+            }
+        };
+        storage = Some(database);
+        snaptium_server::router_with_identity(settings.web_dir, identity)
+    } else {
+        snaptium_server::router(settings.web_dir)
+    };
+    let listener = tokio::net::TcpListener::bind(settings.listen).await?;
     println!("snaptium server started");
-    axum::serve(listener, snaptium_server::router(web_dir))
-        .with_graceful_shutdown(async {
-            let _ = tokio::signal::ctrl_c().await;
-        })
-        .await?;
+    let result = axum::serve(
+        listener,
+        app.into_make_service_with_connect_info::<std::net::SocketAddr>(),
+    )
+    .with_graceful_shutdown(shutdown_signal())
+    .await;
+    if let Some(storage) = storage {
+        storage.shutdown().await;
+    }
+    result?;
     Ok(())
 }
 
-fn setting(name: &str, default: &str) -> Result<String, Box<dyn std::error::Error>> {
-    match std::env::var(name) {
-        Ok(value) if !value.trim().is_empty() => Ok(value),
-        Ok(_) => Err("configuration value must not be empty".into()),
-        Err(std::env::VarError::NotPresent) => Ok(default.into()),
-        Err(_) => Err("configuration value must be valid Unicode".into()),
+async fn shutdown_signal() {
+    #[cfg(unix)]
+    if let Ok(mut terminate) =
+        tokio::signal::unix::signal(tokio::signal::unix::SignalKind::terminate())
+    {
+        tokio::select! { _ = tokio::signal::ctrl_c() => {}, _ = terminate.recv() => {} }
+        return;
     }
+    let _ = tokio::signal::ctrl_c().await;
 }

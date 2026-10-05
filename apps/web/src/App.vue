@@ -5,6 +5,7 @@ import { ServiceStatus } from '@snaptium/ui';
 import type { Health } from '@snaptium/contracts';
 import { fetchHealth } from './api';
 import DraftWorkspace from './drafts/DraftWorkspace.vue';
+import IdentityPanel from './identity/IdentityPanel.vue';
 
 const status = ref<'checking' | 'available' | 'unavailable'>('checking');
 const health = ref<Health | null>(null);
@@ -83,7 +84,7 @@ onBeforeUnmount(() => { activeRequest?.abort(); activeRequest = undefined; });
           class="service-details"
         >
           <div><dt>{{ t('version') }}</dt><dd>{{ health.version }}</dd></div>
-          <div><dt>{{ t('serviceMode') }}</dt><dd>{{ t('foundationMode') }}</dd></div>
+          <div><dt>{{ t('serviceMode') }}</dt><dd>{{ t(health.mode === 'identity' ? 'identityMode' : 'foundationMode') }}</dd></div>
         </dl>
         <button
           class="primary-button"
@@ -93,6 +94,7 @@ onBeforeUnmount(() => { activeRequest?.abort(); activeRequest = undefined; });
           {{ t('retry') }}
         </button>
       </section>
+      <IdentityPanel v-if="health?.mode === 'identity'" />
       <DraftWorkspace />
       <section
         class="next-card"

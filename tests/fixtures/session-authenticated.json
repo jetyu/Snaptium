@@ -1,0 +1,8 @@
+{
+  "state": "authenticated",
+  "account": {
+    "id": "019b7da0-0000-7000-8000-000000000001",
+    "isAdmin": true
+  },
+  "csrfToken": "abababababababababababababababababababababababababababababababab"
+}

@@ -11,7 +11,7 @@ export default tseslint.config(
     files: ['**/*.vue'],
     languageOptions: {
       parserOptions: { parser: tseslint.parser },
-      globals: { AbortController: 'readonly', BeforeUnloadEvent: 'readonly', HTMLElement: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly' },
+      globals: { AbortController: 'readonly', AbortSignal: 'readonly', BeforeUnloadEvent: 'readonly', HTMLElement: 'readonly', setTimeout: 'readonly', clearTimeout: 'readonly' },
     },
   },
   {

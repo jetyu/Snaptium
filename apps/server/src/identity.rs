@@ -11,6 +11,8 @@ use zeroize::Zeroizing;
 use crate::{repository::EntityId, storage::ServerStorage};
 
 static HASH_SLOTS: Semaphore = Semaphore::const_new(2);
+#[cfg(test)]
+pub(crate) static TEST_HASH_SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 const MIN_NEW_PASSWORD_CHARS: usize = 15;
 const MAX_PASSWORD_BYTES: usize = 1024;
 
@@ -138,6 +140,22 @@ pub struct AuthenticatedAccount {
 }
 
 impl ServerStorage {
+    pub(crate) async fn bootstrap_required(&self) -> Result<bool, IdentityError> {
+        let closed: i64 =
+            sqlx::query_scalar("SELECT closed FROM bootstrap_state WHERE singleton = 1")
+                .fetch_one(self.pool())
+                .await
+                .map_err(|_| IdentityError::Unavailable)?;
+        Ok(closed == 0)
+    }
+
+    pub(crate) async fn account_admin(&self, id: &EntityId) -> Result<Option<bool>, IdentityError> {
+        sqlx::query_scalar("SELECT is_admin FROM users WHERE id = ?")
+            .bind(id.canonical())
+            .fetch_optional(self.pool())
+            .await
+            .map_err(|_| IdentityError::Unavailable)
+    }
     /// Trusted caller supplies configured authority and validated candidate secret.
     /// No secrets or credential hashes are returned. Bootstrap does not issue a session.
     pub async fn bootstrap_admin(
@@ -211,7 +229,6 @@ impl ServerStorage {
 mod tests {
     use super::*;
     use sqlx::ConnectOptions;
-    static TEST_HASH_SERIAL: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
     fn password() -> Result<Password, IdentityError> {
         Password::for_creation("test password 长度足够 123".into())
     }

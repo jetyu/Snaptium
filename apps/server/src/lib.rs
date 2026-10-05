@@ -1,9 +1,12 @@
 use std::path::PathBuf;
+use std::sync::Arc;
 
+pub mod configuration;
 pub mod identity;
 pub mod repository;
 mod schema;
 pub mod storage;
+pub mod web_identity;
 
 use axum::{
     Extension, Json, Router,
@@ -20,32 +23,76 @@ use tower_http::services::ServeDir;
 #[derive(Clone)]
 struct AppState {
     web_dir: PathBuf,
+    identity: Option<Arc<web_identity::WebIdentity>>,
 }
 
 #[derive(Clone)]
 struct RequestId(String);
 
 pub fn router(web_dir: PathBuf) -> Router {
-    Router::new()
+    build_router(web_dir, None)
+}
+
+pub fn router_with_identity(web_dir: PathBuf, identity: Arc<web_identity::WebIdentity>) -> Router {
+    build_router(web_dir, Some(identity))
+}
+
+fn build_router(web_dir: PathBuf, identity: Option<Arc<web_identity::WebIdentity>>) -> Router {
+    let mut router = Router::new()
         .route("/api/v1/health", get(health))
         .route("/.well-known/notes", get(discovery))
         .nest_service("/assets", ServeDir::new(web_dir.join("assets")))
-        .fallback(get(shell))
-        .with_state(AppState { web_dir })
+        .fallback(get(shell));
+    if let Some(state) = &identity {
+        router = router.merge(web_identity::router().with_state(state.clone()));
+    }
+    router
+        .with_state(AppState { web_dir, identity })
         .layer(middleware::from_fn(response_headers))
 }
 
-async fn health() -> Json<Health> {
-    Json(Health::foundation(env!("CARGO_PKG_VERSION")))
+async fn health(
+    State(state): State<AppState>,
+    Extension(RequestId(id)): Extension<RequestId>,
+) -> Response {
+    if let Some(identity) = state.identity {
+        if identity.storage.check().await.is_err() {
+            return error(
+                StatusCode::SERVICE_UNAVAILABLE,
+                ErrorCode::ServiceUnavailable,
+                id,
+            );
+        }
+        return match identity.storage.bootstrap_required().await {
+            Ok(required) => {
+                Json(Health::identity(env!("CARGO_PKG_VERSION"), !required)).into_response()
+            }
+            Err(_) => error(
+                StatusCode::SERVICE_UNAVAILABLE,
+                ErrorCode::ServiceUnavailable,
+                id,
+            ),
+        };
+    }
+    Json(Health::foundation(env!("CARGO_PKG_VERSION"))).into_response()
 }
 
-async fn discovery() -> Json<Discovery> {
+async fn discovery(State(state): State<AppState>) -> Json<Discovery> {
+    let identity_enabled = state.identity.is_some();
     Json(Discovery {
         application: "snaptium",
         version: env!("CARGO_PKG_VERSION"),
-        mode: ServiceMode::Foundation,
+        mode: if identity_enabled {
+            ServiceMode::Identity
+        } else {
+            ServiceMode::Foundation
+        },
         protocol_versions: vec![],
-        capabilities: vec![],
+        capabilities: if identity_enabled {
+            vec!["web_identity".into()]
+        } else {
+            vec![]
+        },
     })
 }
 
