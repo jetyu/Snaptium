@@ -34,6 +34,8 @@
 - [x] 4.1.1 Implement and verify the server-only empty-database connection module with per-connection WAL/foreign keys/FULL synchronous/busy timeout, bounded pool, cross-process ownership, and incompatible-database refusal; existing-data upgrades remain pending
 - [ ] 4.2 Add forward migrations for users, devices, sessions, notes, organization, attachments, mutation outcomes, change log, quotas, and schema metadata
 - [x] 4.2.1 Implement and verify transactional empty-database schema initialization for users, single-level folders, notes, confirmed policy defaults and schema metadata; verify reopen, rollback/retry, cross-owner constraints and exact-schema refusal, keeping business APIs and existing-data upgrades pending
+- [x] 4.2.2 Implement the explicit recovery-protected schema-1 to schema-2 forward step, preserving existing content/credentials/policy and permanently closing bootstrap for populated administrator-owned stores; keep note-storage extensions pending
+- [ ] 4.2.3 Add exact schema-3 note-history snapshots and owner-scoped monotonic change-journal storage, atomic current-state backfill, fresh initialization and recovery-protected explicit schema-2 to schema-3 migration; keep business writes, retention enforcement and synchronization APIs pending
 - [ ] 4.3 Implement typed server repositories with short transactions and owner-scoped queries
 - [x] 4.3.1 Implement and verify server-only owner-scoped note reads and bounded UUID-keyset folder pagination, canonical UUIDv7 inputs, positive lossless revisions, content-free errors and raw-source preservation; keep authenticated HTTP integration and transactional writes pending
 - [ ] 4.4 Implement local attachment storage with opaque paths, atomic writes, integrity metadata, and garbage-collection state
@@ -117,8 +119,11 @@
 - [ ] 11.4 Implement backup integrity verification and a restore command that refuses incompatible or incomplete archives before replacing active data
 - [x] 11.4.1 Implement trusted operator backup/verify/restore commands, read-only integrity/schema validation and interruption-safe restoration to a new directory without replacing existing data
 - [ ] 11.5 Implement pre-migration recovery points, schema compatibility refusal, and documented image-plus-backup rollback
+- [x] 11.5.1 Implement an ownership-locked offline migrate command with a freshly verified recovery point, durable interruption marker, pre/post-commit checks and documented new-directory rollback; keep later schemas, attachments and deployment automation pending
 - [ ] 11.6 Add automated tests that restore representative backups, upgrade old schemas, reject future schemas, and recover from interrupted upgrade simulations
 - [x] 11.6.1 Verify current schema-1/2 recovery, concurrent-transaction snapshots, corrupted/incompatible/incomplete backups, existing-target preservation, interrupted-restore refusal and real maintenance commands; keep upgrade simulations pending
+- [x] 11.6.2 Verify schema-1 to schema-2 data preservation, bootstrap policy, backup/lock/future-schema refusal, transactional failure and forced process exit before/after commit with restore/retry; keep hardware power-loss and later-schema upgrade tests pending
+- [ ] 11.6.3 Verify schema-3 history/journal constraints, lossless backfill, database-only backup/restore, skipped-step/downgrade refusal and schema-2 to schema-3 interruption recovery; keep native stream-reset and hardware power-loss verification pending
 
 ## 12. Docker Packaging and Operations
 

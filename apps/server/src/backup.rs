@@ -31,6 +31,7 @@ pub enum BackupError {
     UnsupportedData,
     TargetExists,
     OwnershipUnavailable,
+    IncompleteMigration,
 }
 impl std::fmt::Display for BackupError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -42,6 +43,7 @@ impl std::fmt::Display for BackupError {
             Self::UnsupportedData => "unsupported_backup_data",
             Self::TargetExists => "restore_target_exists",
             Self::OwnershipUnavailable => "storage_ownership_unavailable",
+            Self::IncompleteMigration => "incomplete_migration",
         })
     }
 }
@@ -86,7 +88,7 @@ pub struct BackupInfo {
 impl Manifest {
     fn validate(&self) -> Result<(), BackupError> {
         if self.format_version != 1
-            || !matches!(self.schema_version, 1 | 2)
+            || !matches!(self.schema_version, 1..=3)
             || self.application_version != env!("CARGO_PKG_VERSION")
             || self.attachment_count != 0
         {
@@ -115,7 +117,7 @@ impl Manifest {
     }
 }
 
-async fn blocking<T: Send + 'static>(
+pub(crate) async fn blocking<T: Send + 'static>(
     operation: impl FnOnce() -> Result<T, BackupError> + Send + 'static,
 ) -> Result<T, BackupError> {
     tokio::task::spawn_blocking(operation)
@@ -168,7 +170,7 @@ fn private_directory(path: &Path) -> Result<(), BackupError> {
         }
     })
 }
-fn private_file(path: &Path) -> Result<File, BackupError> {
+pub(crate) fn private_file(path: &Path) -> Result<File, BackupError> {
     let mut options = OpenOptions::new();
     options.read(true).write(true).create_new(true);
     #[cfg(unix)]
@@ -178,7 +180,7 @@ fn private_file(path: &Path) -> Result<File, BackupError> {
     }
     options.open(path).map_err(|_| BackupError::Unavailable)
 }
-fn sync_directory(path: &Path) -> Result<(), BackupError> {
+pub(crate) fn sync_directory(path: &Path) -> Result<(), BackupError> {
     #[cfg(unix)]
     {
         File::open(path)
@@ -241,7 +243,7 @@ async fn inspect_database(path: &Path) -> Result<u32, BackupError> {
             .fetch_one(&pool)
             .await
             .map_err(|_| BackupError::InvalidBackup)?;
-        if !matches!(version, 1 | 2) {
+        if !matches!(version, 1..=3) {
             return Err(BackupError::IncompatibleBackup);
         }
         crate::schema::verify(&pool)
@@ -452,30 +454,13 @@ pub async fn restore(bundle: &Path, target: &Path) -> Result<BackupInfo, BackupE
 
 /// Exact positional arguments only. Errors never echo paths or argument values.
 /// Returns false only for ordinary no-argument server startup.
-pub async fn maintenance(arguments: Vec<std::ffi::OsString>) -> Result<bool, BackupError> {
+pub async fn maintenance(arguments: Vec<std::ffi::OsString>) -> Result<bool, MaintenanceError> {
     if arguments.is_empty() {
         return Ok(false);
     }
     match arguments.as_slice() {
         [command, source, root] if command == "backup" => {
-            let source = PathBuf::from(source);
-            let checked = source.clone();
-            blocking(move || {
-                directory(&checked)?;
-                regular_file(&checked.join(DATABASE))
-            })
-            .await?;
-            let storage = ServerStorage::open(&source)
-                .await
-                .map_err(|error| match error {
-                    crate::storage::StorageError::OwnershipUnavailable => {
-                        BackupError::OwnershipUnavailable
-                    }
-                    crate::storage::StorageError::IncompatibleDatabase => {
-                        BackupError::IncompatibleBackup
-                    }
-                    _ => BackupError::Unavailable,
-                })?;
+            let storage = open_existing(Path::new(source)).await?;
             let result = create(&storage, Path::new(root)).await;
             storage.close().await;
             let info = result?;
@@ -489,9 +474,72 @@ pub async fn maintenance(arguments: Vec<std::ffi::OsString>) -> Result<bool, Bac
             restore(Path::new(bundle), Path::new(target)).await?;
             println!("backup_restored");
         }
-        _ => return Err(BackupError::InvalidInput),
+        [command, source, root] if command == "migrate" => {
+            match crate::migration::run(Path::new(source), Path::new(root)).await? {
+                crate::migration::MigrationOutcome::AlreadyCurrent => {
+                    println!("schema_already_current")
+                }
+                crate::migration::MigrationOutcome::Migrated { .. } => {
+                    println!("schema_migrated 1 2")
+                }
+            }
+        }
+        [command, source, root] if command == "migrate-notes" => {
+            match crate::migration::run_notes(Path::new(source), Path::new(root)).await? {
+                crate::migration::MigrationOutcome::AlreadyCurrent => {
+                    println!("schema_already_current")
+                }
+                crate::migration::MigrationOutcome::Migrated { .. } => {
+                    println!("schema_migrated 2 3")
+                }
+            }
+        }
+        _ => return Err(BackupError::InvalidInput.into()),
     }
     Ok(true)
+}
+
+#[derive(Debug)]
+pub enum MaintenanceError {
+    Backup(BackupError),
+    Migration(crate::migration::MigrationError),
+}
+impl std::fmt::Display for MaintenanceError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Backup(error) => error.fmt(f),
+            Self::Migration(error) => error.fmt(f),
+        }
+    }
+}
+impl std::error::Error for MaintenanceError {}
+impl From<BackupError> for MaintenanceError {
+    fn from(error: BackupError) -> Self {
+        Self::Backup(error)
+    }
+}
+impl From<crate::migration::MigrationError> for MaintenanceError {
+    fn from(error: crate::migration::MigrationError) -> Self {
+        Self::Migration(error)
+    }
+}
+
+/// Operator maintenance must not create a missing source or initialize schema 0.
+pub(crate) async fn open_existing(source: &Path) -> Result<ServerStorage, BackupError> {
+    let checked = source.to_path_buf();
+    blocking(move || {
+        directory(&checked)?;
+        regular_file(&checked.join(DATABASE))
+    })
+    .await?;
+    ServerStorage::open(source)
+        .await
+        .map_err(|error| match error {
+            crate::storage::StorageError::OwnershipUnavailable => BackupError::OwnershipUnavailable,
+            crate::storage::StorageError::IncompatibleDatabase => BackupError::IncompatibleBackup,
+            crate::storage::StorageError::IncompleteMigration => BackupError::IncompleteMigration,
+            _ => BackupError::Unavailable,
+        })
 }
 
 #[cfg(test)]

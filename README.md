@@ -33,5 +33,6 @@ See [本地开发与验证](docs/development.md) for server and Docker commands,
 - [服务端密码与管理员初始化基础](docs/server-identity.md): bounded Argon2id verification, transactional one-time bootstrap, fresh schema compatibility, and tests.
 - [Web 初始化、登录与会话](docs/web-identity.md): explicit local setup, secure production boundaries, cookie/CSRF policy, throttling, restart behavior and current limitations.
 - [服务端数据库备份与恢复](docs/server-backup.md): current-schema snapshots, strict integrity manifests and new-directory restore; attachments and automated migrations remain pending.
+- [服务端离线迁移与恢复点](docs/server-migrations.md): explicit schema-1 to schema-2 upgrade, verified recovery point, interruption-safe refusal and new-directory rollback.
 
 These documents derive from the OpenSpec planning baseline; they do not indicate that implementation is complete or the proposal has been approved.

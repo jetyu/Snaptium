@@ -26,7 +26,7 @@
 
 显式调用 `ServerStorage::open_identity` 才会初始化空数据库为 schema 2：`0001_core.sql` 与 `0002_identity.sql`、默认策略和记录在同一事务提交。`schema_metadata.version = 1` 记录的是不可变的第一份迁移；第二份记录保存在 `bootstrap_state.migration_sql`，数据库当前版本以 `PRAGMA user_version = 2` 为准。精确 schema 检查同时验证两份迁移及对象定义。
 
-已有 schema 1 在只读检查阶段被拒绝，不改为 WAL、不清空、不自动升级；schema 2 可重开，未知版本或修改的迁移记录被拒绝。schema 1 仍可通过旧的 `open_initialized` 读取。现有数据升级必须先完成 OpenSpec 11.3–11.6 的一致备份、恢复和迁移回滚保护；不要通过删除旧库来绕过拒绝。当前只能在独立开发测试目录使用，尚不是生产账号服务。
+普通身份服务启动时已有 schema 1 在只读检查阶段被拒绝，不改为 WAL、不清空、不自动升级；schema 2 可重开，未知版本或修改的迁移记录被拒绝。schema 1 仍可通过 `open_initialized` 读取。已提供单独的 [恢复点保护离线迁移](server-migrations.md)，支持 1→2：已有账号须有管理员，迁移永久关闭初始化；空库迁移后仍需初始化权限。不要删除旧库或中断标记来绕过拒绝。后续 schema、附件与完整部署升级仍待 OpenSpec 11.3–11.6，当前只能在独立开发测试目录使用，尚不是生产账号服务。
 
 ## 验证
 

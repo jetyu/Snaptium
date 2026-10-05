@@ -19,6 +19,7 @@ pub enum StorageError {
     DatabaseUnavailable,
     IncompatibleDatabase,
     IncompleteRestore,
+    IncompleteMigration,
 }
 
 impl std::fmt::Display for StorageError {
@@ -30,6 +31,7 @@ impl std::fmt::Display for StorageError {
             Self::DatabaseUnavailable => "database_unavailable",
             Self::IncompatibleDatabase => "incompatible_database",
             Self::IncompleteRestore => "incomplete_restore",
+            Self::IncompleteMigration => "incomplete_migration",
         })
     }
 }
@@ -45,15 +47,12 @@ pub struct ServerStorage {
 }
 
 impl ServerStorage {
-    /// Accept empty schema zero or an exact supported schema one/two. No upgrades.
+    /// Accept empty schema zero or an exact supported schema one/two/three. No upgrades.
     pub async fn open(directory: &Path) -> Result<Self, StorageError> {
-        Self::open_supported(directory, true).await
+        Self::open_supported(directory, 1).await
     }
 
-    async fn open_supported(
-        directory: &Path,
-        allow_schema_one: bool,
-    ) -> Result<Self, StorageError> {
+    async fn open_supported(directory: &Path, minimum_schema: i64) -> Result<Self, StorageError> {
         if directory.as_os_str().is_empty() {
             return Err(StorageError::InvalidDirectory);
         }
@@ -85,6 +84,11 @@ impl ServerStorage {
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => (),
             Err(_) => return Err(StorageError::DirectoryUnavailable),
         }
+        match std::fs::symlink_metadata(directory.join(crate::migration::MIGRATION_MARKER)) {
+            Ok(_) => return Err(StorageError::IncompleteMigration),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => (),
+            Err(_) => return Err(StorageError::DirectoryUnavailable),
+        }
         // Probe without setting persistent PRAGMAs or creating files. Refuse a
         // nonempty/future database before WAL can mutate it.
         if filename.exists() {
@@ -111,8 +115,7 @@ impl ServerStorage {
                 .map_err(|_| StorageError::DatabaseUnavailable)?;
                 match version {
                     0 if tables == 0 => Ok(()),
-                    1 if allow_schema_one => crate::schema::verify(&probe).await,
-                    2 => crate::schema::verify(&probe).await,
+                    1..=3 if version >= minimum_schema => crate::schema::verify(&probe).await,
                     _ => Err(StorageError::IncompatibleDatabase),
                 }
             }
@@ -180,10 +183,10 @@ impl ServerStorage {
         &self.directory
     }
 
-    /// New schema-2 identity stores only. Refuse schema-1 upgrades until a
-    /// verified pre-upgrade recovery path exists; never replace the old store.
+    /// Fresh schema-2 or exact schema-2/3 identity stores. Schema-1 upgrades require
+    /// the separate, offline, recovery-protected migration command.
     pub async fn open_identity(directory: &Path) -> Result<Self, StorageError> {
-        let storage = Self::open_supported(directory, false).await?;
+        let storage = Self::open_supported(directory, 2).await?;
         let result = async {
             let version: i64 = sqlx::query_scalar("PRAGMA user_version")
                 .fetch_one(&storage.pool)
@@ -191,8 +194,31 @@ impl ServerStorage {
                 .map_err(|_| StorageError::DatabaseUnavailable)?;
             match version {
                 0 => crate::schema::initialize_identity(&storage.pool).await?,
-                2 => (),
+                2 | 3 => (),
                 _ => return Err(StorageError::IncompatibleDatabase),
+            }
+            crate::schema::verify(&storage.pool).await
+        }
+        .await;
+        if let Err(error) = result {
+            storage.close().await;
+            return Err(error);
+        }
+        Ok(storage)
+    }
+
+    /// Note-capable storage foundation; does not expose a note API. Empty stores
+    /// initialize all three schemas atomically. Existing older schemas fail in
+    /// the read-only probe and require the explicit offline migration commands.
+    pub async fn open_notes(directory: &Path) -> Result<Self, StorageError> {
+        let storage = Self::open_supported(directory, 3).await?;
+        let result = async {
+            let version: i64 = sqlx::query_scalar("PRAGMA user_version")
+                .fetch_one(&storage.pool)
+                .await
+                .map_err(|_| StorageError::DatabaseUnavailable)?;
+            if version == 0 {
+                crate::schema::initialize_notes(&storage.pool).await?;
             }
             crate::schema::verify(&storage.pool).await
         }

@@ -1,24 +1,35 @@
-//! Fresh server schemas only. No existing-user-data upgrade is supported yet.
-use sqlx::SqlitePool;
+//! Exact server schema definitions; existing-data upgrades require recovery.
+use sqlx::{SqliteConnection, SqlitePool};
 
 use crate::storage::StorageError;
 
 pub(crate) const INITIAL_SQL: &str = include_str!("../migrations/0001_core.sql");
-const IDENTITY_SQL: &str = include_str!("../migrations/0002_identity.sql");
+pub(crate) const IDENTITY_SQL: &str = include_str!("../migrations/0002_identity.sql");
+pub(crate) const NOTE_STORAGE_SQL: &str = include_str!("../migrations/0003_note_storage.sql");
 
 pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
+    let mut connection = pool
+        .acquire()
+        .await
+        .map_err(|_| StorageError::DatabaseUnavailable)?;
+    verify_connection(&mut connection).await
+}
+
+pub(crate) async fn verify_connection(
+    connection: &mut SqliteConnection,
+) -> Result<(), StorageError> {
     // File/restore boundaries may contain hostile metadata. Bound stored text
     // before decoding it into Rust Strings or collecting schema objects.
     let (objects, largest_sql): (i64, i64) = sqlx::query_as(
         "SELECT count(*), coalesce(max(length(CAST(sql AS BLOB))), 0) FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%'",
-    ).fetch_one(pool).await.map_err(|_| StorageError::IncompatibleDatabase)?;
+    ).fetch_one(&mut *connection).await.map_err(|_| StorageError::IncompatibleDatabase)?;
     if objects > 64 || largest_sql > 8192 {
         return Err(StorageError::IncompatibleDatabase);
     }
     let record_bytes: Option<i64> = sqlx::query_scalar(
         "SELECT length(CAST(migration_sql AS BLOB)) FROM schema_metadata WHERE singleton = 1",
     )
-    .fetch_optional(pool)
+    .fetch_optional(&mut *connection)
     .await
     .map_err(|_| StorageError::IncompatibleDatabase)?;
     if !matches!(record_bytes, Some(1..=8192)) {
@@ -26,7 +37,7 @@ pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
     }
     let record: Option<(i64, String)> =
         sqlx::query_as("SELECT version, migration_sql FROM schema_metadata WHERE singleton = 1")
-            .fetch_optional(pool)
+            .fetch_optional(&mut *connection)
             .await
             .map_err(|_| StorageError::IncompatibleDatabase)?;
     let canonical_sql = INITIAL_SQL.replace("\r\n", "\n");
@@ -34,17 +45,17 @@ pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
         return Err(StorageError::IncompatibleDatabase);
     }
     let version: i64 = sqlx::query_scalar("PRAGMA user_version")
-        .fetch_one(pool)
+        .fetch_one(&mut *connection)
         .await
         .map_err(|_| StorageError::IncompatibleDatabase)?;
-    if !matches!(version, 1 | 2) {
+    if !matches!(version, 1..=3) {
         return Err(StorageError::IncompatibleDatabase);
     }
-    if version == 2 {
+    if version >= 2 {
         let record_bytes: Option<i64> = sqlx::query_scalar(
             "SELECT length(CAST(migration_sql AS BLOB)) FROM bootstrap_state WHERE singleton = 1",
         )
-        .fetch_optional(pool)
+        .fetch_optional(&mut *connection)
         .await
         .map_err(|_| StorageError::IncompatibleDatabase)?;
         if !matches!(record_bytes, Some(1..=8192)) {
@@ -52,10 +63,27 @@ pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
         }
         let state: Option<(i64, String)> =
             sqlx::query_as("SELECT closed, migration_sql FROM bootstrap_state WHERE singleton = 1")
-                .fetch_optional(pool)
+                .fetch_optional(&mut *connection)
                 .await
                 .map_err(|_| StorageError::IncompatibleDatabase)?;
         if !matches!(state, Some((0 | 1, ref sql)) if sql == &IDENTITY_SQL.replace("\r\n", "\n")) {
+            return Err(StorageError::IncompatibleDatabase);
+        }
+    }
+    if version == 3 {
+        let record_bytes: Option<i64> = sqlx::query_scalar(
+            "SELECT length(CAST(migration_sql AS BLOB)) FROM note_storage_metadata WHERE singleton = 1",
+        ).fetch_optional(&mut *connection).await.map_err(|_| StorageError::IncompatibleDatabase)?;
+        if !matches!(record_bytes, Some(1..=8192)) {
+            return Err(StorageError::IncompatibleDatabase);
+        }
+        let record: Option<(i64, String)> = sqlx::query_as(
+            "SELECT version, migration_sql FROM note_storage_metadata WHERE singleton = 1",
+        )
+        .fetch_optional(&mut *connection)
+        .await
+        .map_err(|_| StorageError::IncompatibleDatabase)?;
+        if record != Some((3, NOTE_STORAGE_SQL.replace("\r\n", "\n"))) {
             return Err(StorageError::IncompatibleDatabase);
         }
     }
@@ -67,13 +95,17 @@ pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
     let result = async {
         sqlx::raw_sql(&canonical_sql).execute(&reference).await
             .map_err(|_| StorageError::DatabaseUnavailable)?;
-        if version == 2 {
+        if version >= 2 {
             sqlx::raw_sql(&IDENTITY_SQL.replace("\r\n", "\n")).execute(&reference).await
+                .map_err(|_| StorageError::DatabaseUnavailable)?;
+        }
+        if version == 3 {
+            sqlx::raw_sql(&NOTE_STORAGE_SQL.replace("\r\n", "\n")).execute(&reference).await
                 .map_err(|_| StorageError::DatabaseUnavailable)?;
         }
         let query = "SELECT type, name, tbl_name, sql FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name";
         let actual: Vec<(String, String, String, Option<String>)> = sqlx::query_as(query)
-            .fetch_all(pool).await.map_err(|_| StorageError::IncompatibleDatabase)?;
+            .fetch_all(&mut *connection).await.map_err(|_| StorageError::IncompatibleDatabase)?;
         let expected: Vec<(String, String, String, Option<String>)> = sqlx::query_as(query)
             .fetch_all(&reference).await.map_err(|_| StorageError::DatabaseUnavailable)?;
         if actual != expected { return Err(StorageError::IncompatibleDatabase); }
@@ -84,14 +116,43 @@ pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
 }
 
 pub(crate) async fn initialize(pool: &SqlitePool) -> Result<(), StorageError> {
-    initialize_sql(pool, INITIAL_SQL, false).await
+    initialize_sql(pool, INITIAL_SQL, 1).await
 }
 
 pub(crate) async fn initialize_identity(pool: &SqlitePool) -> Result<(), StorageError> {
-    initialize_sql(pool, INITIAL_SQL, true).await
+    initialize_sql(pool, INITIAL_SQL, 2).await
 }
 
-async fn initialize_sql(pool: &SqlitePool, sql: &str, identity: bool) -> Result<(), StorageError> {
+pub(crate) async fn initialize_notes(pool: &SqlitePool) -> Result<(), StorageError> {
+    initialize_sql(pool, INITIAL_SQL, 3).await
+}
+
+/// Called only after note-storage DDL, within the caller's initialization/migration
+/// transaction. INSERT SELECT avoids decoding or normalizing existing content.
+pub(crate) async fn backfill_notes(connection: &mut SqliteConnection) -> Result<(), StorageError> {
+    for sql in [
+        "INSERT INTO note_history (owner_id, note_id, revision, folder_id, title, markdown, created_at, updated_at, trashed_at) SELECT owner_id, id, revision, folder_id, title, markdown, created_at, updated_at, trashed_at FROM notes ORDER BY owner_id, id",
+        "INSERT INTO change_log (owner_id, entity_kind, entity_id, revision, operation, occurred_at) SELECT owner_id, 'folder', id, revision, 'upsert', updated_at FROM folders ORDER BY owner_id, id",
+        "INSERT INTO change_log (owner_id, entity_kind, entity_id, revision, operation, occurred_at) SELECT owner_id, 'note', id, revision, 'upsert', updated_at FROM notes ORDER BY owner_id, id",
+    ] {
+        sqlx::query(sql)
+            .execute(&mut *connection)
+            .await
+            .map_err(|_| StorageError::DatabaseUnavailable)?;
+    }
+    sqlx::query("INSERT INTO note_storage_metadata VALUES (1, 3, ?)")
+        .bind(NOTE_STORAGE_SQL.replace("\r\n", "\n"))
+        .execute(&mut *connection)
+        .await
+        .map_err(|_| StorageError::DatabaseUnavailable)?;
+    sqlx::query("PRAGMA user_version = 3")
+        .execute(connection)
+        .await
+        .map_err(|_| StorageError::DatabaseUnavailable)?;
+    Ok(())
+}
+
+async fn initialize_sql(pool: &SqlitePool, sql: &str, version: u32) -> Result<(), StorageError> {
     let sql = sql.replace("\r\n", "\n");
     let mut transaction = pool
         .begin()
@@ -111,7 +172,7 @@ async fn initialize_sql(pool: &SqlitePool, sql: &str, identity: bool) -> Result<
             .execute(&mut *transaction)
             .await
             .map_err(|_| StorageError::DatabaseUnavailable)?;
-        if identity {
+        if version >= 2 {
             sqlx::raw_sql(&IDENTITY_SQL.replace("\r\n", "\n"))
                 .execute(&mut *transaction)
                 .await
@@ -125,6 +186,13 @@ async fn initialize_sql(pool: &SqlitePool, sql: &str, identity: bool) -> Result<
                 .execute(&mut *transaction)
                 .await
                 .map_err(|_| StorageError::DatabaseUnavailable)?;
+        }
+        if version == 3 {
+            sqlx::raw_sql(&NOTE_STORAGE_SQL.replace("\r\n", "\n"))
+                .execute(&mut *transaction)
+                .await
+                .map_err(|_| StorageError::DatabaseUnavailable)?;
+            backfill_notes(&mut transaction).await?;
         }
         Ok(())
     }
@@ -173,7 +241,7 @@ mod tests {
         let pool = SqlitePool::connect("sqlite::memory:").await?;
         let broken = format!("{INITIAL_SQL}\nINSERT INTO missing_table VALUES (1);");
         assert_eq!(
-            initialize_sql(&pool, &broken, false).await,
+            initialize_sql(&pool, &broken, 1).await,
             Err(StorageError::DatabaseUnavailable)
         );
         let objects: i64 =

@@ -76,6 +76,7 @@ cargo test --locked -p snaptium-server configuration::tests
 cargo test --locked -p snaptium-server web_identity::tests
 cargo test --locked -p snaptium-server --test startup
 cargo test --locked -p snaptium-server backup::tests
+cargo test --locked -p snaptium-server migration::tests
 cargo test --locked -p snaptium-server --test maintenance
 cargo run --locked -p snaptium-server
 ```
@@ -115,8 +116,8 @@ docker compose -f deploy/docker/compose.yaml down
 
 本机验证：`pnpm check` 已通过，包含类型检查、零警告 lint、59 项契约/真实 Milkdown 引擎/草稿存储/身份访问与组件测试和生产构建；先前离线冻结锁文件安装也已通过。编辑器按需加载。当前无可用浏览器连接，尚未完成真实浏览器 HTTPS Cookie、视觉、中文 IME、刷新草稿恢复、键盘与响应式回归验证，任务 1.3 保持未完成。
 
-本机 Rust 验证：格式检查、零警告 clippy 与锁定依赖的离线测试通过，共 47 项测试（其中 1 项为跨进程测试辅助入口）。覆盖 schema/锁、owner-scoped 查询、版本化密码、容量限制、初始化竞争/回滚、配置拒绝、Origin/CSRF/Cookie 边界、限流、会话轮换与过期；真实 TCP/服务进程测试验证强制重启后账号保留、旧 Web 会话失效、初始化保持关闭且可重新登录退出。备份专项验证当前 schema 1/2、WAL 与并发快照、严格清单/哈希/schema/外键检查、已有目标保护和中断标记；独立维护进程完成备份→校验→新目录恢复→密码登录验证。Unix 权限/符号链接专项交给 CI，本机未运行 NAS 容器验证。
+本机 Rust 验证：格式检查、零警告 clippy 与锁定依赖的离线测试通过，共 57 项测试（其中 2 项为跨进程测试辅助入口）。覆盖 schema/锁、owner-scoped 查询、版本化密码、容量限制、初始化竞争/回滚、配置拒绝、Origin/CSRF/Cookie 边界、限流、会话轮换与过期；真实 TCP/服务进程测试验证强制重启后账号保留、旧 Web 会话失效、初始化保持关闭且可重新登录退出。备份专项验证当前 schema 1/2、WAL 与并发快照、严格清单/哈希/schema/外键检查、已有目标保护和中断标记；独立维护进程完成备份→校验→新目录恢复→密码登录验证。离线迁移专项覆盖 schema 1→2 内容/凭据/配额保留、管理员与初始化策略、恢复点/未知附件/外键破坏拒绝、重复 no-op，以及提交前后四阶段失败/强制进程退出后的恢复重试；真实服务程序验证迁移命令与中断启动拒绝。Unix 权限/符号链接专项交给 CI，本机未运行 NAS 容器或硬件断电验证。
 
 读取 repository 子项 4.3.1 已落实，详见 [服务端读取数据访问层](server-repositories.md)。读取笔记接口仍未开放 HTTP；身份接口已开放，但没有笔记写入，不接受浏览器自报 owner 作为认证。管理员创建后续账号、密码更新、完整安全审计、原生设备凭据与持久化会话仍待对应任务。
 
-任务 1.2 已确认：单层文件夹（删除时保留笔记并移至未分类）、附件 20 MiB、可调整的默认账号容量 5 GiB、每篇最近 100 个历史版本、同步删除记录不自动清理、关闭公开注册由管理员创建账号。初始账号/文件夹/笔记 schema 与策略元数据已验证，但没有正式业务写入 API。当前数据库备份、完整性校验和全新目录恢复子项 11.3.1、11.4.1、11.6.1 已实现，见 [维护命令与恢复边界](server-backup.md)；附件备份、自动调度与真实前向迁移仍待完成，schema 1 不自动升级。下一阶段接入经过验证恢复点保护的存储扩展，再增加经过会话认证的 owner-scoped 笔记保存与重载，并遵守修订、历史及变更流事务规则。Windows 与 Android 不在当前实施范围。
+任务 1.2 已确认：单层文件夹（删除时保留笔记并移至未分类）、附件 20 MiB、可调整的默认账号容量 5 GiB、每篇最近 100 个历史版本、同步删除记录不自动清理、关闭公开注册由管理员创建账号。初始账号/文件夹/笔记 schema 与策略元数据已验证，但没有正式业务写入 API。当前数据库备份、完整性校验和全新目录恢复子项 11.3.1、11.4.1、11.6.1 已实现，见 [维护命令与恢复边界](server-backup.md)。恢复点保护的显式 schema 1→2 迁移子项 4.2.2、11.5.1、11.6.2 已实现，见 [离线迁移与回滚](server-migrations.md)；普通启动不自动升级，附件、自动调度和后续 schema 仍待完成。下一阶段扩展笔记历史/变更流存储并接入经过会话认证的 owner-scoped 笔记保存与重载，遵守修订、历史及变更流事务规则。Windows 与 Android 不在当前实施范围。

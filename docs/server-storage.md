@@ -12,7 +12,7 @@
 
 `open` 接受 schema version 0 且无用户对象的空数据库，或精确匹配受支持 schema 1/2 的数据库。已有数据库先只读检查版本、迁移记录，并将实际 schema 对象与隔离内存数据库中执行同一 SQL 后的对象逐项比较；未知版本、未知对象、修改的列/约束或迁移记录均拒绝。迁移 SQL 统一使用 LF，避免 Windows/Linux 换行差异影响兼容判断。没有自动升级、清空或降级逻辑。
 
-显式调用 `open_initialized` 才会对空库执行 `migrations/0001_core.sql`。表、默认策略、迁移记录和 `user_version = 1` 在同一事务中提交，语句失败显式回滚，再次初始化可重试；schema 1 重开只验证，不重写数据。此版本不升级已有用户数据；未来增加迁移前必须落实并验证一致备份和恢复流程。当前仍仅用于独立开发测试目录，不能作为生产存储交付。
+显式调用 `open_initialized` 才会对空库执行 `migrations/0001_core.sql`。表、默认策略、迁移记录和 `user_version = 1` 在同一事务中提交，语句失败显式回滚，再次初始化可重试；schema 1 重开只验证，不重写数据。该打开接口不升级已有用户数据；已另行提供显式离线的恢复点保护 schema 1→2 迁移，见 [迁移文档](server-migrations.md)。当前仍仅用于独立开发测试目录，不能作为生产存储交付。
 
 身份模块使用 `open_identity`，仅对空库在同一事务内执行上述 SQL 和 `migrations/0002_identity.sql`，新增持久化的 `bootstrap_state` 并设 `user_version = 2`。schema 2 重开同时验证两份迁移记录与对象定义；已有 schema 1 在只读探测阶段拒绝，不改变其日志模式，也不自动升级。`open_initialized` 仍支持重开已验证的 schema 1/2，不降级 schema 2。
 
@@ -22,7 +22,7 @@ schema 1 包含 `users`、单层 `folders`、`notes`、`server_policy`、`schema
 
 数据必须存放于支持 SQLite WAL 与操作系统文件锁的本地文件系统，不使用 SMB/NFS 数据目录。NAS 上应使用容器宿主机的本地持久卷，而不是把数据库经网络共享挂载到开发机。NAS 文件系统及容器锁行为仍需实际验证。
 
-当前 schema 1/2 已提供数据库快照、严格版本/哈希清单校验和恢复至全新目录的维护命令，见 [数据库备份与恢复](server-backup.md)。启动发现 `restore.in-progress` 就拒绝，不打开数据库也不创建空库；恢复失败不覆盖旧目录。该能力尚不包含附件、自动调度或既有数据前向迁移，因此不解除 schema 1 的身份服务升级拒绝。
+当前 schema 1/2 已提供数据库快照、严格版本/哈希清单校验和恢复至全新目录的维护命令，见 [数据库备份与恢复](server-backup.md)。启动发现 `restore.in-progress` 或 `migration.in-progress` 就拒绝，不打开数据库也不创建空库；恢复失败不覆盖旧目录。显式离线迁移支持受保护的 schema 1→2，普通身份服务仍拒绝自动升级。附件、自动调度和后续 schema 待实现。
 
 ## 验证
 

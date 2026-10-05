@@ -4,6 +4,7 @@ use std::sync::Arc;
 pub mod backup;
 pub mod configuration;
 pub mod identity;
+pub mod migration;
 pub mod repository;
 mod schema;
 pub mod storage;
