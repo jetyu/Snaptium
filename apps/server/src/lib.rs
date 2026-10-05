@@ -1,5 +1,7 @@
 use std::path::PathBuf;
 
+pub mod storage;
+
 use axum::{
     Extension, Json, Router,
     body::Body,
@@ -109,7 +111,10 @@ mod tests {
             )
             .await?;
         assert_eq!(response.status(), StatusCode::OK);
-        assert_eq!(response.headers()[header::X_CONTENT_TYPE_OPTIONS], "nosniff");
+        assert_eq!(
+            response.headers()[header::X_CONTENT_TYPE_OPTIONS],
+            "nosniff"
+        );
         let bytes = to_bytes(response.into_body(), 2048).await?;
         let health: Health = serde_json::from_slice(&bytes)?;
         assert_eq!(health, Health::foundation(env!("CARGO_PKG_VERSION")));

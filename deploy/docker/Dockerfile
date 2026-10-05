@@ -8,10 +8,10 @@ RUN pnpm install --frozen-lockfile && pnpm build:web
 
 FROM rust:1.94.0-bookworm AS server
 WORKDIR /build
-COPY Cargo.toml rust-toolchain.toml ./
+COPY Cargo.toml Cargo.lock rust-toolchain.toml ./
 COPY crates ./crates
 COPY apps/server ./apps/server
-RUN cargo build --release -p snaptium-server
+RUN cargo build --release --locked -p snaptium-server
 
 FROM debian:bookworm-slim AS runtime
 RUN groupadd --gid 10001 snaptium && useradd --uid 10001 --gid snaptium --no-create-home snaptium \

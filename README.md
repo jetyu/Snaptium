@@ -28,5 +28,6 @@ See [本地开发与验证](docs/development.md) for server and Docker commands,
 - [开发规约](docs/development-guidelines.md): implementation rules, verification, CI, and review requirements.
 - [Markdown 格式与编辑器边界](docs/markdown-format.md): supported syntax, canonical serialization, source preservation, and editor verification.
 - [Web 本地草稿](docs/web-drafts.md): preview-only storage, recovery, failure handling, and verification.
+- [服务端 SQLite 连接基础](docs/server-storage.md): connection policy, process ownership, compatibility refusal, and verification; not yet wired into HTTP startup.
 
 These documents derive from the OpenSpec planning baseline; they do not indicate that implementation is complete or the proposal has been approved.

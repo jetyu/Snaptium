@@ -59,6 +59,8 @@ Database files and database row models are never synchronized. Shared contracts 
 
 Server SQLite runs as a single writer-capable application instance with WAL, foreign keys, busy timeout, short write transactions, and application-level backup coordination. Attachments remain outside SQLite as files referenced by database metadata.
 
+First-release organization uses folders, as confirmed by the user on 2026-10-05. Tags and note-tag associations are deferred; do not add speculative tag tables, APIs, or UI. Folder access and note moves must remain owner-scoped across Web and native clients. Folder hierarchy and deletion behavior must be defined before implementing those operations, without silently deleting note content.
+
 ### 4. Use Markdown as canonical content with a controlled WYSIWYG projection
 
 Milkdown/ProseMirror provides the editor UI, but normalized Markdown text is the stored and synchronized representation. The first supported subset includes paragraphs, headings, emphasis, strike-through, ordered/unordered/task lists, quotes, code, links, images, and horizontal rules. Arbitrary HTML is rejected or sanitized.
@@ -127,7 +129,7 @@ Rollback restores the previous application image together with the backup taken 
 ## Open Questions
 
 - Final product name, application identifiers, and image names.
-- Whether first-release organization uses folders, tags, or both; the proposed product scope permits both, but implementation sequencing should pick one first.
+- Folder hierarchy and folder-deletion behavior; the first-release organization type is resolved as folders, with tags deferred.
 - Maximum attachment size, total user quota, tombstone retention period, and retained note-history depth.
 - Whether public registration is disabled by default after administrator initialization.
 - Which Windows signing and update distribution channel will be used for the first public beta.

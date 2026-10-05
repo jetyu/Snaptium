@@ -7,6 +7,17 @@ The system SHALL provide a responsive Web workspace in which an authenticated us
 - **WHEN** an authenticated user creates a note and enters a title and body
 - **THEN** the server persists the note and the workspace displays the committed content after reload
 
+### Requirement: First-release folder organization
+The first release SHALL organize notes using owner-scoped folders and SHALL NOT provide tag organization. Folder operations and moving notes between folders MUST verify ownership of both the note and the target folder.
+
+#### Scenario: Move a note to an owned folder
+- **WHEN** an authenticated user moves their own note to their own folder
+- **THEN** the system persists the folder association without changing the note's Markdown content
+
+#### Scenario: Cross-user folder assignment
+- **WHEN** an authenticated user attempts to assign a note to another user's folder
+- **THEN** the system rejects the operation without changing the note or disclosing whether the folder exists
+
 ### Requirement: WYSIWYG Markdown authoring
 The system SHALL provide WYSIWYG authoring for the supported Markdown subset while storing normalized Markdown as canonical note content.
 

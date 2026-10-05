@@ -11,10 +11,12 @@ axum.workspace = true
 tokio.workspace = true
 tower-http.workspace = true
 uuid.workspace = true
+sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio", "sqlite"] }
 
 [dev-dependencies]
 tower.workspace = true
 serde_json.workspace = true
+tempfile = "3"
 
 [lints]
 workspace = true

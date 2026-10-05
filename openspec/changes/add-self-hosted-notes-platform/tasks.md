@@ -2,6 +2,7 @@
 
 - [ ] 1.1 Choose the product name, application identifiers, and container image name using the agreed platform workspace paths without changing existing application entry points
 - [ ] 1.2 Resolve first-release organization scope, attachment limit, storage quota, tombstone retention, note-history retention, and registration default
+  - Organization type confirmed on 2026-10-05: folders for the first release; tags deferred. Remaining policy decisions keep this task pending.
 - [ ] 1.3 Prototype Milkdown WYSIWYG editing with Chinese IME, selection, undo, paste, image insertion, and canonical Markdown round trips
 - [ ] 1.4 Prototype Tauri 2 on Windows with Vue assets, coarse-grained Rust commands, SQLite access, credential storage, and production packaging
 - [ ] 1.5 Prototype Tauri 2 on Android for Chinese IME, keyboard layout, file selection, WebView performance, and WorkManager-to-Rust synchronization invocation, then record the native-shell fallback decision
@@ -14,6 +15,7 @@
 - [x] 2.2.1 Scaffold and verify the Web entry and shared UI, Simplified Chinese i18n, and runtime-validated foundation health contract; keep Windows scaffolding pending
 - [ ] 2.3 Configure strict TypeScript, Rust formatting/linting, dependency policies, and reproducible lockfiles
 - [x] 2.3.1 Configure strict Vue/TypeScript checks, frontend ESLint rules, pinned compatible dependencies, and a verified frozen pnpm lockfile
+- [x] 2.3.2 Generate the Cargo lockfile, verify the current server/protocol workspace with Rust format/clippy/tests, and require locked dependencies in Rust CI and Docker builds; keep native quality gates pending
 - [ ] 2.4 Add CI jobs for frontend typecheck/lint/unit tests, Rust format/clippy/tests, protocol fixtures, Docker build, and Windows Tauri build
 - [x] 2.4.1 Add frontend CI commands and locally verify typecheck, lint, health-boundary/component tests, and production Web build
 - [ ] 2.5 Define structured error codes, request correlation, content-free logs, and development diagnostics shared across applications
@@ -29,6 +31,7 @@
 ## 4. Server Storage Foundation
 
 - [ ] 4.1 Implement server SQLite connection configuration with WAL, foreign keys, busy timeout, bounded connections, and single-instance ownership
+- [x] 4.1.1 Implement and verify the server-only empty-database connection module with per-connection WAL/foreign keys/FULL synchronous/busy timeout, bounded pool, cross-process ownership, and incompatible-database refusal; keep HTTP startup integration and migrated storage pending
 - [ ] 4.2 Add forward migrations for users, devices, sessions, notes, organization, attachments, mutation outcomes, change log, quotas, and schema metadata
 - [ ] 4.3 Implement typed server repositories with short transactions and owner-scoped queries
 - [ ] 4.4 Implement local attachment storage with opaque paths, atomic writes, integrity metadata, and garbage-collection state
@@ -48,7 +51,7 @@
 ## 6. Note and Attachment API
 
 - [ ] 6.1 Implement versioned note create/read/update/trash/restore/delete operations with revision preconditions
-- [ ] 6.2 Implement the selected first-release folder/tag organization operations and ownership rules
+- [ ] 6.2 Implement first-release folder organization operations and ownership rules; keep tags deferred
 - [ ] 6.3 Implement bounded note listing, filtering, ordering, and server-side search for the Web client
 - [ ] 6.4 Implement authenticated attachment upload, download, association, deletion, size limits, safe names, and integrity checks
 - [ ] 6.5 Implement note revision history according to the resolved retention policy
