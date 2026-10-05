@@ -30,8 +30,8 @@
 
 ## 4. Server Storage Foundation
 
-- [ ] 4.1 Implement server SQLite connection configuration with WAL, foreign keys, busy timeout, bounded connections, and single-instance ownership
-- [x] 4.1.1 Implement and verify the server-only empty-database connection module with per-connection WAL/foreign keys/FULL synchronous/busy timeout, bounded pool, cross-process ownership, and incompatible-database refusal; keep HTTP startup integration and migrated storage pending
+- [x] 4.1 Implement server SQLite connection configuration with WAL, foreign keys, busy timeout, bounded connections, and single-instance ownership
+- [x] 4.1.1 Implement and verify the server-only empty-database connection module with per-connection WAL/foreign keys/FULL synchronous/busy timeout, bounded pool, cross-process ownership, and incompatible-database refusal; existing-data upgrades remain pending
 - [ ] 4.2 Add forward migrations for users, devices, sessions, notes, organization, attachments, mutation outcomes, change log, quotas, and schema metadata
 - [x] 4.2.1 Implement and verify transactional empty-database schema initialization for users, single-level folders, notes, confirmed policy defaults and schema metadata; verify reopen, rollback/retry, cross-owner constraints and exact-schema refusal, keeping business APIs and existing-data upgrades pending
 - [ ] 4.3 Implement typed server repositories with short transactions and owner-scoped queries
@@ -41,16 +41,19 @@
 
 ## 5. Identity, Devices, and Authorization
 
-- [ ] 5.1 Implement one-time administrator bootstrap with initialization-secret validation and permanent closure after success
-- [x] 5.1.1 Implement and verify validated server-only initialization secrets and transactional administrator creation with persistent closure, concurrent-winner isolation, rollback/retry and restart protection; initialize fresh schema 2 and refuse schema 1 without mutation, keeping configuration and HTTP bootstrap pending
+- [x] 5.1 Implement one-time administrator bootstrap with initialization-secret validation and permanent closure after success
+- [x] 5.1.1 Implement and verify validated server-only initialization secrets and transactional administrator creation with persistent closure, concurrent-winner isolation, rollback/retry and restart protection; initialize fresh schema 2 and refuse schema 1 without mutation
 - [ ] 5.2 Implement account creation policy and Argon2id password verification with versioned parameters
-- [x] 5.2.1 Implement and verify typed credential boundaries, salted versioned Argon2id hashes, bounded PHC parameters and process-wide blocking-work capacity, generic credential failures and first-administrator password policy; keep administrator-managed accounts, password updates and HTTP login pending
-- [ ] 5.3 Implement Secure HttpOnly SameSite Web sessions with CSRF protection and logout
+- [x] 5.2.1 Implement and verify typed credential boundaries, salted versioned Argon2id hashes, bounded PHC parameters and process-wide blocking-work capacity, generic credential failures and first-administrator password policy; keep administrator-managed accounts and password updates pending
+- [x] 5.2.2 Integrate and verify bounded HTTP password login with trusted configuration and session issuance, shared Rust/TypeScript response fixtures and content-free generic failures; keep administrator-managed accounts and password updates pending
+- [x] 5.3 Implement Secure HttpOnly SameSite Web sessions with CSRF protection and logout
+  - Initial Web sessions are bounded in-memory state with SHA-256 token digests, rotation and eight-hour expiry; restart revokes Web sessions but preserves accounts. Persistent native credentials and session migrations remain separate tasks. Production requires HTTPS; an explicit HTTP exception only permits loopback origins/listeners.
 - [ ] 5.4 Implement native device registration, short-lived access credentials, hashed rotating refresh credentials, and protected client storage integration
 - [ ] 5.5 Implement user device listing, naming, last-seen metadata, individual revocation, and revoke-all behavior
 - [ ] 5.6 Enforce owner-scoped authorization on notes, attachments, synchronization, export, and device operations
 - [ ] 5.7 Add generic authentication failures, rate limiting, security-event auditing, and log-redaction tests
-- [ ] 5.8 Add user-facing security documentation that explicitly states the trusted-server and non-E2EE model
+- [x] 5.7.1 Implement and verify per-peer/global bounded identity throttling, Origin/Host/JSON/custom-header boundaries, request size/time bounds, forwarded-header refusal and content-free error responses; keep complete security-event auditing and proxy log-redaction checks pending
+- [x] 5.8 Add user-facing security documentation that explicitly states the trusted-server and non-E2EE model
 
 ## 6. Note and Attachment API
 
@@ -64,6 +67,7 @@
 ## 7. Web Client and Editor
 
 - [ ] 7.1 Build the responsive authenticated shell, navigation, note list, editor layout, settings, device management, and administration entry points
+- [x] 7.1.1 Implement and verify i18n Web initialization, sign-in, session status and sign-out UI, validated transport, secret clearing, cancellation, CSRF, generic failures and restart semantics; keep the authenticated note workspace, settings, device and administration UI pending
 - [x] 7.2 Implement the Milkdown editor using the controlled Markdown schema and canonical serialization fixtures
 - [ ] 7.3 Sanitize rendered/imported Markdown and enforce a strict content-security policy without third-party runtime scripts
 - [ ] 7.4 Implement online-first note CRUD, organization, trash, search, history, and attachment workflows against the versioned API
@@ -109,9 +113,12 @@
 - [ ] 11.1 Implement complete Markdown/attachment export with a documented portable manifest
 - [ ] 11.2 Implement validated Markdown/attachment import with duplicate policy, sanitization, and itemized failure reporting
 - [ ] 11.3 Implement consistent server backups using the SQLite backup mechanism plus attachment and version manifest capture
+- [x] 11.3.1 Implement current-schema database-only consistent snapshots, strict bounded version/hash manifests and fail-closed publication; keep attachments and scheduling pending
 - [ ] 11.4 Implement backup integrity verification and a restore command that refuses incompatible or incomplete archives before replacing active data
+- [x] 11.4.1 Implement trusted operator backup/verify/restore commands, read-only integrity/schema validation and interruption-safe restoration to a new directory without replacing existing data
 - [ ] 11.5 Implement pre-migration recovery points, schema compatibility refusal, and documented image-plus-backup rollback
 - [ ] 11.6 Add automated tests that restore representative backups, upgrade old schemas, reject future schemas, and recover from interrupted upgrade simulations
+- [x] 11.6.1 Verify current schema-1/2 recovery, concurrent-transaction snapshots, corrupted/incompatible/incomplete backups, existing-target preservation, interrupted-restore refusal and real maintenance commands; keep upgrade simulations pending
 
 ## 12. Docker Packaging and Operations
 

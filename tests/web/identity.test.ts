@@ -62,9 +62,9 @@ describe('identity panel', () => {
     expect(fetchMock.mock.calls[1]?.[0]).toBe('/api/v1/auth/bootstrap');
     wrapper.unmount();
   });
-  it('logs in, keeps tokens out of visible UI and sends CSRF on logout', async () => {
+  it('logs in, keeps tokens out of UI and confirms CSRF logout without another status request', async () => {
     const fetchMock = vi.fn().mockResolvedValueOnce(json(anonymous)).mockResolvedValueOnce(json(session))
-      .mockResolvedValueOnce(new Response(null, { status: 204 })).mockResolvedValueOnce(json(anonymous));
+      .mockResolvedValueOnce(new Response(null, { status: 204 })).mockRejectedValueOnce(new Error('status_unavailable'));
     vi.stubGlobal('fetch', fetchMock);
     const wrapper = mount(IdentityPanel);
     await flushPromises();
@@ -78,6 +78,7 @@ describe('identity panel', () => {
     await flushPromises();
     const init: RequestInit | undefined = fetchMock.mock.calls[2]?.[1];
     expect(init?.headers).toMatchObject({ 'X-CSRF-Token': session.csrfToken });
+    expect(fetchMock).toHaveBeenCalledTimes(3);
     expect(wrapper.find('form').exists()).toBe(true);
     expect(wrapper.get<HTMLInputElement>('#identity-password').element.value).toBe('');
     wrapper.unmount();

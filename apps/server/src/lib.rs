@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
+pub mod backup;
 pub mod configuration;
 pub mod identity;
 pub mod repository;

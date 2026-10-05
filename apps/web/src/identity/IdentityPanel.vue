@@ -60,37 +60,121 @@ async function submit(): Promise<void> {
 async function logout(): Promise<void> {
   const current = session.value;
   if (current?.state !== 'authenticated') return;
-  await run(async signal => { await logoutAccount(current.csrfToken, signal); return fetchSession(signal); });
+  await run(async signal => {
+    await logoutAccount(current.csrfToken, signal);
+    // A confirmed logout must not depend on a second network request.
+    return { state: 'anonymous', bootstrapRequired: false };
+  });
 }
 onMounted(() => { void refresh(); });
 onBeforeUnmount(() => { active?.abort(); active = undefined; clearTimeout(activeTimeout); activeTimeout = undefined; password.value = ''; secret.value = ''; session.value = null; });
 </script>
 
 <template>
-  <section class="identity-panel" aria-labelledby="identity-title">
-    <h2 id="identity-title">{{ t('identityTitle') }}</h2>
+  <section
+    class="identity-panel"
+    aria-labelledby="identity-title"
+  >
+    <h2 id="identity-title">
+      {{ t('identityTitle') }}
+    </h2>
     <p>{{ t('identityNotice') }}</p>
-    <p v-if="busy" aria-live="polite">{{ t('identityWorking') }}</p>
-    <p v-if="error" class="editor-error" role="alert">{{ t(error) }}</p>
+    <p
+      v-if="busy"
+      aria-live="polite"
+    >
+      {{ t('identityWorking') }}
+    </p>
+    <p
+      v-if="error"
+      class="editor-error"
+      role="alert"
+    >
+      {{ t(error) }}
+    </p>
     <template v-if="session?.state === 'authenticated'">
       <p>{{ t('identitySignedIn') }} · {{ t(session.account.isAdmin ? 'identityAdministrator' : 'identityMember') }}</p>
-      <button class="primary-button" :disabled="busy" @click="logout">{{ t('identityLogout') }}</button>
+      <button
+        class="primary-button"
+        :disabled="busy"
+        @click="logout"
+      >
+        {{ t('identityLogout') }}
+      </button>
     </template>
-    <form v-else-if="session?.state === 'anonymous'" @submit.prevent="submit">
-      <p v-if="initialized">{{ t('identityInitialized') }}</p>
+    <form
+      v-else-if="session?.state === 'anonymous'"
+      @submit.prevent="submit"
+    >
+      <p v-if="initialized">
+        {{ t('identityInitialized') }}
+      </p>
       <label for="identity-login">{{ t('identityLoginName') }}</label>
-      <input id="identity-login" v-model="login" name="username" autocomplete="username" required minlength="3" maxlength="64" pattern="[a-z0-9._\-]+" :disabled="busy" aria-describedby="identity-login-hint">
-      <p id="identity-login-hint">{{ t('identityLoginHint') }}</p>
+      <input
+        id="identity-login"
+        v-model="login"
+        name="username"
+        autocomplete="username"
+        required
+        minlength="3"
+        maxlength="64"
+        pattern="[a-z0-9._\-]+"
+        :disabled="busy"
+        aria-describedby="identity-login-hint"
+      >
+      <p id="identity-login-hint">
+        {{ t('identityLoginHint') }}
+      </p>
       <label for="identity-password">{{ t('identityPassword') }}</label>
-      <input id="identity-password" v-model="password" name="password" type="password" :autocomplete="session.bootstrapRequired ? 'new-password' : 'current-password'" required maxlength="1024" :disabled="busy" :aria-describedby="session.bootstrapRequired ? 'identity-password-hint' : undefined">
-      <p v-if="session.bootstrapRequired" id="identity-password-hint">{{ t('identityPasswordHint') }}</p>
+      <input
+        id="identity-password"
+        v-model="password"
+        name="password"
+        type="password"
+        :autocomplete="session.bootstrapRequired ? 'new-password' : 'current-password'"
+        required
+        maxlength="1024"
+        :disabled="busy"
+        :aria-describedby="session.bootstrapRequired ? 'identity-password-hint' : undefined"
+      >
+      <p
+        v-if="session.bootstrapRequired"
+        id="identity-password-hint"
+      >
+        {{ t('identityPasswordHint') }}
+      </p>
       <template v-if="session.bootstrapRequired">
         <label for="identity-secret">{{ t('identitySecret') }}</label>
-        <input id="identity-secret" v-model="secret" type="password" autocomplete="off" required minlength="64" maxlength="64" pattern="[0-9a-f]{64}" :disabled="busy" aria-describedby="identity-secret-hint">
-        <p id="identity-secret-hint">{{ t('identitySecretHint') }}</p>
+        <input
+          id="identity-secret"
+          v-model="secret"
+          type="password"
+          autocomplete="off"
+          required
+          minlength="64"
+          maxlength="64"
+          pattern="[0-9a-f]{64}"
+          :disabled="busy"
+          aria-describedby="identity-secret-hint"
+        >
+        <p id="identity-secret-hint">
+          {{ t('identitySecretHint') }}
+        </p>
       </template>
-      <button class="primary-button" type="submit" :disabled="busy">{{ t(session.bootstrapRequired ? 'identityBootstrap' : 'identityLogin') }}</button>
+      <button
+        class="primary-button"
+        type="submit"
+        :disabled="busy"
+      >
+        {{ t(session.bootstrapRequired ? 'identityBootstrap' : 'identityLogin') }}
+      </button>
     </form>
-    <button v-if="!busy" class="identity-retry" @click="refresh">{{ t('identityRetry') }}</button>
+    <button
+      v-if="!busy"
+      class="identity-retry"
+      @click="refresh"
+    >
+      {{ t('identityRetry') }}
+    </button>
   </section>
 </template>

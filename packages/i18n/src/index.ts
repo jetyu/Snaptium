@@ -51,7 +51,7 @@ const zhCN = {
   version: '服务版本',
   serviceMode: '当前阶段',
   foundationMode: '工程基础',
-  nextTitle: '下一步：账号与笔记工作区',
+  nextTitle: '下一步：笔记工作区',
   nextDescription: '当前预览用于验证 Web 与服务端连接，尚未开放笔记保存。',
   securityNote: '自托管不等于端到端加密。服务管理员能够访问服务端存储的内容。',
   footer: 'Snaptium · 自托管 Markdown 笔记',

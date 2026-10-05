@@ -36,6 +36,8 @@ impl WebPolicy {
             || authority.as_str() != authority.as_str().to_ascii_lowercase()
             || (authority.as_str() != authority.host() && authority.port_u16().is_none())
             || authority.port_u16() == Some(0)
+            || (scheme == "https" && authority.port_u16() == Some(443))
+            || (scheme == "http" && authority.port_u16() == Some(80))
             || authority
                 .port()
                 .is_some_and(|port| port.as_str().parse::<u16>().is_err())
@@ -170,10 +172,13 @@ mod tests {
             "https://nas?x=y",
             "https://NAS",
             "https://nas:99999",
+            "https://nas#fragment",
+            "https://nas:443",
         ] {
             assert!(WebPolicy::parse(origin, false, listen).is_err());
         }
         assert!(WebPolicy::parse("http://127.0.0.1:5173", true, listen).is_ok());
+        assert!(WebPolicy::parse("http://127.0.0.1:80", true, listen).is_err());
         assert!(WebPolicy::parse("http://127.0.0.1:3000", true, "0.0.0.0:3000".parse()?).is_err());
         let policy = WebPolicy::parse("https://notes.example", false, listen)?;
         let cookie = policy.cookie("test", 28800);

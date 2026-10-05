@@ -1,7 +1,7 @@
 //! Server-only storage. Never share this pool or database with native clients.
 use std::{
     fs::{File, OpenOptions},
-    path::Path,
+    path::{Path, PathBuf},
     time::Duration,
 };
 
@@ -18,6 +18,7 @@ pub enum StorageError {
     OwnershipUnavailable,
     DatabaseUnavailable,
     IncompatibleDatabase,
+    IncompleteRestore,
 }
 
 impl std::fmt::Display for StorageError {
@@ -28,6 +29,7 @@ impl std::fmt::Display for StorageError {
             Self::OwnershipUnavailable => "storage_ownership_unavailable",
             Self::DatabaseUnavailable => "database_unavailable",
             Self::IncompatibleDatabase => "incompatible_database",
+            Self::IncompleteRestore => "incomplete_restore",
         })
     }
 }
@@ -39,6 +41,7 @@ impl std::error::Error for StorageError {}
 pub struct ServerStorage {
     pool: SqlitePool,
     _ownership: File,
+    directory: PathBuf,
 }
 
 impl ServerStorage {
@@ -75,6 +78,13 @@ impl ServerStorage {
         .map_err(|_| StorageError::DirectoryUnavailable)??;
 
         let filename = directory.join("server.sqlite3");
+        // A crash during restore must never turn a partial target into a fresh
+        // store or expose its unverified database to the HTTP server.
+        match std::fs::symlink_metadata(directory.join(crate::backup::RESTORE_MARKER)) {
+            Ok(_) => return Err(StorageError::IncompleteRestore),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => (),
+            Err(_) => return Err(StorageError::DirectoryUnavailable),
+        }
         // Probe without setting persistent PRAGMAs or creating files. Refuse a
         // nonempty/future database before WAL can mutate it.
         if filename.exists() {
@@ -129,6 +139,7 @@ impl ServerStorage {
         Ok(Self {
             pool,
             _ownership: ownership,
+            directory,
         })
     }
 
@@ -163,6 +174,10 @@ impl ServerStorage {
 
     pub(crate) fn pool(&self) -> &SqlitePool {
         &self.pool
+    }
+
+    pub(crate) fn directory(&self) -> &Path {
+        &self.directory
     }
 
     /// New schema-2 identity stores only. Refuse schema-1 upgrades until a

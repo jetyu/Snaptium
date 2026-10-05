@@ -7,6 +7,12 @@ use std::sync::Arc;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    if snaptium_server::backup::maintenance(std::env::args_os().skip(1).collect())
+        .await
+        .map_err(|error| error.to_string())?
+    {
+        return Ok(());
+    }
     let settings = Settings::from_env()?;
     if !settings.web_dir.join("index.html").is_file() {
         return Err("web build missing; run pnpm build:web before starting the server".into());

@@ -1,6 +1,6 @@
 # 本地开发与验证
 
-当前交付为 Web-first 工程基础：Vue Web 页面、共享 UI/i18n、健康响应边界校验、Milkdown Markdown 编辑预览、IndexedDB 预览草稿、Axum 路由、独立 SQLite/读取 repository/密码与管理员初始化模块及同镜像 Docker 构建配置。尚无 Web 登录或服务端笔记保存能力，SQLite 与身份模块未接入 HTTP 启动；浏览器草稿可显式恢复为副本，但不能作为真实笔记的唯一备份。产品名暂沿用仓库名 Snaptium；正式标识与分发名称仍由任务 1.1 确定。
+当前交付为 Web-first 开发基础：Vue 共享 UI/i18n、Milkdown Markdown 编辑预览、IndexedDB 预览草稿、Axum 路由与同镜像 Docker 构建配置。显式配置身份服务后，可使用 SQLite 持久化管理员账号，通过 Web 初始化、登录和退出，具备有界内存会话、CSRF 与保守限流。尚无服务端笔记保存能力；浏览器预览草稿不属于登录账号，可显式恢复为副本，但不能作为真实笔记的唯一备份。产品名暂沿用仓库名 Snaptium；正式标识与分发名称仍由任务 1.1 确定。
 
 ## Web 开发
 
@@ -19,6 +19,7 @@ pnpm lint
 pnpm test
 pnpm test:editor
 pnpm test:drafts
+pnpm test:identity
 pnpm build:web
 ```
 
@@ -71,18 +72,23 @@ cargo test --locked -p snaptium-server storage::tests
 cargo test --locked -p snaptium-server schema::tests
 cargo test --locked -p snaptium-server repository::tests
 cargo test --locked -p snaptium-server identity::tests
+cargo test --locked -p snaptium-server configuration::tests
+cargo test --locked -p snaptium-server web_identity::tests
+cargo test --locked -p snaptium-server --test startup
+cargo test --locked -p snaptium-server backup::tests
+cargo test --locked -p snaptium-server --test maintenance
 cargo run --locked -p snaptium-server
 ```
 
 服务默认绑定 `127.0.0.1:3000`，从 `apps/web/dist` 读取构建资源。`SNAPTIUM_LISTEN` 可指定合法 socket 地址；`SNAPTIUM_WEB_DIR` 可指定 Web 构建目录。缺失 index.html 时启动失败。
 
-基础端点：`/api/v1/health` 返回明确的 foundation/not_configured 状态；`/.well-known/notes` 不宣告可用笔记同步协议或能力。`/`、`/notes`、`/settings` 返回同一 Web 入口，`/assets` 提供静态文件。未知 API、WS 与静态路径返回 404，不被 SPA fallback 吞掉。
+基础端点：没有身份配置时 `/api/v1/health` 为 foundation/not_configured；启用后为 identity/ready，状态区分 initialization_required 与 ok，但不表示笔记 API 已可用。`/.well-known/notes` 仅在启用身份时声明 web_identity 能力，始终不宣告可用同步协议。`/`、`/notes`、`/settings` 返回同一 Web 入口，`/assets` 提供静态文件。未知 API、WS 与静态路径返回 404，不被 SPA fallback 吞掉。
 
 生产响应设置 CSP、nosniff、no-referrer、no-store 和生成的请求标识。开发模式 Vite 的 HMR 策略不代表生产 CSP。结构化业务错误与完整请求日志策略在任务 2.5 中继续完善。
 
-服务端 SQLite 模块已进行隔离目录测试，包含 WAL、外键、FULL synchronous、连接池上限、跨进程所有权锁及显式空库 schema 初始化。尚未接入 HTTP 启动，不改变健康端点的存储状态，参见 [服务端存储基础](server-storage.md)。
+服务端 SQLite 模块已接入显式配置的身份服务启动与关闭，包含 WAL、外键、FULL synchronous、连接池上限、跨进程所有权锁及显式空库 schema 初始化；schema 不兼容时不接受流量。关闭等待服务请求结束及连接池关闭，Linux 同时处理 SIGTERM，参见 [服务端存储基础](server-storage.md)。
 
-Rust 身份模块可在独立的新 schema 2 测试库中创建首个管理员并校验密码；已有 schema 1 只读拒绝升级。初始化密钥配置、HTTP 初始化/登录、Web 会话、CSRF、登录限流与退出尚未接入，不新增可用的账号 API 或部署环境变量。接口和运行边界见 [服务端密码与管理员初始化](server-identity.md)。
+Rust 身份核心使用 schema 2；已有 schema 1 只读拒绝升级。`SNAPTIUM_DATA_DIR` 启用身份服务，要求 `SNAPTIUM_PUBLIC_ORIGIN`，新库还需受控的 `SNAPTIUM_BOOTSTRAP_SECRET_FILE`。Web 初始化、登录、Secure/HttpOnly/SameSite 会话、CSRF、限流与退出已接入；生产要求 HTTPS，显式 HTTP 例外仅限回环开发。完整操作步骤见 [Web 初始化、登录与会话](web-identity.md)，密码核心见 [服务端身份基础](server-identity.md)。
 
 ## Docker 开发部署（待本地容器验证）
 
@@ -107,10 +113,10 @@ docker compose -f deploy/docker/compose.yaml down
 
 基础阶段交付任务 2.1–2.5 和 12.1–12.4 的部分内容，已完成的 Web 子项为 2.2.1、2.3.1、2.4.1；编辑器阶段完成任务 1.6、7.2，草稿阶段完成预览子项 7.5.1。Rust 质量子项 2.3.2 和 SQLite 连接子项 4.1.1 已完成。包含 Windows、完整协议、业务存储和运维的其余总任务保持未完成。所有本地验证命令已纳入 CI，但本次未运行远程 CI 或 Docker。草稿存储与失败处理见 [Web 本地草稿](web-drafts.md)。
 
-本机验证：`pnpm check` 已通过，包含类型检查、零警告 lint、50 项契约/真实 Milkdown 引擎/草稿存储与组件测试和生产构建；离线冻结锁文件安装也已通过。编辑器按需加载。当前无可用浏览器连接，尚未完成真实浏览器视觉、中文 IME、刷新草稿恢复、键盘与响应式回归验证，任务 1.3 保持未完成。
+本机验证：`pnpm check` 已通过，包含类型检查、零警告 lint、59 项契约/真实 Milkdown 引擎/草稿存储/身份访问与组件测试和生产构建；先前离线冻结锁文件安装也已通过。编辑器按需加载。当前无可用浏览器连接，尚未完成真实浏览器 HTTPS Cookie、视觉、中文 IME、刷新草稿恢复、键盘与响应式回归验证，任务 1.3 保持未完成。
 
-本机 Rust 验证：格式检查、零警告 clippy 与锁定依赖的离线测试通过，共 25 项测试（其中 1 项为跨进程测试辅助入口）。覆盖 schema/锁、owner-scoped 笔记读取、文件夹分页、非法参数与存储数据、源码及回收站状态保留；身份模块新增版本化密码、容量限制、初始化竞争/回滚/重启和旧库拒绝保护。未运行 NAS 容器验证。
+本机 Rust 验证：格式检查、零警告 clippy 与锁定依赖的离线测试通过，共 47 项测试（其中 1 项为跨进程测试辅助入口）。覆盖 schema/锁、owner-scoped 查询、版本化密码、容量限制、初始化竞争/回滚、配置拒绝、Origin/CSRF/Cookie 边界、限流、会话轮换与过期；真实 TCP/服务进程测试验证强制重启后账号保留、旧 Web 会话失效、初始化保持关闭且可重新登录退出。备份专项验证当前 schema 1/2、WAL 与并发快照、严格清单/哈希/schema/外键检查、已有目标保护和中断标记；独立维护进程完成备份→校验→新目录恢复→密码登录验证。Unix 权限/符号链接专项交给 CI，本机未运行 NAS 容器验证。
 
-读取 repository 子项 4.3.1 已落实，详见 [服务端读取数据访问层](server-repositories.md)。身份基础子项 5.1.1、5.2.1 已落实。这些接口仅为服务端模块，未开放 HTTP；会话认证和笔记写入仍待实现，不接受浏览器自报 owner 作为认证。
+读取 repository 子项 4.3.1 已落实，详见 [服务端读取数据访问层](server-repositories.md)。读取笔记接口仍未开放 HTTP；身份接口已开放，但没有笔记写入，不接受浏览器自报 owner 作为认证。管理员创建后续账号、密码更新、完整安全审计、原生设备凭据与持久化会话仍待对应任务。
 
-任务 1.2 已确认：单层文件夹（删除时保留笔记并移至未分类）、附件 20 MiB、可调整的默认账号容量 5 GiB、每篇最近 100 个历史版本、同步删除记录不自动清理、关闭公开注册由管理员创建账号。初始账号/文件夹/笔记 schema 与策略元数据已验证，但没有正式业务写入 API。下一阶段接入可信初始化配置、服务启动、HTTP 初始化与登录，以及 Secure/HttpOnly/SameSite 会话、CSRF、限流和退出，再增加经过会话认证的 owner-scoped 笔记保存与重载。已有库升级另须先完成迁移恢复保护。Windows 与 Android 不在当前实施范围。
+任务 1.2 已确认：单层文件夹（删除时保留笔记并移至未分类）、附件 20 MiB、可调整的默认账号容量 5 GiB、每篇最近 100 个历史版本、同步删除记录不自动清理、关闭公开注册由管理员创建账号。初始账号/文件夹/笔记 schema 与策略元数据已验证，但没有正式业务写入 API。当前数据库备份、完整性校验和全新目录恢复子项 11.3.1、11.4.1、11.6.1 已实现，见 [维护命令与恢复边界](server-backup.md)；附件备份、自动调度与真实前向迁移仍待完成，schema 1 不自动升级。下一阶段接入经过验证恢复点保护的存储扩展，再增加经过会话认证的 owner-scoped 笔记保存与重载，并遵守修订、历史及变更流事务规则。Windows 与 Android 不在当前实施范围。

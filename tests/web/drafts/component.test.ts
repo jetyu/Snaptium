@@ -24,7 +24,8 @@ async function inspect(): Promise<Draft[]> {
 
 it('does not persist the example until editing, then saves unsupported source exactly', async () => {
   const wrapper = render();
-  await vi.waitFor(() => expect(wrapper.find('.editor-modes button:last-child').attributes('disabled')).toBeUndefined());
+  // A cold dynamic editor import is not subject to a one-second performance budget.
+  await vi.waitFor(() => expect(wrapper.find('.editor-modes button:last-child').attributes('disabled')).toBeUndefined(), { timeout: 5000 });
   expect(await inspect()).toEqual([]);
   await wrapper.get('.editor-modes button:last-child').trigger('click');
   const source = '<script>中文原稿</script>\n';
@@ -64,7 +65,7 @@ it('starts a fresh session without removing an existing draft', async () => {
 it('keeps editing available without storage, shows failure, and warns before leaving', async () => {
   vi.stubGlobal('indexedDB', undefined);
   const wrapper = render();
-  await vi.waitFor(() => expect(wrapper.find('.editor-modes button:last-child').attributes('disabled')).toBeUndefined());
+  await vi.waitFor(() => expect(wrapper.find('.editor-modes button:last-child').attributes('disabled')).toBeUndefined(), { timeout: 5000 });
   expect(wrapper.get('.draft-status[role="alert"]').text()).toContain('失败');
   await wrapper.get('.editor-modes button:last-child').trigger('click');
   await wrapper.get('textarea').setValue('不能丢失的原文');

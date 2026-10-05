@@ -13,6 +13,7 @@
     "test": "vitest run",
     "test:editor": "vitest run tests/web/editor",
     "test:drafts": "vitest run tests/web/drafts",
+    "test:identity": "vitest run tests/web/identity.test.ts",
     "check": "pnpm typecheck && pnpm lint && pnpm test && pnpm build:web"
   },
   "devDependencies": {

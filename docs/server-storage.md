@@ -1,6 +1,6 @@
 # 服务端 SQLite 连接基础
 
-`apps/server/src/storage.rs` 是服务端专属模块，不与原生客户端共享数据库、连接池或表模型。本阶段提供经过测试的连接与初始 schema，**尚未接入 HTTP 服务启动**；健康端点仍返回 `foundation/not_configured`，未提供 Web 登录或正式笔记保存。Rust 凭据与初始化模块见 [服务端身份基础](server-identity.md)。
+`apps/server/src/storage.rs` 是服务端专属模块，不与原生客户端共享数据库、连接池或表模型。配置身份服务时已接入 HTTP 启动，健康端点报告 `identity/ready` 和是否需要初始化；不配置时仍为 `foundation/not_configured`。已支持管理员初始化和 Web 登录，未提供正式笔记保存。配置见 [Web 身份访问](web-identity.md)，Rust 核心见 [服务端身份基础](server-identity.md)。
 
 ## 连接与实例所有权
 
@@ -21,6 +21,8 @@ schema 1 包含 `users`、单层 `folders`、`notes`、`server_policy`、`schema
 笔记文件夹外键包含 `owner_id`，阻止跨账号关联。删除含笔记的文件夹会被数据库拒绝，后续 repository 必须在事务内先移至虚拟“未分类”（`folder_id = NULL`），再删除文件夹，并同时落实修订和变更流。当前测试只验证底层约束及内容保留，不代表文件夹 API 已实现。会话、设备、附件、历史、变更流和幂等结果表留待各业务任务，任务 4.2 整体未完成。
 
 数据必须存放于支持 SQLite WAL 与操作系统文件锁的本地文件系统，不使用 SMB/NFS 数据目录。NAS 上应使用容器宿主机的本地持久卷，而不是把数据库经网络共享挂载到开发机。NAS 文件系统及容器锁行为仍需实际验证。
+
+当前 schema 1/2 已提供数据库快照、严格版本/哈希清单校验和恢复至全新目录的维护命令，见 [数据库备份与恢复](server-backup.md)。启动发现 `restore.in-progress` 就拒绝，不打开数据库也不创建空库；恢复失败不覆盖旧目录。该能力尚不包含附件、自动调度或既有数据前向迁移，因此不解除 schema 1 的身份服务升级拒绝。
 
 ## 验证
 

@@ -7,6 +7,23 @@ pub(crate) const INITIAL_SQL: &str = include_str!("../migrations/0001_core.sql")
 const IDENTITY_SQL: &str = include_str!("../migrations/0002_identity.sql");
 
 pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
+    // File/restore boundaries may contain hostile metadata. Bound stored text
+    // before decoding it into Rust Strings or collecting schema objects.
+    let (objects, largest_sql): (i64, i64) = sqlx::query_as(
+        "SELECT count(*), coalesce(max(length(CAST(sql AS BLOB))), 0) FROM sqlite_schema WHERE name NOT LIKE 'sqlite_%'",
+    ).fetch_one(pool).await.map_err(|_| StorageError::IncompatibleDatabase)?;
+    if objects > 64 || largest_sql > 8192 {
+        return Err(StorageError::IncompatibleDatabase);
+    }
+    let record_bytes: Option<i64> = sqlx::query_scalar(
+        "SELECT length(CAST(migration_sql AS BLOB)) FROM schema_metadata WHERE singleton = 1",
+    )
+    .fetch_optional(pool)
+    .await
+    .map_err(|_| StorageError::IncompatibleDatabase)?;
+    if !matches!(record_bytes, Some(1..=8192)) {
+        return Err(StorageError::IncompatibleDatabase);
+    }
     let record: Option<(i64, String)> =
         sqlx::query_as("SELECT version, migration_sql FROM schema_metadata WHERE singleton = 1")
             .fetch_optional(pool)
@@ -24,6 +41,15 @@ pub(crate) async fn verify(pool: &SqlitePool) -> Result<(), StorageError> {
         return Err(StorageError::IncompatibleDatabase);
     }
     if version == 2 {
+        let record_bytes: Option<i64> = sqlx::query_scalar(
+            "SELECT length(CAST(migration_sql AS BLOB)) FROM bootstrap_state WHERE singleton = 1",
+        )
+        .fetch_optional(pool)
+        .await
+        .map_err(|_| StorageError::IncompatibleDatabase)?;
+        if !matches!(record_bytes, Some(1..=8192)) {
+            return Err(StorageError::IncompatibleDatabase);
+        }
         let state: Option<(i64, String)> =
             sqlx::query_as("SELECT closed, migration_sql FROM bootstrap_state WHERE singleton = 1")
                 .fetch_optional(pool)

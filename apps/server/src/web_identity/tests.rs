@@ -3,6 +3,20 @@ use axum::body::Body;
 use tower::ServiceExt;
 
 type TestResult = Result<(), Box<dyn std::error::Error>>;
+
+#[tokio::test]
+async fn fresh_identity_without_authority_fails_closed() -> TestResult {
+    let directory = tempfile::tempdir()?;
+    let storage = Arc::new(ServerStorage::open_identity(directory.path()).await?);
+    let policy = WebPolicy::parse("https://notes.example", false, "127.0.0.1:3000".parse()?)?;
+    assert!(matches!(
+        WebIdentity::new(storage.clone(), policy, None).await,
+        Err(IdentityError::Unavailable)
+    ));
+    assert!(storage.bootstrap_required().await?);
+    storage.shutdown().await;
+    Ok(())
+}
 async fn fixture() -> Result<
     (
         tempfile::TempDir,
