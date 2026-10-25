@@ -1,6 +1,7 @@
 {
   "about.author": "作者",
   "about.chromium": "Chromium",
+  "about.cpuArchitecture": "CPU 架构",
   "about.copyrights": "版权所有 © 2026 Snaptium Team. 保留所有权利",
   "about.cpuArchitecture": "CPU 架构",
   "about.description": "AI 智能体驱动的 Markdown 笔记应用",
@@ -610,6 +611,7 @@
   "search.agentTaskApplyUpdateFailed": "应用更新建议失败",
   "search.agentTaskApplyWrite": "创建笔记",
   "search.agentTaskApplying": "应用中",
+  "search.agentTaskCompleted": "智能体任务已完成",
   "search.agentTaskApprovalRequired": "操作确认",
   "search.agentTaskCompleted": "智能体任务已完成",
   "search.agentTaskDismissWrite": "忽略",
