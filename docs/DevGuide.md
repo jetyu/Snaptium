@@ -991,6 +991,14 @@ electron/assets/locales
 
 # 十七、常用命令
 
+依赖安全检查（包含开发依赖，发现任何级别的有效漏洞时失败）：
+
+```bash
+npm run audit:dependencies
+```
+
+Windows PowerShell 禁止运行 `npm.ps1` 时，使用 `npm.cmd run audit:dependencies`。
+
 安装依赖：
 
 ```bash
