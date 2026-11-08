@@ -86,7 +86,7 @@ export const COMMANDS = {
     id: 'file.history',
     category: COMMAND_CATEGORIES.FILE,
     scope: COMMAND_SCOPES.RENDERER,
-    defaultKeybinding: 'CommandOrControl+H',
+    defaultKeybinding: process.platform === 'darwin' ? 'CommandOrControl+Shift+H' : 'CommandOrControl+H',
   },
 
   // 搜索操作
