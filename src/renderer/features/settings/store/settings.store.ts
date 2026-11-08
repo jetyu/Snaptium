@@ -378,6 +378,9 @@ function createDefaultConfig(): AppSettings {
 export const useSettingsStore = defineStore('settings', () => {
   const settingsLogger = createLogger('SettingsStore');
   const config = ref<AppSettings>(createDefaultConfig());
+  const scheduledBackupError = ref<string | null>(null);
+  const scheduledBackupRunning = ref(false);
+  const scheduledBackupRetryRequest = ref(0);
 
   const isLoading = ref(false);
   const isExportingDiagnosticLogs = ref(false);
@@ -854,6 +857,9 @@ export const useSettingsStore = defineStore('settings', () => {
   };
 
   return {
+    scheduledBackupError,
+    scheduledBackupRunning,
+    scheduledBackupRetryRequest,
     config,
     persistence,
     general,

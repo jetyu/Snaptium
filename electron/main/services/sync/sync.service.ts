@@ -13,6 +13,7 @@ import { E2EE_ERROR_CODES } from '../../../shared/e2ee.constants.js';
 import { VFS_CONSTANTS } from '../../constants/vfs.constants.js';
 import { settingsService } from '../settings.service.js';
 import { vfsService } from '../vfs.service.js';
+import { historyService } from '../history.service.js';
 import {
   createEmptyManifest,
   createManifestEntry,
@@ -587,6 +588,21 @@ async function applyIncrementalSync(
       continue;
     }
 
+    // Preserve both note versions before either side can be overwritten.
+    const contentId = path.posix.basename(relativePath, VFS_CONSTANTS.MARKDOWN_FILE_EXT);
+    if (localEntry && remoteEntry
+      && relativePath === `${VFS_CONSTANTS.OBJECTS_FOLDER}/${contentId}${VFS_CONSTANTS.MARKDOWN_FILE_EXT}`
+      && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(contentId)) {
+      const localContent = await readLocalFile(workspaceRoot, relativePath);
+      const remoteCiphertext = await provider.readText(toRemoteDataPath(relativePath));
+      if (remoteCiphertext === null) throw new Error($t('sync.error.remoteConflictUnavailable'));
+      const remoteContent = keyManagerService.isUnlocked()
+        ? cryptoService.decryptContent(remoteCiphertext, keyManagerService.getDEK()) : remoteCiphertext;
+      const config = await settingsService.loadConfig();
+      const retention = Math.max(2, config.noteStorage.maxHistoryVersions);
+      await historyService.saveVersion(workspaceRoot, contentId, localContent, retention);
+      await historyService.saveVersion(workspaceRoot, contentId, remoteContent, retention);
+    }
     const winner = pickWinningEntry(localEntry, remoteEntry);
     summary.conflicts += 1;
 
