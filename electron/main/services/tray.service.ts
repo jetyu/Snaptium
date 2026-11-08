@@ -35,8 +35,8 @@ class TrayService {
     if (process.platform === IPC_CHANNELS.PLATFORM_WIN32_KERNEL) {
       this.tray = new Tray(icon);
     } else if (process.platform === IPC_CHANNELS.PLATFORM_DARWIN_KERNEL) {
-      this.tray = new Tray(icon.resize({ width: 32, height: 32 }));
-      this.tray.setPressedImage(icon.resize({ width: 32, height: 32 }));
+      this.tray = new Tray(icon.resize({ width: 18, height: 18 }));
+      this.tray.setPressedImage(icon.resize({ width: 18, height: 18 }));
     } else {
       this.tray = new Tray(icon);
     }

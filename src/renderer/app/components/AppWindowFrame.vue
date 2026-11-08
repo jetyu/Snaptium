@@ -1,5 +1,5 @@
 <template>
-  <header class="app-window-frame" :class="{ 'is-maximized': isMaximized }" @dblclick="handleDoubleClickTitle">
+  <header class="app-window-frame" :class="{ 'is-maximized': isMaximized, 'is-mac': isMac }" @dblclick="handleDoubleClickTitle">
     <div class="app-window-frame__drag-region">
       <div class="app-window-frame__brand">
         <img src="@assets/logo/app-logo-32.png" class="app-window-frame__logo" :alt="appTitle" />
@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <div class="app-window-frame__controls no-drag">
+    <div v-if="!isMac" class="app-window-frame__controls no-drag">
       <button type="button" class="app-window-frame__control-btn" :title="t('menu.window.minimize')"
         :aria-label="t('menu.window.minimize')" @click.stop="handleMinimize">
         <IconMinus :size="14" />
@@ -43,6 +43,7 @@ import AppTitleBarSearch from './AppTitleBarSearch.vue';
 const { t } = useI18n();
 const appTitle = ref<string>(t('common.appName'));
 const isMaximized = ref<boolean>(false);
+const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
 let removeWindowStateListener: (() => void) | null = null;
 
@@ -271,6 +272,11 @@ onBeforeUnmount(() => {
   padding-right: 2px;
   border-bottom-color: color-mix(in srgb, var(--panel-border) 76%, transparent);
   background: color-mix(in srgb, var(--panel) 96%, var(--surface-subtle));
+}
+
+.app-window-frame.is-mac {
+  grid-template-columns: minmax(0, 1fr);
+  padding-left: 80px;
 }
 
 [data-theme='dark'] .app-window-frame.is-maximized {
