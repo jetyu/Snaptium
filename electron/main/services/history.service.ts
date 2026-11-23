@@ -2,7 +2,6 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { VFS_CONSTANTS } from '../constants/vfs.constants.js';
 import { loggerService } from './log/logger.service.js';
-import { writeUtf8 } from './file.service.js';
 import { formatSnapshotFilename, filenameToTimestamp } from '../utils/formatTools.js';
 import { getErrorMessage } from '../services/error.service.js';
 
@@ -55,11 +54,19 @@ export const historyService = {
       }
     }
 
-    const now = Date.now();
-    const fileName = formatSnapshotFilename(new Date(now));
-    const filePath = path.join(historyDir, `${fileName}${VFS_CONSTANTS.MARKDOWN_FILE_EXT}`);
-
-    await writeUtf8(filePath, content);
+    let timestamp = Math.max(Date.now(), (versions[0]?.timestamp ?? 0) + 1);
+    let fileName: string;
+    while (true) {
+      fileName = formatSnapshotFilename(new Date(timestamp));
+      const filePath = path.join(historyDir, `${fileName}${VFS_CONSTANTS.MARKDOWN_FILE_EXT}`);
+      try {
+        await fs.writeFile(filePath, content, { encoding: 'utf8', flag: 'wx' });
+        break;
+      } catch (error: unknown) {
+        if (!(error instanceof Error) || !('code' in error) || error.code !== 'EEXIST') throw error;
+        timestamp += 1;
+      }
+    }
     historyLogger.debug(`Saved history version for ${contentId} at ${fileName}`);
 
     await this.trimVersions(root, contentId, maxVersions);

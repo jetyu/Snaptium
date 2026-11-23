@@ -104,7 +104,7 @@ class TrayService {
     this.updateContextMenu();
   }
 
-  private showAndFocusMainWindow(): void {
+  showAndFocusMainWindow(): void {
     const mainWindow = this.mainWindow;
     if (!mainWindow || mainWindow.isDestroyed()) {
       return;

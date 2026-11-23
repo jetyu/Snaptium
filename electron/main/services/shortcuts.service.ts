@@ -16,7 +16,7 @@ import { getErrorCode, getErrorMessage } from '../services/error.service.js';
 
 const logger = loggerService.createLogger('Electron:Shortcuts Service');
 
-const KEYBINDINGS_CONFIG_VERSION = '1.1.0';
+const KEYBINDINGS_CONFIG_VERSION = '1.2.0';
 
 export interface ShortcutKeybinding {
   commandId: string;
@@ -77,7 +77,7 @@ export const shortcutsService = {
     try {
       const content = await fs.readFile(filePath, 'utf-8');
       const parsed = JSON.parse(content) as { version?: string; keybindings?: ShortcutKeybinding[] };
-      const keybindings = parsed.keybindings || this.getDefaultKeybindings();
+      const keybindings = this.migrateKeybindings(parsed.keybindings || this.getDefaultKeybindings(), parsed.version);
       if (
         parsed.version !== KEYBINDINGS_CONFIG_VERSION
         && !keybindings.some(keybinding => keybinding.commandId === COMMANDS.APP_QUICK_CAPTURE.id)
@@ -93,6 +93,14 @@ export const shortcutsService = {
       }
       return this.getDefaultKeybindings();
     }
+  },
+
+  migrateKeybindings(keybindings: ShortcutKeybinding[], version?: string): ShortcutKeybinding[] {
+    if (process.platform !== 'darwin' || version === KEYBINDINGS_CONFIG_VERSION) return keybindings;
+    return keybindings.map((binding) => binding.commandId === COMMANDS.FILE_HISTORY.id
+      && /^(CommandOrControl|CmdOrCtrl)\+H$/i.test(binding.key)
+      ? { ...binding, key: COMMANDS.FILE_HISTORY.defaultKeybinding }
+      : binding);
   },
 
   async saveKeybindings(keybindings: ShortcutKeybinding[]): Promise<ShortcutKeybinding[]> {
@@ -341,6 +349,6 @@ export const shortcutsService = {
             .filter(keybinding => keybinding.commandId === COMMANDS.APP_QUICK_CAPTURE.id),
         ];
 
-    return await this.saveKeybindings(keybindings);
+    return await this.saveKeybindings(this.migrateKeybindings(keybindings, config.version));
   },
 };

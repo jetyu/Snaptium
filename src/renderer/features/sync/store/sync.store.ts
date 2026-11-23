@@ -102,8 +102,9 @@ export const useSyncStore = defineStore('sync', {
       this.status = SYNC_STATUS.SYNCING;
 
       try {
-        const result = await syncService.run(syncConfig, trigger);
         const workspaceStore = useWorkspaceStore();
+        await workspaceStore.forceFlushAutoSave();
+        const result = await syncService.run(syncConfig, trigger);
         await workspaceStore.initializeWorkspace(true);
         this.lastSyncedAt = result.syncedAt ?? this.lastSyncedAt;
         this.lastSummary = result.summary ?? this.lastSummary;

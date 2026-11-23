@@ -12,6 +12,9 @@
       </span>
     </div>
     <div class="status-right">
+      <span v-if="workspaceStore.saveError" class="status-item" role="alert"
+        :title="workspaceStore.saveError">{{ t('editor.save.failed') }}</span>
+      <button v-if="workspaceStore.saveError" type="button" @click="retrySave">{{ t('editor.save.retry') }}</button>
       <span v-if="fileSize" class="status-item">{{ fileSize }}</span>
       <span v-if="lastSaveTime" class="status-item">{{ lastSaveTime }}</span>
     </div>
@@ -42,6 +45,13 @@ const props = withDefaults(defineProps<Props>(), {
 
 const { t } = useI18n();
 const workspaceStore = useWorkspaceStore();
+async function retrySave(): Promise<void> {
+  try {
+    await workspaceStore.forceFlushAutoSave();
+  } catch {
+    // The store keeps the unsaved content and exposes the failure for retry.
+  }
+}
 const { activeNote, lastSaveTime: storeLastSaveTime } = storeToRefs(workspaceStore);
 
 const currentTime = ref(Date.now());
