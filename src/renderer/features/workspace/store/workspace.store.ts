@@ -20,6 +20,10 @@ import {
 import { WORKSPACE_CONSTANTS, type SaveStatus } from '../constants/workspace.constants';
 
 const saveTimers = new Map<string, ReturnType<typeof setTimeout>>();
+const pendingSaves = new Map<string, Promise<void>>();
+const dirtyNotes = new Map<string, number>();
+const failedSaves = new Map<string, string>();
+const SAVE_RETRY_DELAY_MS = 5000;
 const logger = createLogger('Workspace Store');
 
 export interface WorkspaceTagSummary {
@@ -249,7 +253,9 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     selectNote(id: string) {
       if (this.notes.some((note) => note.id === id)) {
-        this.forceFlushAutoSave();
+        void this.forceFlushAutoSave().catch((error: unknown) => {
+          logger.error(`Failed to flush notes: ${getErrorMessage(error)}`);
+        });
         this.activeNoteId = id;
         this.activeNotebookId = null;
         logger.info(`Selected note: ${id}`);
@@ -258,7 +264,9 @@ export const useWorkspaceStore = defineStore('workspace', {
 
     selectNotebook(id: string) {
       if (this.notebooks.some((notebook) => notebook.id === id)) {
-        this.forceFlushAutoSave();
+        void this.forceFlushAutoSave().catch((error: unknown) => {
+          logger.error(`Failed to flush notes: ${getErrorMessage(error)}`);
+        });
         this.activeNotebookId = id;
         this.activeNoteId = null;
         logger.info(`Selected notebook: ${id}`);
@@ -411,51 +419,12 @@ export const useWorkspaceStore = defineStore('workspace', {
 
       if (workspaceService.isAvailable()) {
         const noteId = note.id;
-        const contentId = note.contentId;
-
         this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVING;
-        this.saveError = null;
+        failedSaves.delete(noteId);
+        this.saveError = failedSaves.values().next().value ?? null;
 
-        clearTimeout(saveTimers.get(noteId));
-        saveTimers.set(
-          noteId,
-          setTimeout(async () => {
-            saveTimers.delete(noteId);
-            const latest = this.notes.find((candidate) => candidate.id === noteId);
-            if (!latest) return;
-
-            try {
-              const result = await workspaceService.saveNoteContent(noteId, contentId, latest.content);
-              if (result.success) {
-                latest.content = result.content;
-                const savedAt = Date.now();
-                this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
-                this.lastSaveTime = savedAt;
-                this.lastSavedNoteMeta = {
-                  noteId,
-                  title: latest.title,
-                  contentId,
-                  savedAt,
-                };
-                logger.debug(`Updated content for note: ${noteId}`);
-
-                setTimeout(() => {
-                  if (this.savingStatus === WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED) {
-                    this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.IDLE;
-                  }
-                }, WORKSPACE_CONSTANTS.AUTO_SAVE.STATUS_HIDE_DELAY);
-              } else {
-                this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR;
-                this.saveError = WORKSPACE_CONSTANTS.ERROR_MESSAGES.SAVE_FAILED;
-                logger.warn(`Failed to persist content for note: ${noteId}`);
-              }
-            } catch (err: unknown) {
-              this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR;
-              this.saveError = getErrorMessage(err, WORKSPACE_CONSTANTS.ERROR_MESSAGES.UNKNOWN_ERROR);
-              logger.error(`Error saving note ${noteId}: ${getErrorMessage(err)}`);
-            }
-          }, WORKSPACE_CONSTANTS.AUTO_SAVE.DEBOUNCE_DELAY)
-        );
+        dirtyNotes.set(noteId, (dirtyNotes.get(noteId) ?? 0) + 1);
+        this.scheduleNoteSave(noteId, WORKSPACE_CONSTANTS.AUTO_SAVE.DEBOUNCE_DELAY);
       }
     },
 
@@ -467,11 +436,17 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
 
       try {
+        await this.persistPendingNote(noteId);
+        const originalContent = note.content;
         const result = await workspaceService.saveNoteContent(note.id, note.contentId, content);
         if (!result.success) {
           return false;
         }
 
+        if (note.content !== originalContent) {
+          await this.persistPendingNote(noteId);
+          return false;
+        }
         note.content = result.content;
         note.updatedAt = Date.now();
         this.activeNoteId = note.id;
@@ -492,40 +467,74 @@ export const useWorkspaceStore = defineStore('workspace', {
       }
     },
 
-    async forceFlushAutoSave() {
-      const promises: Promise<boolean>[] = [];
-
-      for (const [noteId, timer] of saveTimers.entries()) {
-        clearTimeout(timer);
+    scheduleNoteSave(noteId: string, delay: number): void {
+      clearTimeout(saveTimers.get(noteId));
+      saveTimers.set(noteId, setTimeout(() => {
         saveTimers.delete(noteId);
+        void this.persistPendingNote(noteId).catch((error: unknown) => {
+          logger.error(`Error saving note ${noteId}: ${getErrorMessage(error)}`);
+        });
+      }, delay));
+    },
 
-        const note = this.notes.find((candidate) => candidate.id === noteId);
-        if (note) {
-          this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVING;
-          promises.push(
-            workspaceService.saveNoteContent(noteId, note.contentId, note.content).then((result) => {
-              if (result.success) {
-                note.content = result.content;
-                const savedAt = Date.now();
-                this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
-                this.lastSaveTime = savedAt;
-                this.lastSavedNoteMeta = {
-                  noteId,
-                  title: note.title,
-                  contentId: note.contentId,
-                  savedAt,
-                };
-              } else {
-                this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR;
-                this.saveError = WORKSPACE_CONSTANTS.ERROR_MESSAGES.SAVE_FAILED;
-              }
-              return result.success;
-            })
-          );
-        }
+    async persistPendingNote(noteId: string): Promise<void> {
+      const pending = pendingSaves.get(noteId);
+      if (pending) {
+        await pending;
+        if (dirtyNotes.has(noteId)) await this.persistPendingNote(noteId);
+        return;
       }
+      const task = (async (): Promise<void> => {
+        while (dirtyNotes.has(noteId)) {
+          const note = this.notes.find((candidate) => candidate.id === noteId);
+          if (!note) {
+            dirtyNotes.delete(noteId);
+            failedSaves.delete(noteId);
+            this.saveError = failedSaves.values().next().value ?? null;
+            return;
+          }
+          const revision = dirtyNotes.get(noteId);
+          const content = note.content;
+          this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.SAVING;
+          try {
+            const result = await workspaceService.saveNoteContent(noteId, note.contentId, content);
+            if (!result.success) throw new Error(WORKSPACE_CONSTANTS.ERROR_MESSAGES.SAVE_FAILED);
+            if (dirtyNotes.get(noteId) === revision) dirtyNotes.delete(noteId);
+            const savedAt = Date.now();
+            this.lastSaveTime = savedAt;
+            this.lastSavedNoteMeta = { noteId, title: note.title, contentId: note.contentId, savedAt };
+            failedSaves.delete(noteId);
+            this.saveError = failedSaves.values().next().value ?? null;
+            this.savingStatus = this.saveError
+              ? WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR
+              : dirtyNotes.size > 0 ? WORKSPACE_CONSTANTS.SAVE_STATUS.SAVING : WORKSPACE_CONSTANTS.SAVE_STATUS.SAVED;
+          } catch (error: unknown) {
+            this.savingStatus = WORKSPACE_CONSTANTS.SAVE_STATUS.ERROR;
+            this.saveError = getErrorMessage(error, WORKSPACE_CONSTANTS.ERROR_MESSAGES.UNKNOWN_ERROR);
+            failedSaves.set(noteId, this.saveError);
+            this.scheduleNoteSave(noteId, SAVE_RETRY_DELAY_MS);
+            throw error;
+          }
+        }
+      })();
+      pendingSaves.set(noteId, task);
+      try {
+        await task;
+      } finally {
+        pendingSaves.delete(noteId);
+      }
+    },
 
-      await Promise.all(promises);
+    async forceFlushAutoSave(): Promise<void> {
+      for (const timer of saveTimers.values()) clearTimeout(timer);
+      saveTimers.clear();
+      const results = await Promise.allSettled(
+        [...new Set([...dirtyNotes.keys(), ...pendingSaves.keys()])]
+          .map((noteId) => this.persistPendingNote(noteId)),
+      );
+      for (const result of results) {
+        if (result.status === 'rejected') throw result.reason;
+      }
     },
 
     async showNoteInFolder(id: string) {

@@ -1,6 +1,6 @@
 ### v2.2.11 - 2026-11-08
 This update optimizes details and user experience.
-#### 修复
+#### Fixes
 * Fixed known issues
 
 ### v2.2.10 - 2026-09-06

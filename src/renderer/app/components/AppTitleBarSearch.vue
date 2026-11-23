@@ -17,7 +17,8 @@
     <transition name="dropdown-fade">
       <div v-if="isDropdownVisible" class="app-search__dropdown" @mouseenter="clearCloseTimer"
         @mouseleave="startCloseTimer" @click.stop @dblclick.stop>
-        <template v-if="isHistoryMode">
+        <p v-if="searchError" class="app-search__footer" role="alert">{{ searchError }}</p>
+        <template v-else-if="isHistoryMode">
           <div class="app-search__history-header">
             <IconHistory :size="14" />
             <span>{{ t('search.quickHistory') }}</span>
@@ -84,6 +85,7 @@ const { quickSearchRequest } = useSearch();
 
 const QUICK_SEARCH_LISTBOX_ID = 'quick-search-listbox';
 const searchQuery = ref('');
+const searchError = ref('');
 const results = ref<SearchResult[]>([]);
 const searchHistory = ref<string[]>(searchService.quickHistory.list());
 const isFocused = ref(false);
@@ -97,7 +99,7 @@ const isHistoryMode = computed(() => searchQuery.value.trim().length === 0);
 const activeItemCount = computed(() => {
   return isHistoryMode.value ? searchHistory.value.length : results.value.length;
 });
-const isDropdownVisible = computed(() => showDropdown.value && activeItemCount.value > 0);
+const isDropdownVisible = computed(() => showDropdown.value && (activeItemCount.value > 0 || Boolean(searchError.value)));
 const activeOptionId = computed<string | undefined>(() => {
   if (!isDropdownVisible.value) {
     return undefined;
@@ -139,6 +141,7 @@ function handleInput() {
   clearSearchTimeout();
 
   const query = searchQuery.value.trim();
+  searchError.value = '';
   results.value = [];
   highlightedIndex.value = 0;
   if (!query) {
@@ -156,6 +159,7 @@ function handleInput() {
 function clearSearch() {
   clearSearchTimeout();
   searchQuery.value = '';
+  searchError.value = '';
   results.value = [];
   highlightedIndex.value = 0;
   showDropdown.value = isFocused.value && searchHistory.value.length > 0;
@@ -167,7 +171,18 @@ async function runSearch(query: string): Promise<void> {
     return;
   }
 
-  const nextResults = await searchService.searchNotes(normalizedQuery);
+  let nextResults: SearchResult[];
+  searchError.value = '';
+  try {
+    nextResults = await searchService.searchNotes(normalizedQuery);
+  } catch {
+    if (searchQuery.value.trim() === normalizedQuery) {
+      results.value = [];
+      searchError.value = t('search.error.incomplete');
+      showDropdown.value = isFocused.value;
+    }
+    return;
+  }
   if (searchQuery.value.trim() !== normalizedQuery) {
     return;
   }
@@ -268,6 +283,7 @@ async function selectResult(result: SearchResult) {
 
   showDropdown.value = false;
   searchQuery.value = '';
+  searchError.value = '';
   results.value = [];
   highlightedIndex.value = 0;
 }

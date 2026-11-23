@@ -22,7 +22,7 @@ export function registerSearchIpcHandlers() {
         return [];
       }
       logger.error('Search request failed', { error: getErrorMessage(error), query });
-      return [];
+      throw error;
     }
   });
 }

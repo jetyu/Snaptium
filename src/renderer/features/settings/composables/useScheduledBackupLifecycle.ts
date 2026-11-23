@@ -1,6 +1,7 @@
 import { onUnmounted, watch, type WatchStopHandle } from 'vue';
 import { isScheduledBackupDue } from '@shared/scheduled-backup.constants';
 import { createLogger } from '@renderer/features/logger';
+import { i18n } from '@renderer/features/i18n';
 import { getErrorMessage } from '@shared/utils/error.utils';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
 import { settingsService } from '../services/settings.service';
@@ -38,6 +39,7 @@ export function useScheduledBackupLifecycle(): {
         return true;
       }
 
+      settingsStore.scheduledBackupRunning = true;
       try {
         await workspaceStore.forceFlushAutoSave();
         const result = await settingsService.createScheduledBackup({
@@ -53,10 +55,15 @@ export function useScheduledBackupLifecycle(): {
             lastBackupAt: result.backedUpAt,
           });
         }
-        return result.success;
+        if (!result.success) throw new Error(i18n.global.t('scheduledBackup.failed'));
+        settingsStore.scheduledBackupError = null;
+        return true;
       } catch (error: unknown) {
+        settingsStore.scheduledBackupError = getErrorMessage(error);
         logger.error(`Scheduled backup failed: ${getErrorMessage(error)}`);
         return false;
+      } finally {
+        settingsStore.scheduledBackupRunning = false;
       }
     })();
 
@@ -102,6 +109,7 @@ export function useScheduledBackupLifecycle(): {
           scheduledBackup.directoryPath,
           scheduledBackup.intervalHours,
           scheduledBackup.retentionCount,
+          settingsStore.scheduledBackupRetryRequest,
         ] as const;
       },
       () => {

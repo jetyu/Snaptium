@@ -21,6 +21,7 @@ import { useSettingsStore } from '@renderer/features/settings';
 import { useEditor } from '@renderer/features/editor';
 import { useAiAssistant } from '@renderer/features/ai/composables/useAiAssistant';
 import { getErrorMessage } from '@shared/utils/error.utils';
+import { electronApi } from '@renderer/core/bridge/electronApi';
 import { useEditorContextMenu } from '../composables/useEditorContextMenu';
 import EditorAiOperationCard from './EditorAiOperationCard.vue';
 import { useI18n } from 'vue-i18n';
@@ -276,7 +277,7 @@ async function saveImagesAndInsertMarkdown(files: File[]) {
   }
 
   try {
-    const markdownEntries = await Promise.all(
+    const results = await Promise.allSettled(
       files.map(async (file, index) => {
         const dataBase64 = await fileToBase64(file);
         const savedImage = await workspaceService.saveNoteImage(note.contentId, {
@@ -289,9 +290,26 @@ async function saveImagesAndInsertMarkdown(files: File[]) {
       }),
     );
 
-    insertMarkdownAtSelection(markdownEntries.join('\n\n'));
+    const markdownEntries = results.flatMap((result) => result.status === 'fulfilled' ? [result.value] : []);
+    if (activeNote.value?.id === note.id && !isActiveNoteReadMode.value) {
+      if (markdownEntries.length > 0) insertMarkdownAtSelection(markdownEntries.join('\n\n'));
+    } else {
+      await electronApi.settings.showMessage({
+        type: 'warning', title: t('editor.images.title'), message: t('editor.images.noteChanged'),
+      });
+      return;
+    }
+    const failedCount = results.length - markdownEntries.length;
+    if (failedCount > 0) {
+      await electronApi.settings.showMessage({
+        type: 'warning', title: t('editor.images.title'), message: t('editor.images.failed', { count: failedCount }),
+      });
+    }
   } catch (error) {
     logger.error(`Failed to insert image into note: ${getErrorMessage(error)}`);
+    await electronApi.settings.showMessage({
+      type: 'error', title: t('editor.images.title'), message: t('editor.images.error'), detail: getErrorMessage(error),
+    });
   }
 }
 

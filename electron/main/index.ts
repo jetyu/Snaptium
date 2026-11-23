@@ -161,6 +161,8 @@ app.whenReady().then(async () => {
         setupAppMenu(window, nextPreferences.general.language);
         trayService.init(window, () => quickCaptureService.request());
       });
+    } else {
+      trayService.showAndFocusMainWindow();
     }
   });
 
