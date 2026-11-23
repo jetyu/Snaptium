@@ -25,7 +25,7 @@ export function formatSnapshotFilename(date: Date = new Date()): string {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
   const seconds = String(date.getSeconds()).padStart(2, '0');
-  return `${year}-${month}-${day}_${hours}${minutes}${seconds}`;
+  return `${year}-${month}-${day}_${hours}${minutes}${seconds}${String(date.getMilliseconds()).padStart(3, '0')}`;
 }
 
 export function filenameToTimestamp(filename: string): number {
@@ -36,5 +36,6 @@ export function filenameToTimestamp(filename: string): number {
   const h = parseInt(timePart.slice(0, 2), 10);
   const min = parseInt(timePart.slice(2, 4), 10);
   const s = parseInt(timePart.slice(4, 6), 10);
-  return new Date(y, m - 1, d, h, min, s).getTime();
+  const ms = timePart.length >= 9 ? parseInt(timePart.slice(6, 9), 10) : 0;
+  return new Date(y, m - 1, d, h, min, s, ms).getTime();
 }

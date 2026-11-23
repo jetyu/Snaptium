@@ -24,6 +24,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { buildKeybinding } from '@shared/utils/keybinding.utils';
 import { formatKeybinding } from '@renderer/core/utils/formatKeybinding.utils';
 
 interface Props {
@@ -79,23 +80,8 @@ function handleKeyDown(event: KeyboardEvent) {
   event.preventDefault();
   event.stopPropagation();
 
-  const keys: string[] = [];
-
-  // 添加修饰键
-  if (event.ctrlKey || event.metaKey) {
-    keys.push('CommandOrControl');
-  }
-  if (event.altKey) {
-    keys.push('Alt');
-  }
-  if (event.shiftKey) {
-    keys.push('Shift');
-  }
-
-  // 添加主键
-  const mainKey = normalizeKey(event.key);
-  if (mainKey && !isModifierKey(event.key)) {
-    keys.push(mainKey);
+  const keys = buildKeybinding(event, navigator.platform.toUpperCase().includes('MAC')).split('+').filter(Boolean);
+  if (!isModifierKey(event.key)) {
     recordedKeys.value = keys;
     
     // 延迟停止录制，让用户看到完整的快捷键
@@ -105,31 +91,6 @@ function handleKeyDown(event: KeyboardEvent) {
   } else {
     recordedKeys.value = keys;
   }
-}
-
-function normalizeKey(key: string): string {
-  const keyMap: Record<string, string> = {
-    ' ': 'Space',
-    'Escape': 'Escape',
-    'Enter': 'Enter',
-    'Tab': 'Tab',
-    'Backspace': 'Backspace',
-    'Delete': 'Delete',
-    'ArrowUp': 'Up',
-    'ArrowDown': 'Down',
-    'ArrowLeft': 'Left',
-    'ArrowRight': 'Right',
-  };
-
-  if (keyMap[key]) {
-    return keyMap[key];
-  }
-
-  if (key.length === 1) {
-    return key.toUpperCase();
-  }
-
-  return key;
 }
 
 function isModifierKey(key: string): boolean {

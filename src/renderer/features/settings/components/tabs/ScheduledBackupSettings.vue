@@ -1,5 +1,16 @@
 <template>
   <div class="settings-grid settings-fade-in">
+    <section v-if="settingsStore.scheduledBackupError" class="setting-card" role="alert">
+      <div class="setting-copy">
+        <p class="setting-label">{{ t('scheduledBackup.failed') }}</p>
+        <p class="setting-description">{{ settingsStore.scheduledBackupError }}</p>
+      </div>
+      <button type="button" class="action-button secondary"
+        :disabled="settingsStore.scheduledBackupRunning || !scheduledBackup.enabled"
+        @click="settingsStore.scheduledBackupRetryRequest += 1">
+        {{ t('scheduledBackup.retry') }}
+      </button>
+    </section>
     <section class="setting-card">
       <div class="setting-copy">
         <p class="setting-label">{{ t('label.scheduledBackup') }}</p>

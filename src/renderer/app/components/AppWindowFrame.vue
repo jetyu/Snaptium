@@ -5,7 +5,7 @@
         <img src="@assets/logo/app-logo-32.png" class="app-window-frame__logo" :alt="appTitle" />
         <span class="app-window-frame__title">{{ appTitle }}</span>
       </div>
-      <div class="app-window-frame__menu-container">
+      <div v-if="!isMac" class="app-window-frame__menu-container">
         <AppMenuBar />
       </div>
       <div class="app-window-frame__search-container">

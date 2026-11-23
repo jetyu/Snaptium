@@ -1,6 +1,8 @@
 import { onUnmounted, watch, type WatchStopHandle } from 'vue';
 import { useSettingsStore } from '@renderer/features/settings/store/settings.store';
 import { useWorkspaceStore } from '@renderer/features/workspace/store/workspace.store';
+import { createLogger } from '@renderer/features/logger';
+import { getErrorMessage } from '@shared/utils/error.utils';
 import { SYNC_TRIGGERS } from '../constants/sync.constants';
 import { syncService } from '../services/sync.service';
 import { useSyncStore } from '../store/sync.store';
@@ -30,6 +32,8 @@ export function useSyncLifecycle() {
     syncIntervalTimer = window.setInterval(() => {
       void workspaceStore.forceFlushAutoSave().then(() => {
         return syncStore.runSync(settingsStore.config.sync, SYNC_TRIGGERS.TIMER);
+      }).catch((error: unknown) => {
+        createLogger('SyncLifecycle').error(`Sync skipped: ${getErrorMessage(error)}`);
       });
     }, syncConfig.intervalMinutes * 60 * 1000);
   };
