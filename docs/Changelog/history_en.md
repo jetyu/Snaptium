@@ -1,3 +1,15 @@
+### v2.2.12 - 2026-11-24
+This update optimizes details and user experience.
+#### Improvements
+* Improved error messages
+#### Fixes
+* Fixed race conditions when saving and syncing with the cloud
+* Fixed partial failures in full-text search
+* Fixed an issue where the main window could not be displayed again after closing the macOS version window and clicking the Dock icon
+* Fixed an issue where Control and Command were confused when triggering and recording shortcuts in the macOS version
+* Fixed an issue where the shortcut keys for historical versions conflicted with the shortcut keys for hidden applications in the macOS version
+* Fixed an issue where menus inside the window were displayed twice with the system menu bar in the macOS version
+
 ### v2.2.11 - 2026-11-08
 This update optimizes details and user experience.
 #### Fixes
